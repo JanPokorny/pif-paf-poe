@@ -25,6 +25,7 @@ Possible stones:
     - 2048: Player picks an orthogonal direction. All stones on board move in that direction as far as free space allows.
     - Rotate: Player picks one of 2x2 board sub-squares this stone is part of. Those 4 places are then swapped clockwise.
     - Swap: Player selects a row or column this stone was not placed in. The row or column is swapped with the one this stone was placed in.
+    - Chain: After placing, Chain moves to a player-selected adjacent empty space (mandatory if one exists). This vacates the original space. The player may then select any stone adjacent to the newly empty space and move it in, creating another empty space. This may be repeated from each new empty space. The chain may be stopped at any time; only the first move of Chain itself is mandatory. Stones already moved by Chain in this turn cannot be moved again.
 - Restriction:
     - Magnet: Other player must place their next stone orthogonally adjacent to this one.
     - Stinky: Other player must NOT place their next stone orthogonally adjacent to this one.
