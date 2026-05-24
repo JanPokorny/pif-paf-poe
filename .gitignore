@@ -1,2 +1,4 @@
 __pycache__/
 *.pyc
+sweep_output.txt
+hand_winrates.tsv
