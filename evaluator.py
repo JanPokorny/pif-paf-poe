@@ -73,6 +73,14 @@ class Restriction:
     pos: int
 
 
+VALID_RULES = frozenset({
+    "second_pick_first",  # second player picks first player's opening stone
+    "opener_regular",     # first player's opening stone has no effect/restriction
+    "no_center_first",    # first player may not open on the center
+    "opener_no_movement", # first player may not open with shift/2048/rotate/chain
+})
+
+
 @dataclass
 class State:
     board: list  # type: ignore[type-arg]  # list[Optional[Stone]]
@@ -87,6 +95,7 @@ class State:
     win_reason: Optional[str] = None
     chain_empty: Optional[int] = None
     chain_moved: Optional[set] = None
+    rules: frozenset = field(default_factory=frozenset)
 
     def clone(self) -> "State":
         return State(
@@ -102,7 +111,13 @@ class State:
             win_reason=self.win_reason,
             chain_empty=self.chain_empty,
             chain_moved=set(self.chain_moved) if self.chain_moved is not None else None,
+            rules=self.rules,
         )
+
+    @property
+    def is_opening_turn(self) -> bool:
+        # True throughout the very first turn (history holds only the initial state hash).
+        return len(self.history) == 1
 
 
 def hash_state(s: State) -> str:
@@ -203,7 +218,12 @@ def get_remove_actions(s: State):
 
 def get_select_actions(s: State):
     seen = []
-    for t in s.hands[s.current_player]:
+    hand = s.hands[s.current_player]
+    if "opener_no_movement" in s.rules and s.is_opening_turn:
+        allowed = [t for t in hand if t not in MOVEMENT_TYPES and t != "chain"]
+        if allowed:
+            hand = allowed
+    for t in hand:
         if t not in seen:
             seen.append(t)
     return [{"type": "select", "stoneType": t} for t in seen]
@@ -211,6 +231,10 @@ def get_select_actions(s: State):
 
 def get_place_actions(s: State):
     free = [i for i in range(9) if not s.board[i]]
+    if "no_center_first" in s.rules and s.is_opening_turn:
+        filtered = [i for i in free if i != 4]
+        if filtered:
+            free = filtered
     if s.restriction:
         if s.restriction.type == "magnet":
             ok = [i for i in free if adj(i, s.restriction.pos)]
@@ -255,7 +279,8 @@ def get_legal_actions(s: State):
 # ── State transitions ──
 
 def end_turn(s: State) -> None:
-    if s.selected_stone in RESTRICTION_TYPES:
+    opener_pass = "opener_regular" in s.rules and s.is_opening_turn
+    if not opener_pass and s.selected_stone in RESTRICTION_TYPES:
         s.restriction = Restriction(s.selected_stone, s.placed_pos)
     else:
         s.restriction = None
@@ -297,6 +322,9 @@ def do_action(s: State, a: dict) -> None:
     elif t == "place":
         s.board[a["pos"]] = Stone(s.current_player, s.selected_stone)
         s.placed_pos = a["pos"]
+        if "opener_regular" in s.rules and s.is_opening_turn:
+            end_turn(s)
+            return
         if s.selected_stone == "chain":
             has = any(not s.board[i] and adj(i, a["pos"]) for i in range(9))
             if has:
@@ -328,14 +356,28 @@ def do_action(s: State, a: dict) -> None:
         s.chain_empty = a["pos"]
 
 
-def init_game_state(hands_x, hands_o, first_player: str) -> State:
+def init_game_state(hands_x, hands_o, first_player: str, rules=frozenset()) -> State:
     s = State(
         board=[None] * 9,
         hands={"X": list(hands_x), "O": list(hands_o)},
         current_player=first_player,
+        rules=frozenset(rules),
     )
     s.history.add(hash_state(s))
     return s
+
+
+# Preference order for second-player-forces-opener: most-wasted on empty board first.
+# regular and the movement/chain types all degenerate to "place anywhere" on turn 1.
+# stinky/magnet actually give first player a useful restriction, so we avoid forcing them.
+_OPENER_FORCE_PREF = ("regular", "shift", "2048", "rotate", "chain", "stinky", "magnet")
+
+
+def second_pick_opening(first_hand) -> str:
+    for t in _OPENER_FORCE_PREF:
+        if t in first_hand:
+            return t
+    return first_hand[0]
 
 
 # ═══════════════════════════════════════
@@ -473,21 +515,30 @@ def play_game(
     agent_o,
     max_actions: int = 600,
     verbose: bool = False,
+    rules=frozenset(),
 ):
-    s = init_game_state(hands_x, hands_o, first_player)
+    s = init_game_state(hands_x, hands_o, first_player, rules=rules)
     moves = 0
     if verbose:
         print_state(s)
+    if "second_pick_first" in s.rules:
+        forced = second_pick_opening(s.hands[first_player])
+        if verbose:
+            print(f"  [rule second_pick_first] forcing opener: {forced}")
+        do_action(s, {"type": "select", "stoneType": forced})
+        moves += 1
     while s.phase != "gameOver" and moves < max_actions:
         acts = get_legal_actions(s)
         if not acts:
-            break
+            raise RuntimeError(f"no legal actions in phase {s.phase!r} but game not over")
         agent = agent_x if s.current_player == "X" else agent_o
         a = agent(s)
         if verbose:
             print(f"  {s.current_player} [{s.phase}] -> {format_action(a)}")
         do_action(s, a)
         moves += 1
+    if s.winner is None:
+        raise RuntimeError(f"game did not terminate within {max_actions} actions")
     if verbose:
         print_state(s)
         print(f"result: winner={s.winner} reason={s.win_reason} actions={moves}")
@@ -561,14 +612,28 @@ def random_hand(rng: random.Random):
 # Subcommands
 # ═══════════════════════════════════════
 
+def parse_rules(args_rules) -> frozenset:
+    rules = set()
+    for r in args_rules or ():
+        for part in r.split(","):
+            part = part.strip()
+            if not part:
+                continue
+            if part not in VALID_RULES:
+                raise SystemExit(f"unknown rule {part!r}; valid: {','.join(sorted(VALID_RULES))}")
+            rules.add(part)
+    return frozenset(rules)
+
+
 def cmd_play(args) -> int:
     rng = random.Random(args.seed)
+    rules = parse_rules(args.rule)
     hands_x = parse_hand(args.hands_x) if args.hands_x else random_hand(rng)
     hands_o = parse_hand(args.hands_o) if args.hands_o else random_hand(rng)
     agent_x = make_agent(args.agent_x, args.iters, args.time_ms, rng)
     agent_o = make_agent(args.agent_o, args.iters, args.time_ms, rng)
     games = args.games
-    wins = {"X": 0, "O": 0, None: 0}
+    wins = {"X": 0, "O": 0}
     reasons = {}
     for g in range(games):
         if args.first == "R":
@@ -576,20 +641,23 @@ def cmd_play(args) -> int:
         else:
             fp = args.first
         if args.verbose:
-            print(f"\n=== game {g + 1}/{games}  X={format_hand(hands_x)}  O={format_hand(hands_o)}  first={fp} ===")
+            print(f"\n=== game {g + 1}/{games}  X={format_hand(hands_x)}  O={format_hand(hands_o)}  first={fp}"
+                  + (f"  rules={','.join(sorted(rules))}" if rules else "") + " ===")
         w, reason, moves = play_game(
             hands_x, hands_o, fp, agent_x, agent_o,
-            max_actions=args.max_actions, verbose=args.verbose,
+            max_actions=args.max_actions, verbose=args.verbose, rules=rules,
         )
         wins[w] += 1
         reasons[reason] = reasons.get(reason, 0) + 1
         if not args.verbose:
-            print(f"game {g + 1}: winner={w or 'draw'} reason={reason} actions={moves}")
-    total = sum(wins.values())
+            print(f"game {g + 1}: winner={w} reason={reason} actions={moves}")
+    total = wins["X"] + wins["O"]
     print()
+    if rules:
+        print(f"rules: {','.join(sorted(rules))}")
     print(f"X hand: {format_hand(hands_x)}")
     print(f"O hand: {format_hand(hands_o)}")
-    print(f"games: {total}  X={wins['X']}  O={wins['O']}  draws={wins[None]}")
+    print(f"games: {total}  X={wins['X']}  O={wins['O']}")
     if total:
         print(f"X win%: {100 * wins['X'] / total:.1f}   O win%: {100 * wins['O'] / total:.1f}")
     if reasons:
@@ -599,7 +667,7 @@ def cmd_play(args) -> int:
 
 def cmd_tournament(args) -> int:
     rng = random.Random(args.seed)
-    # Generate unique loadouts
+    rules = parse_rules(args.rule)
     seen = set()
     loadouts = []
     tries = 0
@@ -613,12 +681,13 @@ def cmd_tournament(args) -> int:
     if len(loadouts) < 2:
         raise SystemExit("need at least 2 loadouts")
     n = len(loadouts)
-    results = [{"wins": 0, "losses": 0, "draws": 0} for _ in range(n)]
+    results = [{"wins": 0, "losses": 0} for _ in range(n)]
     agent = make_agent(args.agent, args.iters, args.time_ms, rng)
     total_games = n * (n - 1) // 2 * args.games_per_pair
     played = 0
     t0 = time.time()
-    print(f"running tournament: {n} loadouts, {args.games_per_pair} games/pair, {total_games} total games")
+    print(f"running tournament: {n} loadouts, {args.games_per_pair} games/pair, {total_games} total games"
+          + (f"  rules={','.join(sorted(rules))}" if rules else ""))
     for i in range(n):
         for j in range(i + 1, n):
             for g in range(args.games_per_pair):
@@ -626,18 +695,15 @@ def cmd_tournament(args) -> int:
                 hx = loadouts[i] if i_is_x else loadouts[j]
                 ho = loadouts[j] if i_is_x else loadouts[i]
                 first = "X" if g < args.games_per_pair / 2 else "O"
-                w, _, _ = play_game(hx, ho, first, agent, agent, max_actions=args.max_actions)
+                w, _, _ = play_game(hx, ho, first, agent, agent,
+                                    max_actions=args.max_actions, rules=rules)
                 i_won = (i_is_x and w == "X") or (not i_is_x and w == "O")
-                j_won = (i_is_x and w == "O") or (not i_is_x and w == "X")
                 if i_won:
                     results[i]["wins"] += 1
                     results[j]["losses"] += 1
-                elif j_won:
+                else:
                     results[j]["wins"] += 1
                     results[i]["losses"] += 1
-                else:
-                    results[i]["draws"] += 1
-                    results[j]["draws"] += 1
                 played += 1
                 if args.progress and (played % max(1, total_games // 20) == 0 or played == total_games):
                     elapsed = time.time() - t0
@@ -646,14 +712,14 @@ def cmd_tournament(args) -> int:
     ranked = []
     for i, ld in enumerate(loadouts):
         r = results[i]
-        total = r["wins"] + r["losses"] + r["draws"]
+        total = r["wins"] + r["losses"]
         pct = 100 * r["wins"] / total if total else 0
-        ranked.append((i, ld, r["wins"], r["losses"], r["draws"], pct))
-    ranked.sort(key=lambda x: (-x[5], -x[2]))
+        ranked.append((i, ld, r["wins"], r["losses"], pct))
+    ranked.sort(key=lambda x: (-x[4], -x[2]))
     print()
-    print(f"{'#':>3}  {'W':>4} {'L':>4} {'D':>4} {'Win%':>6}  loadout")
-    for rank, (_i, ld, w, l, d, pct) in enumerate(ranked, 1):
-        print(f"{rank:>3}  {w:>4} {l:>4} {d:>4} {pct:>5.1f}%  {format_hand(ld)}")
+    print(f"{'#':>3}  {'W':>4} {'L':>4} {'Win%':>6}  loadout")
+    for rank, (_i, ld, w, l, pct) in enumerate(ranked, 1):
+        print(f"{rank:>3}  {w:>4} {l:>4} {pct:>5.1f}%  {format_hand(ld)}")
     print(f"\ntotal time: {time.time() - t0:.1f}s")
     return 0
 
@@ -681,6 +747,8 @@ def build_parser() -> argparse.ArgumentParser:
     pp.add_argument("--max-actions", type=int, default=600, help="safety cap on total actions per game")
     pp.add_argument("--seed", type=int, default=None)
     pp.add_argument("--verbose", action="store_true", help="print every action and board snapshots")
+    pp.add_argument("--rule", action="append", default=[],
+                    help=f"rule variant (repeatable or comma-separated); valid: {','.join(sorted(VALID_RULES))}")
     pp.set_defaults(func=cmd_play)
 
     pt = sub.add_parser("tournament", help="autobattler: round-robin between random loadouts")
@@ -692,6 +760,8 @@ def build_parser() -> argparse.ArgumentParser:
     pt.add_argument("--max-actions", type=int, default=600)
     pt.add_argument("--seed", type=int, default=None)
     pt.add_argument("--progress", action="store_true", help="print progress to stderr")
+    pt.add_argument("--rule", action="append", default=[],
+                    help=f"rule variant (repeatable or comma-separated); valid: {','.join(sorted(VALID_RULES))}")
     pt.set_defaults(func=cmd_tournament)
 
     return p
