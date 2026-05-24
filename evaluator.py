@@ -607,8 +607,9 @@ def print_state(s: State) -> None:
           + (f"  restriction={s.restriction.type}@{s.restriction.pos}" if s.restriction else ""))
 
 
-def random_hand(rng: random.Random):
-    return [rng.choice(TYPES) for _ in range(5)]
+def random_hand(rng: random.Random, pool=None):
+    pool = pool if pool is not None else TYPES
+    return [rng.choice(pool) for _ in range(5)]
 
 
 # ═══════════════════════════════════════
