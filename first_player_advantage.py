@@ -42,7 +42,7 @@ def main():
         for first_hand_is_a in (True, False):
             hx = ha if first_hand_is_a else hb
             ho = hb if first_hand_is_a else ha
-            w, _, _ = play_game(hx, ho, "X", agent, agent, rules=rules)
+            w, _, _, _ = play_game(hx, ho, "X", agent, agent, rules=rules)
             games += 1
             if w == "X":
                 first_wins += 1

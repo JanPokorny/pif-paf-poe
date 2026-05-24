@@ -96,6 +96,7 @@ class State:
     chain_empty: Optional[int] = None
     chain_moved: Optional[set] = None
     rules: frozenset = field(default_factory=frozenset)
+    turn_count: int = 0
 
     def clone(self) -> "State":
         return State(
@@ -112,6 +113,7 @@ class State:
             chain_empty=self.chain_empty,
             chain_moved=set(self.chain_moved) if self.chain_moved is not None else None,
             rules=self.rules,
+            turn_count=self.turn_count,
         )
 
     @property
@@ -279,6 +281,7 @@ def get_legal_actions(s: State):
 # ── State transitions ──
 
 def end_turn(s: State) -> None:
+    s.turn_count += 1
     opener_pass = "opener_regular" in s.rules and s.is_opening_turn
     if not opener_pass and s.selected_stone in RESTRICTION_TYPES:
         s.restriction = Restriction(s.selected_stone, s.placed_pos)
@@ -541,8 +544,8 @@ def play_game(
         raise RuntimeError(f"game did not terminate within {max_actions} actions")
     if verbose:
         print_state(s)
-        print(f"result: winner={s.winner} reason={s.win_reason} actions={moves}")
-    return s.winner, s.win_reason, moves
+        print(f"result: winner={s.winner} reason={s.win_reason} actions={moves} turns={s.turn_count}")
+    return s.winner, s.win_reason, moves, s.turn_count
 
 
 # ═══════════════════════════════════════
@@ -643,14 +646,14 @@ def cmd_play(args) -> int:
         if args.verbose:
             print(f"\n=== game {g + 1}/{games}  X={format_hand(hands_x)}  O={format_hand(hands_o)}  first={fp}"
                   + (f"  rules={','.join(sorted(rules))}" if rules else "") + " ===")
-        w, reason, moves = play_game(
+        w, reason, moves, turns = play_game(
             hands_x, hands_o, fp, agent_x, agent_o,
             max_actions=args.max_actions, verbose=args.verbose, rules=rules,
         )
         wins[w] += 1
         reasons[reason] = reasons.get(reason, 0) + 1
         if not args.verbose:
-            print(f"game {g + 1}: winner={w} reason={reason} actions={moves}")
+            print(f"game {g + 1}: winner={w} reason={reason} turns={turns} actions={moves}")
     total = wins["X"] + wins["O"]
     print()
     if rules:
@@ -695,8 +698,8 @@ def cmd_tournament(args) -> int:
                 hx = loadouts[i] if i_is_x else loadouts[j]
                 ho = loadouts[j] if i_is_x else loadouts[i]
                 first = "X" if g < args.games_per_pair / 2 else "O"
-                w, _, _ = play_game(hx, ho, first, agent, agent,
-                                    max_actions=args.max_actions, rules=rules)
+                w, _, _, _ = play_game(hx, ho, first, agent, agent,
+                                       max_actions=args.max_actions, rules=rules)
                 i_won = (i_is_x and w == "X") or (not i_is_x and w == "O")
                 if i_won:
                     results[i]["wins"] += 1
