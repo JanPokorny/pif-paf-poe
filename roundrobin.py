@@ -1,4 +1,4 @@
-"""Round-robin between the top 20 surviving hands from the GA.
+"""Round-robin between top GA-survivor hands.
 
 For every ordered pair (i, j), plays N games with hand i as first mover and j
 as second. Reports:
@@ -7,37 +7,41 @@ as second. Reports:
   - Self-play (i = j): isolates pure first-player advantage between identical
     optimized hands
   - Aggregate first-player share across all games
+
+The TOP_HANDS list is the top 20 from the GA run under `regular_chain_any`
+(seed=2026, 25 gens, K=8). For vanilla, edit TOP_HANDS or pass --hands.
 """
 
 import argparse
 import random
 import time
 
-from evaluator import format_hand, make_agent, play_game
+from evaluator import VALID_RULES, format_hand, make_agent, parse_rules, play_game
 
 
-# Top 20 surviving hands from genetic.py run (seed=2026, 25 gens, K=8 games/hand)
+# Top 20 surviving hands from the GA run under --rule regular_chain_any
+# (genetic.py, seed=2026, 25 gens, games-per-hand=8, iters=40)
 TOP_HANDS = [
-    ("regular", "shift", "2048", "rotate", "chain"),
-    ("2048", "regular", "rotate", "chain", "chain"),
-    ("chain", "magnet", "rotate", "rotate", "shift"),
-    ("2048", "2048", "magnet", "rotate", "stinky"),
-    ("chain", "regular", "rotate", "rotate", "rotate"),
-    ("magnet", "rotate", "rotate", "rotate", "rotate"),
-    ("2048", "2048", "chain", "rotate", "shift"),
-    ("2048", "chain", "chain", "rotate", "shift"),
-    ("2048", "2048", "chain", "chain", "stinky"),
-    ("2048", "chain", "chain", "chain", "rotate"),
-    ("2048", "chain", "magnet", "regular", "rotate"),
-    ("2048", "2048", "2048", "rotate", "rotate"),
-    ("2048", "regular", "rotate", "rotate", "stinky"),
-    ("2048", "chain", "rotate", "shift", "stinky"),
-    ("2048", "magnet", "rotate", "rotate", "rotate"),
-    ("chain", "chain", "magnet", "rotate", "stinky"),
-    ("chain", "chain", "chain", "regular", "rotate"),
-    ("chain", "magnet", "regular", "rotate", "shift"),
+    ("magnet", "regular", "regular", "rotate", "rotate"),
+    ("chain", "magnet", "regular", "regular", "rotate"),
+    ("regular", "regular", "regular", "rotate", "rotate"),
+    ("regular", "regular", "rotate", "rotate", "rotate"),
+    ("chain", "regular", "regular", "rotate", "rotate"),
+    ("chain", "chain", "regular", "regular", "rotate"),
+    ("chain", "regular", "regular", "regular", "rotate"),
+    ("2048", "2048", "chain", "regular", "regular"),
+    ("2048", "regular", "regular", "regular", "rotate"),
+    ("2048", "chain", "regular", "regular", "regular"),
+    ("chain", "regular", "regular", "rotate", "stinky"),
+    ("chain", "regular", "regular", "regular", "shift"),
+    ("2048", "2048", "regular", "regular", "rotate"),
+    ("chain", "regular", "regular", "rotate", "shift"),
     ("2048", "chain", "regular", "rotate", "rotate"),
-    ("2048", "2048", "magnet", "rotate", "rotate"),
+    ("magnet", "magnet", "regular", "rotate", "rotate"),
+    ("regular", "regular", "rotate", "rotate", "stinky"),
+    ("magnet", "regular", "regular", "rotate", "shift"),
+    ("2048", "2048", "regular", "regular", "regular"),
+    ("chain", "chain", "regular", "regular", "regular"),
 ]
 
 
@@ -52,9 +56,12 @@ def main():
     ap.add_argument("--games-per-ordered-pair", type=int, default=80)
     ap.add_argument("--iters", type=int, default=40)
     ap.add_argument("--seed", type=int, default=2026)
+    ap.add_argument("--rule", action="append", default=[],
+                    help=f"rule variant (repeatable or comma-separated); valid: {','.join(sorted(VALID_RULES))}")
     args = ap.parse_args()
 
     rng = random.Random(args.seed)
+    rules = parse_rules(args.rule)
     agent = make_agent("mcts", args.iters, None, rng)
 
     n = len(TOP_HANDS)
@@ -64,7 +71,8 @@ def main():
 
     target = n * n * args.games_per_ordered_pair
     print(f"round-robin: {n} hands, {args.games_per_ordered_pair} games per ordered pair, "
-          f"iters={args.iters}, target {target} games")
+          f"iters={args.iters}, target {target} games"
+          + (f", rules={','.join(sorted(rules))}" if rules else ""))
     t0 = time.time()
     done = 0
     pair = 0
@@ -74,7 +82,7 @@ def main():
             hi = list(TOP_HANDS[i])
             hj = list(TOP_HANDS[j])
             for _ in range(args.games_per_ordered_pair):
-                w, _, _, _ = play_game(hi, hj, "X", agent, agent)
+                w, _, _, _ = play_game(hi, hj, "X", agent, agent, rules=rules)
                 if w == "X":
                     M_first_wins[i][j] += 1
                     first_total += 1
