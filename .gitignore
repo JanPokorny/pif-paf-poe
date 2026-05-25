@@ -11,3 +11,5 @@ roundrobin_output.txt
 genetic_rca_output.txt
 genetic_trajectory_rca.tsv
 roundrobin_rca_output.txt
+genetic_mss_output.txt
+genetic_trajectory_mss.tsv
