@@ -74,10 +74,12 @@ class Restriction:
 
 
 VALID_RULES = frozenset({
-    "second_pick_first",  # second player picks first player's opening stone
-    "opener_regular",     # first player's opening stone has no effect/restriction
-    "no_center_first",    # first player may not open on the center
-    "opener_no_movement", # first player may not open with shift/2048/rotate/chain
+    "second_pick_first",   # second player picks first player's opening stone
+    "opener_regular",      # first player's opening stone has no effect/restriction
+    "no_center_first",     # first player may not open on the center
+    "opener_no_movement",  # first player may not open with shift/2048/rotate/chain
+    "regular_chain",       # after placing regular, if stone counts are equal, may place another regular
+    "regular_chain_safe",  # same as regular_chain, but the bonus stone may not complete a 3-in-a-row
 })
 
 
@@ -275,7 +277,32 @@ def get_legal_actions(s: State):
             if s.board[i] and adj(i, s.chain_empty) and i not in s.chain_moved:
                 acts.append({"type": "chainPull", "pos": i})
         return acts
+    if s.phase == "regular_bonus":
+        return get_regular_bonus_actions(s)
     return []
+
+
+def get_regular_bonus_actions(s: State):
+    acts = [{"type": "regular_bonus_pass"}]
+    free = [i for i in range(9) if not s.board[i]]
+    if s.restriction:
+        if s.restriction.type == "magnet":
+            ok = [i for i in free if adj(i, s.restriction.pos)]
+        else:
+            ok = [i for i in free if not adj(i, s.restriction.pos)]
+        if ok:
+            free = ok
+    if "regular_chain_safe" in s.rules:
+        cp = s.current_player
+        safe = []
+        for pos in free:
+            s.board[pos] = Stone(cp, "regular")
+            completes = check3(s.board, cp)
+            s.board[pos] = None
+            if not completes:
+                safe.append(pos)
+        free = safe
+    return acts + [{"type": "regular_bonus_place", "pos": p} for p in free]
 
 
 # ── State transitions ──
@@ -328,6 +355,16 @@ def do_action(s: State, a: dict) -> None:
         if "opener_regular" in s.rules and s.is_opening_turn:
             end_turn(s)
             return
+        if s.selected_stone == "regular" and (
+            "regular_chain" in s.rules or "regular_chain_safe" in s.rules
+        ):
+            cp = s.current_player
+            op = opp(cp)
+            cp_count = sum(1 for c in s.board if c and c.player == cp)
+            op_count = sum(1 for c in s.board if c and c.player == op)
+            if cp_count == op_count and "regular" in s.hands[cp]:
+                s.phase = "regular_bonus"
+                return
         if s.selected_stone == "chain":
             has = any(not s.board[i] and adj(i, a["pos"]) for i in range(9))
             if has:
@@ -357,6 +394,13 @@ def do_action(s: State, a: dict) -> None:
         s.board[a["pos"]] = None
         s.chain_moved.add(s.chain_empty)
         s.chain_empty = a["pos"]
+    elif t == "regular_bonus_pass":
+        end_turn(s)
+    elif t == "regular_bonus_place":
+        s.hands[s.current_player].remove("regular")
+        s.board[a["pos"]] = Stone(s.current_player, "regular")
+        s.placed_pos = a["pos"]
+        end_turn(s)
 
 
 def init_game_state(hands_x, hands_o, first_player: str, rules=frozenset()) -> State:
@@ -587,6 +631,10 @@ def format_action(a: dict) -> str:
         return f"chainPull@{a['pos']}"
     if t == "chainPass":
         return "chainPass"
+    if t == "regular_bonus_place":
+        return f"regular_bonus_place@{a['pos']}"
+    if t == "regular_bonus_pass":
+        return "regular_bonus_pass"
     return str(a)
 
 
