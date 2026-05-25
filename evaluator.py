@@ -378,6 +378,11 @@ def end_turn(s: State) -> None:
     s.placed_pos = None
     s.bonus_used = False
     s.phase = "remove" if board_full(s.board) else "select"
+    if s.phase == "select" and not s.hands[s.current_player]:
+        # Can't place — no stones in hand and board isn't full. Current player loses.
+        s.winner = opp(s.current_player)
+        s.phase = "gameOver"
+        s.win_reason = "out_of_stones"
 
 
 def do_action(s: State, a: dict) -> None:

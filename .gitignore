@@ -15,3 +15,9 @@ genetic_mss_output.txt
 genetic_trajectory_mss.tsv
 genetic_combo_output.txt
 genetic_trajectory_combo.tsv
+genetic_A_output.txt
+genetic_traj_A.tsv
+genetic_B_output.txt
+genetic_traj_B.tsv
+genetic_C_output.txt
+genetic_traj_C.tsv
