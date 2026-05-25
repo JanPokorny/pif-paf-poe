@@ -18,11 +18,12 @@ import random
 import time
 from collections import Counter, defaultdict
 
-from evaluator import TYPES, VALID_RULES, format_hand, make_agent, parse_rules, play_game
+from evaluator import TYPES, VALID_RULES, format_hand, make_agent, parse_rules, play_game, pool_for_rules
 
 
-def all_hand_tuples():
-    return [tuple(sorted(h)) for h in itertools.combinations_with_replacement(TYPES, 5)]
+def all_hand_tuples(pool=None):
+    pool = pool if pool is not None else [t for t in TYPES if t != "stinky_shift"]
+    return [tuple(sorted(h)) for h in itertools.combinations_with_replacement(pool, 5)]
 
 
 def _empty_stats():
@@ -81,7 +82,7 @@ def main():
     rules = parse_rules(args.rule)
     agent = make_agent("mcts", args.iters, None, rng)
 
-    population = all_hand_tuples()
+    population = all_hand_tuples(pool=pool_for_rules(rules))
     n = len(population)
     elim = max(1, int(n * args.elim_pct / 100))
     print(f"population={n}  elim/dup={elim}  games_per_hand={args.games_per_hand}  iters={args.iters}")

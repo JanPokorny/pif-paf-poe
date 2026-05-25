@@ -37,8 +37,8 @@ def main():
 
     t0 = time.time()
     for p in range(args.pairs):
-        ha = random_hand(rng)
-        hb = random_hand(rng)
+        ha = random_hand(rng, rules=rules)
+        hb = random_hand(rng, rules=rules)
         for first_hand_is_a in (True, False):
             hx = ha if first_hand_is_a else hb
             ho = hb if first_hand_is_a else ha

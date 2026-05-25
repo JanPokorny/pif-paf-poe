@@ -15,7 +15,7 @@ import time
 from dataclasses import dataclass, field
 from typing import Optional
 
-TYPES = ["regular", "shift", "2048", "rotate", "magnet", "stinky", "chain"]
+TYPES = ["regular", "shift", "2048", "rotate", "magnet", "stinky", "chain", "stinky_shift"]
 TYPE_CODE = {
     "regular": "rg",
     "shift": "sh",
@@ -24,6 +24,7 @@ TYPE_CODE = {
     "magnet": "mg",
     "stinky": "sk",
     "chain": "ch",
+    "stinky_shift": "ss",
 }
 TYPE_ICON = {
     "regular": "Reg",
@@ -33,6 +34,7 @@ TYPE_ICON = {
     "magnet": "Mg",
     "stinky": "Sk",
     "chain": "Ch",
+    "stinky_shift": "SS",
 }
 LINES = [
     (0, 1, 2), (3, 4, 5), (6, 7, 8),
@@ -45,8 +47,8 @@ SUBSQUARES = {
     "BL": (3, 4, 6, 7),
     "BR": (4, 5, 7, 8),
 }
-MOVEMENT_TYPES = {"shift", "2048", "rotate"}
-RESTRICTION_TYPES = {"magnet", "stinky"}
+MOVEMENT_TYPES = {"shift", "2048", "rotate", "stinky_shift"}
+RESTRICTION_TYPES = {"magnet", "stinky", "stinky_shift"}
 DIRECTIONS = ("up", "down", "left", "right")
 
 
@@ -81,6 +83,7 @@ VALID_RULES = frozenset({
     "regular_chain",       # after placing regular, if stone counts are equal, may place another regular
     "regular_chain_safe",  # same as regular_chain, but the bonus stone may not complete a 3-in-a-row
     "regular_chain_any",   # same trigger as regular_chain, but the bonus stone may be any from hand
+    "merge_stinky_shift",  # random hands draw from {regular, 2048, rotate, magnet, chain, stinky_shift} (no shift/stinky)
 })
 
 
@@ -157,16 +160,20 @@ def subsquares_for(pos: int):
 
 # ── Effects ──
 
-def apply_shift(board, pos: int, direction: str) -> None:
+def apply_shift(board, pos: int, direction: str) -> int:
+    """Apply shift; return the new position of the stone originally at `pos`."""
     r, c = pos // 3, pos % 3
     if direction in ("left", "right"):
         idx = [r * 3, r * 3 + 1, r * 3 + 2]
     else:
         idx = [c, c + 3, c + 6]
+    pos_in_row = idx.index(pos)
     v = [board[i] for i in idx]
     shift = 2 if direction in ("right", "down") else 1
     for i in range(3):
         board[idx[i]] = v[(i + shift) % 3]
+    # board[idx[i]] = v[(i + shift) % 3]  ⇒  v[k] ends up at idx[(k - shift) % 3]
+    return idx[(pos_in_row - shift) % 3]
 
 
 def apply_2048(board, direction: str) -> None:
@@ -201,6 +208,10 @@ def apply_effect(state: State, action: dict) -> None:
     p = state.placed_pos
     if t == "shift":
         apply_shift(state.board, p, action["direction"])
+    elif t == "stinky_shift":
+        # Shift moves the stinky_shift stone too; track its new position so the
+        # subsequent stinky restriction is anchored to where it actually ended up.
+        state.placed_pos = apply_shift(state.board, p, action["direction"])
     elif t == "2048":
         apply_2048(state.board, action["direction"])
     elif t == "rotate":
@@ -255,7 +266,7 @@ def get_place_actions(s: State):
 def get_effect_actions(s: State):
     t = s.selected_stone
     p = s.placed_pos
-    if t == "shift" or t == "2048":
+    if t in ("shift", "2048", "stinky_shift"):
         return [{"type": "effect", "direction": d} for d in DIRECTIONS]
     if t == "rotate":
         return [{"type": "effect", "subsquare": sq} for sq in subsquares_for(p)]
@@ -692,9 +703,18 @@ def print_state(s: State) -> None:
           + (f"  restriction={s.restriction.type}@{s.restriction.pos}" if s.restriction else ""))
 
 
-def random_hand(rng: random.Random, pool=None):
-    pool = pool if pool is not None else TYPES
+def random_hand(rng: random.Random, pool=None, rules=frozenset()):
+    if pool is None:
+        pool = pool_for_rules(rules)
     return [rng.choice(pool) for _ in range(5)]
+
+
+def pool_for_rules(rules):
+    """Default stone pool for random hand generation given active rules."""
+    if "merge_stinky_shift" in rules:
+        return [t for t in TYPES if t not in ("shift", "stinky")]
+    # Vanilla: original 7 types only (stinky_shift only appears under the rule)
+    return [t for t in TYPES if t != "stinky_shift"]
 
 
 # ═══════════════════════════════════════
