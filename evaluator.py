@@ -83,7 +83,10 @@ VALID_RULES = frozenset({
     "regular_chain",       # after placing regular, if stone counts are equal, may place another regular
     "regular_chain_safe",  # same as regular_chain, but the bonus stone may not complete a 3-in-a-row
     "regular_chain_any",   # same trigger as regular_chain, but the bonus stone may be any from hand
+    "any_chain_any",       # bonus triggers on ANY stone placement (not just regular) when counts equal
     "merge_stinky_shift",  # random hands draw from {regular, 2048, rotate, magnet, chain, stinky_shift} (no shift/stinky)
+    "second_free_stone",   # second player places a free regular before turn 1
+    "first_smaller_hand",  # first player drops one stone from their hand at game start
 })
 
 
@@ -295,6 +298,8 @@ def get_legal_actions(s: State):
         return get_regular_bonus_actions(s)
     if s.phase == "regular_chain_select":
         return get_regular_chain_select_actions(s)
+    if s.phase == "pregame_place":
+        return [{"type": "pregame_place", "pos": i} for i in range(9) if not s.board[i]]
     return []
 
 
@@ -359,6 +364,15 @@ def end_turn(s: State) -> None:
         s.phase = "gameOver"
         s.win_reason = "line"
         return
+    # any_chain_any trigger: bonus on any stone placement, before switching player.
+    if "any_chain_any" in s.rules and not s.bonus_used:
+        cp = s.current_player
+        cp_count = sum(1 for c in s.board if c and c.player == cp)
+        op_count = sum(1 for c in s.board if c and c.player == other)
+        if cp_count == op_count and s.hands[cp]:
+            s.phase = "regular_chain_select"
+            s.bonus_used = True
+            return
     s.current_player = other
     s.selected_stone = None
     s.placed_pos = None
@@ -445,15 +459,37 @@ def do_action(s: State, a: dict) -> None:
         s.hands[s.current_player].remove(a["stoneType"])
         s.selected_stone = a["stoneType"]
         s.phase = "place"
+    elif t == "pregame_place":
+        # Second player places a free regular (not from hand) before the first
+        # player's turn 1.
+        s.board[a["pos"]] = Stone(s.current_player, "regular")
+        s.current_player = opp(s.current_player)
+        s.phase = "select"
+        s.history.add(hash_state(s))
 
 
-def init_game_state(hands_x, hands_o, first_player: str, rules=frozenset()) -> State:
+def init_game_state(hands_x, hands_o, first_player: str, rules=frozenset(), rng=None) -> State:
+    rules = frozenset(rules)
+    hx = list(hands_x)
+    ho = list(hands_o)
+    if "first_smaller_hand" in rules:
+        # Drop one stone from the FIRST player's hand. Deterministic drop of the
+        # alphabetically-first stone keeps tests reproducible without an rng.
+        first_hand = hx if first_player == "X" else ho
+        if first_hand:
+            drop = sorted(first_hand)[0]
+            first_hand.remove(drop)
     s = State(
         board=[None] * 9,
-        hands={"X": list(hands_x), "O": list(hands_o)},
+        hands={"X": hx, "O": ho},
         current_player=first_player,
-        rules=frozenset(rules),
+        rules=rules,
     )
+    if "second_free_stone" in rules:
+        # The other player goes BEFORE the first player to place a free regular.
+        # After their placement, current_player flips back to first_player.
+        s.current_player = opp(first_player)
+        s.phase = "pregame_place"
     s.history.add(hash_state(s))
     return s
 
@@ -683,6 +719,8 @@ def format_action(a: dict) -> str:
         return f"regular_chain_select {a['stoneType']}"
     if t == "regular_chain_pass":
         return "regular_chain_pass"
+    if t == "pregame_place":
+        return f"pregame_place@{a['pos']}"
     return str(a)
 
 
