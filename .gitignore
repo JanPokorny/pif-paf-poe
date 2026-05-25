@@ -4,3 +4,5 @@ sweep_output.txt
 hand_winrates.tsv
 evolution_long.txt
 evolution_trajectory.tsv
+genetic_output.txt
+genetic_trajectory.tsv
