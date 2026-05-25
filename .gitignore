@@ -2,3 +2,5 @@ __pycache__/
 *.pyc
 sweep_output.txt
 hand_winrates.tsv
+evolution_long.txt
+evolution_trajectory.tsv
