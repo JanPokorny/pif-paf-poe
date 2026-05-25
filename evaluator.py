@@ -80,6 +80,7 @@ VALID_RULES = frozenset({
     "opener_no_movement",  # first player may not open with shift/2048/rotate/chain
     "regular_chain",       # after placing regular, if stone counts are equal, may place another regular
     "regular_chain_safe",  # same as regular_chain, but the bonus stone may not complete a 3-in-a-row
+    "regular_chain_any",   # same trigger as regular_chain, but the bonus stone may be any from hand
 })
 
 
@@ -99,6 +100,7 @@ class State:
     chain_moved: Optional[set] = None
     rules: frozenset = field(default_factory=frozenset)
     turn_count: int = 0
+    bonus_used: bool = False
 
     def clone(self) -> "State":
         return State(
@@ -116,6 +118,7 @@ class State:
             chain_moved=set(self.chain_moved) if self.chain_moved is not None else None,
             rules=self.rules,
             turn_count=self.turn_count,
+            bonus_used=self.bonus_used,
         )
 
     @property
@@ -279,7 +282,20 @@ def get_legal_actions(s: State):
         return acts
     if s.phase == "regular_bonus":
         return get_regular_bonus_actions(s)
+    if s.phase == "regular_chain_select":
+        return get_regular_chain_select_actions(s)
     return []
+
+
+def get_regular_chain_select_actions(s: State):
+    acts = [{"type": "regular_chain_pass"}]
+    seen = []
+    for t in s.hands[s.current_player]:
+        if t not in seen:
+            seen.append(t)
+    for t in seen:
+        acts.append({"type": "regular_chain_select", "stoneType": t})
+    return acts
 
 
 def get_regular_bonus_actions(s: State):
@@ -335,6 +351,7 @@ def end_turn(s: State) -> None:
     s.current_player = other
     s.selected_stone = None
     s.placed_pos = None
+    s.bonus_used = False
     s.phase = "remove" if board_full(s.board) else "select"
 
 
@@ -355,16 +372,26 @@ def do_action(s: State, a: dict) -> None:
         if "opener_regular" in s.rules and s.is_opening_turn:
             end_turn(s)
             return
-        if s.selected_stone == "regular" and (
-            "regular_chain" in s.rules or "regular_chain_safe" in s.rules
+        if (
+            s.selected_stone == "regular" and not s.bonus_used and (
+                "regular_chain" in s.rules or "regular_chain_safe" in s.rules
+                or "regular_chain_any" in s.rules
+            )
         ):
             cp = s.current_player
             op = opp(cp)
             cp_count = sum(1 for c in s.board if c and c.player == cp)
             op_count = sum(1 for c in s.board if c and c.player == op)
-            if cp_count == op_count and "regular" in s.hands[cp]:
-                s.phase = "regular_bonus"
-                return
+            if cp_count == op_count:
+                if "regular_chain_any" in s.rules:
+                    if s.hands[cp]:
+                        s.phase = "regular_chain_select"
+                        s.bonus_used = True
+                        return
+                elif "regular" in s.hands[cp]:
+                    s.phase = "regular_bonus"
+                    s.bonus_used = True
+                    return
         if s.selected_stone == "chain":
             has = any(not s.board[i] and adj(i, a["pos"]) for i in range(9))
             if has:
@@ -401,6 +428,12 @@ def do_action(s: State, a: dict) -> None:
         s.board[a["pos"]] = Stone(s.current_player, "regular")
         s.placed_pos = a["pos"]
         end_turn(s)
+    elif t == "regular_chain_pass":
+        end_turn(s)
+    elif t == "regular_chain_select":
+        s.hands[s.current_player].remove(a["stoneType"])
+        s.selected_stone = a["stoneType"]
+        s.phase = "place"
 
 
 def init_game_state(hands_x, hands_o, first_player: str, rules=frozenset()) -> State:
@@ -635,6 +668,10 @@ def format_action(a: dict) -> str:
         return f"regular_bonus_place@{a['pos']}"
     if t == "regular_bonus_pass":
         return "regular_bonus_pass"
+    if t == "regular_chain_select":
+        return f"regular_chain_select {a['stoneType']}"
+    if t == "regular_chain_pass":
+        return "regular_chain_pass"
     return str(a)
 
 
