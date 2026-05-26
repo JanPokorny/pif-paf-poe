@@ -32,3 +32,4 @@ fpa_norotate_rca.txt
 genetic_norotate_output.txt
 genetic_traj_norotate.tsv
 class_eval_*.txt
+genetic_classes_output.txt

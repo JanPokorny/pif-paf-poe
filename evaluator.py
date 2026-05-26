@@ -83,14 +83,13 @@ def same_row_col(a: int, b: int) -> bool:
 CORNERS = (0, 2, 6, 8)
 
 VALID_CLASSES = frozenset({
-    "balancer",      # any-after-regular bonus (per-player version of regular_chain_any)
     "oops_stinky",   # every stone this player places also leaves a stinky restriction
     "ctrl_shift",    # this player's shift may shift ANY row/column, not just the placed one
     "polarized",     # this player may ignore the opponent's magnet restriction
     "stench",        # this player's stinky restricts the whole row+column, not just adjacency
     "set_in_stone",  # this player's regular stones can't be moved by the opponent (effect skipped)
     "corny",         # this player also wins by owning all four corners
-})
+})  # NB: "balancer" (any-after-regular) is now the global rule regular_chain_any, not a class
 
 
 VALID_RULES = frozenset({
@@ -546,18 +545,17 @@ def do_action(s: State, a: dict) -> None:
             end_turn(s)
             return
         cp = s.current_player
-        is_balancer = s.classes.get(cp) == "balancer"
         if (
             s.selected_stone == "regular" and not s.bonus_used and (
                 "regular_chain" in s.rules or "regular_chain_safe" in s.rules
-                or "regular_chain_any" in s.rules or is_balancer
+                or "regular_chain_any" in s.rules
             )
         ):
             op = opp(cp)
             cp_count = sum(1 for c in s.board if c and c.player == cp)
             op_count = sum(1 for c in s.board if c and c.player == op)
             if cp_count == op_count:
-                if "regular_chain_any" in s.rules or is_balancer:
+                if "regular_chain_any" in s.rules:
                     if s.hands[cp]:
                         s.phase = "regular_chain_select"
                         s.bonus_used = True
