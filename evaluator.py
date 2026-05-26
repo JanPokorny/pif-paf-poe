@@ -89,6 +89,7 @@ VALID_RULES = frozenset({
     "first_smaller_hand",  # first player drops one stone from their hand at game start
     "second_picks_first_full",  # P2 picks P1's first-turn stone type AND placement (effects skipped)
     "p2_double_first_p1_picks", # P2 may play a second stone on T2; P1 picks which from P2's hand and where
+    "second_free_stone_corner", # like second_free_stone but P2's free regular must go in a corner
 })
 
 
@@ -301,7 +302,8 @@ def get_legal_actions(s: State):
     if s.phase == "regular_chain_select":
         return get_regular_chain_select_actions(s)
     if s.phase == "pregame_place":
-        return [{"type": "pregame_place", "pos": i} for i in range(9) if not s.board[i]]
+        cells = (0, 2, 6, 8) if "second_free_stone_corner" in s.rules else range(9)
+        return [{"type": "pregame_place", "pos": i} for i in cells if not s.board[i]]
     if s.phase == "second_picks_first_full":
         # P2 (current_player) picks both stone type and position for P1's first move.
         first_player = opp(s.current_player)
@@ -563,7 +565,7 @@ def init_game_state(hands_x, hands_o, first_player: str, rules=frozenset(), rng=
         current_player=first_player,
         rules=rules,
     )
-    if "second_free_stone" in rules:
+    if "second_free_stone" in rules or "second_free_stone_corner" in rules:
         # The other player goes BEFORE the first player to place a free regular.
         # After their placement, current_player flips back to first_player.
         s.current_player = opp(first_player)
