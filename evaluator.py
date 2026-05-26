@@ -87,6 +87,8 @@ VALID_RULES = frozenset({
     "merge_stinky_shift",  # random hands draw from {regular, 2048, rotate, magnet, chain, stinky_shift} (no shift/stinky)
     "second_free_stone",   # second player places a free regular before turn 1
     "first_smaller_hand",  # first player drops one stone from their hand at game start
+    "second_picks_first_full",  # P2 picks P1's first-turn stone type AND placement (effects skipped)
+    "p2_double_first_p1_picks", # P2 may play a second stone on T2; P1 picks which from P2's hand and where
 })
 
 
@@ -300,6 +302,34 @@ def get_legal_actions(s: State):
         return get_regular_chain_select_actions(s)
     if s.phase == "pregame_place":
         return [{"type": "pregame_place", "pos": i} for i in range(9) if not s.board[i]]
+    if s.phase == "second_picks_first_full":
+        # P2 (current_player) picks both stone type and position for P1's first move.
+        first_player = opp(s.current_player)
+        acts = []
+        seen = set()
+        for t in s.hands[first_player]:
+            if t in seen:
+                continue
+            seen.add(t)
+            for i in range(9):
+                if s.board[i] is None:
+                    acts.append({"type": "second_picks_first_full", "stoneType": t, "pos": i})
+        return acts
+    if s.phase == "p2_double_choice":
+        return [{"type": "p2_double_choice_skip"}, {"type": "p2_double_choice_use"}]
+    if s.phase == "p1_picks_p2_double":
+        # P1 (current_player) picks a stone from P2's hand and where to place it for P2.
+        p2 = opp(s.current_player)
+        acts = []
+        seen = set()
+        for t in s.hands[p2]:
+            if t in seen:
+                continue
+            seen.add(t)
+            for i in range(9):
+                if s.board[i] is None:
+                    acts.append({"type": "p1_picks_p2_double", "stoneType": t, "pos": i})
+        return acts
     return []
 
 
@@ -373,6 +403,20 @@ def end_turn(s: State) -> None:
             s.phase = "regular_chain_select"
             s.bonus_used = True
             return
+    # p2_double_first_p1_picks trigger: at the end of P2's first turn (T2),
+    # offer P2 the option to play a second stone (where P1 picks). bonus_used
+    # is reused to prevent re-trigger within the same turn chain.
+    if (
+        "p2_double_first_p1_picks" in s.rules
+        and s.turn_count == 2
+        and not s.bonus_used
+        and s.hands[s.current_player]
+    ):
+        s.phase = "p2_double_choice"
+        s.bonus_used = True
+        s.selected_stone = None
+        s.placed_pos = None
+        return
     s.current_player = other
     s.selected_stone = None
     s.placed_pos = None
@@ -471,6 +515,35 @@ def do_action(s: State, a: dict) -> None:
         s.current_player = opp(s.current_player)
         s.phase = "select"
         s.history.add(hash_state(s))
+    elif t == "second_picks_first_full":
+        # P2 (current_player) chose (stoneType, pos) for P1's first move.
+        # Run as if P1 placed a regular at that cell (no effect, no restriction).
+        first_player = opp(s.current_player)
+        s.hands[first_player].remove(a["stoneType"])
+        s.board[a["pos"]] = Stone(first_player, a["stoneType"])
+        s.placed_pos = a["pos"]
+        s.selected_stone = "regular"  # so end_turn skips restriction and effects
+        s.current_player = first_player  # so end_turn checks win from P1's view
+        end_turn(s)
+    elif t == "p2_double_choice_skip":
+        # P2 declines the bonus. Mirror the player switch that end_turn would have done.
+        s.current_player = opp(s.current_player)
+        s.selected_stone = None
+        s.placed_pos = None
+        s.phase = "remove" if board_full(s.board) else "select"
+    elif t == "p2_double_choice_use":
+        # Hand off to P1 to pick a stone + position from P2's hand.
+        s.current_player = opp(s.current_player)
+        s.phase = "p1_picks_p2_double"
+    elif t == "p1_picks_p2_double":
+        # P1 picks a stone from P2's hand and where to put it for P2 (regular-like).
+        p2 = opp(s.current_player)
+        s.hands[p2].remove(a["stoneType"])
+        s.board[a["pos"]] = Stone(p2, a["stoneType"])
+        s.placed_pos = a["pos"]
+        s.selected_stone = "regular"  # skip effects/restriction
+        s.current_player = p2  # end_turn evaluates from P2's perspective
+        end_turn(s)
 
 
 def init_game_state(hands_x, hands_o, first_player: str, rules=frozenset(), rng=None) -> State:
@@ -495,6 +568,11 @@ def init_game_state(hands_x, hands_o, first_player: str, rules=frozenset(), rng=
         # After their placement, current_player flips back to first_player.
         s.current_player = opp(first_player)
         s.phase = "pregame_place"
+    if "second_picks_first_full" in rules:
+        # The other player picks (stone type, position) for the first player's
+        # very first move. After this action, end_turn flips to the second player.
+        s.current_player = opp(first_player)
+        s.phase = "second_picks_first_full"
     s.history.add(hash_state(s))
     return s
 
@@ -726,6 +804,14 @@ def format_action(a: dict) -> str:
         return "regular_chain_pass"
     if t == "pregame_place":
         return f"pregame_place@{a['pos']}"
+    if t == "second_picks_first_full":
+        return f"second_picks_first_full {a['stoneType']}@{a['pos']}"
+    if t == "p2_double_choice_skip":
+        return "p2_double_choice_skip"
+    if t == "p2_double_choice_use":
+        return "p2_double_choice_use"
+    if t == "p1_picks_p2_double":
+        return f"p1_picks_p2_double {a['stoneType']}@{a['pos']}"
     return str(a)
 
 
