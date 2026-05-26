@@ -131,7 +131,7 @@ h1{font-size:2.6em;text-align:center;margin:18px 0 4px;background:linear-gradien
 <!-- Setup Screen -->
 <div id="setup" class="screen active">
 <h1>PIF PAF POE</h1>
-<p class="subtitle">Strategic tic-tac-toe with special stones</p>
+<p class="subtitle">Strategic tic-tac-toe with special stones · Regular Chain: place a regular to even the stone count, then place a bonus stone of any type</p>
 <div class="setup-grid">
   <div class="panel">
     <h2><span class="badge badge-blue">X</span> Your Stones</h2>
@@ -229,7 +229,7 @@ function adj(a,b){const r1=Math.floor(a/3),c1=a%3,r2=Math.floor(b/3),c2=b%3;retu
 function boardFull(b){return b.every(c=>c!==null)}
 
 function cloneState(s){
-  return{board:s.board.map(c=>c?{player:c.player,type:c.type}:null),hands:{X:[...s.hands.X],O:[...s.hands.O]},currentPlayer:s.currentPlayer,restriction:s.restriction?{type:s.restriction.type,pos:s.restriction.pos}:null,history:new Set(s.history),phase:s.phase,selectedStone:s.selectedStone,placedPos:s.placedPos,winner:s.winner,chainEmpty:s.chainEmpty!=null?s.chainEmpty:null,chainMoved:s.chainMoved?new Set(s.chainMoved):null};
+  return{board:s.board.map(c=>c?{player:c.player,type:c.type}:null),hands:{X:[...s.hands.X],O:[...s.hands.O]},currentPlayer:s.currentPlayer,restriction:s.restriction?{type:s.restriction.type,pos:s.restriction.pos}:null,history:new Set(s.history),phase:s.phase,selectedStone:s.selectedStone,placedPos:s.placedPos,winner:s.winner,chainEmpty:s.chainEmpty!=null?s.chainEmpty:null,chainMoved:s.chainMoved?new Set(s.chainMoved):null,bonusUsed:s.bonusUsed||false};
 }
 function hashState(s){
   let h='';
@@ -314,6 +314,7 @@ function getLegalActions(s){
     case'effect':return getEffectActions(s);
     case'chainMove':{const a=[];for(let i=0;i<9;i++)if(!s.board[i]&&adj(i,s.placedPos))a.push({type:'chainMove',pos:i});return a}
     case'chainPull':{const a=[{type:'chainPass'}];for(let i=0;i<9;i++)if(s.board[i]&&adj(i,s.chainEmpty)&&!s.chainMoved.has(i))a.push({type:'chainPull',pos:i});return a}
+    case'regularChainSelect':{const a=[{type:'regularChainPass'}];for(const t of[...new Set(s.hands[s.currentPlayer])])a.push({type:'regularChainSelect',stoneType:t});return a}
     default:return[];
   }
 }
@@ -328,24 +329,37 @@ function endTurn(s){
   s.history.add(h);
   if(check3(s.board,s.currentPlayer)){s.winner=s.currentPlayer;s.phase='gameOver';s.winReason='line';return}
   if(check3(s.board,opp(s.currentPlayer))){s.winner=opp(s.currentPlayer);s.phase='gameOver';s.winReason='line';return}
-  s.currentPlayer=opp(s.currentPlayer);s.selectedStone=null;s.placedPos=null;
+  s.currentPlayer=opp(s.currentPlayer);s.selectedStone=null;s.placedPos=null;s.bonusUsed=false;
   s.phase=boardFull(s.board)?'remove':'select';
+}
+
+// Regular Chain (Any): after placing a regular, if both players now have an
+// equal number of stones on the board and you still hold a stone, you may
+// place a second stone of ANY type as a bonus.
+function regularChainTriggers(s){
+  if(s.selectedStone!=='regular'||s.bonusUsed)return false;
+  const cp=s.currentPlayer,op=opp(cp);
+  let cpN=0,opN=0;
+  for(const c of s.board){if(c){if(c.player===cp)cpN++;else opN++;}}
+  return cpN===opN&&s.hands[cp].length>0;
 }
 
 function doAction(s,a){
   switch(a.type){
     case'remove':{const st=s.board[a.pos];s.board[a.pos]=null;s.hands[st.player].push(st.type);s.phase='select';break}
     case'select':{const idx=s.hands[s.currentPlayer].indexOf(a.stoneType);s.hands[s.currentPlayer].splice(idx,1);s.selectedStone=a.stoneType;s.phase='place';break}
-    case'place':{s.board[a.pos]={player:s.currentPlayer,type:s.selectedStone};s.placedPos=a.pos;if(s.selectedStone==='chain'){let h=false;for(let i=0;i<9;i++)if(!s.board[i]&&adj(i,a.pos)){h=true;break}if(h){s.phase='chainMove';s.chainMoved=new Set()}else endTurn(s)}else if(MOVEMENT_TYPES.includes(s.selectedStone))s.phase='effect';else endTurn(s);break}
+    case'place':{s.board[a.pos]={player:s.currentPlayer,type:s.selectedStone};s.placedPos=a.pos;if(regularChainTriggers(s)){s.phase='regularChainSelect';s.bonusUsed=true;break}if(s.selectedStone==='chain'){let h=false;for(let i=0;i<9;i++)if(!s.board[i]&&adj(i,a.pos)){h=true;break}if(h){s.phase='chainMove';s.chainMoved=new Set()}else endTurn(s)}else if(MOVEMENT_TYPES.includes(s.selectedStone))s.phase='effect';else endTurn(s);break}
     case'effect':{applyEffect(s,a);endTurn(s);break}
     case'chainMove':{s.board[a.pos]=s.board[s.placedPos];s.board[s.placedPos]=null;s.chainEmpty=s.placedPos;s.chainMoved.add(a.pos);s.phase='chainPull';break}
     case'chainPass':{s.chainEmpty=null;s.chainMoved=null;endTurn(s);break}
     case'chainPull':{s.board[s.chainEmpty]=s.board[a.pos];s.board[a.pos]=null;s.chainMoved.add(s.chainEmpty);s.chainEmpty=a.pos;break}
+    case'regularChainPass':{endTurn(s);break}
+    case'regularChainSelect':{const idx=s.hands[s.currentPlayer].indexOf(a.stoneType);s.hands[s.currentPlayer].splice(idx,1);s.selectedStone=a.stoneType;s.phase='place';break}
   }
 }
 
 function initGameState(handsX,handsO,firstPlayer){
-  const s={board:Array(9).fill(null),hands:{X:[...handsX],O:[...handsO]},currentPlayer:firstPlayer,restriction:null,history:new Set(),phase:'select',selectedStone:null,placedPos:null,winner:null,chainEmpty:null,chainMoved:null};
+  const s={board:Array(9).fill(null),hands:{X:[...handsX],O:[...handsO]},currentPlayer:firstPlayer,restriction:null,history:new Set(),phase:'select',selectedStone:null,placedPos:null,winner:null,chainEmpty:null,chainMoved:null,bonusUsed:false};
   s.history.add(hashState(s));
   return s;
 }
@@ -486,13 +500,14 @@ function renderHands(){
   for(const p of['X','O']){
     const el=document.getElementById('gh-'+p.toLowerCase());el.innerHTML='';
     const color=p==='X'?'blue':'red';
-    const selectable=p===humanPlayer&&G.currentPlayer===humanPlayer&&G.phase==='select'&&!aiThinking;
+    const selPhase=G.phase==='select'||G.phase==='regularChainSelect';
+    const selectable=p===humanPlayer&&G.currentPlayer===humanPlayer&&selPhase&&!aiThinking;
     [...G.hands[p]].sort().forEach(t=>{
       const s=document.createElement('span');s.className='game-stone '+color;
       if(selectable)s.classList.add('selectable');
-      else if(G.phase!=='select'||G.currentPlayer!==p)s.classList.add('dim');
+      else if(!selPhase||G.currentPlayer!==p)s.classList.add('dim');
       s.textContent=TYPE_INFO[t].icon+' '+TYPE_INFO[t].name;
-      if(selectable)s.onclick=()=>humanAction({type:'select',stoneType:t});
+      if(selectable)s.onclick=()=>humanAction({type:G.phase==='regularChainSelect'?'regularChainSelect':'select',stoneType:t});
       el.appendChild(s);
     });
   }
@@ -546,6 +561,7 @@ function renderMessage(){
   switch(G.phase){
     case'remove':msg.textContent="Remove one of AI's stones from the board";break;
     case'select':msg.textContent='Select a stone from your hand';break;
+    case'regularChainSelect':{msg.textContent='⛓ Bonus! Stones are even — select another stone to place, or skip.';const b=document.createElement('button');b.className='act-btn';b.textContent='■ Skip bonus';b.onclick=()=>humanAction({type:'regularChainPass'});acts.appendChild(b);break}
     case'place':msg.textContent='Place your '+TYPE_INFO[G.selectedStone].name+' stone on the board';break;
     case'effect':msg.textContent='Choose effect for '+TYPE_INFO[G.selectedStone].name;renderEffectButtons(acts);break;
     case'chainMove':msg.textContent='Move your Chain to an adjacent empty space';break;
