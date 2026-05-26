@@ -73,6 +73,24 @@ class Stone:
 class Restriction:
     type: str
     pos: int
+    variant: Optional[str] = None  # e.g. "stench" → restricts whole row+column instead of adjacency
+
+
+def same_row_col(a: int, b: int) -> bool:
+    return a // 3 == b // 3 or a % 3 == b % 3
+
+
+CORNERS = (0, 2, 6, 8)
+
+VALID_CLASSES = frozenset({
+    "balancer",      # any-after-regular bonus (per-player version of regular_chain_any)
+    "oops_stinky",   # every stone this player places also leaves a stinky restriction
+    "ctrl_shift",    # this player's shift may shift ANY row/column, not just the placed one
+    "polarized",     # this player may ignore the opponent's magnet restriction
+    "stench",        # this player's stinky restricts the whole row+column, not just adjacency
+    "set_in_stone",  # this player's regular stones can't be moved by the opponent (effect skipped)
+    "corny",         # this player also wins by owning all four corners
+})
 
 
 VALID_RULES = frozenset({
@@ -111,13 +129,14 @@ class State:
     rules: frozenset = field(default_factory=frozenset)
     turn_count: int = 0
     bonus_used: bool = False
+    classes: dict = field(default_factory=lambda: {"X": None, "O": None})
 
     def clone(self) -> "State":
         return State(
             board=[c.clone() if c else None for c in self.board],
             hands={"X": list(self.hands["X"]), "O": list(self.hands["O"])},
             current_player=self.current_player,
-            restriction=Restriction(self.restriction.type, self.restriction.pos) if self.restriction else None,
+            restriction=Restriction(self.restriction.type, self.restriction.pos, self.restriction.variant) if self.restriction else None,
             history=set(self.history),
             phase=self.phase,
             selected_stone=self.selected_stone,
@@ -129,6 +148,7 @@ class State:
             rules=self.rules,
             turn_count=self.turn_count,
             bonus_used=self.bonus_used,
+            classes=self.classes,
         )
 
     @property
@@ -147,7 +167,26 @@ def hash_state(s: State) -> str:
     parts.append("|")
     if s.restriction:
         parts.append(s.restriction.type[0] + str(s.restriction.pos))
+        if s.restriction.variant:
+            parts.append(s.restriction.variant[0])
     return "".join(parts)
+
+
+def _restriction_ok_cells(s: State, free):
+    """Filter candidate cells by the active restriction, honoring the current
+    player's class (polarized ignores magnet; stench restriction covers row+col)."""
+    r = s.restriction
+    if not r:
+        return free
+    cp_class = s.classes.get(s.current_player)
+    if r.type == "magnet":
+        if cp_class == "polarized":
+            return free  # may ignore opponent's magnet
+        return [i for i in free if adj(i, r.pos)]
+    # stinky / stinky_shift
+    if r.variant == "stench":
+        return [i for i in free if not same_row_col(i, r.pos)]
+    return [i for i in free if not adj(i, r.pos)]
 
 
 def board_full(board) -> bool:
@@ -212,17 +251,44 @@ def apply_rotate(board, sq: str) -> None:
 
 def apply_effect(state: State, action: dict) -> None:
     t = state.selected_stone
-    p = state.placed_pos
+    # Ctrl+Shift may target a different line than the placed stone's.
+    p = action.get("line", state.placed_pos)
+    new_board = [c.clone() if c else None for c in state.board]
+    new_placed = state.placed_pos
     if t == "shift":
-        apply_shift(state.board, p, action["direction"])
+        moved_to = apply_shift(new_board, p, action["direction"])
+        if action.get("line") is None:
+            new_placed = moved_to
     elif t == "stinky_shift":
-        # Shift moves the stinky_shift stone too; track its new position so the
-        # subsequent stinky restriction is anchored to where it actually ended up.
-        state.placed_pos = apply_shift(state.board, p, action["direction"])
+        # Shift moves the stinky_shift stone; track its new position for the
+        # subsequent stinky restriction (only if it was on the shifted line).
+        if action.get("line") is None or _on_line(state.placed_pos, p, action["direction"]):
+            new_placed = apply_shift(new_board, p, action["direction"])
+        else:
+            apply_shift(new_board, p, action["direction"])
     elif t == "2048":
-        apply_2048(state.board, action["direction"])
+        apply_2048(new_board, action["direction"])
     elif t == "rotate":
-        apply_rotate(state.board, action["subsquare"])
+        apply_rotate(new_board, action["subsquare"])
+    else:
+        return
+    # Set in stone: opponent's movement may not displace this player's regulars.
+    prot = opp(state.current_player)
+    if state.classes.get(prot) == "set_in_stone":
+        before = {i for i, c in enumerate(state.board) if c and c.player == prot and c.type == "regular"}
+        after = {i for i, c in enumerate(new_board) if c and c.player == prot and c.type == "regular"}
+        if before != after:
+            return  # effect skipped entirely; board unchanged
+    state.board[:] = new_board
+    state.placed_pos = new_placed
+
+
+def _on_line(pos: int, line_pos: int, direction: str) -> bool:
+    if pos is None:
+        return False
+    if direction in ("left", "right"):
+        return pos // 3 == line_pos // 3
+    return pos % 3 == line_pos % 3
 
 
 # ── Legal actions ──
@@ -232,10 +298,7 @@ def get_remove_actions(s: State):
     cands = [i for i in range(9) if s.board[i] and s.board[i].player == o]
     if s.restriction:
         no_r = [i for i in cands if i != s.restriction.pos]
-        if s.restriction.type == "magnet":
-            ful = [i for i in no_r if adj(i, s.restriction.pos)]
-        else:
-            ful = [i for i in no_r if not adj(i, s.restriction.pos)]
+        ful = _restriction_ok_cells(s, no_r)
         pool = ful if ful else (no_r if no_r else cands)
         return [{"type": "remove", "pos": p} for p in pool]
     return [{"type": "remove", "pos": p} for p in cands]
@@ -261,10 +324,7 @@ def get_place_actions(s: State):
         if filtered:
             free = filtered
     if s.restriction:
-        if s.restriction.type == "magnet":
-            ok = [i for i in free if adj(i, s.restriction.pos)]
-        else:
-            ok = [i for i in free if not adj(i, s.restriction.pos)]
+        ok = _restriction_ok_cells(s, free)
         if ok:
             free = ok
     return [{"type": "place", "pos": p} for p in free]
@@ -273,6 +333,16 @@ def get_place_actions(s: State):
 def get_effect_actions(s: State):
     t = s.selected_stone
     p = s.placed_pos
+    if t == "shift" and s.classes.get(s.current_player) == "ctrl_shift":
+        # Ctrl+Shift: shift ANY row (left/right) or column (up/down).
+        acts = []
+        for r in range(3):
+            for d in ("left", "right"):
+                acts.append({"type": "effect", "direction": d, "line": r * 3})
+        for c in range(3):
+            for d in ("up", "down"):
+                acts.append({"type": "effect", "direction": d, "line": c})
+        return acts
     if t in ("shift", "2048", "stinky_shift"):
         return [{"type": "effect", "direction": d} for d in DIRECTIONS]
     if t == "rotate":
@@ -293,9 +363,14 @@ def get_legal_actions(s: State):
         return [{"type": "chainMove", "pos": i} for i in range(9)
                 if not s.board[i] and adj(i, s.placed_pos)]
     if s.phase == "chainPull":
+        # Set in stone: a protected player's regulars can't be pulled by the opponent.
+        prot = opp(s.current_player)
+        protect = s.classes.get(prot) == "set_in_stone"
         acts = [{"type": "chainPass"}]
         for i in range(9):
             if s.board[i] and adj(i, s.chain_empty) and i not in s.chain_moved:
+                if protect and s.board[i].player == prot and s.board[i].type == "regular":
+                    continue
                 acts.append({"type": "chainPull", "pos": i})
         return acts
     if s.phase == "regular_bonus":
@@ -356,10 +431,7 @@ def get_regular_bonus_actions(s: State):
     acts = [{"type": "regular_bonus_pass"}]
     free = [i for i in range(9) if not s.board[i]]
     if s.restriction:
-        if s.restriction.type == "magnet":
-            ok = [i for i in free if adj(i, s.restriction.pos)]
-        else:
-            ok = [i for i in free if not adj(i, s.restriction.pos)]
+        ok = _restriction_ok_cells(s, free)
         if ok:
             free = ok
     if "regular_chain_safe" in s.rules:
@@ -377,11 +449,30 @@ def get_regular_bonus_actions(s: State):
 
 # ── State transitions ──
 
+def _has_won(s: State, player: str) -> bool:
+    if check3(s.board, player):
+        return True
+    if s.classes.get(player) == "corny" and all(
+        s.board[c] and s.board[c].player == player for c in CORNERS
+    ):
+        return True
+    return False
+
+
 def end_turn(s: State) -> None:
     s.turn_count += 1
+    cp = s.current_player
     opener_pass = "opener_regular" in s.rules and s.is_opening_turn
-    if not opener_pass and s.selected_stone in RESTRICTION_TYPES:
-        s.restriction = Restriction(s.selected_stone, s.placed_pos)
+    if opener_pass:
+        s.restriction = None
+    elif s.selected_stone in RESTRICTION_TYPES:
+        variant = "stench" if (s.classes.get(cp) == "stench"
+                               and s.selected_stone in ("stinky", "stinky_shift")) else None
+        s.restriction = Restriction(s.selected_stone, s.placed_pos, variant)
+    elif s.classes.get(cp) == "oops_stinky" and s.placed_pos is not None:
+        # Every non-restriction stone this player places also leaves a stinky.
+        variant = "stench" if False else None  # one class per player; no stench stacking
+        s.restriction = Restriction("stinky", s.placed_pos, variant)
     else:
         s.restriction = None
     h = hash_state(s)
@@ -391,13 +482,13 @@ def end_turn(s: State) -> None:
         s.win_reason = "repeat"
         return
     s.history.add(h)
-    if check3(s.board, s.current_player):
+    if _has_won(s, s.current_player):
         s.winner = s.current_player
         s.phase = "gameOver"
         s.win_reason = "line"
         return
     other = opp(s.current_player)
-    if check3(s.board, other):
+    if _has_won(s, other):
         s.winner = other
         s.phase = "gameOver"
         s.win_reason = "line"
@@ -454,18 +545,19 @@ def do_action(s: State, a: dict) -> None:
         if "opener_regular" in s.rules and s.is_opening_turn:
             end_turn(s)
             return
+        cp = s.current_player
+        is_balancer = s.classes.get(cp) == "balancer"
         if (
             s.selected_stone == "regular" and not s.bonus_used and (
                 "regular_chain" in s.rules or "regular_chain_safe" in s.rules
-                or "regular_chain_any" in s.rules
+                or "regular_chain_any" in s.rules or is_balancer
             )
         ):
-            cp = s.current_player
             op = opp(cp)
             cp_count = sum(1 for c in s.board if c and c.player == cp)
             op_count = sum(1 for c in s.board if c and c.player == op)
             if cp_count == op_count:
-                if "regular_chain_any" in s.rules:
+                if "regular_chain_any" in s.rules or is_balancer:
                     if s.hands[cp]:
                         s.phase = "regular_chain_select"
                         s.bonus_used = True
@@ -554,7 +646,7 @@ def do_action(s: State, a: dict) -> None:
         end_turn(s)
 
 
-def init_game_state(hands_x, hands_o, first_player: str, rules=frozenset(), rng=None) -> State:
+def init_game_state(hands_x, hands_o, first_player: str, rules=frozenset(), rng=None, classes=None) -> State:
     rules = frozenset(rules)
     hx = list(hands_x)
     ho = list(hands_o)
@@ -565,11 +657,15 @@ def init_game_state(hands_x, hands_o, first_player: str, rules=frozenset(), rng=
         if first_hand:
             drop = sorted(first_hand)[0]
             first_hand.remove(drop)
+    cls = {"X": None, "O": None}
+    if classes:
+        cls.update(classes)
     s = State(
         board=[None] * 9,
         hands={"X": hx, "O": ho},
         current_player=first_player,
         rules=rules,
+        classes=cls,
     )
     if "second_free_stone" in rules or "second_free_stone_corner" in rules or "second_free_stone_edge" in rules:
         # The other player goes BEFORE the first player to place a free regular.
@@ -734,8 +830,9 @@ def play_game(
     max_actions: int = 600,
     verbose: bool = False,
     rules=frozenset(),
+    classes=None,
 ):
-    s = init_game_state(hands_x, hands_o, first_player, rules=rules)
+    s = init_game_state(hands_x, hands_o, first_player, rules=rules, classes=classes)
     moves = 0
     if verbose:
         print_state(s)
@@ -775,12 +872,18 @@ def play_game(
 #
 # A spec is a tuple:
 #   (hands_x, hands_o, first_player, rules, agent_spec, iters, time_ms, seed)
+# optionally with a trailing classes dict:
+#   (..., seed, classes)
 
 def _play_one_spec(spec):
-    hands_x, hands_o, first, rules, agent_spec, iters, time_ms, seed = spec
+    if len(spec) == 9:
+        hands_x, hands_o, first, rules, agent_spec, iters, time_ms, seed, classes = spec
+    else:
+        hands_x, hands_o, first, rules, agent_spec, iters, time_ms, seed = spec
+        classes = None
     rng = random.Random(seed)
     agent = make_agent(agent_spec, iters, time_ms, rng)
-    return play_game(hands_x, hands_o, first, agent, agent, rules=rules)
+    return play_game(hands_x, hands_o, first, agent, agent, rules=rules, classes=classes)
 
 
 def play_games_parallel(specs, processes=None):
