@@ -76,16 +76,29 @@ def main():
     ap.add_argument("--snapshot-file", default=None)
     ap.add_argument("--rule", action="append", default=[],
                     help=f"rule variant (repeatable or comma-separated); valid: {','.join(sorted(VALID_RULES))}")
+    ap.add_argument("--veto", action="append", default=[],
+                    help="stone type(s) to exclude from the hand pool (repeatable or comma-separated)")
     args = ap.parse_args()
 
     rng = random.Random(args.seed)
     rules = parse_rules(args.rule)
+    veto = set()
+    for v in args.veto:
+        for part in v.split(","):
+            part = part.strip()
+            if part:
+                if part not in TYPES:
+                    raise SystemExit(f"unknown stone type {part!r}; valid: {','.join(TYPES)}")
+                veto.add(part)
     agent = make_agent("mcts", args.iters, None, rng)
 
-    population = all_hand_tuples(pool=pool_for_rules(rules))
+    pool = [t for t in pool_for_rules(rules) if t not in veto]
+    population = all_hand_tuples(pool=pool)
     n = len(population)
     elim = max(1, int(n * args.elim_pct / 100))
     print(f"population={n}  elim/dup={elim}  games_per_hand={args.games_per_hand}  iters={args.iters}")
+    if veto:
+        print(f"veto: {','.join(sorted(veto))}  (pool: {','.join(pool)})")
     if rules:
         print(f"rules: {','.join(sorted(rules))}")
     print(f"initial unique={len(set(population))}")

@@ -14,7 +14,7 @@ import random
 import time
 
 from evaluator import (
-    VALID_RULES, make_agent, parse_rules, play_game, random_hand,
+    TYPES, VALID_RULES, make_agent, parse_rules, play_game, random_hand, pool_for_rules,
 )
 
 
@@ -25,10 +25,21 @@ def main():
     ap.add_argument("--seed", type=int, default=2026)
     ap.add_argument("--rule", action="append", default=[],
                     help=f"rule variant (repeatable or comma-separated); valid: {','.join(sorted(VALID_RULES))}")
+    ap.add_argument("--veto", action="append", default=[],
+                    help="stone type(s) to exclude from the random-hand pool (repeatable or comma-separated)")
     args = ap.parse_args()
 
     rng = random.Random(args.seed)
     rules = parse_rules(args.rule)
+    veto = set()
+    for v in args.veto:
+        for part in v.split(","):
+            part = part.strip()
+            if part:
+                if part not in TYPES:
+                    raise SystemExit(f"unknown stone type {part!r}; valid: {','.join(TYPES)}")
+                veto.add(part)
+    pool = [t for t in pool_for_rules(rules) if t not in veto]
     agent = make_agent("mcts", args.iters, None, rng)
 
     first_wins = 0
@@ -37,8 +48,8 @@ def main():
 
     t0 = time.time()
     for p in range(args.pairs):
-        ha = random_hand(rng, rules=rules)
-        hb = random_hand(rng, rules=rules)
+        ha = random_hand(rng, pool=pool)
+        hb = random_hand(rng, pool=pool)
         for first_hand_is_a in (True, False):
             hx = ha if first_hand_is_a else hb
             ho = hb if first_hand_is_a else ha
@@ -59,6 +70,8 @@ def main():
         print(f"rules: {','.join(sorted(rules))}")
     else:
         print("rules: (vanilla)")
+    if veto:
+        print(f"veto: {','.join(sorted(veto))}  (pool: {','.join(pool)})")
     print(f"games: {total}")
     print(f"first-player wins:  {first_wins}  ({100*first_wins/total:.1f}%)")
     print(f"second-player wins: {second_wins} ({100*second_wins/total:.1f}%)")
