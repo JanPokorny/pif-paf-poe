@@ -23,3 +23,5 @@ genetic_C_output.txt
 genetic_traj_C.tsv
 fpa_v1.txt
 fpa_v2.txt
+fpa_corner.txt
+fpa_corner_mss.txt
