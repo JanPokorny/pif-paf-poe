@@ -27,3 +27,7 @@ fpa_corner.txt
 fpa_corner_mss.txt
 fpa_edge.txt
 fpa_aca.txt
+fpa_norotate_vanilla.txt
+fpa_norotate_rca.txt
+genetic_norotate_output.txt
+genetic_traj_norotate.tsv
