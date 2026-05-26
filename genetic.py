@@ -18,7 +18,7 @@ import random
 import time
 from collections import Counter, defaultdict
 
-from evaluator import TYPES, VALID_RULES, format_hand, make_agent, parse_rules, play_game, pool_for_rules
+from evaluator import TYPES, VALID_RULES, format_hand, parse_rules, play_games_parallel, pool_for_rules
 
 
 def all_hand_tuples(pool=None):
@@ -30,26 +30,27 @@ def _empty_stats():
     return {"games_first": 0, "wins_first": 0, "games_second": 0, "wins_second": 0}
 
 
-def tournament(population, games_per_hand, agent, rng, rules, hand_stats):
+def tournament(population, games_per_hand, iters, rng, rules, hand_stats, processes):
     n = len(population)
     wins = [0] * n
     games_played = [0] * n
     total = games_per_hand * n // 2
+    # Pre-draw all pairings (deterministic from rng), then play in parallel.
+    pairings = []  # (first_idx, second_idx)
+    specs = []
     for _ in range(total):
         i, j = rng.sample(range(n), 2)
-        hi, hj = list(population[i]), list(population[j])
-        key_i = population[i]  # already sorted tuple
-        key_j = population[j]
         if rng.random() < 0.5:
-            # i first, j second
-            w, _, _, _ = play_game(hi, hj, "X", agent, agent, rules=rules)
-            first_key, second_key = key_i, key_j
             first_idx, second_idx = i, j
         else:
-            # j first, i second
-            w, _, _, _ = play_game(hj, hi, "X", agent, agent, rules=rules)
-            first_key, second_key = key_j, key_i
             first_idx, second_idx = j, i
+        pairings.append((first_idx, second_idx))
+        specs.append((list(population[first_idx]), list(population[second_idx]),
+                      "X", rules, "mcts", iters, None, rng.randrange(1 << 30)))
+    results = play_games_parallel(specs, processes=processes)
+    for (first_idx, second_idx), (w, *_rest) in zip(pairings, results):
+        first_key = population[first_idx]
+        second_key = population[second_idx]
         hand_stats[first_key]["games_first"] += 1
         hand_stats[second_key]["games_second"] += 1
         if w == "X":
@@ -58,8 +59,8 @@ def tournament(population, games_per_hand, agent, rng, rules, hand_stats):
         else:
             wins[second_idx] += 1
             hand_stats[second_key]["wins_second"] += 1
-        games_played[i] += 1
-        games_played[j] += 1
+        games_played[first_idx] += 1
+        games_played[second_idx] += 1
     fitness = [wins[k] / max(1, games_played[k]) for k in range(n)]
     return fitness, wins, games_played
 
@@ -78,6 +79,7 @@ def main():
                     help=f"rule variant (repeatable or comma-separated); valid: {','.join(sorted(VALID_RULES))}")
     ap.add_argument("--veto", action="append", default=[],
                     help="stone type(s) to exclude from the hand pool (repeatable or comma-separated)")
+    ap.add_argument("--processes", type=int, default=None, help="worker processes (default: all cores)")
     args = ap.parse_args()
 
     rng = random.Random(args.seed)
@@ -90,8 +92,6 @@ def main():
                 if part not in TYPES:
                     raise SystemExit(f"unknown stone type {part!r}; valid: {','.join(TYPES)}")
                 veto.add(part)
-    agent = make_agent("mcts", args.iters, None, rng)
-
     pool = [t for t in pool_for_rules(rules) if t not in veto]
     population = all_hand_tuples(pool=pool)
     n = len(population)
@@ -109,7 +109,7 @@ def main():
     for gen in range(args.generations):
         gt = time.time()
         fitness, wins, games_played = tournament(
-            population, args.games_per_hand, agent, rng, rules, hand_stats
+            population, args.games_per_hand, args.iters, rng, rules, hand_stats, args.processes
         )
         ranked = sorted(range(n), key=lambda k: (fitness[k], wins[k]), reverse=True)
         top_idx = ranked[:elim]

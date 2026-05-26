@@ -16,7 +16,7 @@ import argparse
 import random
 import time
 
-from evaluator import VALID_RULES, format_hand, make_agent, parse_rules, play_game
+from evaluator import VALID_RULES, format_hand, parse_rules, play_games_parallel
 
 
 # Top 20 surviving hands from the GA run under --rule regular_chain_any
@@ -58,11 +58,11 @@ def main():
     ap.add_argument("--seed", type=int, default=2026)
     ap.add_argument("--rule", action="append", default=[],
                     help=f"rule variant (repeatable or comma-separated); valid: {','.join(sorted(VALID_RULES))}")
+    ap.add_argument("--processes", type=int, default=None, help="worker processes (default: all cores)")
     args = ap.parse_args()
 
     rng = random.Random(args.seed)
     rules = parse_rules(args.rule)
-    agent = make_agent("mcts", args.iters, None, rng)
 
     n = len(TOP_HANDS)
     M_first_wins = [[0] * n for _ in range(n)]
@@ -74,27 +74,24 @@ def main():
           f"iters={args.iters}, target {target} games"
           + (f", rules={','.join(sorted(rules))}" if rules else ""))
     t0 = time.time()
-    done = 0
-    pair = 0
+    # Build all specs (one per ordered-pair game), remembering each game's (i, j).
+    coords = []
+    specs = []
     for i in range(n):
         for j in range(n):
-            pair += 1
             hi = list(TOP_HANDS[i])
             hj = list(TOP_HANDS[j])
             for _ in range(args.games_per_ordered_pair):
-                w, _, _, _ = play_game(hi, hj, "X", agent, agent, rules=rules)
-                if w == "X":
-                    M_first_wins[i][j] += 1
-                    first_total += 1
-                else:
-                    second_total += 1
-                M_games[i][j] += 1
-                done += 1
-            if pair % 40 == 0 or pair == n * n:
-                elapsed = time.time() - t0
-                rate = done / elapsed
-                eta = (target - done) / rate if rate > 0 else 0
-                print(f"  pair {pair}/{n*n}  games {done}/{target}  {rate:.1f} g/s  eta {eta:.0f}s")
+                coords.append((i, j))
+                specs.append((hi, hj, "X", rules, "mcts", args.iters, None, rng.randrange(1 << 30)))
+    results = play_games_parallel(specs, processes=args.processes)
+    for (i, j), (w, *_rest) in zip(coords, results):
+        M_games[i][j] += 1
+        if w == "X":
+            M_first_wins[i][j] += 1
+            first_total += 1
+        else:
+            second_total += 1
 
     elapsed = time.time() - t0
     total = first_total + second_total

@@ -764,6 +764,39 @@ def play_game(
 
 
 # ═══════════════════════════════════════
+# Parallel batch runner
+# ═══════════════════════════════════════
+#
+# Games are independent, so batches (FPA sweeps, GA tournament rounds,
+# round-robins) parallelize cleanly across cores. Each spec is fully
+# self-contained — the worker builds its own rng + agents from the spec's
+# seed — so results are reproducible given the seed list but NOT bit-identical
+# to the old single-shared-rng sequential runs (statistically equivalent).
+#
+# A spec is a tuple:
+#   (hands_x, hands_o, first_player, rules, agent_spec, iters, time_ms, seed)
+
+def _play_one_spec(spec):
+    hands_x, hands_o, first, rules, agent_spec, iters, time_ms, seed = spec
+    rng = random.Random(seed)
+    agent = make_agent(agent_spec, iters, time_ms, rng)
+    return play_game(hands_x, hands_o, first, agent, agent, rules=rules)
+
+
+def play_games_parallel(specs, processes=None):
+    """Run a list of game specs, returning [(winner, reason, moves, turns), ...]
+    in the same order. Falls back to sequential for tiny batches or processes<=1."""
+    import multiprocessing as mp
+    if processes is None:
+        processes = mp.cpu_count()
+    if processes <= 1 or len(specs) < 4:
+        return [_play_one_spec(s) for s in specs]
+    chunk = max(1, len(specs) // (processes * 8))
+    with mp.Pool(processes) as pool:
+        return pool.map(_play_one_spec, specs, chunksize=chunk)
+
+
+# ═══════════════════════════════════════
 # Formatting / parsing
 # ═══════════════════════════════════════
 

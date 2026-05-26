@@ -14,7 +14,7 @@ import random
 import time
 
 from evaluator import (
-    TYPES, VALID_RULES, make_agent, parse_rules, play_game, random_hand, pool_for_rules,
+    TYPES, VALID_RULES, parse_rules, play_games_parallel, random_hand, pool_for_rules,
 )
 
 
@@ -27,6 +27,7 @@ def main():
                     help=f"rule variant (repeatable or comma-separated); valid: {','.join(sorted(VALID_RULES))}")
     ap.add_argument("--veto", action="append", default=[],
                     help="stone type(s) to exclude from the random-hand pool (repeatable or comma-separated)")
+    ap.add_argument("--processes", type=int, default=None, help="worker processes (default: all cores)")
     args = ap.parse_args()
 
     rng = random.Random(args.seed)
@@ -40,29 +41,22 @@ def main():
                     raise SystemExit(f"unknown stone type {part!r}; valid: {','.join(TYPES)}")
                 veto.add(part)
     pool = [t for t in pool_for_rules(rules) if t not in veto]
-    agent = make_agent("mcts", args.iters, None, rng)
 
-    first_wins = 0
-    second_wins = 0
-    games = 0
-
-    t0 = time.time()
+    # Build all game specs up front (hand generation stays sequential/deterministic).
+    specs = []
     for p in range(args.pairs):
         ha = random_hand(rng, pool=pool)
         hb = random_hand(rng, pool=pool)
         for first_hand_is_a in (True, False):
             hx = ha if first_hand_is_a else hb
             ho = hb if first_hand_is_a else ha
-            w, _, _, _ = play_game(hx, ho, "X", agent, agent, rules=rules)
-            games += 1
-            if w == "X":
-                first_wins += 1
-            else:
-                second_wins += 1
-        if (p + 1) % 25 == 0:
-            elapsed = time.time() - t0
-            rate = games / elapsed
-            print(f"  pair {p+1}/{args.pairs}  games {games}  first {first_wins}  second {second_wins}  ({rate:.1f} g/s)")
+            specs.append((hx, ho, "X", rules, "mcts", args.iters, None, rng.randrange(1 << 30)))
+
+    t0 = time.time()
+    results = play_games_parallel(specs, processes=args.processes)
+    first_wins = sum(1 for w, *_ in results if w == "X")
+    second_wins = len(results) - first_wins
+    games = len(results)
 
     total = first_wins + second_wins
     print()
