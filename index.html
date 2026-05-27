@@ -29,6 +29,11 @@ h1{font-size:2.6em;text-align:center;margin:18px 0 4px;background:linear-gradien
 .setup-row{display:flex;gap:6px;justify-content:center}
 .setup-row button{background:#1e3a5f;border:1px solid #334155;color:#94a3b8;padding:5px 12px;border-radius:6px;cursor:pointer;font-size:.8em}
 .setup-row button:hover{background:#2563eb;color:#fff}
+.class-row{margin-top:10px;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.class-row label{font-size:.8em;color:#94a3b8}
+.class-row select{background:#1e3a5f;border:1px solid #334155;color:#cbd5e1;padding:4px 8px;border-radius:6px;font-size:.82em}
+.class-desc{font-size:.72em;color:#64748b;flex-basis:100%}
+.turn-marker .cls{font-size:.8em;opacity:.8}
 .first-turn{text-align:center;margin-bottom:14px}
 .first-turn h3{font-size:.95em;margin-bottom:8px;color:#94a3b8}
 .ft-opts{display:flex;gap:8px;justify-content:center}
@@ -131,19 +136,21 @@ h1{font-size:2.6em;text-align:center;margin:18px 0 4px;background:linear-gradien
 <!-- Setup Screen -->
 <div id="setup" class="screen active">
 <h1>PIF PAF POE</h1>
-<p class="subtitle">Strategic tic-tac-toe with special stones · Regular Chain: place a regular to even the stone count, then place a bonus stone of any type</p>
+<p class="subtitle">Strategic tic-tac-toe with special stones · Regular Chain (global): even the stone count with a regular, then place a bonus stone of any type · pick a Class per player for a special ability</p>
 <div class="setup-grid">
   <div class="panel">
     <h2><span class="badge badge-blue">X</span> Your Stones</h2>
     <div class="stone-btns" id="btns-p1"></div>
     <div class="hand" id="hand-p1"></div>
     <div class="setup-row"><button onclick="randomHand('p1')">Random</button><button onclick="clearHand('p1')">Clear</button></div>
+    <div class="class-row"><label>Class</label><select id="class-p1" onchange="setClass('p1',this.value)"></select><span class="class-desc" id="cdesc-p1"></span></div>
   </div>
   <div class="panel">
     <h2><span class="badge badge-red">O</span> AI Stones</h2>
     <div class="stone-btns" id="btns-p2"></div>
     <div class="hand" id="hand-p2"></div>
     <div class="setup-row"><button onclick="randomHand('p2')">Random</button><button onclick="clearHand('p2')">Clear</button></div>
+    <div class="class-row"><label>Class</label><select id="class-p2" onchange="setClass('p2',this.value)"></select><span class="class-desc" id="cdesc-p2"></span></div>
   </div>
 </div>
 <div class="first-turn">
@@ -219,6 +226,16 @@ const SUBSQUARES={TL:[0,1,3,4],TR:[1,2,4,5],BL:[3,4,6,7],BR:[4,5,7,8]};
 const SQ_LABELS={TL:'Top-left',TR:'Top-right',BL:'Bottom-left',BR:'Bottom-right'};
 const MOVEMENT_TYPES=['shift','2048','rotate'];
 const RESTRICTION_TYPES=['magnet','stinky'];
+const CLASS_INFO={
+  none:{name:'None',desc:'No class ability'},
+  oops_stinky:{name:'Oops, all stinky',desc:'Every stone you place also leaves a stinky restriction'},
+  ctrl_shift:{name:'Ctrl+Shift',desc:'Your Shift may shift ANY row or column'},
+  polarized:{name:'Polarized',desc:"You may ignore the opponent's Magnet restriction"},
+  stench:{name:'Stench',desc:'Your Stinky blocks the whole row + column, not just adjacency'},
+  set_in_stone:{name:'Set in stone',desc:"Your regular stones can't be moved by the opponent"},
+  corny:{name:'Corny',desc:'You also win by owning all four corners'},
+};
+const CLASS_OPTIONS=['none','oops_stinky','ctrl_shift','polarized','stench','set_in_stone','corny'];
 
 // ═══════════════════════════════════════
 // GAME LOGIC
@@ -229,15 +246,29 @@ function adj(a,b){const r1=Math.floor(a/3),c1=a%3,r2=Math.floor(b/3),c2=b%3;retu
 function boardFull(b){return b.every(c=>c!==null)}
 
 function cloneState(s){
-  return{board:s.board.map(c=>c?{player:c.player,type:c.type}:null),hands:{X:[...s.hands.X],O:[...s.hands.O]},currentPlayer:s.currentPlayer,restriction:s.restriction?{type:s.restriction.type,pos:s.restriction.pos}:null,history:new Set(s.history),phase:s.phase,selectedStone:s.selectedStone,placedPos:s.placedPos,winner:s.winner,chainEmpty:s.chainEmpty!=null?s.chainEmpty:null,chainMoved:s.chainMoved?new Set(s.chainMoved):null,bonusUsed:s.bonusUsed||false};
+  return{board:s.board.map(c=>c?{player:c.player,type:c.type}:null),hands:{X:[...s.hands.X],O:[...s.hands.O]},currentPlayer:s.currentPlayer,restriction:s.restriction?{type:s.restriction.type,pos:s.restriction.pos,variant:s.restriction.variant||null}:null,history:new Set(s.history),phase:s.phase,selectedStone:s.selectedStone,placedPos:s.placedPos,winner:s.winner,chainEmpty:s.chainEmpty!=null?s.chainEmpty:null,chainMoved:s.chainMoved?new Set(s.chainMoved):null,bonusUsed:s.bonusUsed||false,classes:s.classes};
 }
 function hashState(s){
   let h='';
   for(let i=0;i<9;i++){const c=s.board[i];h+=c?c.player+TYPE_CODE[c.type]:'..';}
-  h+='|';if(s.restriction)h+=s.restriction.type[0]+s.restriction.pos;return h;
+  h+='|';if(s.restriction){h+=s.restriction.type[0]+s.restriction.pos;if(s.restriction.variant)h+=s.restriction.variant[0];}return h;
 }
 function check3(board,p){return LINES.some(([a,b,c])=>board[a]&&board[a].player===p&&board[b]&&board[b].player===p&&board[c]&&board[c].player===p)}
 function subsquaresFor(pos){return Object.keys(SUBSQUARES).filter(k=>SUBSQUARES[k].includes(pos))}
+function sameRowCol(a,b){return Math.floor(a/3)===Math.floor(b/3)||a%3===b%3}
+// Filter candidate cells by the active restriction, honoring class abilities.
+function restrictionOkCells(s,free){
+  const r=s.restriction;if(!r)return free;
+  const cc=s.classes[s.currentPlayer];
+  if(r.type==='magnet'){if(cc==='polarized')return free;return free.filter(i=>adj(i,r.pos));}
+  if(r.variant==='stench')return free.filter(i=>!sameRowCol(i,r.pos));
+  return free.filter(i=>!adj(i,r.pos));
+}
+function hasWon(s,player){
+  if(check3(s.board,player))return true;
+  if(s.classes[player]==='corny'&&[0,2,6,8].every(c=>s.board[c]&&s.board[c].player===player))return true;
+  return false;
+}
 
 // ── Effects ──
 
@@ -268,10 +299,22 @@ function applyRotate(board,sq){
 }
 
 function applyEffect(state,action){
-  const t=state.selectedStone,p=state.placedPos;
-  if(t==='shift')applyShift(state.board,p,action.direction);
-  else if(t==='2048')apply2048(state.board,action.direction);
-  else if(t==='rotate')applyRotate(state.board,action.subsquare);
+  const t=state.selectedStone;
+  const p=action.line!=null?action.line:state.placedPos;  // Ctrl+Shift may target another line
+  const nb=state.board.map(c=>c?{player:c.player,type:c.type}:null);
+  if(t==='shift')applyShift(nb,p,action.direction);
+  else if(t==='2048')apply2048(nb,action.direction);
+  else if(t==='rotate')applyRotate(nb,action.subsquare);
+  else return;
+  // Set in stone: opponent movement may not displace this player's regulars.
+  const prot=opp(state.currentPlayer);
+  if(state.classes[prot]==='set_in_stone'){
+    const before=new Set(),after=new Set();
+    for(let i=0;i<9;i++){if(state.board[i]&&state.board[i].player===prot&&state.board[i].type==='regular')before.add(i);}
+    for(let i=0;i<9;i++){if(nb[i]&&nb[i].player===prot&&nb[i].type==='regular')after.add(i);}
+    if(before.size!==after.size||[...before].some(i=>!after.has(i)))return;  // skip effect entirely
+  }
+  for(let i=0;i<9;i++)state.board[i]=nb[i];
 }
 
 // ── Legal actions ──
@@ -282,7 +325,7 @@ function getRemoveActions(s){
   for(let i=0;i<9;i++)if(s.board[i]&&s.board[i].player===o)cands.push(i);
   if(s.restriction){
     const noR=cands.filter(i=>i!==s.restriction.pos);
-    const ful=noR.filter(i=>s.restriction.type==='magnet'?adj(i,s.restriction.pos):!adj(i,s.restriction.pos));
+    const ful=restrictionOkCells(s,noR);
     const pool=ful.length?ful:noR.length?noR:cands;
     return pool.map(pos=>({type:'remove',pos}));
   }
@@ -294,14 +337,17 @@ function getSelectActions(s){
 function getPlaceActions(s){
   let free=[];
   for(let i=0;i<9;i++)if(!s.board[i])free.push(i);
-  if(s.restriction){
-    const ok=free.filter(i=>s.restriction.type==='magnet'?adj(i,s.restriction.pos):!adj(i,s.restriction.pos));
-    if(ok.length)free=ok;
-  }
+  if(s.restriction){const ok=restrictionOkCells(s,free);if(ok.length)free=ok;}
   return free.map(pos=>({type:'place',pos}));
 }
 function getEffectActions(s){
   const t=s.selectedStone,p=s.placedPos;
+  if(t==='shift'&&s.classes[s.currentPlayer]==='ctrl_shift'){
+    const a=[];
+    for(let r=0;r<3;r++)for(const d of['left','right'])a.push({type:'effect',direction:d,line:r*3});
+    for(let c=0;c<3;c++)for(const d of['up','down'])a.push({type:'effect',direction:d,line:c});
+    return a;
+  }
   if(t==='shift'||t==='2048')return['up','down','left','right'].map(d=>({type:'effect',direction:d}));
   if(t==='rotate')return subsquaresFor(p).map(sq=>({type:'effect',subsquare:sq}));
   return[];
@@ -313,7 +359,7 @@ function getLegalActions(s){
     case'place':return getPlaceActions(s);
     case'effect':return getEffectActions(s);
     case'chainMove':{const a=[];for(let i=0;i<9;i++)if(!s.board[i]&&adj(i,s.placedPos))a.push({type:'chainMove',pos:i});return a}
-    case'chainPull':{const a=[{type:'chainPass'}];for(let i=0;i<9;i++)if(s.board[i]&&adj(i,s.chainEmpty)&&!s.chainMoved.has(i))a.push({type:'chainPull',pos:i});return a}
+    case'chainPull':{const prot=opp(s.currentPlayer);const protect=s.classes[prot]==='set_in_stone';const a=[{type:'chainPass'}];for(let i=0;i<9;i++)if(s.board[i]&&adj(i,s.chainEmpty)&&!s.chainMoved.has(i)){if(protect&&s.board[i].player===prot&&s.board[i].type==='regular')continue;a.push({type:'chainPull',pos:i})}return a}
     case'regularChainSelect':{const a=[{type:'regularChainPass'}];for(const t of[...new Set(s.hands[s.currentPlayer])])a.push({type:'regularChainSelect',stoneType:t});return a}
     default:return[];
   }
@@ -322,13 +368,18 @@ function getLegalActions(s){
 // ── State transitions ──
 
 function endTurn(s){
-  if(RESTRICTION_TYPES.includes(s.selectedStone))s.restriction={type:s.selectedStone,pos:s.placedPos};
-  else s.restriction=null;
+  const cp=s.currentPlayer;
+  if(RESTRICTION_TYPES.includes(s.selectedStone)){
+    const variant=(s.classes[cp]==='stench'&&s.selectedStone==='stinky')?'stench':null;
+    s.restriction={type:s.selectedStone,pos:s.placedPos,variant};
+  }else if(s.classes[cp]==='oops_stinky'&&s.placedPos!=null){
+    s.restriction={type:'stinky',pos:s.placedPos,variant:null};  // every stone leaves a stinky
+  }else s.restriction=null;
   const h=hashState(s);
   if(s.history.has(h)){s.winner=opp(s.currentPlayer);s.phase='gameOver';s.winReason='repeat';return}
   s.history.add(h);
-  if(check3(s.board,s.currentPlayer)){s.winner=s.currentPlayer;s.phase='gameOver';s.winReason='line';return}
-  if(check3(s.board,opp(s.currentPlayer))){s.winner=opp(s.currentPlayer);s.phase='gameOver';s.winReason='line';return}
+  if(hasWon(s,s.currentPlayer)){s.winner=s.currentPlayer;s.phase='gameOver';s.winReason='line';return}
+  if(hasWon(s,opp(s.currentPlayer))){s.winner=opp(s.currentPlayer);s.phase='gameOver';s.winReason='line';return}
   s.currentPlayer=opp(s.currentPlayer);s.selectedStone=null;s.placedPos=null;s.bonusUsed=false;
   s.phase=boardFull(s.board)?'remove':'select';
 }
@@ -358,8 +409,10 @@ function doAction(s,a){
   }
 }
 
-function initGameState(handsX,handsO,firstPlayer){
-  const s={board:Array(9).fill(null),hands:{X:[...handsX],O:[...handsO]},currentPlayer:firstPlayer,restriction:null,history:new Set(),phase:'select',selectedStone:null,placedPos:null,winner:null,chainEmpty:null,chainMoved:null,bonusUsed:false};
+function initGameState(handsX,handsO,firstPlayer,classes){
+  const cls=classes||{X:null,O:null};
+  const norm={X:cls.X==='none'?null:cls.X,O:cls.O==='none'?null:cls.O};
+  const s={board:Array(9).fill(null),hands:{X:[...handsX],O:[...handsO]},currentPlayer:firstPlayer,restriction:null,history:new Set(),phase:'select',selectedStone:null,placedPos:null,winner:null,chainEmpty:null,chainMoved:null,bonusUsed:false,classes:norm};
   s.history.add(hashState(s));
   return s;
 }
@@ -437,7 +490,20 @@ function showScreen(id){
 // ═══════════════════════════════════════
 
 let setupHands={p1:[],p2:[]};
+let setupClasses={p1:'none',p2:'none'};
 let firstChoice='X';
+
+function renderSetupClasses(){
+  for(const pid of['p1','p2']){
+    const sel=document.getElementById('class-'+pid);
+    if(!sel.options.length){
+      for(const c of CLASS_OPTIONS){const o=document.createElement('option');o.value=c;o.textContent=CLASS_INFO[c].name;sel.appendChild(o);}
+    }
+    sel.value=setupClasses[pid];
+    document.getElementById('cdesc-'+pid).textContent=CLASS_INFO[setupClasses[pid]].desc;
+  }
+}
+function setClass(pid,val){setupClasses[pid]=val;renderSetupClasses()}
 
 function renderSetupTypes(){
   for(const pid of['p1','p2']){
@@ -463,7 +529,7 @@ function renderSetupHands(){
     });
   }
 }
-function renderSetup(){renderSetupTypes();renderSetupHands();document.getElementById('start-btn').disabled=!(setupHands.p1.length===5&&setupHands.p2.length===5)}
+function renderSetup(){renderSetupTypes();renderSetupHands();renderSetupClasses();document.getElementById('start-btn').disabled=!(setupHands.p1.length===5&&setupHands.p2.length===5)}
 function randomHand(pid){setupHands[pid]=[];for(let i=0;i<5;i++)setupHands[pid].push(TYPES[Math.floor(Math.random()*TYPES.length)]);renderSetup()}
 function clearHand(pid){setupHands[pid]=[];renderSetup()}
 function setFirst(btn,val){document.querySelectorAll('.ft-btn').forEach(b=>b.classList.remove('active'));btn.classList.add('active');firstChoice=val}
@@ -476,22 +542,26 @@ let G=null;
 const humanPlayer='X',aiPlayer='O';
 let aiThinking=false,lastPlacedPos=null;
 
+function gameClasses(){return{X:setupClasses.p1,O:setupClasses.p2}}
 function startGame(){
   const fp=firstChoice==='R'?(Math.random()<.5?'X':'O'):firstChoice;
-  G=initGameState([...setupHands.p1],[...setupHands.p2],fp);
+  G=initGameState([...setupHands.p1],[...setupHands.p2],fp,gameClasses());
   lastPlacedPos=null;showScreen('game');renderGame();
   if(G.currentPlayer===aiPlayer)setTimeout(()=>runAI(),300);
 }
 function rematch(){
   const fp=firstChoice==='R'?(Math.random()<.5?'X':'O'):firstChoice;
-  G=initGameState([...setupHands.p1],[...setupHands.p2],fp);
+  G=initGameState([...setupHands.p1],[...setupHands.p2],fp,gameClasses());
   lastPlacedPos=null;document.getElementById('overlay').classList.remove('show');renderGame();
   if(G.currentPlayer===aiPlayer)setTimeout(()=>runAI(),300);
 }
 
 function renderGame(){renderTurnBar();renderHands();renderBoard();renderRestriction();renderMessage()}
 
+function clsTag(player){const c=G.classes[player];return c?' <span class="cls">· '+CLASS_INFO[c].name+'</span>':''}
 function renderTurnBar(){
+  document.getElementById('tm-x').innerHTML='You (X)'+clsTag('X');
+  document.getElementById('tm-o').innerHTML='AI (O)'+clsTag('O');
   document.getElementById('tm-x').classList.toggle('active-turn',G.currentPlayer==='X'&&G.phase!=='gameOver');
   document.getElementById('tm-o').classList.toggle('active-turn',G.currentPlayer==='O'&&G.phase!=='gameOver');
 }
@@ -536,9 +606,10 @@ function renderBoard(){
     if(chainMoveSet.has(i)){cell.classList.add('valid','clickable');cell.onclick=()=>humanAction({type:'chainMove',pos:i})}
     if(chainPullSet.has(i)){cell.classList.add('chain-target','clickable');cell.onclick=()=>humanAction({type:'chainPull',pos:i})}
     if(G.phase==='chainPull'&&G.chainEmpty===i)cell.classList.add('chain-empty');
-    if(G.restriction&&G.phase!=='gameOver'){
-      if(G.restriction.type==='magnet'&&adj(i,G.restriction.pos)&&!G.board[i])cell.classList.add('valid');
-      if(G.restriction.type==='stinky'&&adj(i,G.restriction.pos)&&!G.board[i])cell.classList.add('restricted');
+    if(G.restriction&&G.phase!=='gameOver'&&!G.board[i]){
+      const hit=G.restriction.variant==='stench'?sameRowCol(i,G.restriction.pos):adj(i,G.restriction.pos);
+      if(G.restriction.type==='magnet'&&hit)cell.classList.add('valid');
+      if(G.restriction.type==='stinky'&&hit)cell.classList.add('restricted');
     }
     el.appendChild(cell);
   }
@@ -549,7 +620,9 @@ function renderRestriction(){
   if(G.restriction&&G.phase!=='gameOver'){
     el.className='restriction-note active '+G.restriction.type;
     const r=Math.floor(G.restriction.pos/3)+1,c=G.restriction.pos%3+1;
-    el.textContent=G.restriction.type==='magnet'?'◎ Magnet at row '+r+', col '+c+': must place adjacent':'☠ Stinky at row '+r+', col '+c+': must NOT place adjacent';
+    if(G.restriction.type==='magnet')el.textContent='◎ Magnet at row '+r+', col '+c+': must place adjacent';
+    else if(G.restriction.variant==='stench')el.textContent='☠ Stench at row '+r+', col '+c+': must NOT place in that row or column';
+    else el.textContent='☠ Stinky at row '+r+', col '+c+': must NOT place adjacent';
   }else el.className='restriction-note';
 }
 
@@ -573,7 +646,13 @@ function renderEffectButtons(container){
   for(const a of getEffectActions(G)){
     const b=document.createElement('button');b.className='act-btn';
     if(a.direction){
-      b.textContent={up:'↑ Up',down:'↓ Down',left:'← Left',right:'→ Right'}[a.direction];
+      const arrow={up:'↑',down:'↓',left:'←',right:'→'}[a.direction];
+      if(a.line!=null){
+        const lbl=(a.direction==='left'||a.direction==='right')?('Row '+(Math.floor(a.line/3)+1)):('Col '+(a.line%3+1));
+        b.textContent=arrow+' '+lbl;
+      }else{
+        b.textContent={up:'↑ Up',down:'↓ Down',left:'← Left',right:'→ Right'}[a.direction];
+      }
     }else if(a.subsquare){
       b.textContent='↻ '+SQ_LABELS[a.subsquare];
     }
