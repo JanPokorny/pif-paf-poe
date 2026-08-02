@@ -1,0 +1,213 @@
+{
+ "opts": {
+  "mode": "general",
+  "games": 1000,
+  "iters": 500,
+  "workers": 4,
+  "seed": 12345,
+  "out": "sim/results/general.json",
+  "smart": true,
+  "hand": 5
+ },
+ "rows": [
+  {
+   "a": "relentless",
+   "b": "none",
+   "w": 615,
+   "l": 385,
+   "d": 0,
+   "n": 1000,
+   "firstW": 399,
+   "firstN": 500,
+   "secondW": 216,
+   "secondN": 500,
+   "reasons": {
+    "line": 1000
+   },
+   "turns": 4433,
+   "act": 187,
+   "actW": 168,
+   "full": 20,
+   "score": 0.615,
+   "lo": 0.5844549636309254,
+   "hi": 0.6446648496942048
+  },
+  {
+   "a": "telekinesis",
+   "b": "none",
+   "w": 530,
+   "l": 470,
+   "d": 0,
+   "n": 1000,
+   "firstW": 407,
+   "firstN": 500,
+   "secondW": 123,
+   "secondN": 500,
+   "reasons": {
+    "line": 1000
+   },
+   "turns": 4674,
+   "act": 111,
+   "actW": 95,
+   "full": 26,
+   "score": 0.53,
+   "lo": 0.49900973970958434,
+   "hi": 0.5607606463752323
+  },
+  {
+   "a": "overload",
+   "b": "none",
+   "w": 519,
+   "l": 481,
+   "d": 0,
+   "n": 1000,
+   "firstW": 413,
+   "firstN": 500,
+   "secondW": 106,
+   "secondN": 500,
+   "reasons": {
+    "line": 1000
+   },
+   "turns": 4659,
+   "act": 317,
+   "actW": 201,
+   "full": 26,
+   "score": 0.519,
+   "lo": 0.48801857780672125,
+   "hi": 0.549836000046996
+  },
+  {
+   "a": "scavenger",
+   "b": "none",
+   "w": 505,
+   "l": 489,
+   "d": 6,
+   "n": 1000,
+   "firstW": 403,
+   "firstN": 500,
+   "secondW": 105,
+   "secondN": 500,
+   "reasons": {
+    "line": 994,
+    "cap": 6
+   },
+   "turns": 4631,
+   "act": 13,
+   "actW": 10,
+   "full": 21,
+   "score": 0.508,
+   "lo": 0.4770423632544587,
+   "hi": 0.5388964063681592
+  },
+  {
+   "a": "none",
+   "b": "none",
+   "w": 502,
+   "l": 498,
+   "d": 0,
+   "n": 1000,
+   "firstW": 400,
+   "firstN": 500,
+   "secondW": 102,
+   "secondN": 500,
+   "reasons": {
+    "line": 1000
+   },
+   "turns": 4710,
+   "act": 0,
+   "actW": 0,
+   "full": 29,
+   "score": 0.502,
+   "lo": 0.47106162688393816,
+   "hi": 0.5329230655217162
+  },
+  {
+   "a": "lingering",
+   "b": "none",
+   "w": 502,
+   "l": 498,
+   "d": 0,
+   "n": 1000,
+   "firstW": 392,
+   "firstN": 500,
+   "secondW": 110,
+   "secondN": 500,
+   "reasons": {
+    "line": 1000
+   },
+   "turns": 4776,
+   "act": 295,
+   "actW": 147,
+   "full": 35,
+   "score": 0.502,
+   "lo": 0.47106162688393816,
+   "hi": 0.5329230655217162
+  },
+  {
+   "a": "whirlwind",
+   "b": "none",
+   "w": 501,
+   "l": 499,
+   "d": 0,
+   "n": 1000,
+   "firstW": 408,
+   "firstN": 500,
+   "secondW": 93,
+   "secondN": 500,
+   "reasons": {
+    "line": 1000
+   },
+   "turns": 4565,
+   "act": 174,
+   "actW": 95,
+   "full": 19,
+   "score": 0.501,
+   "lo": 0.47006526890602685,
+   "hi": 0.5319270772968004
+  },
+  {
+   "a": "anchor",
+   "b": "none",
+   "w": 483,
+   "l": 517,
+   "d": 0,
+   "n": 1000,
+   "firstW": 388,
+   "firstN": 500,
+   "secondW": 95,
+   "secondN": 500,
+   "reasons": {
+    "line": 1000
+   },
+   "turns": 4656,
+   "act": 14,
+   "actW": 1,
+   "full": 25,
+   "score": 0.483,
+   "lo": 0.4521519062661586,
+   "hi": 0.5139782082857787
+  },
+  {
+   "a": "slither",
+   "b": "none",
+   "w": 482,
+   "l": 518,
+   "d": 0,
+   "n": 1000,
+   "firstW": 391,
+   "firstN": 500,
+   "secondW": 91,
+   "secondN": 500,
+   "reasons": {
+    "line": 1000
+   },
+   "turns": 4625,
+   "act": 234,
+   "actW": 141,
+   "full": 26,
+   "score": 0.482,
+   "lo": 0.4511578913647933,
+   "hi": 0.5129798769843168
+  }
+ ]
+}

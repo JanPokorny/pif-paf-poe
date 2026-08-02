@@ -1,0 +1,12 @@
+mode=ctrl games/matchup=1000 iters=500 hand=5 rollout=policy total=6000 workers=4
+played 6000 games in 146.9s
+
+matchup                       score   95% CI          W-L-D         1st    2nd    turns  fired  |score  full   endings
+----------------------------------------------------------------------------------------------------------------------------
+none vs none [telekinesis hand] 51.6%  [ 48.5, 54.7]   516-484-0      79.6   23.6  4.6      0.0     -      0.0  line:1000
+none vs none [slither hand]    50.6%  [ 47.5, 53.7]   506-494-0      96.4    4.8  4.3      0.0     -      0.0  line:1000
+none vs none [relentless hand] 49.9%  [ 46.8, 53.0]   499-501-0      58.2   41.6  6.4      0.0     -     17.2  line:1000
+none vs none [whirlwind hand]  49.5%  [ 46.4, 52.6]   495-505-0      87.8   11.2  4.3      0.0     -      0.0  line:1000
+none vs none [overload hand]   48.9%  [ 45.8, 52.0]   489-511-0      87.6   10.2  4.3      0.0     -      0.0  line:1000
+none vs none [lingering hand]  48.6%  [ 45.5, 51.7]   486-514-0      69.2   28.0  6.0      0.0     -     10.0  line:1000
+wrote sim/results/ctrl.json

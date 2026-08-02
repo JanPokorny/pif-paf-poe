@@ -1,0 +1,10 @@
+mode=general games/matchup=700 iters=500 hand=9 rollout=policy total=2800 workers=4
+played 2800 games in 76.7s
+
+matchup                       score   95% CI          W-L-D         1st    2nd    turns  fired  |score  full   endings
+----------------------------------------------------------------------------------------------------------------------------
+lingering vs none              52.1%  [ 48.4, 55.8]   365-335-0      86.9   17.4  4.4     37.1   47.3%    0.0  line:700
+anchor vs none                 51.4%  [ 47.7, 55.1]   360-340-0      85.7   17.1  4.4      0.0     -      0.0  line:700
+scavenger vs none              50.4%  [ 46.7, 54.1]   353-347-0      86.6   14.3  4.3      0.1  100.0%    0.1  line:700
+none vs none                   49.0%  [ 45.3, 52.7]   343-357-0      82.3   15.7  4.4      0.0     -      0.3  line:700
+wrote sim/results/hand9.json

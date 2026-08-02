@@ -29,3 +29,18 @@ Possible stones:
 - Restriction:
     - Magnet: Other player must place their next stone orthogonally adjacent to this one.
     - Stinky: Other player must NOT place their next stone orthogonally adjacent to this one.
+
+## Skills (proposal)
+
+A *skill* is a single passive modifier a player owns for the whole game, on top of their hand. Where a hand is "what you drew", a skill is "who you are". Most skills upgrade one stone type, so a skill is only worth as much as the hand it is paired with; two are hand-independent.
+
+- Whirlwind (Rotate): instead of a 2x2 sub-square, Rotate may turn the whole 8-field outer ring one step clockwise or counter-clockwise. Not available if the Rotate stone was placed in the centre.
+- Telekinesis (Shift): Shift may move any row or column, not only the one it was placed in.
+- Relentless (Regular): after placing a Regular stone, if the player does not have an advantage on the board (strictly more own stones than the opponent's), they may immediately take another turn.
+- Overload (2048): the 2048 stone resolves twice; the player picks both directions, which may be the same.
+- Lingering (Magnet/Stinky): the restriction binds the opponent for their next *two* turns instead of one.
+- Slither (Chain): the Chain stone moves and pulls diagonally as well as orthogonally.
+- Anchor (any hand): the stone the player placed on their last turn may not be returned to hand by the opponent, unless it is the only stone the opponent could return.
+- Scavenger (any hand): stones this player returns from a full board go to *their* hand instead of back to the owner.
+
+See `sim/README.md` for a balance study of these.

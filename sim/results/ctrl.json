@@ -1,0 +1,153 @@
+{
+ "opts": {
+  "mode": "ctrl",
+  "games": 1000,
+  "iters": 500,
+  "workers": 4,
+  "seed": 12345,
+  "out": "sim/results/ctrl.json",
+  "smart": true,
+  "hand": 5,
+  "only": null
+ },
+ "rows": [
+  {
+   "label": "none vs none [telekinesis hand]",
+   "a": "none",
+   "b": "none",
+   "w": 516,
+   "l": 484,
+   "d": 0,
+   "n": 1000,
+   "firstW": 398,
+   "firstN": 500,
+   "secondW": 118,
+   "secondN": 500,
+   "reasons": {
+    "line": 1000
+   },
+   "turns": 4628,
+   "act": 0,
+   "actW": 0,
+   "full": 0,
+   "score": 0.516,
+   "lo": 0.48502358387647304,
+   "hi": 0.5468539553687625
+  },
+  {
+   "label": "none vs none [slither hand]",
+   "a": "none",
+   "b": "none",
+   "w": 506,
+   "l": 494,
+   "d": 0,
+   "n": 1000,
+   "firstW": 482,
+   "firstN": 500,
+   "secondW": 24,
+   "secondN": 500,
+   "reasons": {
+    "line": 1000
+   },
+   "turns": 4326,
+   "act": 0,
+   "actW": 0,
+   "full": 0,
+   "score": 0.506,
+   "lo": 0.47504829137433036,
+   "hi": 0.5369057858426329
+  },
+  {
+   "label": "none vs none [relentless hand]",
+   "a": "none",
+   "b": "none",
+   "w": 499,
+   "l": 501,
+   "d": 0,
+   "n": 1000,
+   "firstW": 291,
+   "firstN": 500,
+   "secondW": 208,
+   "secondN": 500,
+   "reasons": {
+    "line": 1000
+   },
+   "turns": 6367,
+   "act": 0,
+   "actW": 0,
+   "full": 172,
+   "score": 0.499,
+   "lo": 0.4680729227031996,
+   "hi": 0.5299347310939733
+  },
+  {
+   "label": "none vs none [whirlwind hand]",
+   "a": "none",
+   "b": "none",
+   "w": 495,
+   "l": 505,
+   "d": 0,
+   "n": 1000,
+   "firstW": 439,
+   "firstN": 500,
+   "secondW": 56,
+   "secondN": 500,
+   "reasons": {
+    "line": 1000
+   },
+   "turns": 4334,
+   "act": 0,
+   "actW": 0,
+   "full": 0,
+   "score": 0.495,
+   "lo": 0.46408970934046934,
+   "hi": 0.5259485596453947
+  },
+  {
+   "label": "none vs none [overload hand]",
+   "a": "none",
+   "b": "none",
+   "w": 489,
+   "l": 511,
+   "d": 0,
+   "n": 1000,
+   "firstW": 438,
+   "firstN": 500,
+   "secondW": 51,
+   "secondN": 500,
+   "reasons": {
+    "line": 1000
+   },
+   "turns": 4295,
+   "act": 0,
+   "actW": 0,
+   "full": 0,
+   "score": 0.489,
+   "lo": 0.4581185876110968,
+   "hi": 0.5199656041578039
+  },
+  {
+   "label": "none vs none [lingering hand]",
+   "a": "none",
+   "b": "none",
+   "w": 486,
+   "l": 514,
+   "d": 0,
+   "n": 1000,
+   "firstW": 346,
+   "firstN": 500,
+   "secondW": 140,
+   "secondN": 500,
+   "reasons": {
+    "line": 1000
+   },
+   "turns": 5969,
+   "act": 0,
+   "actW": 0,
+   "full": 100,
+   "score": 0.486,
+   "lo": 0.4551346916565153,
+   "hi": 0.5169724615039037
+  }
+ ]
+}
