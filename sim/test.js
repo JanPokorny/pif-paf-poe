@@ -295,4 +295,182 @@ t('returned stones join the remover\'s hand', () => {
   assert.deepStrictEqual(s.hands.O, ['chain'], 'owner does not get it back');
 });
 
+
+
+console.log('\nrule variants');
+
+function mkr(rules, hands) {
+  return E.initGameState(hands.X, hands.O, 'X', { X: 'none', O: 'none' }, rules);
+}
+
+t('effectWin=false defers a line made by an effect', () => {
+  const build = rules => {
+    const s = mkr(rules, { X: ['shift', 'regular'], O: ['regular', 'regular'] });
+    put(s, 0, 'X', 'regular'); put(s, 1, 'X', 'regular');   // X on 0,1; needs 2
+    s.phase = 'select';
+    E.doAction(s, { type: 'select', stoneType: 'shift' });
+    E.doAction(s, { type: 'place', pos: 6 });               // bottom-left, no line yet
+    E.doAction(s, { type: 'effect', direction: 'up' });     // col 0 shifts up: 6 -> 3, 0 -> 6...
+    return s;
+  };
+  // Use a line the shift actually creates: X on 1,2 and shift placed at 3 moving right.
+  const mk2 = rules => {
+    const s = mkr(rules, { X: ['shift', 'regular'], O: ['regular', 'regular'] });
+    put(s, 1, 'X', 'regular'); put(s, 2, 'X', 'regular');
+    s.phase = 'select';
+    E.doAction(s, { type: 'select', stoneType: 'shift' });
+    E.doAction(s, { type: 'place', pos: 3 });               // row 1, no line
+    E.doAction(s, { type: 'effect', direction: 'up' });      // col 0: 3 -> 0, completing 0,1,2
+    return s;
+  };
+  const now = mk2({});
+  assert.strictEqual(now.winner, 'X', 'default: effect line wins at once');
+  const later = mk2({ effectWin: false });
+  assert.strictEqual(later.winner, null, 'deferred: no win yet');
+  assert.strictEqual(later.currentPlayer, 'O', 'opponent gets a turn to break it');
+  build({});
+});
+
+t('a deferred line wins if the opponent cannot break it', () => {
+  const s = mkr({ effectWin: false }, { X: ['shift', 'regular'], O: ['regular'] });
+  put(s, 1, 'X', 'regular'); put(s, 2, 'X', 'regular');
+  s.phase = 'select';
+  E.doAction(s, { type: 'select', stoneType: 'shift' });
+  E.doAction(s, { type: 'place', pos: 3 });
+  E.doAction(s, { type: 'effect', direction: 'up' });
+  assert.strictEqual(s.winner, null);
+  E.doAction(s, { type: 'select', stoneType: 'regular' });   // O plays elsewhere
+  E.doAction(s, { type: 'place', pos: 8 });
+  assert.strictEqual(s.winner, 'X', 'line survived one turn');
+});
+
+t('effectWin=false still awards a line completed by the placement', () => {
+  const s = mkr({ effectWin: false }, { X: ['shift', 'regular'], O: ['regular'] });
+  put(s, 0, 'X', 'regular'); put(s, 1, 'X', 'regular');
+  s.phase = 'select';
+  E.doAction(s, { type: 'select', stoneType: 'shift' });
+  E.doAction(s, { type: 'place', pos: 2 });                  // completes 0,1,2 on placement
+  assert.strictEqual(s.phase, 'effect', 'the shift still has to resolve');
+  E.doAction(s, { type: 'effect', direction: 'right' });      // rotates the all-X row: line survives
+  assert.strictEqual(s.winner, 'X');
+});
+
+t('restrictionFizzle grounds a movement stone played under a restriction', () => {
+  const s = mkr({ restrictionFizzle: true }, { X: ['magnet', 'regular'], O: ['shift', '2048'] });
+  s.phase = 'select';
+  E.doAction(s, { type: 'select', stoneType: 'magnet' });
+  E.doAction(s, { type: 'place', pos: 4 });
+  E.doAction(s, { type: 'select', stoneType: 'shift' });      // O is restricted
+  E.doAction(s, { type: 'place', pos: 1 });
+  assert.strictEqual(s.phase, 'select', 'no effect phase: the shift fizzled');
+  assert.strictEqual(s.currentPlayer, 'X');
+  assert.strictEqual(s.board[1].type, 'shift', 'the stone is still placed');
+});
+
+t('restrictionFizzle leaves the owner\'s own movement stones alone', () => {
+  const s = mkr({ restrictionFizzle: true }, { X: ['magnet', 'shift'], O: ['regular'] });
+  s.phase = 'select';
+  E.doAction(s, { type: 'select', stoneType: 'magnet' });
+  E.doAction(s, { type: 'place', pos: 4 });
+  E.doAction(s, { type: 'select', stoneType: 'regular' });
+  E.doAction(s, { type: 'place', pos: 1 });
+  E.doAction(s, { type: 'select', stoneType: 'shift' });      // X, restriction is X's own
+  E.doAction(s, { type: 'place', pos: 0 });
+  assert.strictEqual(s.phase, 'effect');
+});
+
+t('chainPulls caps how far the chain drags', () => {
+  const s = mkr({ chainPulls: 1 }, { X: ['chain', 'regular'], O: ['regular'] });
+  put(s, 1, 'O', 'regular'); put(s, 2, 'O', 'regular');
+  s.phase = 'select';
+  E.doAction(s, { type: 'select', stoneType: 'chain' });
+  E.doAction(s, { type: 'place', pos: 0 });
+  E.doAction(s, { type: 'chainMove', pos: 3 });
+  assert.ok(has(E.getLegalActions(s), a => a.type === 'chainPull'), 'first pull allowed');
+  E.doAction(s, { type: 'chainPull', pos: 1 });
+  assert.deepStrictEqual(E.getLegalActions(s), [{ type: 'chainPass' }], 'second pull refused');
+});
+
+t('openCentre=false only blocks the very first stone', () => {
+  const s = mkr({ openCentre: false }, { X: ['regular', 'regular'], O: ['regular'] });
+  s.phase = 'select';
+  E.doAction(s, { type: 'select', stoneType: 'regular' });
+  assert.ok(!E.getPlaceActions(s).some(a => a.pos === 4));
+  E.doAction(s, { type: 'place', pos: 0 });
+  E.doAction(s, { type: 'select', stoneType: 'regular' });
+  assert.ok(E.getPlaceActions(s).some(a => a.pos === 4), 'second stone may take the centre');
+});
+
+t('persistentRestriction: every enemy Stinky on the board keeps restricting', () => {
+  const s = mkr({ persistentRestriction: true }, { X: ['stinky', 'stinky'], O: ['regular', 'regular'] });
+  put(s, 0, 'X', 'stinky'); put(s, 8, 'X', 'stinky');
+  s.currentPlayer = 'O'; s.phase = 'select';
+  E.doAction(s, { type: 'select', stoneType: 'regular' });
+  const ok = E.getPlaceActions(s).map(a => a.pos).sort((x, y) => x - y);
+  assert.deepStrictEqual(ok, [2, 4, 6], 'not adjacent to either stinky');
+});
+
+t('persistentRestriction: enemy Magnets pull you next to one of them', () => {
+  const s = mkr({ persistentRestriction: true }, { X: ['magnet'], O: ['regular', 'regular'] });
+  put(s, 0, 'X', 'magnet');
+  s.currentPlayer = 'O'; s.phase = 'select';
+  E.doAction(s, { type: 'select', stoneType: 'regular' });
+  assert.deepStrictEqual(E.getPlaceActions(s).map(a => a.pos).sort((x, y) => x - y), [1, 3]);
+});
+
+t('persistentRestriction relaxes rather than deadlocking', () => {
+  const s = mkr({ persistentRestriction: true }, { X: ['stinky'], O: ['regular', 'regular'] });
+  // Stinkies on all four edges: every empty cell touches one, so the lock has to
+  // give way rather than leave the player with no legal placement.
+  put(s, 1, 'X', 'stinky'); put(s, 3, 'X', 'stinky');
+  put(s, 5, 'X', 'stinky'); put(s, 7, 'X', 'stinky');
+  s.currentPlayer = 'O'; s.phase = 'select';
+  E.doAction(s, { type: 'select', stoneType: 'regular' });
+  assert.deepStrictEqual(E.getPlaceActions(s).map(a => a.pos).sort((x, y) => x - y), [0, 2, 4, 6, 8]);
+});
+
+t('persistentRestriction keeps the tighter filter while it still allows a move', () => {
+  const s = mkr({ persistentRestriction: true }, { X: ['stinky'], O: ['regular', 'regular'] });
+  put(s, 1, 'X', 'stinky'); put(s, 3, 'X', 'stinky');
+  s.currentPlayer = 'O'; s.phase = 'select';
+  E.doAction(s, { type: 'select', stoneType: 'regular' });
+  assert.deepStrictEqual(E.getPlaceActions(s).map(a => a.pos).sort((x, y) => x - y), [5, 7, 8]);
+});
+
+t('own restriction stones never restrict their owner', () => {
+  const s = mkr({ persistentRestriction: true }, { X: ['stinky', 'regular'], O: ['regular'] });
+  put(s, 0, 'X', 'stinky');
+  s.currentPlayer = 'X'; s.phase = 'select';
+  E.doAction(s, { type: 'select', stoneType: 'regular' });
+  assert.strictEqual(E.getPlaceActions(s).length, 8);
+});
+
+
+t('effectLineForbidden: an effect may not complete your line', () => {
+  const mk3 = rules => {
+    const s = mkr(rules, { X: ['shift', 'regular'], O: ['regular', 'regular'] });
+    put(s, 1, 'X', 'regular'); put(s, 2, 'X', 'regular');
+    s.phase = 'select';
+    E.doAction(s, { type: 'select', stoneType: 'shift' });
+    E.doAction(s, { type: 'place', pos: 3 });      // shifting col 0 up puts it on 0: line
+    return s;
+  };
+  const open = mk3({});
+  assert.ok(E.getLegalActions(open).some(a => a.direction === 'up'), 'normally legal');
+  const shut = mk3({ effectLineForbidden: true });
+  const acts = E.getLegalActions(shut);
+  assert.ok(!acts.some(a => a.direction === 'up'), 'the line-completing shift is gone');
+  assert.ok(acts.length > 0, 'other directions remain');
+});
+
+t('effectLineForbidden still lets you win by placing', () => {
+  const s = mkr({ effectLineForbidden: true }, { X: ['shift', 'regular'], O: ['regular'] });
+  put(s, 0, 'X', 'regular'); put(s, 1, 'X', 'regular');
+  s.phase = 'select';
+  E.doAction(s, { type: 'select', stoneType: 'shift' });
+  E.doAction(s, { type: 'place', pos: 2 });
+  E.doAction(s, { type: 'effect', direction: 'right' });
+  assert.strictEqual(s.winner, 'X');
+});
+
 console.log('\n' + passed + ' checks passed\n');

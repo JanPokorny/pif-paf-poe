@@ -26,6 +26,29 @@ const SKILLS = {
 };
 const SKILL_IDS = Object.keys(SKILLS);
 
+// ── Rule variants ───────────────────────────────────────────────────────────
+// Defaults reproduce index.html exactly. Everything else is an experiment.
+const DEFAULT_RULES = {
+  // A line completed by a movement effect wins immediately. With false, it is
+  // deferred: the opponent gets one turn to break it, and it wins at the end of
+  // that turn if it survives. Lines completed by the placement itself always win
+  // at once.
+  effectWin: true,
+  // A movement effect may not be used to complete your own line at all: the
+  // winning stone has to be placed, which means it can be blocked.
+  effectLineForbidden: false,
+  // While the opponent's Magnet/Stinky restriction is on you, your movement
+  // stone's effect does not resolve (the stone is still placed).
+  restrictionFizzle: false,
+  // Every Magnet/Stinky the opponent has on the board restricts you, for as long
+  // as it stays there, instead of only the one they played last turn.
+  persistentRestriction: false,
+  // How many stones Chain may drag after its own mandatory move.
+  chainPulls: Infinity,
+  // May the very first stone of the game be placed in the centre?
+  openCentre: true,
+};
+
 // ── Board helpers ───────────────────────────────────────────────────────────
 
 function opp(p) { return p === 'X' ? 'O' : 'X'; }
@@ -52,8 +75,9 @@ function chainAdj(s, a, b) { return s.skills[s.currentPlayer] === 'slither' ? ad
 
 // ── State ───────────────────────────────────────────────────────────────────
 
-function initGameState(handsX, handsO, firstPlayer, skills) {
+function initGameState(handsX, handsO, firstPlayer, skills, rules) {
   const s = {
+    rules: rules ? { ...DEFAULT_RULES, ...rules } : DEFAULT_RULES,
     board: Array(9).fill(null),
     hands: { X: [...handsX], O: [...handsO] },
     skills: { X: (skills && skills.X) || 'none', O: (skills && skills.O) || 'none' },
@@ -70,6 +94,9 @@ function initGameState(handsX, handsO, firstPlayer, skills) {
     nextId: 1,
     anchored: { X: null, O: null }, // stone id protected from removal
     pending2048: 0,                 // extra 2048 resolutions queued (Overload)
+    lineOnPlace: false,             // mover already had a line before any effect
+    movedThisTurn: false,           // an effect or chain move has run this turn
+    chainPulled: 0,
     stats: { X: {}, O: {} },        // activation counters; dropped by cloneState
   };
   s.history.add(hashState(s));
@@ -78,6 +105,7 @@ function initGameState(handsX, handsO, firstPlayer, skills) {
 
 function cloneState(s) {
   return {
+    rules: s.rules,
     board: s.board.map(c => c ? { player: c.player, type: c.type, id: c.id } : null),
     hands: { X: [...s.hands.X], O: [...s.hands.O] },
     skills: s.skills,
@@ -94,6 +122,9 @@ function cloneState(s) {
     nextId: s.nextId,
     anchored: { X: s.anchored.X, O: s.anchored.O },
     pending2048: s.pending2048,
+    lineOnPlace: s.lineOnPlace,
+    movedThisTurn: s.movedThisTurn,
+    chainPulled: s.chainPulled,
   };
 }
 
@@ -166,7 +197,37 @@ function applyEffect(s, a) {
 // ── Legal actions ───────────────────────────────────────────────────────────
 
 function restrictionActive(s) {
+  if (s.rules.persistentRestriction) {
+    const o = opp(s.currentPlayer);
+    for (let i = 0; i < 9; i++) {
+      const c = s.board[i];
+      if (c && c.player === o && RESTRICTION_TYPES.includes(c.type)) return { type: c.type, pos: i, owner: o, uses: 1 };
+    }
+    return null;
+  }
   return s.restriction && s.restriction.owner !== s.currentPlayer ? s.restriction : null;
+}
+
+// Placement filter for persistent restrictions: adjacent to at least one enemy
+// Magnet, and adjacent to no enemy Stinky. Relaxed step by step if that leaves
+// nowhere to play, so a lock can never deadlock the game.
+function persistentFilter(s, free) {
+  const o = opp(s.currentPlayer);
+  const magnets = [], stinkies = [];
+  for (let i = 0; i < 9; i++) {
+    const c = s.board[i];
+    if (!c || c.player !== o) continue;
+    if (c.type === 'magnet') magnets.push(i);
+    else if (c.type === 'stinky') stinkies.push(i);
+  }
+  if (!magnets.length && !stinkies.length) return free;
+  const okMagnet = f => !magnets.length || magnets.some(m => adj(f, m));
+  const okStinky = f => stinkies.every(st => !adj(f, st));
+  for (const test of [f => okMagnet(f) && okStinky(f), okStinky, okMagnet]) {
+    const ok = free.filter(test);
+    if (ok.length) return ok;
+  }
+  return free;
 }
 
 function getRemoveActions(s) {
@@ -196,12 +257,38 @@ function getSelectActions(s) {
 function getPlaceActions(s) {
   let free = [];
   for (let i = 0; i < 9; i++) if (!s.board[i]) free.push(i);
-  const r = restrictionActive(s);
-  if (r) {
-    const ok = free.filter(i => r.type === 'magnet' ? adj(i, r.pos) : !adj(i, r.pos));
-    if (ok.length) free = ok;
+  if (!s.rules.openCentre && free.length === 9) free = free.filter(i => i !== 4);
+  if (s.rules.persistentRestriction) {
+    free = persistentFilter(s, free);
+  } else {
+    const r = restrictionActive(s);
+    if (r) {
+      const ok = free.filter(i => r.type === 'magnet' ? adj(i, r.pos) : !adj(i, r.pos));
+      if (ok.length) free = ok;
+    }
   }
   return free.map(pos => ({ type: 'place', pos }));
+}
+
+// Would this action leave the mover with a line they did not already have?
+function makesNewLine(s, a) {
+  if (!s.rules.effectLineForbidden || s.lineOnPlace) return false;
+  const b = s.board.slice();
+  const t = s.selectedStone, p = s.placedPos;
+  if (a.type === 'effect') {
+    if (t === 'shift') applyShift(b, p, a.direction, a.line);
+    else if (t === '2048') apply2048(b, a.direction);
+    else if (t === 'rotate') { if (a.ring) applyRing(b, a.ring === 'cw'); else applyRotate(b, a.subsquare); }
+  } else if (a.type === 'chainMove') { b[a.pos] = b[s.placedPos]; b[s.placedPos] = null; }
+  else if (a.type === 'chainPull') { b[s.chainEmpty] = b[a.pos]; b[a.pos] = null; }
+  else return false;
+  return check3(b, s.currentPlayer);
+}
+
+function withoutWinningEffects(s, acts, keepAtLeastOne) {
+  if (!s.rules.effectLineForbidden) return acts;
+  const ok = acts.filter(a => !makesNewLine(s, a));
+  return (ok.length || !keepAtLeastOne) ? ok : acts;
 }
 
 function getEffectActions(s) {
@@ -232,9 +319,15 @@ function getLegalActions(s) {
     case 'remove': return getRemoveActions(s);
     case 'select': return getSelectActions(s);
     case 'place': return getPlaceActions(s);
-    case 'effect': return getEffectActions(s);
-    case 'chainMove': { const a = []; for (let i = 0; i < 9; i++) if (!s.board[i] && chainAdj(s, i, s.placedPos)) a.push({ type: 'chainMove', pos: i }); return a; }
-    case 'chainPull': { const a = [{ type: 'chainPass' }]; for (let i = 0; i < 9; i++) if (s.board[i] && chainAdj(s, i, s.chainEmpty) && !s.chainMoved.has(i)) a.push({ type: 'chainPull', pos: i }); return a; }
+    case 'effect': return withoutWinningEffects(s, getEffectActions(s), true);
+    case 'chainMove': { const a = []; for (let i = 0; i < 9; i++) if (!s.board[i] && chainAdj(s, i, s.placedPos)) a.push({ type: 'chainMove', pos: i }); return withoutWinningEffects(s, a, true); }
+    case 'chainPull': {
+      const a = [{ type: 'chainPass' }];
+      if (s.chainPulled >= s.rules.chainPulls) return a;
+      const pulls = [];
+      for (let i = 0; i < 9; i++) if (s.board[i] && chainAdj(s, i, s.chainEmpty) && !s.chainMoved.has(i)) pulls.push({ type: 'chainPull', pos: i });
+      return a.concat(withoutWinningEffects(s, pulls, false));
+    }
     case 'bonus': return [{ type: 'bonusTake' }, { type: 'bonusPass' }];
     default: return [];
   }
@@ -255,7 +348,11 @@ function resolveTurn(s) {
   const h = hashState(s);
   if (s.history.has(h)) { s.winner = opp(p); s.phase = 'gameOver'; s.winReason = 'repeat'; return true; }
   s.history.add(h);
-  if (check3(s.board, p)) { s.winner = p; s.phase = 'gameOver'; s.winReason = 'line'; return true; }
+  // A line the mover shuffled into existence this turn does not win on the spot
+  // when effectWin is off; the opponent gets one turn to break it, after which
+  // the check at the end of *their* turn (the branch below) awards the win.
+  const deferred = !s.rules.effectWin && s.movedThisTurn && !s.lineOnPlace;
+  if (check3(s.board, p) && !deferred) { s.winner = p; s.phase = 'gameOver'; s.winReason = 'line'; return true; }
   if (check3(s.board, opp(p))) { s.winner = opp(p); s.phase = 'gameOver'; s.winReason = 'line'; return true; }
   return false;
 }
@@ -264,6 +361,7 @@ function resolveTurn(s) {
 function advanceTurn(s, again) {
   if (!again) s.currentPlayer = opp(s.currentPlayer);
   s.selectedStone = null; s.placedPos = null;
+  s.lineOnPlace = false; s.movedThisTurn = false; s.chainPulled = 0;
   s.phase = boardFull(s.board) ? 'remove' : 'select';
   // Dead ends are draws, matching the "no legal actions" break in the reference implementation.
   if (s.phase === 'remove' && !getRemoveActions(s).length) { s.winner = null; s.phase = 'gameOver'; s.winReason = 'stuck'; }
@@ -284,6 +382,12 @@ function endTurn(s) {
 
 function afterPlacement(s) {
   const t = s.selectedStone;
+  s.lineOnPlace = check3(s.board, s.currentPlayer);
+  if (s.rules.restrictionFizzle && restrictionActive(s) && (t === 'chain' || MOVEMENT_TYPES.includes(t))) {
+    bump(s, 'fizzle');           // the restriction grounded this movement stone
+    endTurn(s);
+    return;
+  }
   if (t === 'chain') {
     let h = false;
     for (let i = 0; i < 9; i++) if (!s.board[i] && chainAdj(s, i, s.placedPos)) { h = true; break; }
@@ -331,6 +435,7 @@ function doAction(s, a) {
       if (a.ring) bump(s, 'whirlwind_ring');
       if (a.line) bump(s, 'telekinesis_line');
       if (s.pending2048 > 0) bump(s, 'overload_second');
+      s.movedThisTurn = true;
       applyEffect(s, a);
       if (s.pending2048 > 0) { s.pending2048--; s.phase = 'effect'; }
       else endTurn(s);
@@ -338,6 +443,7 @@ function doAction(s, a) {
     }
     case 'chainMove': {
       if (!adj(a.pos, s.placedPos)) bump(s, 'slither_diag');
+      s.movedThisTurn = true;
       s.board[a.pos] = s.board[s.placedPos]; s.board[s.placedPos] = null;
       s.chainEmpty = s.placedPos; s.chainMoved.add(a.pos); s.phase = 'chainPull';
       break;
@@ -346,7 +452,7 @@ function doAction(s, a) {
     case 'chainPull': {
       if (!adj(a.pos, s.chainEmpty)) bump(s, 'slither_diag');
       s.board[s.chainEmpty] = s.board[a.pos]; s.board[a.pos] = null;
-      s.chainMoved.add(s.chainEmpty); s.chainEmpty = a.pos;
+      s.chainMoved.add(s.chainEmpty); s.chainEmpty = a.pos; s.chainPulled++; s.movedThisTurn = true;
       break;
     }
     case 'bonusPass': { bump(s, 'relentless_pass'); advanceTurn(s, false); break; }
@@ -356,7 +462,7 @@ function doAction(s, a) {
 
 module.exports = {
   TYPES, TYPE_CODE, LINES, SUBSQUARES, MOVEMENT_TYPES, RESTRICTION_TYPES, RING,
-  SKILLS, SKILL_IDS,
+  SKILLS, SKILL_IDS, DEFAULT_RULES,
   opp, adj, adjDiag, boardFull, check3, countStones, subsquaresFor, findById,
   initGameState, cloneState, hashState,
   applyShift, apply2048, applyRotate, applyRing,

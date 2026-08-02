@@ -44,3 +44,24 @@ A *skill* is a single passive modifier a player owns for the whole game, on top 
 - Scavenger (any hand): stones this player returns from a full board go to *their* hand instead of back to the owner.
 
 See `sim/README.md` for a balance study of these.
+
+## Base game balance (proposal)
+
+Simulation of the base game (no skills) found a strict two-tier hierarchy with no
+counters at all: Chain beats every other hand type, and swapping two cards in a hand for
+Chains is worth about +37 percentage points. Two rule changes, and only in combination,
+turn that hierarchy into a counter-triangle where no hand type beats the whole field:
+
+- Persistent restrictions: every Magnet/Stinky a player has on the board keeps restricting
+  the opponent's placement for as long as it stays there, rather than only the one played
+  last turn. A placement must be adjacent to at least one enemy Magnet and adjacent to no
+  enemy Stinky; if that leaves no legal placement the requirement is relaxed (Stinky first,
+  then Magnet, then dropped) so a lock can never deadlock the game.
+- Restriction fizzle: a movement stone placed while under an enemy restriction is still
+  placed, but its effect does not resolve.
+- Optional: Chain moves itself to the adjacent empty space but drags no further stones.
+
+The resulting loop is Magnet > Chain/Rotate > Stinky > Magnet. Measurements, the fifteen
+rule variants that did *not* work, and suggested price ordering are in `sim/BALANCE.md`.
+Note that this does not address the first-mover advantage, which remains ~70% and is the
+larger imbalance.

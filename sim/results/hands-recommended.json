@@ -1,0 +1,366 @@
+{
+ "opts": {
+  "games": 260,
+  "iters": 650,
+  "seed": 777000,
+  "workers": 4,
+  "rules": {
+   "chainPulls": 0,
+   "persistentRestriction": true,
+   "restrictionFizzle": true
+  },
+  "out": "sim/results/hands-recommended.json",
+  "label": "RECOMMENDED: persist+fizzle+chain0",
+  "set": "swap2"
+ },
+ "matrix": {
+  "2048": {
+   "2048": {
+    "pts": 0,
+    "n": 0
+   },
+   "regular": {
+    "pts": 209,
+    "n": 260
+   },
+   "shift": {
+    "pts": 186,
+    "n": 260
+   },
+   "rotate": {
+    "pts": 128,
+    "n": 260
+   },
+   "magnet": {
+    "pts": 15,
+    "n": 260
+   },
+   "stinky": {
+    "pts": 74,
+    "n": 260
+   },
+   "chain": {
+    "pts": 130,
+    "n": 260
+   }
+  },
+  "regular": {
+   "2048": {
+    "pts": 51,
+    "n": 260
+   },
+   "regular": {
+    "pts": 0,
+    "n": 0
+   },
+   "shift": {
+    "pts": 126,
+    "n": 260
+   },
+   "rotate": {
+    "pts": 35,
+    "n": 260
+   },
+   "magnet": {
+    "pts": 26,
+    "n": 260
+   },
+   "stinky": {
+    "pts": 77,
+    "n": 260
+   },
+   "chain": {
+    "pts": 38,
+    "n": 260
+   }
+  },
+  "shift": {
+   "2048": {
+    "pts": 74,
+    "n": 260
+   },
+   "regular": {
+    "pts": 134,
+    "n": 260
+   },
+   "shift": {
+    "pts": 0,
+    "n": 0
+   },
+   "rotate": {
+    "pts": 34,
+    "n": 260
+   },
+   "magnet": {
+    "pts": 28,
+    "n": 260
+   },
+   "stinky": {
+    "pts": 80,
+    "n": 260
+   },
+   "chain": {
+    "pts": 59,
+    "n": 260
+   }
+  },
+  "rotate": {
+   "2048": {
+    "pts": 132,
+    "n": 260
+   },
+   "regular": {
+    "pts": 225,
+    "n": 260
+   },
+   "shift": {
+    "pts": 226,
+    "n": 260
+   },
+   "rotate": {
+    "pts": 0,
+    "n": 0
+   },
+   "magnet": {
+    "pts": 89,
+    "n": 260
+   },
+   "stinky": {
+    "pts": 159,
+    "n": 260
+   },
+   "chain": {
+    "pts": 122,
+    "n": 260
+   }
+  },
+  "magnet": {
+   "2048": {
+    "pts": 245,
+    "n": 260
+   },
+   "regular": {
+    "pts": 234,
+    "n": 260
+   },
+   "shift": {
+    "pts": 232,
+    "n": 260
+   },
+   "rotate": {
+    "pts": 171,
+    "n": 260
+   },
+   "magnet": {
+    "pts": 0,
+    "n": 0
+   },
+   "stinky": {
+    "pts": 123,
+    "n": 260
+   },
+   "chain": {
+    "pts": 140,
+    "n": 260
+   }
+  },
+  "stinky": {
+   "2048": {
+    "pts": 186,
+    "n": 260
+   },
+   "regular": {
+    "pts": 183,
+    "n": 260
+   },
+   "shift": {
+    "pts": 180,
+    "n": 260
+   },
+   "rotate": {
+    "pts": 101,
+    "n": 260
+   },
+   "magnet": {
+    "pts": 137,
+    "n": 260
+   },
+   "stinky": {
+    "pts": 0,
+    "n": 0
+   },
+   "chain": {
+    "pts": 62,
+    "n": 260
+   }
+  },
+  "chain": {
+   "2048": {
+    "pts": 130,
+    "n": 260
+   },
+   "regular": {
+    "pts": 222,
+    "n": 260
+   },
+   "shift": {
+    "pts": 201,
+    "n": 260
+   },
+   "rotate": {
+    "pts": 138,
+    "n": 260
+   },
+   "magnet": {
+    "pts": 120,
+    "n": 260
+   },
+   "stinky": {
+    "pts": 198,
+    "n": 260
+   },
+   "chain": {
+    "pts": 0,
+    "n": 0
+   }
+  }
+ },
+ "overall": [
+  {
+   "a": "magnet",
+   "score": 0.7339743589743589,
+   "lo": 0.7114911608066916,
+   "hi": 0.7553080342012937,
+   "n": 1560,
+   "turns": 5.187820512820513
+  },
+  {
+   "a": "chain",
+   "score": 0.6467948717948718,
+   "lo": 0.6227419919611951,
+   "hi": 0.670126544084911,
+   "n": 1560,
+   "turns": 4.558333333333334
+  },
+  {
+   "a": "rotate",
+   "score": 0.610897435897436,
+   "lo": 0.5864590862913872,
+   "hi": 0.6347909431233567,
+   "n": 1560,
+   "turns": 4.5442307692307695
+  },
+  {
+   "a": "stinky",
+   "score": 0.5442307692307692,
+   "lo": 0.5194374105012722,
+   "hi": 0.5688068208837989,
+   "n": 1560,
+   "turns": 5.116025641025641
+  },
+  {
+   "a": "2048",
+   "score": 0.4756410256410256,
+   "lo": 0.45094859769761236,
+   "hi": 0.5004531299453918,
+   "n": 1560,
+   "turns": 4.558974358974359
+  },
+  {
+   "a": "shift",
+   "score": 0.2621794871794872,
+   "lo": 0.24095697837901,
+   "hi": 0.28457041518821563,
+   "n": 1560,
+   "turns": 4.8634615384615385
+  },
+  {
+   "a": "regular",
+   "score": 0.22628205128205128,
+   "lo": 0.20620510623123015,
+   "hi": 0.24770378070463342,
+   "n": 1560,
+   "turns": 4.891666666666667
+  }
+ ],
+ "mirror": [
+  {
+   "a": "2048",
+   "firstPts": 247,
+   "firstN": 260,
+   "turns": 1087,
+   "n": 260,
+   "full": 0,
+   "rate": 0.95
+  },
+  {
+   "a": "rotate",
+   "firstPts": 231,
+   "firstN": 260,
+   "turns": 1089,
+   "n": 260,
+   "full": 0,
+   "rate": 0.8884615384615384
+  },
+  {
+   "a": "chain",
+   "firstPts": 214,
+   "firstN": 260,
+   "turns": 1118,
+   "n": 260,
+   "full": 0,
+   "rate": 0.823076923076923
+  },
+  {
+   "a": "shift",
+   "firstPts": 189,
+   "firstN": 260,
+   "turns": 1201,
+   "n": 260,
+   "full": 0,
+   "rate": 0.7269230769230769
+  },
+  {
+   "a": "magnet",
+   "firstPts": 169,
+   "firstN": 260,
+   "turns": 1590,
+   "n": 260,
+   "full": 23,
+   "rate": 0.65
+  },
+  {
+   "a": "stinky",
+   "firstPts": 118,
+   "firstN": 260,
+   "turns": 1446,
+   "n": 260,
+   "full": 6,
+   "rate": 0.45384615384615384
+  },
+  {
+   "a": "regular",
+   "firstPts": 114,
+   "firstN": 260,
+   "turns": 1500,
+   "n": 260,
+   "full": 28,
+   "rate": 0.43846153846153846
+  }
+ ],
+ "summary": {
+  "label": "RECOMMENDED: persist+fizzle+chain0",
+  "unbeaten": 0,
+  "top": "magnet",
+  "topScore": 0.7339743589743589,
+  "spread": 0.5076923076923077,
+  "cycles": 2,
+  "triples": 35,
+  "firstAdv": 0.7043956043956044,
+  "worstFirst": 0.95,
+  "worstFirstOf": "2048",
+  "turns": 4.817216117216118,
+  "bottom": "regular",
+  "bottomScore": 0.22628205128205128
+ }
+}
