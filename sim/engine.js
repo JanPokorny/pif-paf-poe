@@ -4,10 +4,24 @@
 // Kept behaviourally identical to index.html when both players have skill 'none'.
 
 const TYPES = ['regular', 'shift', '2048', 'rotate', 'magnet', 'stinky', 'chain'];
-const TYPE_CODE = { regular: 'rg', shift: 'sh', '2048': '20', rotate: 'ro', magnet: 'mg', stinky: 'sk', chain: 'ch' };
+// Experimental stones, kept out of TYPES so every existing script and result
+// keeps meaning exactly what it meant. Opt in with the --pool flag.
+//   mimic    - resolves the movement effect of the stone the opponent placed last turn
+//   leech    - must be placed beside an enemy stone, then swaps places with one
+//   glue     - itself and its orthogonal neighbours cannot be moved by an effect
+//   mountain - cannot be moved by an effect
+const EXTRA_TYPES = ['mimic', 'leech', 'glue', 'mountain'];
+const ALL_TYPES = TYPES.concat(EXTRA_TYPES);
+const TYPE_CODE = { regular: 'rg', shift: 'sh', '2048': '20', rotate: 'ro', magnet: 'mg', stinky: 'sk', chain: 'ch',
+  mimic: 'mi', leech: 'le', glue: 'gl', mountain: 'mo' };
 const LINES = [[0, 1, 2], [3, 4, 5], [6, 7, 8], [0, 3, 6], [1, 4, 7], [2, 5, 8], [0, 4, 8], [2, 4, 6]];
 const SUBSQUARES = { TL: [0, 1, 3, 4], TR: [1, 2, 4, 5], BL: [3, 4, 6, 7], BR: [4, 5, 7, 8] };
 const MOVEMENT_TYPES = ['shift', '2048', 'rotate'];
+// Stones with a resolve step after placement. Mimic only has one if it finds
+// something to copy; Leech only if it landed next to an enemy stone.
+const EFFECT_TYPES = ['shift', '2048', 'rotate', 'chain', 'leech', 'mimic'];
+// What Mimic can copy. Mimic itself is excluded, so copies never chain.
+const MIMIC_COPIES = ['shift', '2048', 'rotate', 'chain', 'leech'];
 const RESTRICTION_TYPES = ['magnet', 'stinky'];
 const RING = [0, 1, 2, 5, 8, 7, 6, 3]; // outer ring, clockwise
 
@@ -108,6 +122,8 @@ function initGameState(handsX, handsO, firstPlayer, skills, rules) {
     nextId: 1,
     anchored: { X: null, O: null }, // stone id protected from removal
     pending2048: 0,                 // extra 2048 resolutions queued (Overload)
+    lastPlaced: { X: null, O: null },  // what each player placed on their last turn (Mimic)
+    mimicAs: null,                     // the effect a Mimic is borrowing this turn
     turnsDone: 0,
     pieResolved: false,
     lineOnPlace: false,             // mover already had a line before any effect
@@ -115,6 +131,7 @@ function initGameState(handsX, handsO, firstPlayer, skills, rules) {
     chainPulled: 0,
     stats: { X: {}, O: {} },        // activation counters; dropped by cloneState
   };
+  s.hasMimic = hands.X.includes('mimic') || hands.O.includes('mimic');
   s.history.add(hashState(s));
   return s;
 }
@@ -142,6 +159,9 @@ function cloneState(s) {
     movedThisTurn: s.movedThisTurn,
     chainPulled: s.chainPulled,
     dullTurn: s.dullTurn,
+    lastPlaced: { X: s.lastPlaced.X, O: s.lastPlaced.O },
+    mimicAs: s.mimicAs,
+    hasMimic: s.hasMimic,
     turnsDone: s.turnsDone,
     pieResolved: s.pieResolved,
   };
@@ -152,6 +172,10 @@ function hashState(s) {
   for (let i = 0; i < 9; i++) { const c = s.board[i]; h += c ? c.player + TYPE_CODE[c.type] : '..'; }
   h += '|';
   if (s.restriction) h += s.restriction.type[0] + s.restriction.pos + s.restriction.owner + s.restriction.uses;
+  // What was played last turn is part of the position only when a Mimic could
+  // read it. Gated so games without Mimic hash exactly as index.html does, and
+  // the parity check keeps its meaning.
+  if (s.hasMimic) h += '|' + (s.lastPlaced.X || '-') + (s.lastPlaced.O || '-');
   return h;
 }
 
@@ -206,11 +230,59 @@ function applyRing(board, dirCw) {
   }
 }
 
+// One implementation of "resolve a movement effect onto this board", shared by
+// the real move, the immobility veto, the effect-line filter and the MCTS
+// preview, so the four can never drift apart.
+function applyEffectTo(board, type, pos, a) {
+  if (type === 'shift') applyShift(board, pos, a.direction, a.line);
+  else if (type === '2048') apply2048(board, a.direction);
+  else if (type === 'rotate') { if (a.ring) applyRing(board, a.ring === 'cw'); else applyRotate(board, a.subsquare); }
+  else if (type === 'leech') { const t = board[a.swap]; board[a.swap] = board[pos]; board[pos] = t; }
+}
+
+// The effect currently resolving: Mimic borrows another stone's, everything else
+// uses its own.
+function effectiveType(s) { return s.mimicAs || s.selectedStone; }
+
 function applyEffect(s, a) {
-  const t = s.selectedStone, p = s.placedPos;
-  if (t === 'shift') applyShift(s.board, p, a.direction, a.line);
-  else if (t === '2048') apply2048(s.board, a.direction);
-  else if (t === 'rotate') { if (a.ring) applyRing(s.board, a.ring === 'cw'); else applyRotate(s.board, a.subsquare); }
+  applyEffectTo(s.board, effectiveType(s), s.placedPos, a);
+}
+
+// ── Immobility (Glue, Mountain) ─────────────────────────────────────────────
+// Glue and Mountain turn "this movement does not happen" into a property of the
+// board rather than a rules clause: a direction that would drag a stuck stone is
+// simply not on the menu, and a stone with no legal direction left resolves
+// nothing. That is restrictionFizzle, expressed as board position.
+
+function immobile(board, i) {
+  const c = board[i];
+  if (!c) return false;
+  if (c.type === 'mountain' || c.type === 'glue') return true;
+  for (let j = 0; j < 9; j++) if (board[j] && board[j].type === 'glue' && adj(i, j)) return true;
+  return false;
+}
+
+function anyImmobile(board) {
+  for (let i = 0; i < 9; i++) if (immobile(board, i)) return true;
+  return false;
+}
+
+// Effects are permutations of the board's references, so "did this stone move"
+// is an identity comparison. Immobility is judged on the pre-effect board.
+function movesStuckStone(s, a) {
+  if (!anyImmobile(s.board)) return false;
+  const b = s.board.slice();
+  if (a.type === 'effect') applyEffectTo(b, effectiveType(s), s.placedPos, a);
+  else if (a.type === 'chainMove') { b[a.pos] = b[s.placedPos]; b[s.placedPos] = null; }
+  else if (a.type === 'chainPull') { b[s.chainEmpty] = b[a.pos]; b[a.pos] = null; }
+  else return false;
+  for (let i = 0; i < 9; i++) if (immobile(s.board, i) && b[i] !== s.board[i]) return true;
+  return false;
+}
+
+function withoutStuck(s, acts) {
+  if (!anyImmobile(s.board)) return acts;
+  return acts.filter(a => !movesStuckStone(s, a));
 }
 
 // ── Legal actions ───────────────────────────────────────────────────────────
@@ -292,6 +364,17 @@ function getPlaceActions(s) {
       if (ok.length) free = ok;
     }
   }
+  // Leech wants to land beside an enemy stone. Applied after the opponent's
+  // restriction, which outranks it: a Leech with nowhere to latch on is still
+  // placeable, it just arrives inert.
+  if (s.selectedStone === 'leech') {
+    const o = opp(s.currentPlayer);
+    const near = free.filter(i => {
+      for (let j = 0; j < 9; j++) if (s.board[j] && s.board[j].player === o && adj(i, j)) return true;
+      return false;
+    });
+    if (near.length) free = near;
+  }
   return free.map(pos => ({ type: 'place', pos }));
 }
 
@@ -299,15 +382,21 @@ function getPlaceActions(s) {
 function makesNewLine(s, a) {
   if (!s.rules.effectLineForbidden || s.lineOnPlace) return false;
   const b = s.board.slice();
-  const t = s.selectedStone, p = s.placedPos;
-  if (a.type === 'effect') {
-    if (t === 'shift') applyShift(b, p, a.direction, a.line);
-    else if (t === '2048') apply2048(b, a.direction);
-    else if (t === 'rotate') { if (a.ring) applyRing(b, a.ring === 'cw'); else applyRotate(b, a.subsquare); }
-  } else if (a.type === 'chainMove') { b[a.pos] = b[s.placedPos]; b[s.placedPos] = null; }
+  if (a.type === 'effect') applyEffectTo(b, effectiveType(s), s.placedPos, a);
+  else if (a.type === 'chainMove') { b[a.pos] = b[s.placedPos]; b[s.placedPos] = null; }
   else if (a.type === 'chainPull') { b[s.chainEmpty] = b[a.pos]; b[a.pos] = null; }
   else return false;
   return check3(b, s.currentPlayer);
+}
+
+// The stuck filter is a hard legality rule, so it is applied before the soft
+// effectLineForbidden filter (which keeps one option rather than none).
+function effectOptions(s) { return withoutStuck(s, getEffectActions(s)); }
+
+function chainMoveOptions(s) {
+  const a = [];
+  for (let i = 0; i < 9; i++) if (!s.board[i] && chainAdj(s, i, s.placedPos)) a.push({ type: 'chainMove', pos: i });
+  return withoutStuck(s, a);
 }
 
 function withoutWinningEffects(s, acts, keepAtLeastOne) {
@@ -317,8 +406,13 @@ function withoutWinningEffects(s, acts, keepAtLeastOne) {
 }
 
 function getEffectActions(s) {
-  const t = s.selectedStone, p = s.placedPos, sk = s.skills[s.currentPlayer];
+  const t = effectiveType(s), p = s.placedPos, sk = s.skills[s.currentPlayer];
   const DIRS = ['up', 'down', 'left', 'right'];
+  if (t === 'leech') {
+    const o = opp(s.currentPlayer), out = [];
+    for (let i = 0; i < 9; i++) if (s.board[i] && s.board[i].player === o && adj(i, p)) out.push({ type: 'effect', swap: i });
+    return out;
+  }
   if (t === '2048') return DIRS.map(d => ({ type: 'effect', direction: d }));
   if (t === 'shift') {
     const base = DIRS.map(d => ({ type: 'effect', direction: d }));
@@ -344,14 +438,14 @@ function getLegalActions(s) {
     case 'remove': return getRemoveActions(s);
     case 'select': return getSelectActions(s);
     case 'place': return getPlaceActions(s);
-    case 'effect': return withoutWinningEffects(s, getEffectActions(s), true);
-    case 'chainMove': { const a = []; for (let i = 0; i < 9; i++) if (!s.board[i] && chainAdj(s, i, s.placedPos)) a.push({ type: 'chainMove', pos: i }); return withoutWinningEffects(s, a, true); }
+    case 'effect': return withoutWinningEffects(s, effectOptions(s), true);
+    case 'chainMove': return withoutWinningEffects(s, chainMoveOptions(s), true);
     case 'chainPull': {
       const a = [{ type: 'chainPass' }];
       if (s.chainPulled >= s.rules.chainPulls) return a;
       const pulls = [];
       for (let i = 0; i < 9; i++) if (s.board[i] && chainAdj(s, i, s.chainEmpty) && !s.chainMoved.has(i)) pulls.push({ type: 'chainPull', pos: i });
-      return a.concat(withoutWinningEffects(s, pulls, false));
+      return a.concat(withoutWinningEffects(s, withoutStuck(s, pulls), false));
     }
     case 'bonus': return [{ type: 'bonusTake' }, { type: 'bonusPass' }];
     case 'pie': return [{ type: 'pieKeep' }, { type: 'pieSwap' }];
@@ -364,6 +458,10 @@ function getLegalActions(s) {
 // Restriction bookkeeping + the repeat/line terminal checks. True if the game ended.
 function resolveTurn(s) {
   const p = s.currentPlayer;
+  // Recorded after the effect has resolved, so Mimic reads what the opponent
+  // played, not what that stone went on to do. Mimic records itself, which is
+  // why a Mimic cannot copy a Mimic.
+  s.lastPlaced[p] = s.selectedStone;
   if (RESTRICTION_TYPES.includes(s.selectedStone) && !s.dullTurn) {
     s.restriction = { type: s.selectedStone, pos: s.placedPos, owner: p, uses: s.skills[p] === 'lingering' ? 2 : 1 };
   } else if (s.restriction && s.restriction.owner !== p) {
@@ -433,18 +531,36 @@ function afterPlacement(s) {
     endTurn(s);
     return;
   }
-  if (s.rules.restrictionFizzle && restrictionActive(s) && (t === 'chain' || MOVEMENT_TYPES.includes(t))) {
+  if (s.rules.restrictionFizzle && restrictionActive(s) && EFFECT_TYPES.includes(t)) {
     bump(s, 'fizzle');           // the restriction grounded this movement stone
     endTurn(s);
     return;
   }
-  if (t === 'chain') {
-    let h = false;
-    for (let i = 0; i < 9; i++) if (!s.board[i] && chainAdj(s, i, s.placedPos)) { h = true; break; }
-    if (h) { s.phase = 'chainMove'; s.chainMoved = new Set(); } else endTurn(s);
-  } else if (MOVEMENT_TYPES.includes(t)) {
+  // Mimic borrows the effect of the stone the opponent placed on their last
+  // turn. On the opening move there is nothing to borrow, so a Mimic in the
+  // first player's hand is a Regular exactly once per game - by construction,
+  // and only for them.
+  s.mimicAs = null;
+  if (t === 'mimic') {
+    const last = s.lastPlaced[opp(s.currentPlayer)];
+    if (!last || !MIMIC_COPIES.includes(last)) { bump(s, 'mimic_blank'); endTurn(s); return; }
+    s.mimicAs = last;
+    bump(s, 'mimic_copy');
+  }
+  const eff = effectiveType(s);
+  if (eff === 'chain') {
+    if (chainMoveOptions(s).length) { s.phase = 'chainMove'; s.chainMoved = new Set(); }
+    else { if (anyImmobile(s.board)) bump(s, 'stuck'); endTurn(s); }
+  } else if (EFFECT_TYPES.includes(eff)) {
+    // No legal direction left (everything reachable is glued, or a Leech landed
+    // with nothing to grab) - the stone is placed and resolves nothing.
+    if (!effectOptions(s).length) {
+      bump(s, eff === 'leech' && !anyImmobile(s.board) ? 'leech_blank' : 'stuck');
+      endTurn(s);
+      return;
+    }
     s.phase = 'effect';
-    if (t === '2048' && s.skills[s.currentPlayer] === 'overload') s.pending2048 = 1;
+    if (eff === '2048' && s.skills[s.currentPlayer] === 'overload') s.pending2048 = 1;
   } else endTurn(s);
 }
 
@@ -519,11 +635,13 @@ function doAction(s, a) {
 }
 
 module.exports = {
-  TYPES, TYPE_CODE, LINES, SUBSQUARES, MOVEMENT_TYPES, RESTRICTION_TYPES, RING,
+  TYPES, EXTRA_TYPES, ALL_TYPES, TYPE_CODE, LINES, SUBSQUARES, MOVEMENT_TYPES,
+  EFFECT_TYPES, MIMIC_COPIES, RESTRICTION_TYPES, RING,
   SKILLS, SKILL_IDS, DEFAULT_RULES,
   opp, adj, adjDiag, boardFull, check3, countStones, subsquaresFor, findById,
+  immobile, anyImmobile, effectiveType,
   initGameState, cloneState, hashState,
-  applyShift, apply2048, applyRotate, applyRing,
+  applyShift, apply2048, applyRotate, applyRing, applyEffectTo,
   getLegalActions, getRemoveActions, getSelectActions, getPlaceActions, getEffectActions,
   doAction, endTurn, resolveTurn, advanceTurn,
 };

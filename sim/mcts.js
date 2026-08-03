@@ -3,7 +3,7 @@
 // so tournament runs are reproducible.
 
 const { cloneState, getLegalActions, doAction, check3, opp,
-  applyShift, apply2048, applyRotate, applyRing } = require('./engine');
+  applyEffectTo, effectiveType } = require('./engine');
 
 // Rollout policy. Pure-random rollouts blunder constantly, which makes every
 // evaluation noise; this one only looks one ply ahead — take a line if one is
@@ -12,12 +12,8 @@ const { cloneState, getLegalActions, doAction, check3, opp,
 function previewBoard(s, a) {
   const b = s.board.slice();
   if (a.type === 'place') b[a.pos] = { player: s.currentPlayer, type: s.selectedStone, id: -1 };
-  else if (a.type === 'effect') {
-    const t = s.selectedStone, p = s.placedPos;
-    if (t === 'shift') applyShift(b, p, a.direction, a.line);
-    else if (t === '2048') apply2048(b, a.direction);
-    else if (t === 'rotate') { if (a.ring) applyRing(b, a.ring === 'cw'); else applyRotate(b, a.subsquare); }
-  } else return null;
+  else if (a.type === 'effect') applyEffectTo(b, effectiveType(s), s.placedPos, a);
+  else return null;
   return b;
 }
 

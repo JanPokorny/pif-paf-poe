@@ -10,23 +10,30 @@
 
 const fs = require('fs');
 const path = require('path');
-const { TYPES } = require('./engine');
+const { TYPES, ALL_TYPES } = require('./engine');
 const { runSpecs, wilson, arg, defaultWorkers } = require('./tourney');
 
 // Three ways of looking at the same question.
 //   mono  - five copies of one stone: what is this stone worth on its own?
 //   swap1 - one stone in an otherwise plain hand: marginal value of one copy.
 //   swap2 - two copies inside a mixed shell: marginal value in a real hand.
-function archetypeSet(set) {
+// `pool` restricts which stones exist at all: the archetype list shrinks to the
+// pool, and any pool-excluded stone in a fixed mixed hand becomes a Regular, so
+// hands stay five cards long and stay comparable across pools. With no pool the
+// behaviour is byte-identical to before, so older results keep their meaning.
+function archetypeSet(set, pool) {
+  const types = pool && pool.length ? ALL_TYPES.filter(t => pool.includes(t)) : TYPES;
+  const filler = types.includes('regular') ? 'regular' : types[0];
+  const keep = h => h.map(t => (types.includes(t) ? t : filler));
   const A = {};
   if (set === 'swap1') {
-    for (const t of TYPES) A[t] = [t, 'regular', 'regular', 'regular', 'regular'];
+    for (const t of types) A[t] = [t, filler, filler, filler, filler];
   } else if (set === 'swap2') {
-    for (const t of TYPES) A[t] = [t, t, 'regular', 'shift', 'rotate'];
+    for (const t of types) A[t] = keep([t, t, 'regular', 'shift', 'rotate']);
   } else {
-    for (const t of TYPES) A[t] = Array(5).fill(t);
-    A.mixed = ['regular', 'shift', '2048', 'rotate', 'chain'];
-    A.control = ['regular', 'magnet', 'stinky', 'shift', 'rotate'];
+    for (const t of types) A[t] = Array(5).fill(t);
+    A.mixed = keep(['regular', 'shift', '2048', 'rotate', 'chain']);
+    A.control = keep(['regular', 'magnet', 'stinky', 'shift', 'rotate']);
   }
   return A;
 }
@@ -35,7 +42,7 @@ let ARCHETYPES = archetypeSet('mono');
 let NAMES = Object.keys(ARCHETYPES);
 
 function buildSpecs(opts) {
-  ARCHETYPES = archetypeSet(opts.set || 'mono');
+  ARCHETYPES = archetypeSet(opts.set || 'mono', opts.pool);
   NAMES = Object.keys(ARCHETYPES);
   const specs = [];
   let seed = opts.seed;
@@ -63,6 +70,7 @@ function cliOpts() {
     out: arg('out', null),
     label: arg('label', 'base'),
     set: arg('set', 'mono'),
+    pool: arg('pool', null) ? arg('pool', null).split(',') : null,
   };
 }
 

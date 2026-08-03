@@ -550,4 +550,150 @@ t('pieSwap hands the opening stone and its hand to the decider', () => {
   assert.strictEqual(s.currentPlayer, 'X', 'the opener now moves second');
 });
 
+console.log('\nnew stones: mimic / leech / glue / mountain');
+
+// A hand long enough that nothing runs out mid-test.
+function mkx(hx, ho) { return E.initGameState(hx, ho, 'X', null, null); }
+
+t('mimic copies the movement effect the opponent just played', () => {
+  const s = mkx(['mimic', 'regular'], ['2048', 'regular']);
+  s.currentPlayer = 'O'; s.phase = 'select';
+  E.doAction(s, { type: 'select', stoneType: '2048' });
+  E.doAction(s, { type: 'place', pos: 8 });
+  E.doAction(s, { type: 'effect', direction: 'up' });
+  assert.strictEqual(s.currentPlayer, 'X');
+  E.doAction(s, { type: 'select', stoneType: 'mimic' });
+  E.doAction(s, { type: 'place', pos: 6 });
+  assert.strictEqual(s.phase, 'effect', 'mimic borrowed an effect');
+  const acts = E.getLegalActions(s);
+  assert.ok(has(acts, a => a.direction === 'right'), 'and it is 2048\'s menu of directions');
+  E.doAction(s, { type: 'effect', direction: 'right' });
+  assert.ok(s.board[8] && s.board[8].type === 'mimic', 'the mimic itself slid like a 2048');
+});
+
+t('mimic is a blank when there is nothing to copy', () => {
+  // X opens: the opponent has not placed anything at all yet.
+  const s = mkx(['mimic', 'regular'], ['regular', 'regular']);
+  s.phase = 'select';
+  E.doAction(s, { type: 'select', stoneType: 'mimic' });
+  E.doAction(s, { type: 'place', pos: 0 });
+  assert.strictEqual(s.phase, 'select', 'no effect step');
+  assert.strictEqual(s.currentPlayer, 'O', 'the turn simply ended');
+  assert.strictEqual(s.stats.X.mimic_blank, 1);
+});
+
+t('mimic cannot copy a mimic, or a restriction stone', () => {
+  const s = mkx(['mimic', 'regular'], ['mimic', 'magnet', 'regular']);
+  s.lastPlaced.O = 'mimic';
+  s.phase = 'select';
+  E.doAction(s, { type: 'select', stoneType: 'mimic' });
+  E.doAction(s, { type: 'place', pos: 0 });
+  assert.strictEqual(s.stats.X.mimic_blank, 1, 'mimic-on-mimic does not chain');
+  s.lastPlaced.O = 'magnet';
+  s.currentPlayer = 'X'; s.phase = 'select';
+  E.doAction(s, { type: 'select', stoneType: 'regular' });
+  E.doAction(s, { type: 'place', pos: 8 });
+  assert.strictEqual(s.stats.X.mimic_copy, undefined, 'a restriction is not a movement effect');
+});
+
+t('leech must be placed beside an enemy stone', () => {
+  const s = mkx(['leech', 'regular'], ['regular', 'regular']);
+  put(s, 0, 'O', 'regular');
+  put(s, 8, 'X', 'regular');
+  s.phase = 'select';
+  E.doAction(s, { type: 'select', stoneType: 'leech' });
+  const spots = E.getLegalActions(s).map(a => a.pos).sort((x, y) => x - y);
+  assert.deepStrictEqual(spots, [1, 3], 'only the squares orthogonally touching O on 0');
+});
+
+t('leech swaps itself with an adjacent enemy stone', () => {
+  const s = mkx(['leech', 'regular'], ['regular', 'regular']);
+  put(s, 0, 'O', 'regular');
+  s.phase = 'select';
+  E.doAction(s, { type: 'select', stoneType: 'leech' });
+  E.doAction(s, { type: 'place', pos: 1 });
+  assert.strictEqual(s.phase, 'effect');
+  assert.deepStrictEqual(E.getLegalActions(s).map(a => a.swap), [0]);
+  E.doAction(s, { type: 'effect', swap: 0 });
+  assert.strictEqual(s.board[0].type, 'leech', 'leech took the enemy square');
+  assert.strictEqual(s.board[0].player, 'X');
+  assert.strictEqual(s.board[1].player, 'O', 'and the enemy stone took its place');
+});
+
+t('leech with no enemy stone on the board is placeable but inert', () => {
+  const s = mkx(['leech', 'regular'], ['regular', 'regular']);
+  s.phase = 'select';
+  E.doAction(s, { type: 'select', stoneType: 'leech' });
+  assert.strictEqual(E.getLegalActions(s).length, 9, 'the requirement relaxes rather than blocking');
+  E.doAction(s, { type: 'place', pos: 4 });
+  assert.strictEqual(s.phase, 'select');
+  assert.strictEqual(s.stats.X.leech_blank, 1);
+});
+
+t('mountain cannot be moved by an effect', () => {
+  const s = mkx(['2048', 'regular'], ['mountain', 'regular']);
+  put(s, 2, 'O', 'mountain');
+  assert.ok(E.immobile(s.board, 2));
+  s.phase = 'select';
+  E.doAction(s, { type: 'select', stoneType: '2048' });
+  E.doAction(s, { type: 'place', pos: 0 });
+  const dirs = E.getLegalActions(s).map(a => a.direction).sort();
+  // Row 0 is [X@0, _, M@2]. 'right' slides X into 1 and leaves the mountain on 2;
+  // 'up' moves nothing at all. 'left' would drag the mountain 2->1 and 'down'
+  // would drag it 2->8, so both are off the menu.
+  assert.deepStrictEqual(dirs, ['right', 'up'], 'only directions that leave the mountain alone');
+});
+
+t('glue sticks itself and its orthogonal neighbours', () => {
+  const s = mkx(['regular'], ['glue']);
+  put(s, 4, 'O', 'glue');
+  put(s, 1, 'X', 'regular');   // neighbour of the glue
+  put(s, 0, 'X', 'regular');   // diagonal: free to move
+  assert.ok(E.immobile(s.board, 4), 'the glue itself');
+  assert.ok(E.immobile(s.board, 1), 'its orthogonal neighbour');
+  assert.ok(!E.immobile(s.board, 0), 'but not a diagonal one');
+});
+
+t('an effect with every direction glued resolves nothing', () => {
+  const s = mkx(['shift', 'regular'], ['glue', 'regular']);
+  put(s, 4, 'O', 'glue');
+  s.phase = 'select';
+  E.doAction(s, { type: 'select', stoneType: 'shift' });
+  E.doAction(s, { type: 'place', pos: 1 });   // shift's own row/col both contain the glue
+  assert.strictEqual(s.phase, 'select', 'no effect step at all');
+  assert.strictEqual(s.stats.X.stuck, 1);
+  assert.strictEqual(s.board[1].type, 'shift', 'the stone is still placed');
+});
+
+t('glue stops a chain from moving or pulling', () => {
+  const s = mkx(['chain', 'regular'], ['glue', 'regular']);
+  put(s, 0, 'O', 'glue');
+  s.phase = 'select';
+  E.doAction(s, { type: 'select', stoneType: 'chain' });
+  E.doAction(s, { type: 'place', pos: 1 });   // adjacent to the glue: stuck
+  assert.strictEqual(s.phase, 'select', 'the mandatory chain move is blocked');
+  assert.strictEqual(s.stats.X.stuck, 1);
+});
+
+t('a mountain in a rotate sub-square rules that sub-square out', () => {
+  const s = mkx(['rotate', 'regular'], ['mountain', 'regular']);
+  put(s, 0, 'O', 'mountain');
+  s.phase = 'select';
+  E.doAction(s, { type: 'select', stoneType: 'rotate' });
+  E.doAction(s, { type: 'place', pos: 4 });   // TL contains the mountain; TR/BL/BR do not
+  const sqs = E.getLegalActions(s).map(a => a.subsquare).sort();
+  assert.deepStrictEqual(sqs, ['BL', 'BR', 'TR']);
+});
+
+t('games without a mimic hash exactly as before', () => {
+  const a = mkx(['regular', 'shift'], ['2048', 'chain']);
+  const b = mkx(['regular', 'shift'], ['2048', 'chain']);
+  b.lastPlaced = { X: 'shift', O: 'chain' };
+  assert.strictEqual(E.hashState(a), E.hashState(b), 'lastPlaced is not in the hash');
+  const c = mkx(['mimic', 'shift'], ['2048', 'chain']);
+  const d = mkx(['mimic', 'shift'], ['2048', 'chain']);
+  d.lastPlaced = { X: 'shift', O: 'chain' };
+  assert.notStrictEqual(E.hashState(c), E.hashState(d), 'but it is once a mimic can read it');
+});
+
 console.log('\n' + passed + ' checks passed\n');
