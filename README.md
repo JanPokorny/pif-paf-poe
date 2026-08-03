@@ -30,6 +30,28 @@ Possible stones:
     - Magnet: Other player must place their next stone orthogonally adjacent to this one.
     - Stinky: Other player must NOT place their next stone orthogonally adjacent to this one.
 
+## New stones (proposal)
+
+Four stones added to answer two problems: the second player has nothing that
+rewards moving after the opponent has committed, and the persistent-restriction
+plus restriction-fizzle pairing below is a lot of rules text for what it buys.
+
+- Mimic: resolves the movement effect of the stone the opponent placed on their last turn
+  (you choose the direction). If they placed no movement stone, or it is the opening move,
+  Mimic has no effect. Mimic cannot copy a Mimic.
+- Leech: must be placed orthogonally adjacent to an enemy stone. It then swaps places with
+  one enemy stone it is adjacent to. If no square next to an enemy stone is free, Leech may
+  be placed anywhere and has no effect.
+- Glue: this stone and every stone orthogonally adjacent to it cannot be moved by a
+  movement effect.
+- Mountain: this stone cannot be moved by a movement effect.
+
+A movement effect that would move a stuck stone may not be chosen at all; if that leaves no
+legal choice, the stone is placed and its effect does not resolve. Glue and Mountain
+therefore express *restriction fizzle* as a board position rather than a rules clause, which
+is the point of them: the intent is that Glue replaces Stinky and lets the persistent
+restriction and fizzle rules below be dropped.
+
 ## Skills (proposal)
 
 A *skill* is a single passive modifier a player owns for the whole game, on top of their hand. Where a hand is "what you drew", a skill is "who you are". Most skills upgrade one stone type, so a skill is only worth as much as the hand it is paired with; two are hand-independent.
