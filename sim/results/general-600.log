@@ -1,1 +1,0 @@
-mode=general games/matchup=1600 iters=600 rollout=policy total=14400 workers=4

@@ -1,7 +1,0 @@
-base                               POOL	regular,shift,2048,rotate,magnet,stinky,chain	sd=0.0	p90-p10=0.0	first=79.3	turns=4.9
-pie rule                           POOL	regular,shift,2048,rotate,magnet,stinky,chain	sd=0.0	p90-p10=0.0	first=49.7	turns=5.3
-no effect-lines                    POOL	regular,shift,2048,rotate,magnet,stinky,chain	sd=0.0	p90-p10=0.0	first=70.7	turns=5.6
-no effect-lines + chain0           POOL	regular,shift,2048,rotate,magnet,stinky,chain	sd=0.0	p90-p10=0.0	first=68.6	turns=5.7
-balance set + no eff-lines         POOL	regular,shift,2048,rotate,magnet,stinky,chain	sd=0.0	p90-p10=0.0	first=64.6	turns=5.9
-balance set + pie rule             POOL	regular,shift,2048,rotate,magnet,stinky,chain	sd=0.0	p90-p10=0.0	first=47.9	turns=6.2
-DONE
