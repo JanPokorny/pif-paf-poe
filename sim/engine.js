@@ -70,6 +70,8 @@ const DEFAULT_RULES = {
   // Pie rule: after the opening turn, the second player may trade seats, taking
   // the opening stone and the hand that played it.
   pieRule: false,
+  // A player's own Glue does not hamper their own effects, only the opponent's.
+  glueOneSided: false,
 };
 
 const CENTRE = [4], EDGES = [1, 3, 5, 7], CORNERS = [0, 2, 6, 8];
@@ -254,34 +256,45 @@ function applyEffect(s, a) {
 // simply not on the menu, and a stone with no legal direction left resolves
 // nothing. That is restrictionFizzle, expressed as board position.
 
-function immobile(board, i) {
+// `mover` + oneSided: under glueOneSided a player's own Glue does not hamper
+// their own effects, only the opponent's. Mountain is a wall either way.
+function immobile(board, i, mover, oneSided) {
   const c = board[i];
   if (!c) return false;
-  if (c.type === 'mountain' || c.type === 'glue') return true;
-  for (let j = 0; j < 9; j++) if (board[j] && board[j].type === 'glue' && adj(i, j)) return true;
+  const sticks = g => !(oneSided && mover && g.player === mover);
+  if (c.type === 'mountain') return true;
+  if (c.type === 'glue' && sticks(c)) return true;
+  for (let j = 0; j < 9; j++) {
+    const g = board[j];
+    if (g && g.type === 'glue' && sticks(g) && adj(i, j)) return true;
+  }
   return false;
 }
 
-function anyImmobile(board) {
-  for (let i = 0; i < 9; i++) if (immobile(board, i)) return true;
+function anyImmobile(board, mover, oneSided) {
+  for (let i = 0; i < 9; i++) if (immobile(board, i, mover, oneSided)) return true;
   return false;
 }
 
 // Effects are permutations of the board's references, so "did this stone move"
 // is an identity comparison. Immobility is judged on the pre-effect board.
+function stuckArgs(s) { return [s.currentPlayer, s.rules.glueOneSided]; }
+
 function movesStuckStone(s, a) {
-  if (!anyImmobile(s.board)) return false;
+  const [mv, os] = stuckArgs(s);
+  if (!anyImmobile(s.board, mv, os)) return false;
   const b = s.board.slice();
   if (a.type === 'effect') applyEffectTo(b, effectiveType(s), s.placedPos, a);
   else if (a.type === 'chainMove') { b[a.pos] = b[s.placedPos]; b[s.placedPos] = null; }
   else if (a.type === 'chainPull') { b[s.chainEmpty] = b[a.pos]; b[a.pos] = null; }
   else return false;
-  for (let i = 0; i < 9; i++) if (immobile(s.board, i) && b[i] !== s.board[i]) return true;
+  for (let i = 0; i < 9; i++) if (immobile(s.board, i, mv, os) && b[i] !== s.board[i]) return true;
   return false;
 }
 
 function withoutStuck(s, acts) {
-  if (!anyImmobile(s.board)) return acts;
+  const [mv, os] = stuckArgs(s);
+  if (!anyImmobile(s.board, mv, os)) return acts;
   return acts.filter(a => !movesStuckStone(s, a));
 }
 
@@ -555,7 +568,7 @@ function afterPlacement(s) {
     // No legal direction left (everything reachable is glued, or a Leech landed
     // with nothing to grab) - the stone is placed and resolves nothing.
     if (!effectOptions(s).length) {
-      bump(s, eff === 'leech' && !anyImmobile(s.board) ? 'leech_blank' : 'stuck');
+      bump(s, eff === 'leech' && !anyImmobile(s.board, ...stuckArgs(s)) ? 'leech_blank' : 'stuck');
       endTurn(s);
       return;
     }

@@ -1,0 +1,192 @@
+=============== stinkyless ===============
+hands[swap2]: 8 archetypes, 7200 games, iters=600, rules="default"
+played 7200 games in 266.9s
+
+matrix: row archetype scores this %% against column archetype (both seatings)
+
+          2048     regular  shift    rotate   magnet   chain    glue     mountain 
+2048         -      77.0     75.0     49.5     76.5     43.5     77.5     74.0    
+regular    23.0       -      44.5     14.5     45.0     11.0     44.5     49.0    
+shift      25.0     55.5       -      21.0     47.0     19.5     54.0     50.0    
+rotate     50.5     85.5     79.0       -      83.5     42.0     76.0     77.0    
+magnet     23.5     55.0     53.0     16.5       -      17.5     51.5     48.5    
+chain      56.5     89.0     80.5     58.0     82.5       -      79.5     80.5    
+glue       22.5     55.5     46.0     24.0     48.5     20.5       -      50.0    
+mountain   26.0     51.0     50.0     23.0     51.5     19.5     50.0       -     
+
+overall strength (vs the whole field)
+archetype   score   95% CI          turns  beats
+------------------------------------------------------------------------------
+chain        75.2%  [ 72.9, 77.4]   4.4    7/7
+rotate       70.5%  [ 68.1, 72.8]   4.4    6/7
+2048         67.6%  [ 65.1, 70.0]   4.4    5/7
+shift        38.9%  [ 36.3, 41.4]   4.7    2/7
+mountain     38.7%  [ 36.2, 41.3]   4.9    2/7
+glue         38.1%  [ 35.6, 40.7]   4.8    1/7
+magnet       37.9%  [ 35.4, 40.5]   5.0    3/7
+regular      33.1%  [ 30.7, 35.6]   5.0    0/7
+
+mirror matches (same archetype both sides): the first-mover advantage
+archetype   1st wins  turns   board fills
+------------------------------------------------
+chain        97.0%    4.1       0.0%
+2048         92.5%    4.2       0.0%
+rotate       88.5%    4.2       0.0%
+glue         84.0%    4.7       7.0%
+mountain     74.5%    5.0      10.5%
+shift        64.0%    4.7       0.0%
+magnet       61.0%    5.2       5.5%
+regular      49.0%    5.7       8.5%
+
+balance summary [stinkyless]
+  top archetype        chain  75.2%
+  spread (top-bottom)  42.1pp
+  RPS cycles           0/56 triples (0%)
+  first-mover edge      76.3% mean,  97.0% worst (chain)
+  mean game length     4.7 turns
+  unbeaten archetypes  1
+wrote sim/results/new-stinkyless.json
+=============== glueonly ===============
+hands[swap2]: 7 archetypes, 5600 games, iters=600, rules="default"
+played 5600 games in 208.7s
+
+matrix: row archetype scores this %% against column archetype (both seatings)
+
+          2048     regular  shift    rotate   magnet   chain    glue     
+2048         -      77.0     75.0     49.5     76.5     43.5     77.5    
+regular    23.0       -      42.0     16.5     53.5     14.0     49.0    
+shift      25.0     58.0       -      22.5     46.0     22.5     55.0    
+rotate     50.5     83.5     77.5       -      75.0     45.5     70.0    
+magnet     23.5     46.5     54.0     25.0       -      20.0     44.5    
+chain      56.5     86.0     77.5     54.5     80.0       -      77.0    
+glue       22.5     51.0     45.0     30.0     55.5     23.0       -     
+
+overall strength (vs the whole field)
+archetype   score   95% CI          turns  beats
+------------------------------------------------------------------------------
+chain        71.9%  [ 69.3, 74.4]   4.4    6/6
+rotate       67.0%  [ 64.3, 69.6]   4.4    5/6
+2048         66.5%  [ 63.8, 69.1]   4.4    4/6
+shift        38.2%  [ 35.5, 40.9]   4.7    2/6
+glue         37.8%  [ 35.1, 40.6]   4.8    2/6
+magnet       35.6%  [ 32.9, 38.3]   4.9    1/6
+regular      33.0%  [ 30.4, 35.7]   5.0    1/6
+
+mirror matches (same archetype both sides): the first-mover advantage
+archetype   1st wins  turns   board fills
+------------------------------------------------
+chain        96.0%    4.1       0.0%
+rotate       94.5%    4.1       0.0%
+2048         92.5%    4.2       0.0%
+glue         85.5%    4.7       7.0%
+shift        69.5%    4.7       0.0%
+magnet       63.0%    5.2       6.5%
+regular      52.5%    5.7      10.5%
+
+balance summary [glueonly]
+  top archetype        chain  71.9%
+  spread (top-bottom)  38.9pp
+  RPS cycles           2/35 triples (6%)
+  first-mover edge      79.1% mean,  96.0% worst (chain)
+  mean game length     4.6 turns
+  unbeaten archetypes  1
+wrote sim/results/new-glueonly.json
+=============== reactive ===============
+hands[swap2]: 8 archetypes, 7200 games, iters=600, rules="default"
+played 7200 games in 263.8s
+
+matrix: row archetype scores this %% against column archetype (both seatings)
+
+          2048     regular  shift    rotate   magnet   chain    mimic    leech    
+2048         -      77.0     75.0     49.5     76.5     43.5     59.0     48.0    
+regular    23.0       -      44.5     14.5     45.0     11.0     35.5     11.0    
+shift      25.0     55.5       -      21.0     47.0     19.5     41.5     17.5    
+rotate     50.5     85.5     79.0       -      83.5     42.0     52.5     44.5    
+magnet     23.5     55.0     53.0     16.5       -      17.5     42.0     19.5    
+chain      56.5     89.0     80.5     58.0     82.5       -      56.5     53.0    
+mimic      41.0     64.5     58.5     47.5     58.0     43.5       -      22.5    
+leech      52.0     89.0     82.5     55.5     80.5     47.0     77.5       -     
+
+overall strength (vs the whole field)
+archetype   score   95% CI          turns  beats
+------------------------------------------------------------------------------
+leech        69.1%  [ 66.7, 71.5]   4.7    6/7
+chain        68.0%  [ 65.5, 70.4]   4.4    7/7
+rotate       62.5%  [ 59.9, 65.0]   4.4    5/7
+2048         61.2%  [ 58.6, 63.7]   4.4    4/7
+mimic        47.9%  [ 45.3, 50.5]   4.6    3/7
+shift        32.4%  [ 30.0, 34.9]   4.7    1/7
+magnet       32.4%  [ 30.0, 34.9]   4.9    2/7
+regular      26.4%  [ 24.1, 28.7]   4.9    0/7
+
+mirror matches (same archetype both sides): the first-mover advantage
+archetype   1st wins  turns   board fills
+------------------------------------------------
+chain        97.0%    4.1       0.0%
+2048         92.5%    4.2       0.0%
+rotate       88.5%    4.2       0.0%
+mimic        69.0%    4.7       0.5%
+shift        64.0%    4.7       0.0%
+leech        62.0%    5.0       0.0%
+magnet       61.0%    5.2       5.5%
+regular      49.0%    5.7       8.5%
+
+balance summary [reactive]
+  top archetype        leech  69.1%
+  spread (top-bottom)  42.8pp
+  RPS cycles           0/56 triples (0%)
+  first-mover edge      72.9% mean,  97.0% worst (chain)
+  mean game length     4.6 turns
+  unbeaten archetypes  1
+wrote sim/results/new-reactive.json
+=============== candidate ===============
+hands[swap2]: 9 archetypes, 9000 games, iters=600, rules="default"
+played 9000 games in 319.1s
+
+matrix: row archetype scores this %% against column archetype (both seatings)
+
+          2048     regular  shift    rotate   magnet   mimic    leech    glue     mountain 
+2048         -      77.0     75.0     49.5     76.5     61.0     44.0     82.0     76.5    
+regular    23.0       -      45.5     16.5     49.0     35.5     11.0     50.0     51.0    
+shift      25.0     54.5       -      21.5     56.0     43.0     11.0     54.5     48.5    
+rotate     50.5     83.5     78.5       -      77.0     54.0     52.0     69.5     81.5    
+magnet     23.5     51.0     44.0     23.0       -      37.5     18.0     53.0     47.0    
+mimic      39.0     64.5     57.0     46.0     62.5       -      29.5     53.5     57.5    
+leech      56.0     89.0     89.0     48.0     82.0     70.5       -      80.0     84.0    
+glue       18.0     50.0     45.5     30.5     47.0     46.5     20.0       -      52.5    
+mountain   23.5     49.0     51.5     18.5     53.0     42.5     16.0     47.5       -     
+
+overall strength (vs the whole field)
+archetype   score   95% CI          turns  beats
+------------------------------------------------------------------------------
+leech        74.8%  [ 72.6, 76.9]   4.8    7/8
+rotate       68.3%  [ 66.0, 70.5]   4.5    8/8
+2048         67.7%  [ 65.4, 69.9]   4.4    6/8
+mimic        51.2%  [ 48.7, 53.6]   4.6    5/8
+shift        39.3%  [ 36.9, 41.7]   4.8    3/8
+glue         38.8%  [ 36.4, 41.2]   4.8    1/8
+mountain     37.7%  [ 35.3, 40.1]   4.9    2/8
+magnet       37.1%  [ 34.8, 39.5]   5.0    2/8
+regular      35.2%  [ 32.9, 37.6]   5.1    1/8
+
+mirror matches (same archetype both sides): the first-mover advantage
+archetype   1st wins  turns   board fills
+------------------------------------------------
+2048         92.5%    4.2       0.0%
+rotate       90.5%    4.2       0.0%
+glue         80.5%    4.6       7.0%
+mimic        74.5%    4.5       0.0%
+shift        69.5%    4.6       0.0%
+mountain     64.5%    5.1       6.5%
+leech        63.0%    5.1       0.0%
+magnet       54.5%    5.5       2.5%
+regular      48.0%    5.7      13.5%
+
+balance summary [candidate]
+  top archetype        leech  74.8%
+  spread (top-bottom)  39.6pp
+  RPS cycles           4/84 triples (5%)
+  first-mover edge      70.8% mean,  92.5% worst (2048)
+  mean game length     4.8 turns
+  unbeaten archetypes  1
+wrote sim/results/new-candidate.json

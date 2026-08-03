@@ -1,0 +1,4 @@
+mimic in a mixed shell                   1st 72.5% [69.3,75.5]  blanks/game: opener 0.67 responder 0.36  copies/game 0.87
+all mimic (blank forced on the opener)   1st 97.1% [95.7,98.1]  blanks/game: opener 4.94 responder 3.97  copies/game 0.00
+mimic + movers only                      1st 94.6% [92.8,96.0]  blanks/game: opener 0.40 responder 0.21  copies/game 0.94
+plain baseline                           1st 49.5% [46.0,53.0]  blanks/game: opener 0.00 responder 0.00  copies/game 0.00

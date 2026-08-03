@@ -1,0 +1,2 @@
+=============== glue1sided ===============
+hands[swap2]: 8 archetypes, 7200 games, iters=600, rules={"glueOneSided":true}
