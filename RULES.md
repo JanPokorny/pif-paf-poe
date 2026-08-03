@@ -113,17 +113,3 @@ may be placed anywhere and does nothing.
 **Magnet** — the opponent must place their next stone adjacent to this one.
 
 **Stinky** — the opponent must not place their next stone adjacent to this one.
-
-## Notes on the stone list
-
-**Chain** was cut. It moved itself to an adjacent empty square and then dragged a chain of
-further stones along, and it beat every other kind of hand by a wide margin.
-
-Earlier versions of this repository contain a simulation harness and a balance study of the
-stones, the first-mover advantage and a proposal for per-player "skills"; see the git history.
-Two of its findings are worth carrying forward:
-
-- The strongest stones are the ones that can complete a line by moving stones that are already
-  on the board, because a movement threat has no blocking square.
-- Whoever moves first wins far more often than they should. The cause is tempo, so handicaps
-  aimed at the opening square or at material do not touch it.
