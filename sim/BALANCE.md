@@ -5,7 +5,9 @@ Measuring the stones themselves: is any hand type obviously the best, and does t
 
 ```
 node sim/hands.js --games 300 --iters 500                      # five-copy hands
+node sim/hands.js --set swap1 --games 240 --iters 450          # one copy in a plain hand
 node sim/hands.js --set swap2 --games 240 --iters 450          # two copies in a mixed shell
+node sim/loadouts.js --loadouts 60 --opponents 14              # random hands, fitted stone values
 node sim/hands.js --rules '{"chainPulls":0}' ...               # one rule variant, full matrix
 node sim/sweep.js --round3 --set swap2 --games 160 --iters 400 # compare rule variants
 ```
@@ -20,9 +22,10 @@ advantage for that hand. Two archetype sets:
 - `mono` — five copies of one stone, plus `mixed` (regular/shift/2048/rotate/chain) and
   `control` (regular/magnet/stinky/shift/rotate). Isolates a stone, but nobody plays
   five Magnets.
-- `swap2` — two copies of the stone in an identical shell (`regular`, `shift`, `rotate`).
-  Hands differ by exactly two cards, which is what a real deck decision looks like, and
-  it is the marginal value a metagame price should key off.
+- `swap1` / `swap2` — one or two copies of the stone in an identical shell (`swap1` fills
+  with Regulars, `swap2` with `regular`/`shift`/`rotate`). Hands differ by one or two
+  cards, which is what a real deck decision looks like, and it is the marginal value a
+  metagame price should key off. Comparing the two exposes how a stone stacks.
 
 Three numbers summarise a rule set:
 
@@ -81,9 +84,13 @@ stones that cannot do it at all.
 
 Two smaller pathologies show up in the five-copy numbers:
 
-- **Magnet is a trap card.** A Magnet hand loses 100-0 to a plain Regular hand. "The
-  opponent must place next to this stone" points them at your newest stone, which is
-  exactly where your line is forming, so Magnet mostly helps the opponent block you.
+- **Magnet does not stack.** The first copy is a real upgrade; the fifth is a disaster.
+  Head-to-head against the same hand holding Regulars instead, Magnet scores **65.4%
+  with one copy, 50.4% with two, and 0.0% with five**. Each Magnet points the opponent
+  at your newest stone, which is exactly where your line is forming — one of those is a
+  useful lure, three in a row is a guided tour of your position. Do not read the
+  five-copy number as "Magnet is bad"; read it as "Magnet has strongly negative
+  self-synergy", which is a different and much more interesting card.
 - **Stinky inverts the seat.** In an all-Stinky mirror the *second* player wins 99.7%.
   It is the only thing in the game that punishes moving first.
 
@@ -210,3 +217,55 @@ If this matters, the fix is not a stone tweak — it is a structural one: a pie 
 second player, or something that lengthens the game enough for a comeback to exist. Note
 that the earlier Relentless skill did exactly the latter and overshot to 87%, so the
 correct compensation is smaller than one free stone.
+
+
+## Does a stone's value depend on how many you take?
+
+Yes, and for Magnet it dominates everything else. Head-to-head against the identical
+hand holding Regulars in place of the Magnets:
+
+| copies of Magnet | vs the Regular version | Magnet's score vs the field |
+| --- | --- | --- |
+| 1 (in an all-Regular hand) | **65.4%** | 37.6% |
+| 2 (in a mixed shell) | 50.4% | 39.2% |
+| 5 (mono hand) | **0.0%** | 17.3% |
+
+One Magnet is worth more than one Regular by a wide margin. Five Magnets lose every
+single game to five Regulars. Any per-stone price has to be a curve, not a number, or
+players will correctly buy exactly one.
+
+The one-copy set (`--set swap1`, 240 games/pair) also reorders the top: **2048 79.9% >
+rotate 76.4% > chain 51.7%** > shift 46.1% > magnet 37.6% > stinky 30.9% > regular 27.5%.
+Chain is the best stone to stack and only the third best to hold one of; 2048 is the
+reverse. Game length nearly doubles too (7.0 turns, against 4.7 for two-copy hands),
+because a hand that is mostly Regulars cannot end things quickly.
+
+## Random loadouts: what the in-game autobattler is showing you
+
+60 random five-stone hands, each against 14 random rivals in both seatings, 3360 games
+(`sim/loadouts.js`). Fitted value is a least-squares fit of loadout score on stone
+counts, scaled to what five copies would be worth:
+
+| stone | in top 25% of hands | base rate | mean score with >=1 | fitted value per 5 copies |
+| --- | --- | --- | --- | --- |
+| chain | 80.0% | 48.3% | 58.0% | **+49.2pp** |
+| 2048 | 53.3% | 50.0% | 55.2% | +33.6pp |
+| rotate | 66.7% | 50.0% | 57.0% | +30.3pp |
+| shift | 46.7% | 56.7% | 49.9% | -12.8pp |
+| magnet | 46.7% | 60.0% | 46.8% | -32.0pp |
+| regular | 26.7% | 45.0% | 45.9% | -32.1pp |
+| stinky | 53.3% | 68.3% | 46.8% | -36.1pp |
+
+**Magnet shows up in plenty of strong hands** — three of the top six here — which is
+exactly the impression the autobattler leaderboard gives. It is a base-rate illusion:
+Magnet is in 60% of random hands, and it appears in only 46.7% of the top quartile, so
+it is actually *under*-represented among winners. The top hands containing it
+(`2048 chain magnet rotate stinky`, `2048 magnet magnet rotate rotate`) are carried by
+their Chains, Rotates and 2048s. Compare Chain: 48.3% base rate, 80.0% of the top
+quartile.
+
+Two things make this easy to misread in-game. The autobattler's default settings play
+about 36 games per loadout, which is a standard error of roughly 8 percentage points —
+wide enough for any stone to top the table by luck. And with seven stone types in five
+slots, most types appear in about half of all hands, so "the top hands use it" is the
+null result, not a finding.

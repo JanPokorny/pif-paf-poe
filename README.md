@@ -61,7 +61,10 @@ turn that hierarchy into a counter-triangle where no hand type beats the whole f
   placed, but its effect does not resolve.
 - Optional: Chain moves itself to the adjacent empty space but drags no further stones.
 
-The resulting loop is Magnet > Chain/Rotate > Stinky > Magnet. Measurements, the fifteen
+The resulting loop is Magnet > Chain/Rotate > Stinky > Magnet. Note that Magnet's value
+depends sharply on how many you take even in the base game: one copy beats the Regular it
+replaces 65-35, five copies lose to five Regulars 0-100, so any metagame price for it has
+to be a curve rather than a flat number. Measurements, the fifteen
 rule variants that did *not* work, and suggested price ordering are in `sim/BALANCE.md`.
 Note that this does not address the first-mover advantage, which remains ~70% and is the
 larger imbalance.
