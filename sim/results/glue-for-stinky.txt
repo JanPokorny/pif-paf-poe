@@ -1,0 +1,2 @@
+=============== glue replaces stinky (persist+fizzle kept) ===============
+hands[swap2]: 7 archetypes, 5600 games, iters=600, rules={"persistentRestriction":true,"restrictionFizzle":true,"chainPulls":0,"glueOneSided":true}
