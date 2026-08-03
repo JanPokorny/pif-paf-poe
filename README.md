@@ -48,9 +48,28 @@ plus restriction-fizzle pairing below is a lot of rules text for what it buys.
 
 A movement effect that would move a stuck stone may not be chosen at all; if that leaves no
 legal choice, the stone is placed and its effect does not resolve. Glue and Mountain
-therefore express *restriction fizzle* as a board position rather than a rules clause, which
-is the point of them: the intent is that Glue replaces Stinky and lets the persistent
-restriction and fizzle rules below be dropped.
+therefore express *restriction fizzle* as a board position rather than a rules clause.
+
+Measured, that substitution does not work, and the two halves of the proposal came apart:
+
+- **Mimic is worth keeping, Leech and Mountain are not.** Mimic is the only one of the four
+  that is neither weak nor broken (mid-table, and worth about +21pp over the two Regulars it
+  replaces). Leech wins 69-75% and is the top hand type in every pool it appears in.
+  Mountain cancels 0.06 enemy effects per game and is Glue with radius zero.
+- **Glue does not replace Stinky or the fizzle rule.** Magnet plus fizzle cancels 0.84 enemy
+  effects per game against Glue's 0.20, because Magnet compels the opponent to place next to
+  it while Glue only bites when the direction they wanted happens to drag a glued stone.
+  Swapping Stinky for Glue makes Magnet unbeaten at 75.8%; Stinky beats Magnet 60.5% where
+  Glue loses to it at 42.0%. The counter-cycle lives on the *placement* axis, where Magnet
+  compels adjacency and Stinky forbids it, not on the movement axis where Glue sits.
+- **Mimic does not help the second player**, which was the reason for proposing it. A stone
+  that is dead on turn one costs nothing when you choose your own play order (the opener
+  eats 0.67 blanks per game to the responder's 0.36), and copying movement effects amplifies
+  the tempo advantage rather than taxing it.
+
+The rules text below can still be shortened without changing behaviour — the relaxation
+ladder is just "ignore as few restrictions as you can" — but it cannot be traded for a
+stone. See `sim/BALANCE.md`.
 
 ## Skills (proposal)
 

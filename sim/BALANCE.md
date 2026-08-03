@@ -443,3 +443,138 @@ tested is worth the rules text.
 For casual play there is a zero-rules option that the harness itself relies on: **play
 paired games with swapped seats** and score the pair. That makes the seat advantage cancel
 exactly rather than approximately, which is why every measurement in this document does it.
+
+## Four new stones: Mimic, Leech, Glue, Mountain
+
+Built to answer two questions: is there a stone that rewards moving *second*, and
+can positional immobility (Glue, Mountain) replace the Stinky + persistent
+restriction + restriction fizzle machinery, which is a lot of rules text.
+
+Every run below is the swap2 shell at 200 games per pair, 600 iterations, both
+seatings. `firstAdv` is the mean over the archetype mirrors in that same run, so
+it is comparable across these rows but not with the mirror-only instrument in the
+section above.
+
+| pool / rules | top | spread | cycles | unbeaten | firstAdv |
+|---|---|---|---|---|---|
+| recommended: base 7, persist+fizzle+chain0 | magnet 73.4 | 50.8 | 2/35 | **0** | 70.4 |
+| Glue+Mountain replace Stinky, plain rules | chain 75.2 | 42.1 | 0/56 | 1 | 76.3 |
+| Glue only, plain rules | chain 71.9 | 38.9 | 2/35 | 1 | 79.1 |
+| Glue one-sided, plain rules | chain 75.1 | 41.9 | 0/56 | 1 | 74.9 |
+| persist + Glue, no fizzle | chain 71.4 | 42.3 | 0/35 | 1 | 79.5 |
+| persist + Glue, no fizzle, chain0 | rotate 68.2 | 39.0 | 1/35 | **0** | 77.9 |
+| Glue replaces Stinky, persist+fizzle+chain0 | magnet 75.8 | 51.2 | 1/35 | 1 | 76.8 |
+| Stinky *and* Glue, persist+fizzle+chain0 | magnet 69.3 | 43.9 | 4/56 | **0** | 70.4 |
+| Mimic+Leech added, no Stinky, plain rules | leech 69.1 | 42.8 | 0/56 | 1 | 72.9 |
+| all new stones, no Stinky/Chain, plain rules | leech 74.8 | 39.6 | 4/84 | 1 | 70.8 |
+
+### Immobility cannot replace fizzle: it is a fifth of the mechanism
+
+Each denial hand is two copies in the swap2 shell, played against a Chain hand,
+600 games. The counter is how many of the opponent's effects the mechanism
+actually cancelled.
+
+| mechanism | score vs a Chain hand | enemy effects cancelled per game |
+|---|---|---|
+| Mountain | 18.2% | 0.06 |
+| Glue (symmetric) | 21.7% | 0.19 |
+| Glue (one-sided) | 18.8% | 0.20 |
+| Stinky + persist+fizzle | 31.2% | 0.32 |
+| Magnet + persist+fizzle | **57.3%** | **0.84** |
+
+Magnet plus fizzle cancels four times what Glue does, and that is the whole
+difference. Magnet *forces* the opponent to place next to it, so the fizzle clause
+then bites almost every turn from anywhere on the board. Glue only bites when the
+direction the opponent actually wanted happens to drag a glued stone — about one
+turn in five — and its reach is five squares.
+
+Removing fizzle confirms which half is load-bearing: with persistent restrictions
+but no fizzle, Magnet drops from 73.4% to 46.4% and Chain is unbeaten again.
+**Fizzle is the rule that does the work; persistence is the smaller half.**
+
+### Glue cannot replace Stinky either
+
+Keeping persist+fizzle and swapping Stinky for Glue puts the game *further* out of
+balance than the base game was: Magnet becomes unbeaten at 75.8% and the spread
+grows to 51.2pp, the worst in this study.
+
+| matchup | result |
+|---|---|
+| Stinky vs Magnet | **60.5%** |
+| Glue vs Magnet | 42.0% |
+| Glue vs Rotate | 19.0% |
+| Glue vs Chain | 17.5% |
+
+Stinky beats Magnet; Glue loses to it. Stinky is the only counter Magnet has, so
+deleting it is what makes Magnet unbeaten — not anything about Glue.
+
+The reason is that the counter-cycle does not live on the movement axis at all. It
+lives on the *placement* axis: Magnet compels adjacency, Stinky forbids it, and
+they are opposites of one another, which is exactly why they counter. Fizzle is
+the amplifier that makes dictating placement matter against a movement hand. Glue
+and Mountain sit on the movement axis, where the movement stones already win, and
+on that axis they are simply weak stones (35-43%).
+
+Adding Glue *alongside* Stinky changes nothing structurally (unbeaten 0 either
+way, firstAdv 70.4 either way) and Glue is the second-worst archetype in that
+pool at 35.3%. It does not earn a slot.
+
+**Mountain should be cut outright.** It cancels 0.06 effects per game, it is
+dominated by Glue in every pool containing both, and it is Glue with radius zero,
+so it adds a stone type without adding a mechanic.
+
+### Mimic is a good stone that does nothing for the second player
+
+Mimic is well balanced — 47.9% and 51.6% across two pools, mid-table in both —
+and two Mimics are worth **+21pp over the two Regulars they replace** (47.9 vs
+26.4). Keep it if you want another stone; it is the only one of the four that is
+neither too weak nor too strong.
+
+But it fails the job it was designed for. Mirror matches, 800 games each:
+
+| mirror hand | 1st player wins |
+|---|---|
+| plain (regular x3, shift, rotate) | 49.5% |
+| Mimic shell (mimic x2, regular, shift, rotate) | 72.5% |
+| Mimic + movers (mimic x2, shift, rotate, 2048) | 94.6% |
+| all Mimic | 97.1% |
+
+Two reasons, and the first generalises to every "dead on turn 1" design:
+
+1. **A conditional blank costs nothing when you choose your play order.** The
+   opener eats 0.67 blanks per game to the responder's 0.36 — a difference of a
+   third of a stone. A stone that is bad on the first turn simply is not played on
+   the first turn.
+2. **Mimic copies movement effects, and movement is what makes moving first
+   good.** It amplifies the tempo game rather than taxing it.
+
+The all-Mimic row is 97.1% with *zero* copies per game: if neither side ever plays
+a non-Mimic there is nothing to copy, so the hand degenerates into all-Regulars,
+and with no movement stones in play a completed line can never be broken. Same
+mechanism as the base game's core finding, from the other direction.
+
+### Leech is overpowered
+
+Top archetype in every pool it appears in — 69.1%, 72.1%, 74.8%, beating 7/8 —
+and it does not help the seat either (mirror 63.0%). Swapping places with an
+enemy stone is the strongest reactive effect there is, as expected. Nerf it (swap
+only with an enemy *Regular*, or make the swap the whole turn) or leave it out.
+
+### What this means for simplifying the rules
+
+The awkward text cannot be traded for a stone: fizzle and Stinky are both
+load-bearing, and Glue and Mountain are weak stones on an axis that is already
+won by the movement stones. What *can* be simplified is the wording, without
+touching behaviour:
+
+- The relaxation ladder does not need enumerating. "If no square satisfies every
+  restriction on you, ignore as few of them as you can" is the same rule as
+  "both, then Stinky only, then Magnet only, then none".
+- Fizzle is one clause: "a movement stone placed while an enemy restriction is on
+  you is placed, but its effect does not resolve."
+- Persistence is one clause: "a Magnet or Stinky restricts for as long as it stays
+  on the board, not just the turn after it is played."
+
+That is three sentences for the whole mechanism, which is close to the floor for
+what it buys (unbeaten 1 → 0, and the largest single reduction in the first-mover
+advantage of anything measured that is not the pie rule).

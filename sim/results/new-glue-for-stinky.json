@@ -1,0 +1,376 @@
+{
+ "opts": {
+  "games": 200,
+  "iters": 600,
+  "seed": 777000,
+  "workers": 4,
+  "rules": {
+   "persistentRestriction": true,
+   "restrictionFizzle": true,
+   "chainPulls": 0,
+   "glueOneSided": true
+  },
+  "out": "sim/results/new-glue-for-stinky.json",
+  "label": "glue-for-stinky",
+  "set": "swap2",
+  "pool": [
+   "regular",
+   "shift",
+   "2048",
+   "rotate",
+   "magnet",
+   "chain",
+   "glue"
+  ]
+ },
+ "matrix": {
+  "2048": {
+   "2048": {
+    "pts": 0,
+    "n": 0
+   },
+   "regular": {
+    "pts": 154,
+    "n": 200
+   },
+   "shift": {
+    "pts": 150,
+    "n": 200
+   },
+   "rotate": {
+    "pts": 99,
+    "n": 200
+   },
+   "magnet": {
+    "pts": 17,
+    "n": 200
+   },
+   "chain": {
+    "pts": 106,
+    "n": 200
+   },
+   "glue": {
+    "pts": 128,
+    "n": 200
+   }
+  },
+  "regular": {
+   "2048": {
+    "pts": 46,
+    "n": 200
+   },
+   "regular": {
+    "pts": 0,
+    "n": 0
+   },
+   "shift": {
+    "pts": 84,
+    "n": 200
+   },
+   "rotate": {
+    "pts": 33,
+    "n": 200
+   },
+   "magnet": {
+    "pts": 11,
+    "n": 200
+   },
+   "chain": {
+    "pts": 29,
+    "n": 200
+   },
+   "glue": {
+    "pts": 91,
+    "n": 200
+   }
+  },
+  "shift": {
+   "2048": {
+    "pts": 50,
+    "n": 200
+   },
+   "regular": {
+    "pts": 116,
+    "n": 200
+   },
+   "shift": {
+    "pts": 0,
+    "n": 0
+   },
+   "rotate": {
+    "pts": 45,
+    "n": 200
+   },
+   "magnet": {
+    "pts": 16,
+    "n": 200
+   },
+   "chain": {
+    "pts": 50,
+    "n": 200
+   },
+   "glue": {
+    "pts": 93,
+    "n": 200
+   }
+  },
+  "rotate": {
+   "2048": {
+    "pts": 101,
+    "n": 200
+   },
+   "regular": {
+    "pts": 167,
+    "n": 200
+   },
+   "shift": {
+    "pts": 155,
+    "n": 200
+   },
+   "rotate": {
+    "pts": 0,
+    "n": 0
+   },
+   "magnet": {
+    "pts": 65,
+    "n": 200
+   },
+   "chain": {
+    "pts": 98,
+    "n": 200
+   },
+   "glue": {
+    "pts": 153,
+    "n": 200
+   }
+  },
+  "magnet": {
+   "2048": {
+    "pts": 183,
+    "n": 200
+   },
+   "regular": {
+    "pts": 189,
+    "n": 200
+   },
+   "shift": {
+    "pts": 184,
+    "n": 200
+   },
+   "rotate": {
+    "pts": 135,
+    "n": 200
+   },
+   "magnet": {
+    "pts": 0,
+    "n": 0
+   },
+   "chain": {
+    "pts": 102,
+    "n": 200
+   },
+   "glue": {
+    "pts": 116,
+    "n": 200
+   }
+  },
+  "chain": {
+   "2048": {
+    "pts": 94,
+    "n": 200
+   },
+   "regular": {
+    "pts": 171,
+    "n": 200
+   },
+   "shift": {
+    "pts": 150,
+    "n": 200
+   },
+   "rotate": {
+    "pts": 102,
+    "n": 200
+   },
+   "magnet": {
+    "pts": 98,
+    "n": 200
+   },
+   "chain": {
+    "pts": 0,
+    "n": 0
+   },
+   "glue": {
+    "pts": 164,
+    "n": 200
+   }
+  },
+  "glue": {
+   "2048": {
+    "pts": 72,
+    "n": 200
+   },
+   "regular": {
+    "pts": 109,
+    "n": 200
+   },
+   "shift": {
+    "pts": 107,
+    "n": 200
+   },
+   "rotate": {
+    "pts": 47,
+    "n": 200
+   },
+   "magnet": {
+    "pts": 84,
+    "n": 200
+   },
+   "chain": {
+    "pts": 36,
+    "n": 200
+   },
+   "glue": {
+    "pts": 0,
+    "n": 0
+   }
+  }
+ },
+ "overall": [
+  {
+   "a": "magnet",
+   "score": 0.7575,
+   "lo": 0.7324530204214571,
+   "hi": 0.7809035540647543,
+   "n": 1200,
+   "turns": 5.095
+  },
+  {
+   "a": "chain",
+   "score": 0.6491666666666667,
+   "lo": 0.6217276952064593,
+   "hi": 0.6756536214052943,
+   "n": 1200,
+   "turns": 4.514166666666667
+  },
+  {
+   "a": "rotate",
+   "score": 0.6158333333333333,
+   "lo": 0.5879846193008729,
+   "hi": 0.6429427718110474,
+   "n": 1200,
+   "turns": 4.4825
+  },
+  {
+   "a": "2048",
+   "score": 0.545,
+   "lo": 0.5167256694743446,
+   "hi": 0.5729871299504302,
+   "n": 1200,
+   "turns": 4.451666666666667
+  },
+  {
+   "a": "glue",
+   "score": 0.37916666666666665,
+   "lo": 0.35214175973917905,
+   "hi": 0.4069627603239254,
+   "n": 1200,
+   "turns": 4.928333333333334
+  },
+  {
+   "a": "shift",
+   "score": 0.30833333333333335,
+   "lo": 0.282850439459843,
+   "hi": 0.335039488916116,
+   "n": 1200,
+   "turns": 4.716666666666667
+  },
+  {
+   "a": "regular",
+   "score": 0.245,
+   "lo": 0.22150449547245177,
+   "hi": 0.2701229744538242,
+   "n": 1200,
+   "turns": 4.9
+  }
+ ],
+ "mirror": [
+  {
+   "a": "rotate",
+   "firstPts": 189,
+   "firstN": 200,
+   "turns": 827,
+   "n": 200,
+   "full": 0,
+   "rate": 0.945
+  },
+  {
+   "a": "2048",
+   "firstPts": 185,
+   "firstN": 200,
+   "turns": 833,
+   "n": 200,
+   "full": 0,
+   "rate": 0.925
+  },
+  {
+   "a": "chain",
+   "firstPts": 170,
+   "firstN": 200,
+   "turns": 844,
+   "n": 200,
+   "full": 0,
+   "rate": 0.85
+  },
+  {
+   "a": "glue",
+   "firstPts": 146,
+   "firstN": 200,
+   "turns": 1002,
+   "n": 200,
+   "full": 20,
+   "rate": 0.73
+  },
+  {
+   "a": "magnet",
+   "firstPts": 141,
+   "firstN": 200,
+   "turns": 1195,
+   "n": 200,
+   "full": 14,
+   "rate": 0.705
+  },
+  {
+   "a": "shift",
+   "firstPts": 139,
+   "firstN": 200,
+   "turns": 949,
+   "n": 200,
+   "full": 0,
+   "rate": 0.695
+  },
+  {
+   "a": "regular",
+   "firstPts": 105,
+   "firstN": 200,
+   "turns": 1139,
+   "n": 200,
+   "full": 21,
+   "rate": 0.525
+  }
+ ],
+ "summary": {
+  "label": "glue-for-stinky",
+  "unbeaten": 1,
+  "top": "magnet",
+  "topScore": 0.7575,
+  "spread": 0.5125,
+  "cycles": 1,
+  "triples": 35,
+  "firstAdv": 0.767857142857143,
+  "worstFirst": 0.945,
+  "worstFirstOf": "rotate",
+  "turns": 4.726904761904762,
+  "bottom": "regular",
+  "bottomScore": 0.245
+ }
+}
