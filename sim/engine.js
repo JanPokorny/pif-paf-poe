@@ -47,7 +47,18 @@ const DEFAULT_RULES = {
   chainPulls: Infinity,
   // May the very first stone of the game be placed in the centre?
   openCentre: true,
+  // Where the very first stone of the game may go: 'any' | 'centre' | 'edge' | 'corner'.
+  openingSquare: 'any',
+  // The opening stone resolves no effect and imposes no restriction.
+  dullOpening: false,
+  // Extra Regular stones handed to whoever moves second.
+  secondPlayerExtra: 0,
+  // Pie rule: after the opening turn, the second player may trade seats, taking
+  // the opening stone and the hand that played it.
+  pieRule: false,
 };
+
+const CENTRE = [4], EDGES = [1, 3, 5, 7], CORNERS = [0, 2, 6, 8];
 
 // ── Board helpers ───────────────────────────────────────────────────────────
 
@@ -76,10 +87,13 @@ function chainAdj(s, a, b) { return s.skills[s.currentPlayer] === 'slither' ? ad
 // ── State ───────────────────────────────────────────────────────────────────
 
 function initGameState(handsX, handsO, firstPlayer, skills, rules) {
+  const R = rules ? { ...DEFAULT_RULES, ...rules } : DEFAULT_RULES;
+  const hands = { X: [...handsX], O: [...handsO] };
+  for (let i = 0; i < R.secondPlayerExtra; i++) hands[opp(firstPlayer)].push('regular');
   const s = {
-    rules: rules ? { ...DEFAULT_RULES, ...rules } : DEFAULT_RULES,
+    rules: R,
     board: Array(9).fill(null),
-    hands: { X: [...handsX], O: [...handsO] },
+    hands,
     skills: { X: (skills && skills.X) || 'none', O: (skills && skills.O) || 'none' },
     currentPlayer: firstPlayer,
     restriction: null,       // {type,pos,owner,uses}
@@ -94,6 +108,8 @@ function initGameState(handsX, handsO, firstPlayer, skills, rules) {
     nextId: 1,
     anchored: { X: null, O: null }, // stone id protected from removal
     pending2048: 0,                 // extra 2048 resolutions queued (Overload)
+    turnsDone: 0,
+    pieResolved: false,
     lineOnPlace: false,             // mover already had a line before any effect
     movedThisTurn: false,           // an effect or chain move has run this turn
     chainPulled: 0,
@@ -125,6 +141,9 @@ function cloneState(s) {
     lineOnPlace: s.lineOnPlace,
     movedThisTurn: s.movedThisTurn,
     chainPulled: s.chainPulled,
+    dullTurn: s.dullTurn,
+    turnsDone: s.turnsDone,
+    pieResolved: s.pieResolved,
   };
 }
 
@@ -257,7 +276,13 @@ function getSelectActions(s) {
 function getPlaceActions(s) {
   let free = [];
   for (let i = 0; i < 9; i++) if (!s.board[i]) free.push(i);
-  if (!s.rules.openCentre && free.length === 9) free = free.filter(i => i !== 4);
+  if (free.length === 9) {                       // the opening placement
+    const sq = s.rules.openingSquare;
+    if (sq === 'centre') free = free.filter(i => CENTRE.includes(i));
+    else if (sq === 'edge') free = free.filter(i => EDGES.includes(i));
+    else if (sq === 'corner') free = free.filter(i => CORNERS.includes(i));
+    else if (!s.rules.openCentre) free = free.filter(i => i !== 4);
+  }
   if (s.rules.persistentRestriction) {
     free = persistentFilter(s, free);
   } else {
@@ -329,6 +354,7 @@ function getLegalActions(s) {
       return a.concat(withoutWinningEffects(s, pulls, false));
     }
     case 'bonus': return [{ type: 'bonusTake' }, { type: 'bonusPass' }];
+    case 'pie': return [{ type: 'pieKeep' }, { type: 'pieSwap' }];
     default: return [];
   }
 }
@@ -338,7 +364,7 @@ function getLegalActions(s) {
 // Restriction bookkeeping + the repeat/line terminal checks. True if the game ended.
 function resolveTurn(s) {
   const p = s.currentPlayer;
-  if (RESTRICTION_TYPES.includes(s.selectedStone)) {
+  if (RESTRICTION_TYPES.includes(s.selectedStone) && !s.dullTurn) {
     s.restriction = { type: s.selectedStone, pos: s.placedPos, owner: p, uses: s.skills[p] === 'lingering' ? 2 : 1 };
   } else if (s.restriction && s.restriction.owner !== p) {
     s.restriction.uses--;
@@ -359,13 +385,30 @@ function resolveTurn(s) {
 
 // `again` keeps the turn with the same player (Relentless).
 function advanceTurn(s, again) {
-  if (!again) s.currentPlayer = opp(s.currentPlayer);
+  if (!again) { s.currentPlayer = opp(s.currentPlayer); s.turnsDone++; }
   s.selectedStone = null; s.placedPos = null;
-  s.lineOnPlace = false; s.movedThisTurn = false; s.chainPulled = 0;
+  s.lineOnPlace = false; s.movedThisTurn = false; s.chainPulled = 0; s.dullTurn = false;
   s.phase = boardFull(s.board) ? 'remove' : 'select';
   // Dead ends are draws, matching the "no legal actions" break in the reference implementation.
   if (s.phase === 'remove' && !getRemoveActions(s).length) { s.winner = null; s.phase = 'gameOver'; s.winReason = 'stuck'; }
   if (s.phase === 'select' && !s.hands[s.currentPlayer].length) { s.winner = null; s.phase = 'gameOver'; s.winReason = 'nohand'; }
+  // Pie rule: the second player decides before their first turn.
+  if (s.rules.pieRule && !s.pieResolved && s.turnsDone === 1 && s.phase !== 'gameOver') s.phase = 'pie';
+}
+
+// Trade seats: the deciding player takes the opening stone and the hand that
+// played it, and the opener now moves as the second player.
+function pieSwap(s) {
+  for (let i = 0; i < 9; i++) if (s.board[i]) s.board[i].player = opp(s.board[i].player);
+  const h = s.hands.X; s.hands.X = s.hands.O; s.hands.O = h;
+  s.skills = { X: s.skills.O, O: s.skills.X };
+  s.anchored = { X: s.anchored.O, O: s.anchored.X };
+  if (s.restriction) s.restriction.owner = opp(s.restriction.owner);
+  s.currentPlayer = opp(s.currentPlayer);
+  // Positions seen before the trade describe a mirrored game; start the
+  // repetition record over so the swap cannot hand out a bogus repeat win.
+  s.history = new Set();
+  s.history.add(hashState(s));
 }
 
 // Relentless: after a plain Regular placement, offer another turn when not ahead on board.
@@ -383,6 +426,13 @@ function endTurn(s) {
 function afterPlacement(s) {
   const t = s.selectedStone;
   s.lineOnPlace = check3(s.board, s.currentPlayer);
+  // dullOpening: the game's very first stone is inert - no effect, no restriction.
+  s.dullTurn = false;
+  if (s.rules.dullOpening && s.board.filter(c => c).length === 1) {
+    s.dullTurn = true;
+    endTurn(s);
+    return;
+  }
   if (s.rules.restrictionFizzle && restrictionActive(s) && (t === 'chain' || MOVEMENT_TYPES.includes(t))) {
     bump(s, 'fizzle');           // the restriction grounded this movement stone
     endTurn(s);
@@ -453,6 +503,14 @@ function doAction(s, a) {
       if (!adj(a.pos, s.chainEmpty)) bump(s, 'slither_diag');
       s.board[s.chainEmpty] = s.board[a.pos]; s.board[a.pos] = null;
       s.chainMoved.add(s.chainEmpty); s.chainEmpty = a.pos; s.chainPulled++; s.movedThisTurn = true;
+      break;
+    }
+    case 'pieKeep': { s.pieResolved = true; s.phase = boardFull(s.board) ? 'remove' : 'select'; break; }
+    case 'pieSwap': {
+      bump(s, 'pie_swap');
+      s.pieResolved = true;
+      pieSwap(s);
+      s.phase = boardFull(s.board) ? 'remove' : 'select';
       break;
     }
     case 'bonusPass': { bump(s, 'relentless_pass'); advanceTurn(s, false); break; }

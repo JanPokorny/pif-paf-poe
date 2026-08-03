@@ -66,8 +66,25 @@ depends sharply on how many you take even in the base game: one copy beats the R
 replaces 65-35, five copies lose to five Regulars 0-100, so any metagame price for it has
 to be a curve rather than a flat number. Measurements, the fifteen
 rule variants that did *not* work, and suggested price ordering are in `sim/BALANCE.md`.
-Note that this does not address the first-mover advantage, which remains ~70% and is the
-larger imbalance.
+### First-mover advantage
+
+Measured on mirror matches, the first player wins **79.3%** of the time. Handicaps aimed
+directly at this do essentially nothing — constraining the opening square is worth 0-2pp
+(and forcing a corner makes it *worse*), an inert opening stone 1.3pp, a spare stone for
+the second player 2.3pp. The advantage is tempo, not position or material, and none of
+those change who reaches three stones first.
+
+Two things do work:
+
+- The balance changes above, unchanged: **79.3% -> 66.8%**, four times the effect of any
+  purpose-built handicap, because they lengthen the game enough for the defender to matter.
+- A **pie rule** — after the opening turn, the second player may trade seats, taking the
+  opening stone and the hand that played it, after which the opener moves second. This
+  gives **49.7%** alone and **47.9%** on top of the balance set. It costs a rule and makes
+  the opening a bidding exercise rather than a move.
+
+For casual play, playing paired games with swapped seats cancels the advantage exactly and
+costs no rules text at all.
 
 If the aim is to *simplify* rather than rebalance, `sim/BALANCE.md` also measures the game
 with each stone deleted from the pool. Short version: cut **Shift** — it duplicates what

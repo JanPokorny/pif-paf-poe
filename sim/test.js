@@ -473,4 +473,81 @@ t('effectLineForbidden still lets you win by placing', () => {
   assert.strictEqual(s.winner, 'X');
 });
 
+
+t('dullOpening makes the first stone inert', () => {
+  const s = mkr({ dullOpening: true }, { X: ['2048', 'regular'], O: ['regular'] });
+  s.phase = 'select';
+  E.doAction(s, { type: 'select', stoneType: '2048' });
+  E.doAction(s, { type: 'place', pos: 0 });
+  assert.strictEqual(s.phase, 'select', 'no effect phase for the opening stone');
+  assert.strictEqual(s.currentPlayer, 'O');
+  // The second stone of the game still resolves normally.
+  const b = mkr({ dullOpening: true }, { X: ['regular', '2048'], O: ['2048'] });
+  b.phase = 'select';
+  E.doAction(b, { type: 'select', stoneType: 'regular' });
+  E.doAction(b, { type: 'place', pos: 0 });
+  E.doAction(b, { type: 'select', stoneType: '2048' });
+  E.doAction(b, { type: 'place', pos: 8 });
+  assert.strictEqual(b.phase, 'effect');
+});
+
+t('dullOpening suppresses an opening restriction', () => {
+  const s = mkr({ dullOpening: true }, { X: ['magnet', 'regular'], O: ['regular'] });
+  s.phase = 'select';
+  E.doAction(s, { type: 'select', stoneType: 'magnet' });
+  E.doAction(s, { type: 'place', pos: 4 });
+  assert.strictEqual(s.restriction, null);
+  assert.strictEqual(E.getPlaceActions(s).length, 8, 'opponent may play anywhere');
+});
+
+t('openingSquare constrains only the first stone', () => {
+  for (const [sq, expect] of [['centre', [4]], ['edge', [1, 3, 5, 7]], ['corner', [0, 2, 6, 8]]]) {
+    const s = mkr({ openingSquare: sq }, { X: ['regular', 'regular'], O: ['regular'] });
+    s.phase = 'select';
+    E.doAction(s, { type: 'select', stoneType: 'regular' });
+    assert.deepStrictEqual(E.getPlaceActions(s).map(a => a.pos).sort((x, y) => x - y), expect, sq);
+    E.doAction(s, { type: 'place', pos: expect[0] });
+    E.doAction(s, { type: 'select', stoneType: 'regular' });
+    assert.strictEqual(E.getPlaceActions(s).length, 8, sq + ': second stone unconstrained');
+  }
+});
+
+t('secondPlayerExtra hands the extra stones to whoever moves second', () => {
+  const s = E.initGameState(['regular'], ['shift'], 'X', { X: 'none', O: 'none' }, { secondPlayerExtra: 1 });
+  assert.deepStrictEqual(s.hands.X, ['regular']);
+  assert.deepStrictEqual(s.hands.O, ['shift', 'regular']);
+  const b = E.initGameState(['regular'], ['shift'], 'O', { X: 'none', O: 'none' }, { secondPlayerExtra: 2 });
+  assert.deepStrictEqual(b.hands.X, ['regular', 'regular', 'regular']);
+  assert.deepStrictEqual(b.hands.O, ['shift']);
+});
+
+
+t('pieRule offers the second player a seat trade, once', () => {
+  const s = mkr({ pieRule: true }, { X: ['regular', 'shift'], O: ['2048', 'chain'] });
+  s.phase = 'select';
+  E.doAction(s, { type: 'select', stoneType: 'regular' });
+  E.doAction(s, { type: 'place', pos: 4 });
+  assert.strictEqual(s.phase, 'pie');
+  assert.deepStrictEqual(E.getLegalActions(s), [{ type: 'pieKeep' }, { type: 'pieSwap' }]);
+  E.doAction(s, { type: 'pieKeep' });
+  assert.strictEqual(s.phase, 'select');
+  assert.strictEqual(s.currentPlayer, 'O');
+  E.doAction(s, { type: 'select', stoneType: '2048' });
+  E.doAction(s, { type: 'place', pos: 0 });
+  E.doAction(s, { type: 'effect', direction: 'up' });
+  assert.strictEqual(s.phase, 'select', 'the offer is not repeated');
+});
+
+t('pieSwap hands the opening stone and its hand to the decider', () => {
+  const s = mkr({ pieRule: true }, { X: ['regular', 'shift'], O: ['2048', 'chain'] });
+  s.phase = 'select';
+  E.doAction(s, { type: 'select', stoneType: 'regular' });
+  E.doAction(s, { type: 'place', pos: 4 });
+  E.doAction(s, { type: 'pieSwap' });
+  assert.strictEqual(s.board[4].player, 'O', 'the opening stone changed hands');
+  assert.deepStrictEqual(s.hands.O, ['shift'], 'O also took the hand that played it');
+  assert.deepStrictEqual(s.hands.X, ['2048', 'chain']);
+  assert.strictEqual(s.currentPlayer, 'X', 'the opener now moves second');
+});
+
 console.log('\n' + passed + ' checks passed\n');

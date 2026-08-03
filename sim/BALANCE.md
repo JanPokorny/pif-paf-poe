@@ -350,3 +350,79 @@ every hand keeps a real choice and the seat advantage does not get worse.
 The root README lists a **Swap** stone (exchange the placed stone's row or column with
 another). It is not implemented in `index.html` and is not in any measurement here. That
 is a free simplification: either delete it from the rules or build it.
+
+## Reducing the first-mover advantage
+
+Measured on mirror matches only — 48 random hands, each played 12 times from both
+seatings, 1152 games per rule set (`sim/loadouts.js --opponents 0 --mirrors 12`). That
+isolates the seat: identical hands, so the only asymmetry left is who moves first. 50% is
+fair; standard error is about 1.2pp.
+
+| rule set | 1st player wins | turns |
+| --- | --- | --- |
+| *base* | *79.3%* | *4.9* |
+| opening stone must be a corner | 83.2% | 4.8 |
+| opening stone must be the centre | 80.4% | 4.7 |
+| second player starts with +2 Regulars | 79.2% | 4.8 |
+| opening stone is inert (no effect, no restriction) | 78.0% | 4.9 |
+| opening stone must be an edge | 77.3% | 4.9 |
+| second player starts with +1 Regular | 77.0% | 4.9 |
+| effect-lines forbidden | 70.7% | 5.6 |
+| effect-lines forbidden + chain0 | 68.6% | 5.7 |
+| **persistent + fizzle + chain0** ("balance set") | **66.8%** | 5.6 |
+| balance set + effect-lines forbidden | **64.6%** | 5.9 |
+| **pie rule** | **49.7%** | 5.3 |
+| balance set + pie rule | **47.9%** | 6.2 |
+
+### Handicaps and opening restrictions do nothing
+
+Everything aimed *directly* at the seat lands within a couple of points of the 79.3%
+baseline, which is barely outside noise. Constraining where the opening stone may go is
+worthless in both directions — forcing a corner makes it *worse* (83.2%), forcing an edge
+helps by 2pp. Making the opening stone inert buys 1.3pp. Handing the second player a spare
+stone buys 2.3pp for one and nothing for two, which is what the earlier finding predicts:
+games end after ~5 turns with stones still in hand, so extra cards are not a resource
+anyone is short of.
+
+The reason is that the advantage is **tempo**, not position and not material. The first
+player reaches three stones first, and nothing that adjusts the starting position or the
+hand size changes that ordering.
+
+### Slowing the race down works, and it is free
+
+The rule set already recommended for stone balance — persistent restrictions, restriction
+fizzle, Chain drags nothing — cuts the seat advantage from **79.3% to 66.8%**, four times
+the effect of any purpose-built handicap, and it was not designed for this at all. Adding
+"a movement effect may not complete your own line" takes it to **64.6%**, at the cost of
+the stone-balance regression that variant causes (see above). Game length rises from 4.9
+to ~5.9 turns, which is the mechanism: the defender gets enough turns to matter.
+
+This is the cheapest real fix. It needs no new concepts in the rules, and it is the same
+change already justified on other grounds.
+
+### The pie rule removes it outright
+
+**49.7%** — the seat advantage is gone, and with the balance set on top, 47.9%. That is
+not a surprise, it is close to a theorem: if the second player may trade seats after
+seeing the opening move, the first player is forced to open with something they would be
+equally happy to receive, so the value of moving first is competed away by construction.
+
+Implemented as `pieRule`: after the opening turn, the second player may trade seats,
+taking the opening stone *and* the hand that played it, after which the opener moves as
+the second player. Game length only rises to 5.3 turns, so it does not slow the game down
+the way the balance set does.
+
+The cost is conceptual, not numerical: the opening turn becomes a bidding exercise rather
+than a move, which is a real change in feel and adds a rule that needs explaining. It also
+makes the opening deliberately weak, which some players dislike.
+
+### Recommendation
+
+Take the **balance set** first: 79.3% → 66.8%, no new concepts, and it is the same change
+that removes the dominant hand type. If a ~67% seat advantage is still too high — and for
+a two-player game it probably is — add the **pie rule** on top for 47.9%. Nothing else
+tested is worth the rules text.
+
+For casual play there is a zero-rules option that the harness itself relies on: **play
+paired games with swapped seats** and score the pair. That makes the seat advantage cancel
+exactly rather than approximately, which is why every measurement in this document does it.
