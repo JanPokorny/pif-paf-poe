@@ -181,6 +181,23 @@ pushes the opponent away but never builds anything. **Stinky beats Magnet** (52.
 Magnet's own restriction drags the opponent right next to the Magnet player's newest
 stone, and Stinky is the hand that most wants to be pushed around.
 
+At 260 games per pair the leg that closes the triangle (Stinky over Magnet, 52.7%) sits
+inside its own confidence interval — 260 games is not enough to distinguish it from a coin
+flip, and both cycles in the table depend on that one cell. Re-measured at 2600 games per
+pair, all three legs are significant and the triangle stands (`results/cycle-edge.txt`):
+
+| edge | rate | Wilson 95% | n |
+|---|---|---|---|
+| magnet > rotate | 61.4% | [59.5, 63.3] | 2600 |
+| rotate > stinky | 63.1% | [61.2, 64.9] | 2600 |
+| stinky > magnet | 55.4% | [53.5, 57.3] | 2600 |
+
+The cycle also survives deleting Chain from the pool: Rotate already shares Chain's node,
+so recomputing the matrix without the Chain archetype leaves the Magnet > Rotate > Stinky >
+Magnet triangle intact and unbeaten archetypes at 0. (No new games were needed for that
+check — the swap2 shell contains no Chain, so `chainPulls` never applies to any pair not
+involving the Chain archetype itself.)
+
 ### What this costs
 
 Regular (22.6%) and Shift (26.2%) fall further. A plain hand has no answer to a board
