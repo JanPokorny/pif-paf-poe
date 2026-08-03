@@ -69,31 +69,30 @@ export function createGame({ handX, handO, first = 'X' }) {
   for (const t of [...handX, ...handO]) {
     if (!STONE_TYPES.includes(t)) throw new Error(`unknown stone type: ${t}`);
   }
-  const state = {
+  return {
     board: Array(9).fill(null),      // {player, type, id} | null
     hands: { X: [...handX], O: [...handO] },
+    first,                           // who opened; the other one wins a filled board
     player: first,                   // whose turn it is
-    phase: 'select',                 // 'return' | 'select' | 'place' | 'effect' | 'over'
+    phase: 'select',                 // 'select' | 'place' | 'effect' | 'over'
     restriction: null,               // {type, pos, owner} imposed on the other player
     lastPlaced: { X: null, O: null },// stone type each player placed last turn (Mimic)
     selected: null,                  // stone type taken from hand, awaiting placement
     placedAt: null,                  // where it was placed, awaiting its effect
     borrowed: null,                  // effect a Mimic is resolving this turn
-    seen: new Set(),                 // positions already reached, for the repetition rule
     over: false,
     winner: null,
-    reason: null,                    // 'line' | 'repetition' | 'stuck' | 'nostones'
+    reason: null,                    // 'line' | 'full'
     turns: 0,
     nextId: 1,
   };
-  state.seen.add(positionKey(state));
-  return state;
 }
 
 export function cloneState(s) {
   return {
     board: s.board.map((c) => (c ? { player: c.player, type: c.type, id: c.id } : null)),
     hands: { X: [...s.hands.X], O: [...s.hands.O] },
+    first: s.first,
     player: s.player,
     phase: s.phase,
     restriction: s.restriction ? { ...s.restriction } : null,
@@ -101,28 +100,12 @@ export function cloneState(s) {
     selected: s.selected,
     placedAt: s.placedAt,
     borrowed: s.borrowed,
-    seen: new Set(s.seen),
     over: s.over,
     winner: s.winner,
     reason: s.reason,
     turns: s.turns,
     nextId: s.nextId,
   };
-}
-
-// Board contents + active restriction + what was played last turn. Mimic reads
-// the last-placed types, so two positions that differ only there are genuinely
-// different positions.
-export function positionKey(s) {
-  let key = '';
-  for (let i = 0; i < 9; i++) {
-    const c = s.board[i];
-    key += c ? c.player + TYPE_CODE[c.type] : '..';
-  }
-  key += '|';
-  if (s.restriction) key += `${s.restriction.type[0]}${s.restriction.pos}${s.restriction.owner}`;
-  key += `|${s.lastPlaced.X ?? '-'}/${s.lastPlaced.O ?? '-'}`;
-  return key;
 }
 
 // ── Immobility ──────────────────────────────────────────────────────────────
@@ -220,24 +203,6 @@ function effectType(s) { return s.borrowed ?? s.selected; }
 
 // ── Legal actions ───────────────────────────────────────────────────────────
 
-function returnActions(s) {
-  const opponent = other(s.player);
-  const mine = [];
-  for (let i = 0; i < 9; i++) if (s.board[i]?.player === opponent) mine.push(i);
-
-  // A restriction the opponent placed on us still binds; if freeing one of their
-  // squares would let us satisfy it, we must free one of those.
-  const r = s.restriction;
-  if (r && r.owner === opponent) {
-    const notTheCause = mine.filter((i) => i !== r.pos);
-    const helpful = notTheCause.filter((i) =>
-      r.type === 'magnet' ? adjacent(i, r.pos) : !adjacent(i, r.pos));
-    const pool = helpful.length ? helpful : notTheCause.length ? notTheCause : mine;
-    return pool.map((pos) => ({ type: 'return', pos }));
-  }
-  return mine.map((pos) => ({ type: 'return', pos }));
-}
-
 function selectActions(s) {
   return [...new Set(s.hands[s.player])].map((stone) => ({ type: 'select', stone }));
 }
@@ -294,7 +259,6 @@ function effectActions(s) {
 
 export function legalActions(s) {
   switch (s.phase) {
-    case 'return': return returnActions(s);
     case 'select': return selectActions(s);
     case 'place': return placeActions(s);
     case 'effect': return effectActions(s);
@@ -323,10 +287,6 @@ function endTurn(s) {
     s.restriction = null;   // it bound us for this turn and is now spent
   }
 
-  const key = positionKey(s);
-  if (s.seen.has(key)) { finish(s, other(player), 'repetition'); return true; }
-  s.seen.add(key);
-
   if (hasLine(s.board, player)) { finish(s, player, 'line'); return true; }
   if (hasLine(s.board, other(player))) { finish(s, other(player), 'line'); return true; }
 
@@ -335,11 +295,15 @@ function endTurn(s) {
   s.selected = null;
   s.placedAt = null;
   s.borrowed = null;
-  s.phase = isFull(s.board) ? 'return' : 'select';
+  s.phase = 'select';
 
-  // Nothing legal to do is a draw rather than a loss.
-  if (s.phase === 'return' && !returnActions(s).length) { finish(s, null, 'stuck'); return true; }
-  if (s.phase === 'select' && !s.hands[s.player].length) { finish(s, null, 'nostones'); return true; }
+  // Out of room, or out of stones: the game is over and the player who did not
+  // open takes it. Since a turn adds a stone and never removes one, this is
+  // reached by move nine at the latest, so no game can run away.
+  if (isFull(s.board) || !s.hands[s.player].length) {
+    finish(s, other(s.first), 'full');
+    return true;
+  }
   return false;
 }
 
@@ -364,13 +328,6 @@ export function applyAction(s, action) {
   if (s.over) throw new Error('game is over');
 
   switch (action.type) {
-    case 'return': {
-      const stone = s.board[action.pos];
-      s.board[action.pos] = null;
-      s.hands[stone.player].push(stone.type);
-      s.phase = 'select';
-      break;
-    }
     case 'select': {
       const hand = s.hands[s.player];
       const at = hand.indexOf(action.stone);

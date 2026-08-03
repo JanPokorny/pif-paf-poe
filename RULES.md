@@ -2,8 +2,8 @@
 
 A two-player board game based on tic-tac-toe. Stones are placed on a 3x3 grid and the goal is
 three in a row, orthogonally or diagonally. Unlike tic-tac-toe, each player arrives with a
-hand of five stones, most of which do something when placed, and the game does not end when
-the board fills up.
+hand of five stones, most of which do something when placed. A game lasts at most nine
+placements, and if the board fills with nobody in a line, the player who moved *second* wins.
 
 ## Board
 
@@ -25,22 +25,33 @@ randomly.
 
 On your turn, in order:
 
-1. **Return** — only if the board is full: choose one of the opponent's stones on the board
-   and return it to their hand, which frees that square. If the opponent's active restriction
-   could be satisfied by freeing one of their squares, you must choose among those.
-2. **Place** — choose a stone from your hand and place it on a free square, obeying any
+1. **Place** — choose a stone from your hand and place it on a free square, obeying any
    restriction the opponent has on you (see below).
-3. **Resolve** — if the stone you placed has an effect, resolve it now.
-4. **Check** — in this order:
-   - if the resulting position repeats a position already seen this game, **your opponent
-     wins**;
-   - if you have three in a row, **you win**;
-   - if your opponent has three in a row, **they win**.
-5. Pass the turn.
+2. **Resolve** — if the stone you placed has an effect, resolve it now.
+3. **Check** — if you have three in a row, **you win**; otherwise if your opponent has three
+   in a row, **they win**.
+4. Pass the turn.
 
-A position, for the repetition rule, means the contents of all nine squares, plus any active
-restriction, plus what each player placed last turn. If you cannot act at all, the game is a
-draw.
+Stones are never removed from the board, so each turn adds exactly one and the ninth placement
+fills the grid. **If the board is full and nobody has three in a row, the player who moved
+second wins.** Same if the player to move has no stones left.
+
+There are no draws.
+
+### Why it ends this way
+
+Moving first is a real advantage in this game — you reach three stones first — so the second
+player gets the tie. It also means the first player has a deadline: the board fills on *their*
+fifth stone, so they must have a line by then or they lose.
+
+The board filling on the ninth placement is also why the second player only ever places four
+of their five stones. They still hold five, so the one left behind is a choice they make by
+playing the others.
+
+Do not expect this to even the game out on its own. Measured over mirror matches, it moves the
+first player from 67.5% to 65.3% and decides about one game in seven — most games end in a
+line well before the ninth stone. It is a simplification that happens to lean the right way,
+not a fix.
 
 ## Restrictions
 
@@ -50,9 +61,8 @@ place:
 - **Magnet** — you must place adjacent to it.
 - **Stinky** — you must not place adjacent to it.
 
-If no free square satisfies the restriction, it does not apply this turn. You cannot get
-around a restriction by returning the stone that caused it. A restriction only constrains the
-opponent, never its owner, and it lasts one turn.
+If no free square satisfies the restriction, it does not apply this turn. A restriction only
+constrains the opponent, never its owner, and it lasts one turn.
 
 ## Immobility
 
@@ -61,9 +71,6 @@ stuck. A stuck stone cannot be moved by any effect. Concretely:
 
 - You may not choose an effect that would move a stuck stone.
 - If that leaves no legal choice, the stone is still placed but resolves nothing.
-
-Being stuck has nothing to do with being returned to hand — a full board can still send a
-Mountain home.
 
 ## Stones
 
