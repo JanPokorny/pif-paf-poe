@@ -3,17 +3,19 @@
 // enough games and both seatings to be trustworthy.
 //
 //   node sim/loadouts.js --loadouts 60 --opponents 16 --games 2 --iters 450
+//   node sim/loadouts.js --pool regular,2048,rotate,magnet,stinky   (drop shift+chain)
 //
 // Every loadout plays `opponents` randomly drawn rivals, `games` times each, in
 // both seatings. Then each stone's marginal value is fitted by least squares over
 // the loadout scores, which answers "is a stone worth having" directly rather
 // than through the accident of which loadouts happened to be generated.
 
-const { TYPES } = require('./engine');
+const { TYPES: ALL_TYPES } = require('./engine');
 const { runSpecs, wilson, arg, defaultWorkers } = require('./tourney');
 const { makeRng } = require('./mcts');
 
 function buildSpecs(opts) {
+  const TYPES = opts.pool;
   const rng = makeRng(opts.seed);
   const loadouts = [];
   for (let i = 0; i < opts.loadouts; i++) {
@@ -33,6 +35,12 @@ function buildSpecs(opts) {
         specs.push({ ...base, first: 'O', seed: seed++ });
       }
     }
+    // A couple of mirror games per loadout, purely to measure the seat advantage.
+    for (let g = 0; g < opts.mirrors; g++) {
+      const base = { a: i, b: i, mirror: true, handX: loadouts[i], handO: loadouts[i], iters: opts.iters, rules: opts.rules };
+      specs.push({ ...base, first: 'X', seed: seed++ });
+      specs.push({ ...base, first: 'O', seed: seed++ });
+    }
   }
   return { specs, loadouts };
 }
@@ -40,7 +48,7 @@ function buildSpecs(opts) {
 // Least squares over stone counts. The counts of a hand always sum to 5, so an
 // intercept would be collinear; we fit without one and read the coefficients as
 // "points this stone contributes per copy".
-function fitPerStone(loadouts, score) {
+function fitPerStone(loadouts, score, TYPES) {
   const n = TYPES.length;
   const X = loadouts.map(h => TYPES.map(t => h.filter(s => s === t).length));
   const A = Array.from({ length: n }, () => new Array(n + 1).fill(0));
@@ -73,20 +81,41 @@ async function main() {
     seed: parseInt(arg('seed', '31337'), 10),
     workers: parseInt(arg('workers', String(defaultWorkers())), 10),
     rules: arg('rules', null) ? JSON.parse(arg('rules', null)) : undefined,
+    mirrors: parseInt(arg('mirrors', '3'), 10),
+    pool: (arg('pool', null) || ALL_TYPES.join(',')).split(','),
+    quiet: process.argv.includes('--quiet'),
   };
+  for (const t of opts.pool) if (!ALL_TYPES.includes(t)) throw new Error('unknown stone: ' + t);
+  const TYPES = opts.pool;
   const { specs, loadouts } = buildSpecs(opts);
-  console.error(`loadouts: ${loadouts.length} hands, ${specs.length} games, iters=${opts.iters}`);
+  console.error(`loadouts: pool=[${TYPES.join(' ')}] ${loadouts.length} hands, ${specs.length} games, iters=${opts.iters}`);
   const t0 = Date.now();
   const games = await runSpecs(specs, opts.workers);
   console.error(`played ${games.length} games in ${((Date.now() - t0) / 1000).toFixed(1)}s`);
 
   const pts = new Array(loadouts.length).fill(0), n = new Array(loadouts.length).fill(0);
+  let firstPts = 0, firstN = 0, turns = 0;
   for (const g of games) {
     const aPts = g.winner === 'X' ? 1 : g.winner === null ? 0.5 : 0;
+    turns += g.turns;
+    if (g.mirror) { firstPts += g.first === 'X' ? aPts : 1 - aPts; firstN++; continue; }
     pts[g.a] += aPts; n[g.a]++;
     pts[g.b] += 1 - aPts; n[g.b]++;
   }
   const score = loadouts.map((_, i) => n[i] ? pts[i] / n[i] : 0.5);
+  const mean = score.reduce((s, v) => s + v, 0) / score.length;
+  const sd = Math.sqrt(score.reduce((s, v) => s + (v - mean) ** 2, 0) / score.length);
+  const sorted = [...score].sort((a, b) => b - a);
+  const decile = Math.max(1, Math.round(score.length / 10));
+  const topDecile = sorted.slice(0, decile).reduce((s, v) => s + v, 0) / decile;
+  const botDecile = sorted.slice(-decile).reduce((s, v) => s + v, 0) / decile;
+
+  // One line per pool, for the leave-one-out comparison.
+  console.log('POOL\t' + TYPES.join(',') + '\tsd=' + (sd * 100).toFixed(1) +
+    '\tp90-p10=' + ((topDecile - botDecile) * 100).toFixed(1) +
+    '\tfirst=' + (firstPts / firstN * 100).toFixed(1) +
+    '\tturns=' + (turns / games.length).toFixed(1));
+  if (opts.quiet) return;
 
   const pad = (s, w) => String(s).padEnd(w);
   const p3 = x => (x * 100).toFixed(1).padStart(5);
@@ -107,7 +136,7 @@ async function main() {
   console.log(pad('stone', 10) + pad('in top 25%', 12) + pad('base rate', 11) +
     pad('mean w/ >=1', 13) + pad('mean w/ 0', 11) + pad('fitted value/copy', 18));
   console.log('-'.repeat(76));
-  const fit = fitPerStone(loadouts, score);
+  const fit = fitPerStone(loadouts, score, TYPES);
   const fitMean = fit.reduce((s, v) => s + v, 0) / fit.length;
   const topCut = Math.max(1, Math.round(loadouts.length / 4));
   const top = ranked.slice(0, topCut);

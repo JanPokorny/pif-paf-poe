@@ -1,0 +1,4 @@
+drop_shift+chain       POOL	regular,2048,rotate,magnet,stinky	sd=19.9	p90-p10=63.6	first=77.4	turns=5.0
+drop_shift+regular     POOL	2048,rotate,magnet,stinky,chain	sd=15.2	p90-p10=49.8	first=80.6	turns=4.6
+drop_regular+magnet    POOL	shift,2048,rotate,stinky,chain	sd=9.3	p90-p10=32.9	first=87.2	turns=4.3
+DONE

@@ -1,0 +1,9 @@
+drop=none     POOL	regular,shift,2048,rotate,magnet,stinky,chain	sd=17.3	p90-p10=55.2	first=83.0	turns=4.6
+drop=regular  POOL	shift,2048,rotate,magnet,stinky,chain	sd=13.7	p90-p10=44.9	first=81.3	turns=4.5
+drop=shift    POOL	regular,2048,rotate,magnet,stinky,chain	sd=16.3	p90-p10=53.8	first=76.4	turns=4.7
+drop=2048     POOL	regular,shift,rotate,magnet,stinky,chain	sd=19.4	p90-p10=58.2	first=77.4	turns=4.8
+drop=rotate   POOL	regular,shift,2048,magnet,stinky,chain	sd=16.9	p90-p10=54.5	first=79.5	turns=4.8
+drop=magnet   POOL	regular,shift,2048,rotate,stinky,chain	sd=12.5	p90-p10=39.5	first=87.5	turns=4.4
+drop=stinky   POOL	regular,shift,2048,rotate,magnet,chain	sd=10.5	p90-p10=33.8	first=84.4	turns=4.4
+drop=chain    POOL	regular,shift,2048,rotate,magnet,stinky	sd=17.0	p90-p10=50.2	first=77.8	turns=4.9
+DONE

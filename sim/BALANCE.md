@@ -269,3 +269,84 @@ about 36 games per loadout, which is a standard error of roughly 8 percentage po
 wide enough for any stone to top the table by luck. And with seven stone types in five
 slots, most types appear in about half of all hands, so "the top hands use it" is the
 null result, not a finding.
+
+## Which stones could be cut?
+
+A stone's own win rate is the wrong criterion — deleting one changes the balance of
+everything left. So: regenerate the whole random-loadout tournament with that stone
+removed from the pool and see what the remaining game looks like
+(`sim/loadouts.js --pool ...`, 48 hands x 12 opponents, 2592 games per pool).
+
+Two numbers, and they pull in opposite directions:
+
+- **sd / p90-p10** — how much the *draw* decides the game. Lower is better.
+- **first** — the first-mover edge in mirror matches. Lower is better.
+
+| removed | sd | p90-p10 | first-mover | verdict |
+| --- | --- | --- | --- | --- |
+| *nothing (all 7)* | *17.3* | *55.2* | *83.0%* | |
+| **shift** | 16.3 | 53.8 | **76.4%** | **cut this one** |
+| chain | 17.0 | 50.2 | 77.8% | tempting, but nerfing is cheaper |
+| regular | 13.7 | 44.9 | 81.3% | defensible |
+| rotate | 16.9 | 54.5 | 79.5% | no reason to |
+| 2048 | **19.4** | **58.2** | 77.4% | **keep — removing it hurts** |
+| magnet | 12.5 | 39.5 | **87.5%** | **keep — removing it hurts** |
+| stinky | 10.5 | 33.8 | **84.4%** | **keep — removing it hurts** |
+
+**Read sd with care.** Deleting a weak stone lowers it almost by definition, because bad
+hands stop existing; it is not evidence that the stone was bad for the game. Smaller
+pools also score lower on it mechanically, so only compare pools of equal size. The
+first-mover column is the one that cannot be gamed this way.
+
+### Cut Shift
+
+It is the only removal that buys a real improvement without paying for it somewhere else:
+the best first-mover swing of any single cut (**83.0% -> 76.4%**, more than either Chain
+or 2048 gives) at essentially unchanged draw-dependence.
+
+It is also the most *redundant* stone in the set. Shift slides a line; that is what 2048
+already does, and 2048 does it better. And it is bottom-tier under every measurement we
+have: 46.1% with one copy, 35.0% with two, -12.8pp fitted in random hands, 0/6 matchups
+won in the two-copy round robin. Nothing in the game is only expressible as a Shift.
+
+### Do not cut the two that look weakest
+
+Magnet (39.2% with two copies) and Stinky (37.3%) are the worst-scoring stones and the
+obvious things to delete. Both removals make the game **worse**: the first-mover edge goes
+from 83.0% to 87.5% and 84.4%. They are the only brake on the seat advantage — an
+all-Stinky mirror is the one configuration in the game where the second player wins — they
+are the entire denial class, and they are the pair that produced the only
+rock-paper-scissors triangle we found. Cutting them buys a lower sd, which is the
+tautology above, and pays for it with the game's biggest actual defect.
+
+**2048 is the sharpest case.** It is a top-tier stone by score (+33.6pp fitted) and yet
+removing it is the only cut that makes draw-dependence *worse* on both measures
+(17.3 -> 19.4, 55.2 -> 58.2). It is doing balancing work as the counterweight to Chain.
+
+### Chain: cut or nerf
+
+Chain is the "too strong" stone by every measure: +49.2pp fitted, 80% of the top quartile
+from a 48% base rate, unbeaten in every base-rules configuration. Cutting it does help
+(first-mover 83.0 -> 77.8, p90-p10 55.2 -> 50.2). But `chainPulls: 0` — Chain steps to an
+adjacent empty space and drags nothing — already brings it into line (Rotate takes over
+the top spot at a similar level), and that keeps the most distinctive mechanic in the game.
+Prefer the nerf; cut it only if rules length is the thing being optimised.
+
+### If you want to get down to five
+
+| pool | sd | p90-p10 | first-mover |
+| --- | --- | --- | --- |
+| 2048 rotate magnet stinky chain (cut shift, regular) | **15.2** | **49.8** | 80.6% |
+| regular 2048 rotate magnet stinky (cut shift, chain) | 19.9 | 63.6 | **77.4%** |
+| shift 2048 rotate stinky chain (cut regular, magnet) | 9.3 | 32.9 | **87.2%** |
+
+The third row is the trap this whole section is about. An sd of 9.3 is by far the best in
+the study and it is the *worst* pool of the three: every hand is a race, so the coin toss
+decides 87% of games. Cutting Shift and Regular (top row) is the better five-stone game —
+every hand keeps a real choice and the seat advantage does not get worse.
+
+### Also: Swap is in the rules but not in the game
+
+The root README lists a **Swap** stone (exchange the placed stone's row or column with
+another). It is not implemented in `index.html` and is not in any measurement here. That
+is a free simplification: either delete it from the rules or build it.

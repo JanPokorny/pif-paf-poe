@@ -5,7 +5,7 @@ process.on('message', msg => {
   if (msg.type !== 'chunk') return;
   const out = msg.specs.map(sp => {
     const r = playGame(sp);
-    return { key: sp.key, a: sp.a, b: sp.b, label: sp.label, first: sp.first, ...r };
+    return { key: sp.key, a: sp.a, b: sp.b, label: sp.label, first: sp.first, mirror: sp.mirror, ...r };
   });
   process.send({ type: 'done', out });
 });

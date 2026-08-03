@@ -68,3 +68,12 @@ to be a curve rather than a flat number. Measurements, the fifteen
 rule variants that did *not* work, and suggested price ordering are in `sim/BALANCE.md`.
 Note that this does not address the first-mover advantage, which remains ~70% and is the
 larger imbalance.
+
+If the aim is to *simplify* rather than rebalance, `sim/BALANCE.md` also measures the game
+with each stone deleted from the pool. Short version: cut **Shift** — it duplicates what
+2048 does, it is bottom-tier under every measurement, and removing it is the single best
+change for the first-mover advantage. Keep Magnet and Stinky despite their low win rates:
+removing either makes the seat advantage measurably worse, because they are the only
+brake on it. Do not cut 2048 — it is the counterweight to Chain, and removing it is the
+only cut that makes outcomes depend *more* on the draw. Note also that **Swap** appears in
+the rules above but is not implemented in `index.html`.
