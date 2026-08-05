@@ -1,0 +1,55 @@
+
+random hands: 24 hands, 2208 games, 184 per hand (92 opening, 92 replying), iters=800
+
+per-hand win rate, whole field, both seats
+
+hand                    total   95% CI           1st     2nd     seat gap  turns
+----------------------------------------------------------------------------------
+swa mou mag mag sti      72.8%  [ 66.0, 78.7]     87.0%   58.7%  28.3pp    6.1
+rot lee lee mag sti      71.7%  [ 64.8, 77.7]     82.6%   60.9%  21.7pp    6.1
+reg glu glu mag mag      70.7%  [ 63.7, 76.8]     91.3%   50.0%  41.3pp    6.1
+shi 204 glu mou mag      70.1%  [ 63.1, 76.3]     87.0%   53.3%  33.7pp    5.8
+reg shi rot mag sti      69.6%  [ 62.6, 75.8]     81.5%   57.6%  23.9pp    5.9
+shi glu mou mou mag      66.3%  [ 59.2, 72.7]     79.3%   53.3%  26.1pp    6.0
+reg 204 mag mag sti      64.1%  [ 57.0, 70.7]     76.1%   52.2%  23.9pp    6.4
+shi mim lee mou sti      60.9%  [ 53.7, 67.6]     75.0%   46.7%  28.3pp    5.7
+swa mim mim mou mag      58.2%  [ 50.9, 65.0]     72.8%   43.5%  29.3pp    6.0
+204 mim lee glu sti      56.0%  [ 48.8, 63.0]     66.3%   45.7%  20.7pp    6.1
+reg swa mim mou mag      54.9%  [ 47.7, 61.9]     66.3%   43.5%  22.8pp    6.1
+reg rot glu glu mag      50.5%  [ 43.4, 57.7]     62.0%   39.1%  22.8pp    6.1
+rot lee mou mou sti      47.3%  [ 40.2, 54.5]     53.3%   41.3%  12.0pp    6.1
+reg shi swa lee glu      46.2%  [ 39.1, 53.4]     55.4%   37.0%  18.5pp    6.1
+204 swa swa mim lee      43.5%  [ 36.5, 50.7]     63.0%   23.9%  39.1pp    5.8
+reg rot swa lee mou      42.4%  [ 35.5, 49.6]     51.1%   33.7%  17.4pp    6.1
+204 rot rot swa lee      40.2%  [ 33.4, 47.4]     66.3%   14.1%  52.2pp    5.8
+204 204 glu glu sti      37.5%  [ 30.8, 44.7]     40.2%   34.8%  5.4pp     6.6
+shi shi 204 204 204      37.0%  [ 30.3, 44.1]     54.3%   19.6%  34.8pp    5.4
+shi glu mou mou sti      36.4%  [ 29.8, 43.6]     43.5%   29.3%  14.1pp    6.3
+rot mim lee glu sti      35.9%  [ 29.3, 43.0]     33.7%   38.0%  -4.3pp    6.5
+shi swa glu glu mou      29.9%  [ 23.7, 36.9]     34.8%   25.0%  9.8pp     6.3
+reg swa mou sti sti      23.9%  [ 18.3, 30.6]     32.6%   15.2%  17.4pp    6.0
+reg rot glu glu mou      14.1%  [  9.8, 19.9]      4.3%   23.9%  -19.6pp   6.7
+
+stone types, by the hands that hold them
+
+stone     hands  copies  holders  others   delta
+----------------------------------------------------
+magnet    10     13       64.9%    39.4%   25.5pp
+stinky    11     12       52.4%    48.0%   4.4pp
+shift     8      9        52.0%    49.0%   3.1pp
+mimic     6      7        51.5%    49.5%   2.1pp
+2048      7      10       49.8%    50.1%   -0.3pp
+leech     9      10       49.3%    50.4%   -1.1pp
+regular   9      9        48.5%    50.9%   -2.4pp
+mountain  12     15       48.1%    51.9%   -3.8pp
+glue      11     16       46.7%    52.8%   -6.1pp
+rotate    8      9        46.5%    51.8%   -5.3pp
+swap      9      10       45.8%    52.5%   -6.8pp
+
+summary
+  opening seat wins     60.8% [ 58.8, 62.8]
+  hand spread           72.8% (swa mou mag mag sti) to  14.1% (reg rot glu glu mou), 58.7pp
+  seat gap per hand    21.6pp mean, -19.6pp to 52.2pp
+  hands better 2nd     2/24
+  games decided by      79.8% line,  20.2% full board
+  mean game length     6.1 turns
