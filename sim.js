@@ -10,13 +10,14 @@
 
 import { Worker, isMainThread, parentPort, workerData } from 'node:worker_threads';
 import { cpus } from 'node:os';
-import { mkdirSync, writeFileSync } from 'node:fs';
+import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { dirname } from 'node:path';
+import { pathToFileURL } from 'node:url';
 
 import { createGame, applyAction, STONE_TYPES } from './engine.js';
 import { chooseAction, makeRng } from './ai.js';
 
-const CODE = {
+export const CODE = {
   regular: 'reg', shift: 'shi', '2048': '204', rotate: 'rot', swap: 'swa',
   mimic: 'mim', leech: 'lee', glue: 'glu', mountain: 'mou', magnet: 'mag', stinky: 'sti',
 };
@@ -25,7 +26,7 @@ const CODE = {
 
 // X is always the opening seat, so a spec says which hand opens rather than
 // which hand is X. Both sides search with the same budget off the same stream.
-function playGame(spec) {
+export function playGame(spec) {
   const rng = makeRng(spec.seed);
   const s = createGame({ handX: spec.opener, handO: spec.replier, first: 'X' });
   while (!s.over) applyAction(s, chooseAction(s, { iterations: spec.iters, rng }));
@@ -40,7 +41,9 @@ function playGame(spec) {
 
 // ── Workers ─────────────────────────────────────────────────────────────────
 
-if (!isMainThread) {
+// evolve.js imports this module inside its own workers, so the two guards key
+// off `kind` rather than off being a worker at all.
+if (!isMainThread && workerData?.kind === 'roundrobin') {
   parentPort.postMessage(workerData.specs.map(playGame));
 }
 
@@ -50,7 +53,7 @@ function runSpecs(specs, workers) {
 
   return Promise.all(chunks.filter((c) => c.length).map((specs) =>
     new Promise((resolve, reject) => {
-      const w = new Worker(new URL(import.meta.url), { workerData: { specs } });
+      const w = new Worker(new URL(import.meta.url), { workerData: { kind: 'roundrobin', specs } });
       w.on('message', resolve);
       w.on('error', reject);
     })
@@ -59,12 +62,19 @@ function runSpecs(specs, workers) {
 
 // ── Setup ───────────────────────────────────────────────────────────────────
 
-function randomHands(count, rng) {
+export function sortHand(hand) {
+  return hand.slice().sort((a, b) => STONE_TYPES.indexOf(a) - STONE_TYPES.indexOf(b));
+}
+
+export function randomHand(rng) {
+  return sortHand(Array.from({ length: 5 }, () => STONE_TYPES[(rng() * STONE_TYPES.length) | 0]));
+}
+
+export function randomHands(count, rng) {
   const hands = [];
   const seen = new Set();
   while (hands.length < count) {
-    const hand = Array.from({ length: 5 }, () => STONE_TYPES[(rng() * STONE_TYPES.length) | 0]);
-    hand.sort((a, b) => STONE_TYPES.indexOf(a) - STONE_TYPES.indexOf(b));
+    const hand = randomHand(rng);
     const key = hand.join(',');
     if (seen.has(key)) continue;   // a repeat would be its own mirror match
     seen.add(key);
@@ -93,7 +103,7 @@ function buildSpecs(hands, opts) {
 
 // Wilson score interval: an exact-ish 95% band that stays sane at the small
 // per-hand sample sizes this study can afford.
-function wilson(wins, n) {
+export function wilson(wins, n) {
   if (!n) return [0, 0];
   const z = 1.96, p = wins / n;
   const d = 1 + z * z / n;
@@ -102,8 +112,8 @@ function wilson(wins, n) {
   return [Math.max(0, centre - half), Math.min(1, centre + half)];
 }
 
-const pad = (s, n) => String(s).padEnd(n);
-const pct = (x) => (x * 100).toFixed(1).padStart(5);
+export const pad = (s, n) => String(s).padEnd(n);
+export const pct = (x) => (x * 100).toFixed(1).padStart(5);
 
 function report(hands, games, opts) {
   const rows = hands.map((hand, i) => ({
@@ -197,7 +207,7 @@ function report(hands, games, opts) {
 
 // ── CLI ─────────────────────────────────────────────────────────────────────
 
-function arg(name, fallback) {
+export function arg(name, fallback) {
   const at = process.argv.indexOf('--' + name);
   return at > 0 && process.argv[at + 1] !== undefined ? process.argv[at + 1] : fallback;
 }
@@ -209,10 +219,15 @@ async function main() {
     iters: parseInt(arg('iters', '800'), 10),
     seed: parseInt(arg('seed', '4242'), 10),
     workers: parseInt(arg('workers', String(Math.max(1, cpus().length - 1))), 10),
+    handsFile: arg('hands-file', null),   // a JSON array of hands, e.g. from evolve.js
     out: arg('out', null),
   };
 
-  const hands = randomHands(opts.hands, makeRng(opts.seed));
+  // A supplied field replaces the random sample; everything downstream is the same.
+  const hands = opts.handsFile
+    ? JSON.parse(readFileSync(opts.handsFile, 'utf8')).map(sortHand)
+    : randomHands(opts.hands, makeRng(opts.seed));
+  opts.hands = hands.length;
   const specs = buildSpecs(hands, opts);
   console.error(`playing ${specs.length} games on ${opts.workers} workers...`);
 
@@ -228,4 +243,5 @@ async function main() {
   }
 }
 
-if (isMainThread) await main();
+const isEntryPoint = process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href;
+if (isMainThread && isEntryPoint) await main();
