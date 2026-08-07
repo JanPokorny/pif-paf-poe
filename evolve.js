@@ -202,19 +202,34 @@ function report(acc, opts) {
   console.log(`${Object.keys(acc.seen).length} distinct hands visited, ` +
     `${Object.keys(acc.handStats).length} of them played`);
 
-  // Drift of the pool itself. A stone that wins keeps its holders alive, and a
-  // stone that loses is what a losing hand throws away, so share is selection.
-  console.log('\nstone share of the population, uniform start is 9.1%\n');
-  console.log(pad('stone', 10) + quarters.map((_, q) => pad(`@${((q + 1) * 25)}%`, 8)).join('') +
-    'change');
-  console.log('-'.repeat(52));
-  const last = snaps[snaps.length - 1];
-  const drift = STONE_TYPES.map((t) => ({ t, end: share(last, t), start: 1 / STONE_TYPES.length }))
-    .sort((a, b) => b.end - a.end);
+  // Drift of the pool itself: what the live hands are made of, censused as the
+  // run goes. A stone that wins keeps its holders alive and a stone that loses
+  // is what a losing hand throws away, so share is selection -- but only if it
+  // clears the noise. One census is `stones` slots wide, so read the mean over
+  // the whole run against the +-se column, not any single column.
+  const uniform = 1 / STONE_TYPES.length;
+  const se = Math.sqrt(uniform * (1 - uniform) / snaps[0].stones);
+  console.log(`\nstone share of the live hands, uniform is ${pct(uniform)}%, ` +
+    `census of ${snaps[0].stones} slots +-${pct(se)}pp\n`);
+  console.log(pad('stone', 10) +
+    quarters.map((_, q) => pad(`${(q + 1) * 25}% in`, 8)).join('') +
+    pad('mean', 8) + pad('sd', 8) + 'vs uniform');
+  console.log('-'.repeat(70));
+  const drift = STONE_TYPES.map((t) => {
+    const series = snaps.map((snap) => share(snap, t));
+    const mean = series.reduce((a, b) => a + b, 0) / series.length;
+    const sd = Math.sqrt(series.reduce((a, b) => a + (b - mean) ** 2, 0) / series.length);
+    return { t, mean, sd };
+  }).sort((a, b) => b.mean - a.mean);
   for (const d of drift) {
+    const delta = (d.mean - uniform) * 100;
     console.log(pad(d.t, 10) + quarters.map((s) => pad(pct(share(s, d.t)) + '%', 8)).join('') +
-      ((d.end - d.start) * 100).toFixed(1) + 'pp');
+      pad(pct(d.mean) + '%', 8) + pad(pct(d.sd) + 'pp', 8) +
+      (delta >= 0 ? '+' : '') + delta.toFixed(1) + 'pp');
   }
+  // Censuses overlap in membership, so the spread above is not sqrt(n)-shrinkable
+  // into a confidence interval. Treat a mean within about one sd of uniform as
+  // undecided and read the copies table below instead.
 
   // Win rate of a hand-side by how many copies of a stone it holds. Every game
   // in the run contributes both of its sides, so n is large and the comparison
