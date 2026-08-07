@@ -11,3 +11,14 @@ uno-reverse: 400 games, spent in 232 of 778 chances, mean turn 2.9
 
 mind-control: 400 games, spent in 383, mean turn 1.3
 
+
+anchor: 400 games, spent in 221 of 714 chances, mean turn 2.9
+
+  26.7%   denied a move that would have won on the spot
+
+second-wind: 400 games, spent in 400, mean turn 1.0
+
+
+fizzle: 400 games, spent in 265 of 781 chances, mean turn 3.2
+
+  24.5%   denied a move that would have won on the spot

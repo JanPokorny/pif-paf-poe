@@ -77,8 +77,7 @@ function diagnose(item, opts) {
       const action = chooseAction(s, { iterations: opts.iters, rng });
 
       if (action.type === 'reverse') tally.offered++;
-      const spending = (action.type === 'counter' && action.use !== 'pass')
-        || (action.type === 'reverse' && action.reverse);
+      const spending = action.use && action.use !== 'pass' && action.use !== 'none';
 
       if (spending) {
         tally.spent++;
@@ -94,7 +93,7 @@ function diagnose(item, opts) {
           }
         } else if (action.type === 'reverse') {
           const asIs = cloneState(s);
-          applyAction(asIs, { type: 'reverse', reverse: false });
+          applyAction(asIs, { type: 'reverse', use: 'none' });
           if (asIs.over && asIs.winner === s.player) note('denied a move that would have won on the spot');
         }
       }

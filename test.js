@@ -5,7 +5,7 @@
 //   node test.js
 
 import {
-  createGame, applyAction, legalActions, render, STONE_TYPES, other, toMove,
+  createGame, applyAction, legalActions, render, STONE_TYPES, ITEMS, other, toMove,
 } from './engine.js';
 import { makeRng, randomAction } from './ai.js';
 
@@ -349,7 +349,7 @@ const empty = ['.', '.', '.', '.', '.', '.', '.', '.', '.'];
   applyAction(s, { type: 'effect', direction: 'right' });
   check('Uno Reverse interrupts, and it is the other player choosing',
     [s.phase, toMove(s)], ['reverse', 'O']);
-  applyAction(s, { type: 'reverse', reverse: true });
+  applyAction(s, { type: 'reverse', use: 'uno-reverse' });
   check('reversed, the shift runs the other way',
     show(s.board), ['.', '.', 'Xsh', '.', '.', '.', '.', '.', 'Xmg']);
   check('Uno Reverse is once per game', s.spent.O, true);
@@ -358,6 +358,95 @@ const empty = ['.', '.', '.', '.', '.', '.', '.', '.', '.'];
 {
   const s = held([...empty], { at: 0, selected: 'shift', item: 'super-shift', player: 'X' });
   check('a Counterattack is inert for whoever opened', legalActions(s).length, 4);
+}
+
+// ── The seat-gap Counterattacks ─────────────────────────────────────────────
+
+{
+  const s = createGame({
+    handX: ['shift'], handO: ['mountain', 'mountain'], first: 'X', itemO: 'second-wind',
+  });
+  s.board = board(['Xsh', '.', '.', '.', '.', '.', '.', '.', '.']);
+  s.player = 'O';
+  applyAction(s, { type: 'select', stone: 'mountain' });
+  applyAction(s, { type: 'place', pos: 8 });
+  applyAction(s, { type: 'counter', use: 'second-wind' });
+  check('Second Wind keeps the turn instead of passing it',
+    [s.phase, s.player], ['select', 'O']);
+}
+
+{
+  // O's Shift would run right; Fizzle stops it happening at all.
+  const s = createGame({ handX: ['shift'], handO: ['shift'], first: 'X', itemO: 'fizzle' });
+  s.board = board(['.', '.', '.', '.', '.', '.', '.', '.', 'Omg']);
+  applyAction(s, { type: 'select', stone: 'shift' });
+  applyAction(s, { type: 'place', pos: 0 });
+  applyAction(s, { type: 'effect', direction: 'right' });
+  check('Fizzle interrupts, and the other player chooses', [s.phase, toMove(s)], ['reverse', 'O']);
+  applyAction(s, { type: 'reverse', use: 'fizzle' });
+  check('the effect simply does not happen',
+    show(s.board), ['Xsh', '.', '.', '.', '.', '.', '.', '.', 'Omg']);
+  check('Fizzle is once per game', s.spent.O, true);
+}
+
+{
+  // X sweeps the top row right. Anchor nails O's stone down; X's still moves.
+  const s = createGame({ handX: ['2048'], handO: ['shift'], first: 'X', itemO: 'anchor' });
+  s.board = board(['Omg', '.', '.', '.', '.', '.', '.', '.', '.']);
+  applyAction(s, { type: 'select', stone: '2048' });
+  applyAction(s, { type: 'place', pos: 3 });
+  applyAction(s, { type: 'effect', direction: 'right' });
+  applyAction(s, { type: 'reverse', use: 'anchor' });
+  check('Anchor holds the holder\'s stones while everything else slides',
+    show(s.board), ['Omg', '.', '.', '.', '.', 'X20', '.', '.', '.']);
+}
+
+{
+  const s = createGame({ handX: ['shift'], handO: ['shift'], first: 'X', itemO: 'echo' });
+  s.board = board(['.', '.', '.', '.', '.', '.', '.', '.', 'Xmg']);
+  s.player = 'O';
+  applyAction(s, { type: 'select', stone: 'shift' });
+  applyAction(s, { type: 'place', pos: 0 });
+  applyAction(s, { type: 'effect', direction: 'right' });
+  check('Echo is offered once the effect has resolved', s.phase, 'counter');
+  applyAction(s, { type: 'counter', use: 'echo' });
+  check('and it puts the same stone back on the effect menu', s.phase, 'effect');
+  applyAction(s, { type: 'effect', direction: 'right' });
+  check('so the shift runs twice in one turn',
+    show(s.board), ['.', '.', 'Osh', '.', '.', '.', '.', '.', 'Xmg']);
+}
+
+{
+  const s = createGame({
+    handX: ['shift'], handO: ['mountain'], first: 'X', itemO: 'blind-spot',
+  });
+  s.board = board(['Xsh', '.', '.', '.', '.', '.', '.', '.', '.']);
+  s.player = 'O';
+  applyAction(s, { type: 'select', stone: 'mountain' });
+  applyAction(s, { type: 'place', pos: 8 });
+  applyAction(s, { type: 'counter', use: 'blind-spot', pos: 4 });
+  applyAction(s, { type: 'select', stone: 'shift' });
+  check('Blind Spot closes one square for the opponent',
+    legalActions(s).map((a) => a.pos), [1, 2, 3, 5, 6, 7]);
+}
+
+{
+  // Every item, played out at random, has to reach a legal finish.
+  const rng = makeRng(29);
+  const stuck = [];
+  for (const item of ITEMS) {
+    for (let g = 0; g < 40; g++) {
+      const hand = () => Array.from({ length: 5 },
+        () => STONE_TYPES[(rng() * STONE_TYPES.length) | 0]);
+      const s = createGame({
+        handX: hand(), handO: hand(), first: rng() < 0.5 ? 'X' : 'O', itemO: item,
+      });
+      let plies = 0;
+      while (!s.over && plies++ < 200) applyAction(s, randomAction(s, rng));
+      if (!s.over || !['X', 'O'].includes(s.winner)) stuck.push(item);
+    }
+  }
+  check('every Counterattack plays out to a winner', [...new Set(stuck)], []);
 }
 
 console.log(failures ? `\n${failures} failing` : 'all checks pass');
