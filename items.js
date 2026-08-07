@@ -15,7 +15,7 @@ import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { dirname } from 'node:path';
 import { pathToFileURL } from 'node:url';
 
-import { createGame, applyAction, ITEMS } from './engine.js';
+import { createGame, applyAction, cloneState, hasLine, other, ITEMS, LINES } from './engine.js';
 import { chooseAction, makeRng } from './ai.js';
 import { arg, pad, pct, randomHand, wilson } from './sim.js';
 
@@ -49,6 +49,66 @@ function runSpecs(specs, workers) {
       w.on('error', reject);
     })
   )).then((r) => r.flat());
+}
+
+// ── What a once-per-game item is actually doing ─────────────────────────────
+
+// Is this stone part of an enemy two-in-a-row that still has its third square?
+function inLiveThreat(board, pos) {
+  const p = board[pos].player;
+  return LINES.some((line) => line.includes(pos)
+    && line.filter((i) => board[i]?.player === p).length === 2
+    && line.some((i) => !board[i]));
+}
+
+// Plays the item out and counts what it was spent on, because a swing on its
+// own does not say which mechanism produced it.
+function diagnose(item, opts) {
+  const rng = makeRng(opts.seed);
+  const tally = { games: 0, offered: 0, spent: 0, turnSum: 0, notes: {} };
+  const note = (k) => { tally.notes[k] = (tally.notes[k] ?? 0) + 1; };
+
+  for (let g = 0; g < opts.pairs; g++) {
+    const s = createGame({
+      handX: randomHand(rng), handO: randomHand(rng), first: 'X', itemO: item,
+    });
+    let plies = 0;
+    while (!s.over && plies++ < 200) {
+      const action = chooseAction(s, { iterations: opts.iters, rng });
+
+      if (action.type === 'reverse') tally.offered++;
+      const spending = (action.type === 'counter' && action.use !== 'pass')
+        || (action.type === 'reverse' && action.reverse);
+
+      if (spending) {
+        tally.spent++;
+        tally.turnSum += s.turns;
+        if (action.use === 'overtake') {
+          if (s.turns === 1) note('spent on the holder\'s first turn');
+          if (hasLine(s.board, other(s.player))) note('undid a line the holder\'s own effect gave away');
+          else if (inLiveThreat(s.board, action.pos)) note('took a stone out of a live two-in-a-row');
+          const after = cloneState(s);
+          applyAction(after, action);
+          if (!after.board.some((c) => c?.player === other(s.player))) {
+            note('left the opponent with nothing on the board');
+          }
+        } else if (action.type === 'reverse') {
+          const asIs = cloneState(s);
+          applyAction(asIs, { type: 'reverse', reverse: false });
+          if (asIs.over && asIs.winner === s.player) note('denied a move that would have won on the spot');
+        }
+      }
+      applyAction(s, action);
+    }
+    tally.games++;
+  }
+
+  console.log(`\n${item}: ${tally.games} games, spent in ${tally.spent}` +
+    (tally.offered ? ` of ${tally.offered} chances` : '') +
+    `, mean turn ${(tally.turnSum / tally.spent).toFixed(1)}\n`);
+  for (const [k, v] of Object.entries(tally.notes).sort((a, b) => b[1] - a[1])) {
+    console.log('  ' + pad((v / tally.spent * 100).toFixed(1) + '%', 8) + k);
+  }
 }
 
 // ── Reporting ───────────────────────────────────────────────────────────────
@@ -110,7 +170,10 @@ async function main() {
     only: arg('only', null)?.split(','),
     out: arg('out', 'results/items.json'),
     reportOnly: process.argv.includes('--report'),
+    diagnose: arg('diagnose', null),
   };
+
+  if (opts.diagnose) { diagnose(opts.diagnose, opts); return; }
 
   let state = existsSync(opts.out) ? JSON.parse(readFileSync(opts.out, 'utf8')) : null;
   if (state && (state.pairs !== opts.pairs || state.iters !== opts.iters) && !opts.reportOnly) {

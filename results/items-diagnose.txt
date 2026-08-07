@@ -1,0 +1,13 @@
+
+overtake: 400 games, spent in 399, mean turn 1.1
+
+  94.5%   spent on the holder's first turn
+  94.5%   left the opponent with nothing on the board
+  3.0%    took a stone out of a live two-in-a-row
+
+uno-reverse: 400 games, spent in 232 of 778 chances, mean turn 2.9
+
+  25.4%   denied a move that would have won on the spot
+
+mind-control: 400 games, spent in 383, mean turn 1.3
+
