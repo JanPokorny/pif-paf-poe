@@ -26,8 +26,8 @@ randomly.
 On your turn, in order:
 
 1. **Place** — choose a stone from your hand and place it on any free square. The only
-   thing that narrows your choice is a restriction the opponent has on you (see below);
-   no stone has a placement requirement of its own.
+   thing that narrows your choice is a Magnet the opponent placed last turn; no stone has a
+   placement requirement of its own.
 2. **Resolve** — if the stone you placed has an effect, resolve it now. Resolving is not
    optional. You may place a stone where its effect has nothing to do, and then it does
    nothing; you may not place it where the effect can happen and decline to take it.
@@ -57,35 +57,7 @@ of games reach a full board — the tiebreak decides about one game in eleven. I
 simplification that leans the right way, not a fix, and the first-mover problem is currently
 the largest open question about this game.
 
-## Restrictions
-
-A Magnet placed by your opponent on their last turn constrains where you may place: you must
-place adjacent to it.
-
-If no free square is adjacent to it, the restriction does not apply this turn. It only
-constrains the opponent, never its owner, and it lasts one turn.
-
-## Immobility
-
-A Mountain cannot be moved by any effect. It does not cancel the effect — it stands still
-and everything else moves as far as the space allows. A Mountain is a wall on the board,
-not a veto on your choice:
-
-- **2048** — stones still slide, they just cannot slide past a Mountain. Each stretch of
-  the line on either side of a Mountain packs on its own.
-- **Shift** — the line still moves one step, except that a stone whose destination is the
-  Mountain stays where it is, and so does anything queued behind it. A Mountain also
-  breaks the wrap-around: nothing travels through it to reach the other end.
-- **Rotate** — the same, around the four squares: the Mountain holds its corner, and the
-  other stones each advance one step if the corner ahead of them is free or is freed.
-- **Leech** — a Mountain cannot be taken, so it is never a valid target.
-
-Every direction and square stays on the menu regardless. An effect that turns out to move
-nothing is still a legal thing to do.
-
 ## Stones
-
-### Movement
 
 **Shift** — choose an orthogonal direction. The row (for left/right) or column (for up/down)
 containing this stone shifts one step that way, and whatever falls off the end wraps around to
@@ -97,15 +69,25 @@ the free space allows, exactly like the tile game.
 **Rotate** — choose one of the 2x2 sub-squares this stone belongs to. Those four squares
 rotate one step clockwise.
 
-### Reactive
-
 **Leech** — if it lands adjacent to an enemy stone, it trades places with one of them, your
 choice. Otherwise it does nothing.
 
-### Static
+**Mountain** — does nothing when placed, and no effect ever moves it afterwards. It does not
+cancel effects, though: it stands still and everything else moves as far as the space allows,
+so it is a wall on the board rather than a veto on your choice.
 
-**Mountain** — this stone is never moved by an effect.
+- **2048** — stones still slide, they just cannot slide past a Mountain. Each stretch of the
+  line on either side of it packs on its own.
+- **Shift** — the line still moves one step, except that a stone whose destination is the
+  Mountain stays where it is, and so does anything queued behind it. A Mountain also breaks
+  the wrap-around: nothing travels through it to reach the other end.
+- **Rotate** — the same, around the four squares: the Mountain holds its corner, and the
+  other stones each advance one step if the corner ahead of them is free or is freed.
+- **Leech** — a Mountain cannot be taken, so it is never a valid target.
 
-### Restriction
+Every direction and square stays on the menu regardless. An effect that turns out to move
+nothing is still a legal thing to do.
 
-**Magnet** — the opponent must place their next stone adjacent to this one.
+**Magnet** — the opponent must place their next stone adjacent to this one. If no free square
+is adjacent to it, the restriction does not apply that turn. It constrains only the opponent,
+never its owner, and it lasts one turn.
