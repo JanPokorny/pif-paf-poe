@@ -8,7 +8,7 @@
 // searched as separate plies (select, place, resolve), so the search picks a
 // stone knowing what it will do with it.
 
-import { cloneState, legalActions, applyAction, hasLine, other } from './engine.js';
+import { cloneState, legalActions, applyAction, hasLine, other, toMove } from './engine.js';
 
 // mulberry32: small, fast, seedable, so a game can be replayed exactly.
 export function makeRng(seed) {
@@ -40,9 +40,11 @@ function peek(s, action) {
 // available, otherwise avoid handing the opponent one — and is the same for both
 // sides, so it cannot favour either.
 export function policyAction(s, actions, rng) {
-  if (s.phase !== 'place' && s.phase !== 'effect') return pick(actions, rng);
+  // Choosing a stone does not touch the board, so there is nothing to look at;
+  // every other phase moves something and is worth one ply of sight.
+  if (s.phase === 'select') return pick(actions, rng);
 
-  const me = s.player;
+  const me = toMove(s);
   const winning = [];
   const safe = [];
   for (const action of actions) {
@@ -82,8 +84,9 @@ class Node {
     return this.untried;
   }
 
-  // UCB1. `score` is counted from the point of view of the player to move in
-  // this node's parent, which is who chose the action leading here.
+  // UCB1. `score` is counted from the point of view of whoever was choosing in
+  // this node's parent, which with a Counterattack in play is not always the
+  // player whose turn it is.
   ucb1(c) {
     return this.score / this.visits + c * Math.sqrt(Math.log(this.parent.visits) / this.visits);
   }
@@ -136,7 +139,7 @@ export function chooseAction(state, options = {}) {
     // its parent; a draw is worth half to both.
     for (let n = node; n; n = n.parent) {
       n.visits++;
-      const chooser = n.parent ? n.parent.state.player : null;
+      const chooser = n.parent ? toMove(n.parent.state) : null;
       if (chooser === null) continue;
       if (winner === chooser) n.score += 1;
       else if (winner === null) n.score += 0.5;

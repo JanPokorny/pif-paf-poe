@@ -69,7 +69,7 @@ the free space allows, exactly like the tile game.
 **Rotate** — choose one of the 2x2 sub-squares this stone belongs to. Those four squares
 rotate one step clockwise.
 
-**Leech** — if it lands adjacent to an enemy stone, it trades places with one of them, your
+**Swap** — if it lands adjacent to an enemy stone, it trades places with one of them, your
 choice. Otherwise it does nothing.
 
 **Mountain** — does nothing when placed, and no effect ever moves it afterwards. It does not
@@ -83,7 +83,7 @@ so it is a wall on the board rather than a veto on your choice.
   the wrap-around: nothing travels through it to reach the other end.
 - **Rotate** — the same, around the four squares: the Mountain holds its corner, and the
   other stones each advance one step if the corner ahead of them is free or is freed.
-- **Leech** — a Mountain cannot be taken, so it is never a valid target.
+- **Swap** — a Mountain cannot be taken, so it is never a valid target.
 
 Every direction and square stays on the menu regardless. An effect that turns out to move
 nothing is still a legal thing to do.
@@ -91,3 +91,42 @@ nothing is still a legal thing to do.
 **Magnet** — the opponent must place their next stone adjacent to this one. If no free square
 is adjacent to it, the restriction does not apply that turn. It constrains only the opponent,
 never its owner, and it lasts one turn.
+
+## Counterattack
+
+Moving first is a large advantage in this game, so the player who moves second brings one
+**Counterattack**. It is not a stone and is never placed: it is held for the whole game and
+changes what you may do. A Counterattack held by the player who moves *first* does nothing at
+all. How a player acquires one is outside these rules.
+
+Six of them sharpen a stone you already hold:
+
+**Super Shift** — your Shift may move any row or column, not only the one it was placed in.
+
+**Super 2048** — your 2048 may run a second time, in a different direction of your choice.
+
+**Super Rotate** — your Rotate may turn any of the four 2x2 sub-squares, or the whole outer
+ring of eight squares, one step clockwise.
+
+**Super Swap** — your Swap may also take a stone diagonally adjacent to it.
+
+**Super Mountain** — when you place a Mountain, you may ignore an opponent's Magnet.
+
+**Super Magnet** — your Magnet does not wear off after one turn. It keeps its hold until the
+Magnet leaves the board, and it pulls from wherever the Magnet has been moved to.
+
+Four stand on their own:
+
+**Overtake** — once per game, at the end of your turn, return one of your opponent's stones
+from the board to their hand. This is not a movement effect, so a Mountain is not safe from
+it. The board has a hole in it again, and they have a stone back to place.
+
+**Antipolar** — your opponent's Magnets repel you instead of attracting you: you must place
+your stone *not* adjacent to one, if any free square allows it.
+
+**Mind Control** — once per game, at the end of your turn, name a stone in your opponent's
+hand. That is the stone they must play on their next turn.
+
+**Uno Reverse** — once per game, after your opponent resolves a Shift, a 2048 or a Rotate,
+you may make it run the other way instead: the opposite direction for Shift and 2048,
+anticlockwise for Rotate.

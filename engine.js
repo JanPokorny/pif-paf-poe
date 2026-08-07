@@ -6,9 +6,14 @@
 //
 //   import { createGame, legalActions, applyAction } from './engine.js';
 //
-//   const g = createGame({ handX: [...], handO: [...], first: 'X' });
+//   const g = createGame({ handX: [...], handO: [...], first: 'X', itemO: 'overtake' });
 //   while (!g.over) applyAction(g, pickOne(legalActions(g)));
-//   g.winner;  // 'X' | 'O' | null (draw)
+//   g.winner;  // 'X' | 'O'
+//
+// Most turns are select -> place -> resolve. A Counterattack can add two more
+// decision points: `reverse`, where the player who is NOT to move answers the
+// movement effect just chosen, and `counter`, where the player to move spends an
+// end-of-turn item. `toMove` is who chooses now; it is not always `player`.
 
 export const LINES = [
   [0, 1, 2], [3, 4, 5], [6, 7, 8],
@@ -16,22 +21,34 @@ export const LINES = [
   [0, 4, 8], [2, 4, 6],
 ];
 const SUBSQUARES = { TL: [0, 1, 3, 4], TR: [1, 2, 4, 5], BL: [3, 4, 6, 7], BR: [4, 5, 7, 8] };
+// The eight outer squares, clockwise from the top left. Super Rotate turns these.
+const RING = [0, 1, 2, 5, 8, 7, 6, 3];
 const DIRECTIONS = ['up', 'down', 'left', 'right'];
+const OPPOSITE = { up: 'down', down: 'up', left: 'right', right: 'left' };
 
 export const STONE_TYPES = [
   'shift', '2048', 'rotate',   // movement
-  'leech',                     // reactive
+  'swap',                      // reactive
   'mountain',                  // static
   'magnet',                    // restriction
 ];
 
-// Stones that resolve something after being placed. Leech only does if it
-// landed next to a movable enemy stone.
-const EFFECT_TYPES = ['shift', '2048', 'rotate', 'leech'];
+// Stones that resolve something after being placed. Swap only does if it landed
+// next to a movable enemy stone.
+const EFFECT_TYPES = ['shift', '2048', 'rotate', 'swap'];
+// What Uno Reverse can answer: the effects that have an opposite.
+const MOVEMENT_TYPES = ['shift', '2048', 'rotate'];
+
+// A Counterattack is held by one player and only works when that player moves
+// second. Six sharpen a stone they hold; four stand on their own.
+export const ITEMS = [
+  'super-shift', 'super-2048', 'super-rotate', 'super-swap', 'super-mountain', 'super-magnet',
+  'overtake', 'antipolar', 'mind-control', 'uno-reverse',
+];
 
 const TYPE_CODE = {
   shift: 'sh', '2048': '20', rotate: 'ro',
-  leech: 'le', mountain: 'mo', magnet: 'mg',
+  swap: 'sw', mountain: 'mo', magnet: 'mg',
 };
 
 // ── Geometry ────────────────────────────────────────────────────────────────
@@ -42,6 +59,11 @@ const col = (i) => i % 3;
 
 export function adjacent(a, b) {
   return Math.abs(row(a) - row(b)) + Math.abs(col(a) - col(b)) === 1;
+}
+
+// Adjacent including the corners: what Super Swap reaches.
+export function touching(a, b) {
+  return a !== b && Math.abs(row(a) - row(b)) <= 1 && Math.abs(col(a) - col(b)) <= 1;
 }
 
 const rowSquares = (r) => [r * 3, r * 3 + 1, r * 3 + 2];
@@ -61,19 +83,27 @@ function freeSquares(board) {
 
 // ── State ───────────────────────────────────────────────────────────────────
 
-export function createGame({ handX, handO, first = 'X' }) {
+export function createGame({ handX, handO, first = 'X', itemX = null, itemO = null }) {
   for (const t of [...handX, ...handO]) {
     if (!STONE_TYPES.includes(t)) throw new Error(`unknown stone type: ${t}`);
+  }
+  for (const i of [itemX, itemO]) {
+    if (i !== null && !ITEMS.includes(i)) throw new Error(`unknown item: ${i}`);
   }
   return {
     board: Array(9).fill(null),      // {player, type, id} | null
     hands: { X: [...handX], O: [...handO] },
+    items: { X: itemX, O: itemO },   // Counterattack, live only for the second player
+    spent: { X: false, O: false },   // a once-per-game item has been used
     first,                           // who opened; the other one wins a filled board
     player: first,                   // whose turn it is
-    phase: 'select',                 // 'select' | 'place' | 'effect' | 'over'
-    restriction: null,               // {pos, owner}: a Magnet imposed on the other player
+    actor: null,                     // who chooses now, when that is not `player`
+    phase: 'select',                 // select | place | effect | reverse | counter | over
+    restriction: null,               // {id, owner, sticky}: a Magnet on the other player
+    forced: null,                    // {player, stone}: Mind Control on their next turn
     selected: null,                  // stone type taken from hand, awaiting placement
     placedAt: null,                  // where it was placed, awaiting its effect
+    pending: null,                   // effect chosen, awaiting a possible Uno Reverse
     over: false,
     winner: null,
     reason: null,                    // 'line' | 'full'
@@ -86,18 +116,32 @@ export function cloneState(s) {
   return {
     board: s.board.map((c) => (c ? { player: c.player, type: c.type, id: c.id } : null)),
     hands: { X: [...s.hands.X], O: [...s.hands.O] },
+    items: { ...s.items },
+    spent: { ...s.spent },
     first: s.first,
     player: s.player,
+    actor: s.actor,
     phase: s.phase,
     restriction: s.restriction ? { ...s.restriction } : null,
+    forced: s.forced ? { ...s.forced } : null,
     selected: s.selected,
     placedAt: s.placedAt,
+    pending: s.pending ? { ...s.pending } : null,
     over: s.over,
     winner: s.winner,
     reason: s.reason,
     turns: s.turns,
     nextId: s.nextId,
   };
+}
+
+// Whoever is choosing right now. Every phase but `reverse` is the player whose
+// turn it is; `reverse` hands the choice to the other player for one decision.
+export function toMove(s) { return s.actor ?? s.player; }
+
+// A Counterattack is inert in the hands of whoever opened the game.
+export function itemOf(s, player) {
+  return player === s.first ? null : s.items[player];
 }
 
 // ── Immobility ──────────────────────────────────────────────────────────────
@@ -141,16 +185,16 @@ function stepAlong(board, cells) {
   }
 }
 
-// The travel order of a row or column under a direction: each square hands its
-// stone to the next one listed.
-function lineOrder(pos, dir) {
+// The travel order of one row or column under a direction: each square hands
+// its stone to the next one listed. `index` picks which row or column.
+function lineOrder(index, dir) {
   const horizontal = dir === 'left' || dir === 'right';
-  const idx = horizontal ? rowSquares(row(pos)) : colSquares(col(pos));
+  const idx = horizontal ? rowSquares(index) : colSquares(index);
   return dir === 'right' || dir === 'down' ? idx : idx.slice().reverse();
 }
 
-function applyShift(board, pos, dir) {
-  stepAlong(board, lineOrder(pos, dir));
+function applyShift(board, dir, index) {
+  stepAlong(board, lineOrder(index, dir));
 }
 
 // Pack `cells` toward cells[0], which is the end the stones are sliding to.
@@ -174,65 +218,121 @@ function apply2048(board, dir) {
   }
 }
 
-function applyRotate(board, square) {
-  const [tl, tr, bl, br] = SUBSQUARES[square];
-  stepAlong(board, [tl, tr, br, bl]);   // clockwise
+function applyRotate(board, square, ccw) {
+  const [tl, tr, bl, br] = square === 'RING' ? [] : SUBSQUARES[square];
+  const cycle = square === 'RING' ? RING.slice() : [tl, tr, br, bl];
+  stepAlong(board, ccw ? cycle.reverse() : cycle);
 }
 
-function applyLeech(board, pos, target) {
+function applySwap(board, pos, target) {
   const tmp = board[target];
   board[target] = board[pos];
   board[pos] = tmp;
+}
+
+// An effect answered by Uno Reverse runs the other way: the opposite direction
+// for Shift and 2048, anticlockwise for Rotate.
+function mirrored(action) {
+  return {
+    ...action,
+    direction: action.direction ? OPPOSITE[action.direction] : undefined,
+    second: action.second ? OPPOSITE[action.second] : undefined,
+    ccw: !action.ccw,
+  };
 }
 
 // The single place an effect is resolved, shared by the real move and any
 // lookahead, so the two cannot disagree.
 function resolveOnto(board, type, pos, action) {
   switch (type) {
-    case 'shift': return applyShift(board, pos, action.direction);
-    case '2048': return apply2048(board, action.direction);
-    case 'rotate': return applyRotate(board, action.square);
-    case 'leech': return applyLeech(board, pos, action.target);
+    case 'shift': {
+      // Without Super Shift the line is the one the stone sits in.
+      const horizontal = action.direction === 'left' || action.direction === 'right';
+      const index = action.index ?? (horizontal ? row(pos) : col(pos));
+      return applyShift(board, action.direction, index);
+    }
+    case '2048': {
+      apply2048(board, action.direction);
+      if (action.second) apply2048(board, action.second);   // Super 2048
+      return;
+    }
+    case 'rotate': return applyRotate(board, action.square, action.ccw);
+    case 'swap': return applySwap(board, pos, action.target);
   }
 }
 
 // ── Legal actions ───────────────────────────────────────────────────────────
 
 function selectActions(s) {
-  return [...new Set(s.hands[s.player])].map((stone) => ({ type: 'select', stone }));
+  let hand = [...new Set(s.hands[s.player])];
+  // Mind Control named the stone for this turn.
+  if (s.forced?.player === s.player && hand.includes(s.forced.stone)) hand = [s.forced.stone];
+  return hand.map((stone) => ({ type: 'select', stone }));
 }
 
 function placeActions(s) {
   let free = freeSquares(s.board);
-
+  const p = s.player;
+  const item = itemOf(s, p);
   const r = s.restriction;
-  if (r && r.owner === other(s.player)) {
-    const allowed = free.filter((i) => adjacent(i, r.pos));
+
+  // A Magnet the opponent owns pulls you next to it -- unless you are placing a
+  // Mountain and hold Super Mountain, or Antipolar has turned the pull into a
+  // push. A restriction that no free square can satisfy does not apply.
+  const at = r && r.owner === other(p) ? magnetSquare(s, r) : -1;
+  if (at >= 0 && !(item === 'super-mountain' && s.selected === 'mountain')) {
+    const allowed = free.filter((i) =>
+      item === 'antipolar' ? !adjacent(i, at) : adjacent(i, at));
     if (allowed.length) free = allowed;
   }
 
-  // Every stone may go on any free square; only the opponent's restriction
-  // narrows that. A stone whose effect then finds nothing to do simply resolves
-  // nothing -- placing it there is legal, declining the effect is not.
   return free.map((pos) => ({ type: 'place', pos }));
+}
+
+// The restriction follows the Magnet itself, not the square it landed on: a
+// Magnet that gets shifted keeps pulling from wherever it ends up, and one that
+// leaves the board stops pulling at all.
+function magnetSquare(s, r) {
+  return s.board.findIndex((c) => c?.id === r.id);
 }
 
 function effectActions(s) {
   const type = s.selected;
   const pos = s.placedAt;
-  let out = [];
+  const item = itemOf(s, s.player);
+  const out = [];
 
-  if (type === 'shift' || type === '2048') {
-    out = DIRECTIONS.map((direction) => ({ type: 'effect', direction }));
+  if (type === 'shift') {
+    // Super Shift picks the line as well as the direction.
+    for (const direction of DIRECTIONS) {
+      const horizontal = direction === 'left' || direction === 'right';
+      const own = horizontal ? row(pos) : col(pos);
+      const lines = item === 'super-shift' ? [0, 1, 2] : [own];
+      for (const index of lines) out.push({ type: 'effect', direction, index });
+    }
+  } else if (type === '2048') {
+    for (const direction of DIRECTIONS) {
+      out.push({ type: 'effect', direction });
+      // Super 2048 may run a second time, in a different direction.
+      if (item === 'super-2048') {
+        for (const second of DIRECTIONS) {
+          if (second !== direction) out.push({ type: 'effect', direction, second });
+        }
+      }
+    }
   } else if (type === 'rotate') {
-    out = Object.keys(SUBSQUARES)
-      .filter((k) => SUBSQUARES[k].includes(pos))
-      .map((square) => ({ type: 'effect', square }));
-  } else if (type === 'leech') {
-    // An adjacent enemy stone, and a Mountain is not one that can be taken.
+    // Super Rotate reaches any sub-square, and the outer ring.
+    const squares = item === 'super-rotate'
+      ? [...Object.keys(SUBSQUARES), 'RING']
+      : Object.keys(SUBSQUARES).filter((k) => SUBSQUARES[k].includes(pos));
+    for (const square of squares) out.push({ type: 'effect', square });
+  } else if (type === 'swap') {
+    // An adjacent enemy stone -- diagonally too with Super Swap -- and a
+    // Mountain is not one that can be taken.
     const opponent = other(s.player);
+    const near = item === 'super-swap' ? touching : adjacent;
     for (let i = 0; i < 9; i++) {
-      if (s.board[i]?.player === opponent && adjacent(i, pos) && !isStuck(s.board, i)) {
+      if (s.board[i]?.player === opponent && near(i, pos) && !isStuck(s.board, i)) {
         out.push({ type: 'effect', target: i });
       }
     }
@@ -241,11 +341,36 @@ function effectActions(s) {
   return out;
 }
 
+// The other player answers a movement effect, once per game.
+function reverseActions() {
+  return [{ type: 'reverse', reverse: false }, { type: 'reverse', reverse: true }];
+}
+
+// End-of-turn items, spent by the player whose turn is ending.
+function counterActions(s) {
+  const p = s.player;
+  const out = [{ type: 'counter', use: 'pass' }];
+  if (s.spent[p]) return out;
+
+  if (itemOf(s, p) === 'overtake') {
+    for (let i = 0; i < 9; i++) {
+      if (s.board[i]?.player === other(p)) out.push({ type: 'counter', use: 'overtake', pos: i });
+    }
+  } else if (itemOf(s, p) === 'mind-control') {
+    for (const stone of new Set(s.hands[other(p)])) {
+      out.push({ type: 'counter', use: 'mind-control', stone });
+    }
+  }
+  return out;
+}
+
 export function legalActions(s) {
   switch (s.phase) {
     case 'select': return selectActions(s);
     case 'place': return placeActions(s);
     case 'effect': return effectActions(s);
+    case 'reverse': return reverseActions(s);
+    case 'counter': return counterActions(s);
     default: return [];
   }
 }
@@ -259,29 +384,37 @@ function finish(s, winner, reason) {
   s.reason = reason;
 }
 
-// Restriction bookkeeping and the three terminal checks, in the order RULES.md
-// gives them. Returns true if the game ended.
+// Restriction bookkeeping and the terminal checks, in the order RULES.md gives
+// them. Returns true if the game ended.
 function endTurn(s) {
   const player = s.player;
 
   if (s.selected === 'magnet') {
-    s.restriction = { pos: s.placedAt, owner: player };
-  } else if (s.restriction?.owner === other(player)) {
+    s.restriction = {
+      id: s.board[s.placedAt].id, owner: player,
+      sticky: itemOf(s, player) === 'super-magnet',
+    };
+  } else if (s.restriction?.owner === other(player) && !s.restriction.sticky) {
     s.restriction = null;   // it bound us for this turn and is now spent
   }
+  // A Magnet that has left the board -- taken by Overtake -- stops binding.
+  if (s.restriction && magnetSquare(s, s.restriction) < 0) s.restriction = null;
+  if (s.forced?.player === player) s.forced = null;   // Mind Control is spent
 
   if (hasLine(s.board, player)) { finish(s, player, 'line'); return true; }
   if (hasLine(s.board, other(player))) { finish(s, other(player), 'line'); return true; }
 
   s.player = other(player);
+  s.actor = null;
   s.turns++;
   s.selected = null;
   s.placedAt = null;
+  s.pending = null;
   s.phase = 'select';
 
   // Out of room, or out of stones: the game is over and the player who did not
-  // open takes it. Since a turn adds a stone and never removes one, this is
-  // reached by move nine at the latest, so no game can run away.
+  // open takes it. Overtake can hand a stone back, so the board is not strictly
+  // filling every turn, but it can only do that once and the game still ends.
   if (isFull(s.board) || !s.hands[s.player].length) {
     finish(s, other(s.first), 'full');
     return true;
@@ -289,12 +422,32 @@ function endTurn(s) {
   return false;
 }
 
-function afterPlacement(s) {
-  if (!EFFECT_TYPES.includes(s.selected)) { endTurn(s); return; }
+// After the effect is settled: the mover may still have an end-of-turn item.
+function afterEffect(s) {
+  const p = s.player;
+  const item = itemOf(s, p);
+  if (!s.spent[p] && (item === 'overtake' || item === 'mind-control')) {
+    s.phase = 'counter';
+    s.actor = null;
+    if (counterActions(s).length > 1) return;   // something to choose
+  }
+  endTurn(s);
+}
 
-  // A Leech with nothing to grab: the stone is placed and resolves nothing.
+function afterPlacement(s) {
+  if (!EFFECT_TYPES.includes(s.selected)) { afterEffect(s); return; }
+
+  // A Swap with nothing to take: the stone is placed and resolves nothing.
   s.phase = 'effect';
-  if (!effectActions(s).length) endTurn(s);
+  if (!effectActions(s).length) afterEffect(s);
+}
+
+// Uno Reverse is held by the player who is not moving, and answers exactly the
+// movement effects that have an opposite.
+function reverseAvailable(s) {
+  const foe = other(s.player);
+  return itemOf(s, foe) === 'uno-reverse' && !s.spent[foe]
+    && MOVEMENT_TYPES.includes(s.selected);
 }
 
 export function applyAction(s, action) {
@@ -317,7 +470,36 @@ export function applyAction(s, action) {
       break;
     }
     case 'effect': {
+      if (reverseAvailable(s)) {
+        s.pending = action;
+        s.phase = 'reverse';
+        s.actor = other(s.player);   // the other player answers
+        break;
+      }
       resolveOnto(s.board, s.selected, s.placedAt, action);
+      afterEffect(s);
+      break;
+    }
+    case 'reverse': {
+      if (action.reverse) s.spent[toMove(s)] = true;
+      resolveOnto(s.board, s.selected, s.placedAt,
+        action.reverse ? mirrored(s.pending) : s.pending);
+      s.pending = null;
+      s.actor = null;
+      afterEffect(s);
+      break;
+    }
+    case 'counter': {
+      const p = s.player;
+      if (action.use === 'overtake') {
+        const cell = s.board[action.pos];
+        s.hands[cell.player].push(cell.type);
+        s.board[action.pos] = null;
+        s.spent[p] = true;
+      } else if (action.use === 'mind-control') {
+        s.forced = { player: other(p), stone: action.stone };
+        s.spent[p] = true;
+      }
       endTurn(s);
       break;
     }
