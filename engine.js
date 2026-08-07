@@ -19,23 +19,22 @@ const SUBSQUARES = { TL: [0, 1, 3, 4], TR: [1, 2, 4, 5], BL: [3, 4, 6, 7], BR: [
 const DIRECTIONS = ['up', 'down', 'left', 'right'];
 
 export const STONE_TYPES = [
-  'regular',
   'shift', '2048', 'rotate', 'swap',   // movement
   'mimic', 'leech',                    // reactive
-  'glue', 'mountain',                  // static
+  'mountain',                          // static
   'magnet', 'stinky',                  // restriction
 ];
 
 // Stones that resolve something after being placed. Mimic only does if it finds
-// an effect to borrow, Leech only if it landed next to an enemy stone.
+// an effect to borrow, Leech only if it landed next to a movable enemy stone.
 const EFFECT_TYPES = ['shift', '2048', 'rotate', 'swap', 'leech', 'mimic'];
 // What Mimic can borrow. It is not in the list itself, so copies never chain.
 const MIMIC_COPIES = ['shift', '2048', 'rotate', 'swap', 'leech'];
 const RESTRICTION_TYPES = ['magnet', 'stinky'];
 
 const TYPE_CODE = {
-  regular: 'rg', shift: 'sh', '2048': '20', rotate: 'ro', swap: 'sw',
-  mimic: 'mi', leech: 'le', glue: 'gl', mountain: 'mo', magnet: 'mg', stinky: 'sk',
+  shift: 'sh', '2048': '20', rotate: 'ro', swap: 'sw',
+  mimic: 'mi', leech: 'le', mountain: 'mo', magnet: 'mg', stinky: 'sk',
 };
 
 // ── Geometry ────────────────────────────────────────────────────────────────
@@ -110,70 +109,90 @@ export function cloneState(s) {
 
 // ── Immobility ──────────────────────────────────────────────────────────────
 
+// A Mountain is never moved by an effect. It does not cancel the effect: it
+// stands still and everything else moves as far as the space allows, so a
+// Mountain reads as a wall on the board rather than as a veto on the menu.
 export function isStuck(board, i) {
-  const cell = board[i];
-  if (!cell) return false;
-  if (cell.type === 'mountain' || cell.type === 'glue') return true;
-  for (let j = 0; j < 9; j++) {
-    if (board[j]?.type === 'glue' && adjacent(i, j)) return true;
-  }
-  return false;
-}
-
-function anyStuck(board) {
-  for (let i = 0; i < 9; i++) if (isStuck(board, i)) return true;
-  return false;
-}
-
-// Effects permute the board's references, so "did this stone move" is an identity
-// check. Stuckness is judged before the effect.
-function wouldMoveStuck(s, action) {
-  if (!anyStuck(s.board)) return false;
-  const after = s.board.slice();
-  resolveOnto(after, effectType(s), s.placedAt, action);
-  for (let i = 0; i < 9; i++) {
-    if (isStuck(s.board, i) && after[i] !== s.board[i]) return true;
-  }
-  return false;
+  return board[i]?.type === 'mountain';
 }
 
 // ── Effects ─────────────────────────────────────────────────────────────────
 
-function applyShift(board, pos, dir) {
+// Advance every stone one step along `cells`, which lists the squares in the
+// order stones travel and wraps from the last back to the first. With no
+// Mountain in the way this is the plain cyclic shift. A Mountain breaks the
+// cycle into strips: inside a strip a stone advances if the square ahead is
+// empty or is emptied by the stone ahead of it, and the stone facing the
+// Mountain stays put along with anything queued behind it.
+function stepAlong(board, cells) {
+  const n = cells.length;
+  const wall = cells.map((i) => isStuck(board, i));
+
+  if (!wall.some(Boolean)) {
+    const before = cells.map((i) => board[i]);
+    for (let k = 0; k < n; k++) board[cells[(k + 1) % n]] = before[k];
+    return;
+  }
+
+  for (let w = 0; w < n; w++) {
+    if (!wall[w]) continue;
+    const strip = [];
+    for (let k = 1; k < n && !wall[(w + k) % n]; k++) strip.push(cells[(w + k) % n]);
+    // From the far end backwards, so a stone can follow the one ahead of it.
+    for (let k = strip.length - 1; k > 0; k--) {
+      if (!board[strip[k]] && board[strip[k - 1]]) {
+        board[strip[k]] = board[strip[k - 1]];
+        board[strip[k - 1]] = null;
+      }
+    }
+  }
+}
+
+// The travel order of a row or column under a direction: each square hands its
+// stone to the next one listed.
+function lineOrder(pos, dir) {
   const horizontal = dir === 'left' || dir === 'right';
   const idx = horizontal ? rowSquares(row(pos)) : colSquares(col(pos));
-  const before = idx.map((i) => board[i]);
-  const step = dir === 'right' || dir === 'down' ? 2 : 1;
-  for (let i = 0; i < 3; i++) board[idx[i]] = before[(i + step) % 3];
+  return dir === 'right' || dir === 'down' ? idx : idx.slice().reverse();
+}
+
+function applyShift(board, pos, dir) {
+  stepAlong(board, lineOrder(pos, dir));
+}
+
+// Pack `cells` toward cells[0], which is the end the stones are sliding to.
+function packToward(board, cells) {
+  const stones = cells.map((i) => board[i]).filter(Boolean);
+  cells.forEach((i, k) => { board[i] = stones[k] ?? null; });
 }
 
 function apply2048(board, dir) {
   const horizontal = dir === 'left' || dir === 'right';
-  const toFarEnd = dir === 'right' || dir === 'down';
   for (let i = 0; i < 3; i++) {
     const idx = horizontal ? rowSquares(i) : colSquares(i);
-    const stones = idx.map((j) => board[j]).filter((c) => c !== null);
-    const packed = Array(3).fill(null);
-    for (let j = 0; j < stones.length; j++) {
-      packed[toFarEnd ? 3 - stones.length + j : j] = stones[j];
+    // Destination end first, then Mountains cut the line into segments that
+    // each pack on their own -- nothing slides past a Mountain.
+    const cells = dir === 'right' || dir === 'down' ? idx.slice().reverse() : idx;
+    let segment = [];
+    for (const c of cells) {
+      if (isStuck(board, c)) { packToward(board, segment); segment = []; } else segment.push(c);
     }
-    for (let j = 0; j < 3; j++) board[idx[j]] = packed[j];
+    packToward(board, segment);
   }
 }
 
 function applyRotate(board, square) {
   const [tl, tr, bl, br] = SUBSQUARES[square];
-  const before = [board[tl], board[tr], board[bl], board[br]];
-  board[tr] = before[0];
-  board[br] = before[1];
-  board[tl] = before[2];
-  board[bl] = before[3];
+  stepAlong(board, [tl, tr, br, bl]);   // clockwise
 }
 
 function applySwap(board, pos, axis, index) {
   const own = axis === 'row' ? rowSquares(row(pos)) : colSquares(col(pos));
   const target = axis === 'row' ? rowSquares(index) : colSquares(index);
   for (let i = 0; i < 3; i++) {
+    // A Mountain on either side of the trade keeps its square; the rest of the
+    // line changes places around it.
+    if (isStuck(board, own[i]) || isStuck(board, target[i])) continue;
     const tmp = board[own[i]];
     board[own[i]] = board[target[i]];
     board[target[i]] = tmp;
@@ -186,8 +205,8 @@ function applyLeech(board, pos, target) {
   board[pos] = tmp;
 }
 
-// The single place an effect is resolved, shared by the real move, the
-// immobility veto and any lookahead, so they cannot disagree.
+// The single place an effect is resolved, shared by the real move and any
+// lookahead, so the two cannot disagree.
 function resolveOnto(board, type, pos, action) {
   switch (type) {
     case 'shift': return applyShift(board, pos, action.direction);
@@ -217,15 +236,9 @@ function placeActions(s) {
     if (allowed.length) free = allowed;
   }
 
-  // Leech wants to land next to an enemy stone. The opponent's restriction
-  // outranks that, and the requirement relaxes rather than blocking the stone.
-  if (s.selected === 'leech') {
-    const opponent = other(s.player);
-    const beside = free.filter((i) =>
-      s.board.some((c, j) => c?.player === opponent && adjacent(i, j)));
-    if (beside.length) free = beside;
-  }
-
+  // Every stone may go on any free square; only the opponent's restriction
+  // narrows that. A stone whose effect then finds nothing to do simply resolves
+  // nothing -- placing it there is legal, declining the effect is not.
   return free.map((pos) => ({ type: 'place', pos }));
 }
 
@@ -246,15 +259,16 @@ function effectActions(s) {
       if (i !== col(pos)) out.push({ type: 'effect', axis: 'col', index: i });
     }
   } else if (type === 'leech') {
+    // An adjacent enemy stone, and a Mountain is not one that can be taken.
     const opponent = other(s.player);
     for (let i = 0; i < 9; i++) {
-      if (s.board[i]?.player === opponent && adjacent(i, pos)) {
+      if (s.board[i]?.player === opponent && adjacent(i, pos) && !isStuck(s.board, i)) {
         out.push({ type: 'effect', target: i });
       }
     }
   }
 
-  return out.filter((a) => !wouldMoveStuck(s, a));
+  return out;
 }
 
 export function legalActions(s) {
