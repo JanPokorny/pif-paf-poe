@@ -1,0 +1,780 @@
+{
+ "opts": {
+  "hands": 24,
+  "games": 4,
+  "iters": 800,
+  "seed": 4242,
+  "workers": 3,
+  "handsFile": null,
+  "out": "results/six-stones.json"
+ },
+ "rows": [
+  {
+   "i": 7,
+   "hand": [
+    "shift",
+    "rotate",
+    "leech",
+    "mountain",
+    "magnet"
+   ],
+   "label": "shi rot lee mou mag",
+   "first": {
+    "wins": 82,
+    "n": 92
+   },
+   "second": {
+    "wins": 40,
+    "n": 92
+   },
+   "turns": 959,
+   "n": 184,
+   "wins": 122,
+   "rate": 0.6630434782608695,
+   "firstRate": 0.8913043478260869,
+   "secondRate": 0.43478260869565216,
+   "ci": [
+    0.5920312862969785,
+    0.7273867765815318
+   ],
+   "meanTurns": 5.211956521739131
+  },
+  {
+   "i": 14,
+   "hand": [
+    "shift",
+    "rotate",
+    "rotate",
+    "leech",
+    "mountain"
+   ],
+   "label": "shi rot rot lee mou",
+   "first": {
+    "wins": 78,
+    "n": 92
+   },
+   "second": {
+    "wins": 39,
+    "n": 92
+   },
+   "turns": 988,
+   "n": 184,
+   "wins": 117,
+   "rate": 0.6358695652173914,
+   "firstRate": 0.8478260869565217,
+   "secondRate": 0.42391304347826086,
+   "ci": [
+    0.5642214313962284,
+    0.701960287669197
+   ],
+   "meanTurns": 5.369565217391305
+  },
+  {
+   "i": 0,
+   "hand": [
+    "2048",
+    "leech",
+    "leech",
+    "mountain",
+    "magnet"
+   ],
+   "label": "204 lee lee mou mag",
+   "first": {
+    "wins": 75,
+    "n": 92
+   },
+   "second": {
+    "wins": 40,
+    "n": 92
+   },
+   "turns": 989,
+   "n": 184,
+   "wins": 115,
+   "rate": 0.625,
+   "firstRate": 0.8152173913043478,
+   "secondRate": 0.43478260869565216,
+   "ci": [
+    0.5531629835685029,
+    0.6917241979716885
+   ],
+   "meanTurns": 5.375
+  },
+  {
+   "i": 20,
+   "hand": [
+    "shift",
+    "2048",
+    "mountain",
+    "magnet",
+    "magnet"
+   ],
+   "label": "shi 204 mou mag mag",
+   "first": {
+    "wins": 78,
+    "n": 92
+   },
+   "second": {
+    "wins": 37,
+    "n": 92
+   },
+   "turns": 989,
+   "n": 184,
+   "wins": 115,
+   "rate": 0.625,
+   "firstRate": 0.8478260869565217,
+   "secondRate": 0.40217391304347827,
+   "ci": [
+    0.5531629835685029,
+    0.6917241979716885
+   ],
+   "meanTurns": 5.375
+  },
+  {
+   "i": 10,
+   "hand": [
+    "2048",
+    "2048",
+    "leech",
+    "mountain",
+    "magnet"
+   ],
+   "label": "204 204 lee mou mag",
+   "first": {
+    "wins": 75,
+    "n": 92
+   },
+   "second": {
+    "wins": 35,
+    "n": 92
+   },
+   "turns": 972,
+   "n": 184,
+   "wins": 110,
+   "rate": 0.5978260869565217,
+   "firstRate": 0.8152173913043478,
+   "secondRate": 0.3804347826086957,
+   "ci": [
+    0.5256748408061128,
+    0.6659759969209934
+   ],
+   "meanTurns": 5.282608695652174
+  },
+  {
+   "i": 22,
+   "hand": [
+    "shift",
+    "2048",
+    "rotate",
+    "mountain",
+    "magnet"
+   ],
+   "label": "shi 204 rot mou mag",
+   "first": {
+    "wins": 77,
+    "n": 92
+   },
+   "second": {
+    "wins": 31,
+    "n": 92
+   },
+   "turns": 979,
+   "n": 184,
+   "wins": 108,
+   "rate": 0.5869565217391305,
+   "firstRate": 0.8369565217391305,
+   "secondRate": 0.33695652173913043,
+   "ci": [
+    0.5147413695564272,
+    0.6556149306454452
+   ],
+   "meanTurns": 5.320652173913044
+  },
+  {
+   "i": 18,
+   "hand": [
+    "shift",
+    "2048",
+    "leech",
+    "leech",
+    "mountain"
+   ],
+   "label": "shi 204 lee lee mou",
+   "first": {
+    "wins": 70,
+    "n": 92
+   },
+   "second": {
+    "wins": 35,
+    "n": 92
+   },
+   "turns": 939,
+   "n": 184,
+   "wins": 105,
+   "rate": 0.5706521739130435,
+   "firstRate": 0.7608695652173914,
+   "secondRate": 0.3804347826086957,
+   "ci": [
+    0.49840598253943336,
+    0.6400085113745877
+   ],
+   "meanTurns": 5.103260869565218
+  },
+  {
+   "i": 3,
+   "hand": [
+    "shift",
+    "2048",
+    "leech",
+    "mountain",
+    "magnet"
+   ],
+   "label": "shi 204 lee mou mag",
+   "first": {
+    "wins": 69,
+    "n": 92
+   },
+   "second": {
+    "wins": 34,
+    "n": 92
+   },
+   "turns": 967,
+   "n": 184,
+   "wins": 103,
+   "rate": 0.5597826086956522,
+   "firstRate": 0.75,
+   "secondRate": 0.3695652173913043,
+   "ci": [
+    0.487558420152931,
+    0.6295615362358562
+   ],
+   "meanTurns": 5.255434782608695
+  },
+  {
+   "i": 9,
+   "hand": [
+    "shift",
+    "rotate",
+    "mountain",
+    "magnet",
+    "magnet"
+   ],
+   "label": "shi rot mou mag mag",
+   "first": {
+    "wins": 70,
+    "n": 92
+   },
+   "second": {
+    "wins": 33,
+    "n": 92
+   },
+   "turns": 1007,
+   "n": 184,
+   "wins": 103,
+   "rate": 0.5597826086956522,
+   "firstRate": 0.7608695652173914,
+   "secondRate": 0.358695652173913,
+   "ci": [
+    0.487558420152931,
+    0.6295615362358562
+   ],
+   "meanTurns": 5.4728260869565215
+  },
+  {
+   "i": 19,
+   "hand": [
+    "shift",
+    "mountain",
+    "mountain",
+    "magnet",
+    "magnet"
+   ],
+   "label": "shi mou mou mag mag",
+   "first": {
+    "wins": 84,
+    "n": 92
+   },
+   "second": {
+    "wins": 19,
+    "n": 92
+   },
+   "turns": 969,
+   "n": 184,
+   "wins": 103,
+   "rate": 0.5597826086956522,
+   "firstRate": 0.9130434782608695,
+   "secondRate": 0.20652173913043478,
+   "ci": [
+    0.487558420152931,
+    0.6295615362358562
+   ],
+   "meanTurns": 5.266304347826087
+  },
+  {
+   "i": 16,
+   "hand": [
+    "shift",
+    "shift",
+    "rotate",
+    "leech",
+    "mountain"
+   ],
+   "label": "shi shi rot lee mou",
+   "first": {
+    "wins": 66,
+    "n": 92
+   },
+   "second": {
+    "wins": 35,
+    "n": 92
+   },
+   "turns": 949,
+   "n": 184,
+   "wins": 101,
+   "rate": 0.5489130434782609,
+   "firstRate": 0.717391304347826,
+   "secondRate": 0.3804347826086957,
+   "ci": [
+    0.4767446706411454,
+    0.6190807482224077
+   ],
+   "meanTurns": 5.157608695652174
+  },
+  {
+   "i": 8,
+   "hand": [
+    "2048",
+    "rotate",
+    "leech",
+    "mountain",
+    "magnet"
+   ],
+   "label": "204 rot lee mou mag",
+   "first": {
+    "wins": 67,
+    "n": 92
+   },
+   "second": {
+    "wins": 32,
+    "n": 92
+   },
+   "turns": 985,
+   "n": 184,
+   "wins": 99,
+   "rate": 0.5380434782608695,
+   "firstRate": 0.7282608695652174,
+   "secondRate": 0.34782608695652173,
+   "ci": [
+    0.46596449715438937,
+    0.6085663841839296
+   ],
+   "meanTurns": 5.353260869565218
+  },
+  {
+   "i": 1,
+   "hand": [
+    "2048",
+    "2048",
+    "rotate",
+    "rotate",
+    "leech"
+   ],
+   "label": "204 204 rot rot lee",
+   "first": {
+    "wins": 71,
+    "n": 92
+   },
+   "second": {
+    "wins": 19,
+    "n": 92
+   },
+   "turns": 882,
+   "n": 184,
+   "wins": 90,
+   "rate": 0.4891304347826087,
+   "firstRate": 0.7717391304347826,
+   "secondRate": 0.20652173913043478,
+   "ci": [
+    0.41786530849946546,
+    0.5608401539753005
+   ],
+   "meanTurns": 4.793478260869565
+  },
+  {
+   "i": 15,
+   "hand": [
+    "2048",
+    "rotate",
+    "leech",
+    "mountain",
+    "mountain"
+   ],
+   "label": "204 rot lee mou mou",
+   "first": {
+    "wins": 62,
+    "n": 92
+   },
+   "second": {
+    "wins": 24,
+    "n": 92
+   },
+   "turns": 977,
+   "n": 184,
+   "wins": 86,
+   "rate": 0.4673913043478261,
+   "firstRate": 0.6739130434782609,
+   "secondRate": 0.2608695652173913,
+   "ci": [
+    0.3967033283635404,
+    0.5394130590607575
+   ],
+   "meanTurns": 5.309782608695652
+  },
+  {
+   "i": 13,
+   "hand": [
+    "2048",
+    "mountain",
+    "mountain",
+    "mountain",
+    "magnet"
+   ],
+   "label": "204 mou mou mou mag",
+   "first": {
+    "wins": 68,
+    "n": 92
+   },
+   "second": {
+    "wins": 16,
+    "n": 92
+   },
+   "turns": 1034,
+   "n": 184,
+   "wins": 84,
+   "rate": 0.45652173913043476,
+   "firstRate": 0.7391304347826086,
+   "secondRate": 0.17391304347826086,
+   "ci": [
+    0.38617224965145136,
+    0.5286496002476124
+   ],
+   "meanTurns": 5.619565217391305
+  },
+  {
+   "i": 11,
+   "hand": [
+    "shift",
+    "mountain",
+    "mountain",
+    "mountain",
+    "magnet"
+   ],
+   "label": "shi mou mou mou mag",
+   "first": {
+    "wins": 75,
+    "n": 92
+   },
+   "second": {
+    "wins": 8,
+    "n": 92
+   },
+   "turns": 982,
+   "n": 184,
+   "wins": 83,
+   "rate": 0.45108695652173914,
+   "firstRate": 0.8152173913043478,
+   "secondRate": 0.08695652173913043,
+   "ci": [
+    0.38091925177759234,
+    0.5232553293588545
+   ],
+   "meanTurns": 5.336956521739131
+  },
+  {
+   "i": 2,
+   "hand": [
+    "rotate",
+    "leech",
+    "mountain",
+    "mountain",
+    "magnet"
+   ],
+   "label": "rot lee mou mou mag",
+   "first": {
+    "wins": 59,
+    "n": 92
+   },
+   "second": {
+    "wins": 22,
+    "n": 92
+   },
+   "turns": 1073,
+   "n": 184,
+   "wins": 81,
+   "rate": 0.44021739130434784,
+   "firstRate": 0.6413043478260869,
+   "secondRate": 0.2391304347826087,
+   "ci": [
+    0.3704384637641438,
+    0.5124415798470691
+   ],
+   "meanTurns": 5.831521739130435
+  },
+  {
+   "i": 5,
+   "hand": [
+    "2048",
+    "rotate",
+    "rotate",
+    "rotate",
+    "leech"
+   ],
+   "label": "204 rot rot rot lee",
+   "first": {
+    "wins": 72,
+    "n": 92
+   },
+   "second": {
+    "wins": 5,
+    "n": 92
+   },
+   "turns": 903,
+   "n": 184,
+   "wins": 77,
+   "rate": 0.41847826086956524,
+   "firstRate": 0.782608695652174,
+   "secondRate": 0.05434782608695652,
+   "ci": [
+    0.34957861427934245,
+    0.49071235428140236
+   ],
+   "meanTurns": 4.907608695652174
+  },
+  {
+   "i": 21,
+   "hand": [
+    "rotate",
+    "rotate",
+    "rotate",
+    "mountain",
+    "magnet"
+   ],
+   "label": "rot rot rot mou mag",
+   "first": {
+    "wins": 69,
+    "n": 92
+   },
+   "second": {
+    "wins": 4,
+    "n": 92
+   },
+   "turns": 948,
+   "n": 184,
+   "wins": 73,
+   "rate": 0.3967391304347826,
+   "firstRate": 0.75,
+   "secondRate": 0.043478260869565216,
+   "ci": [
+    0.32885658813690644,
+    0.4688453053733703
+   ],
+   "meanTurns": 5.1521739130434785
+  },
+  {
+   "i": 4,
+   "hand": [
+    "shift",
+    "shift",
+    "2048",
+    "2048",
+    "2048"
+   ],
+   "label": "shi shi 204 204 204",
+   "first": {
+    "wins": 58,
+    "n": 92
+   },
+   "second": {
+    "wins": 12,
+    "n": 92
+   },
+   "turns": 872,
+   "n": 184,
+   "wins": 70,
+   "rate": 0.3804347826086957,
+   "firstRate": 0.6304347826086957,
+   "secondRate": 0.13043478260869565,
+   "ci": [
+    0.3134075339557047,
+    0.452352553266721
+   ],
+   "meanTurns": 4.739130434782608
+  },
+  {
+   "i": 12,
+   "hand": [
+    "rotate",
+    "mountain",
+    "magnet",
+    "magnet",
+    "magnet"
+   ],
+   "label": "rot mou mag mag mag",
+   "first": {
+    "wins": 57,
+    "n": 92
+   },
+   "second": {
+    "wins": 13,
+    "n": 92
+   },
+   "turns": 1047,
+   "n": 184,
+   "wins": 70,
+   "rate": 0.3804347826086957,
+   "firstRate": 0.6195652173913043,
+   "secondRate": 0.14130434782608695,
+   "ci": [
+    0.3134075339557047,
+    0.452352553266721
+   ],
+   "meanTurns": 5.690217391304348
+  },
+  {
+   "i": 17,
+   "hand": [
+    "2048",
+    "leech",
+    "leech",
+    "magnet",
+    "magnet"
+   ],
+   "label": "204 lee lee mag mag",
+   "first": {
+    "wins": 54,
+    "n": 92
+   },
+   "second": {
+    "wins": 14,
+    "n": 92
+   },
+   "turns": 1050,
+   "n": 184,
+   "wins": 68,
+   "rate": 0.3695652173913043,
+   "firstRate": 0.5869565217391305,
+   "secondRate": 0.15217391304347827,
+   "ci": [
+    0.3031531682663445,
+    0.4413123814308471
+   ],
+   "meanTurns": 5.706521739130435
+  },
+  {
+   "i": 6,
+   "hand": [
+    "shift",
+    "shift",
+    "rotate",
+    "magnet",
+    "magnet"
+   ],
+   "label": "shi shi rot mag mag",
+   "first": {
+    "wins": 49,
+    "n": 92
+   },
+   "second": {
+    "wins": 18,
+    "n": 92
+   },
+   "turns": 1023,
+   "n": 184,
+   "wins": 67,
+   "rate": 0.3641304347826087,
+   "firstRate": 0.532608695652174,
+   "secondRate": 0.1956521739130435,
+   "ci": [
+    0.29803971233080306,
+    0.4357785686037716
+   ],
+   "meanTurns": 5.559782608695652
+  },
+  {
+   "i": 23,
+   "hand": [
+    "shift",
+    "rotate",
+    "leech",
+    "leech",
+    "leech"
+   ],
+   "label": "shi rot lee lee lee",
+   "first": {
+    "wins": 40,
+    "n": 92
+   },
+   "second": {
+    "wins": 18,
+    "n": 92
+   },
+   "turns": 1019,
+   "n": 184,
+   "wins": 58,
+   "rate": 0.31521739130434784,
+   "firstRate": 0.43478260869565216,
+   "secondRate": 0.1956521739130435,
+   "ci": [
+    0.25244721029469674,
+    0.3855456517763248
+   ],
+   "meanTurns": 5.538043478260869
+  }
+ ],
+ "openerRate": 0.7359601449275363,
+ "stoneRows": [
+  {
+   "t": "mountain",
+   "hands": 18,
+   "copies": 25,
+   "held": 0.5368357487922705,
+   "rest": 0.3894927536231884
+  },
+  {
+   "t": "shift",
+   "hands": 13,
+   "copies": 16,
+   "held": 0.5246655518394648,
+   "rest": 0.47084980237154145
+  },
+  {
+   "t": "leech",
+   "hands": 14,
+   "copies": 19,
+   "held": 0.5170807453416149,
+   "rest": 0.47608695652173905
+  },
+  {
+   "t": "2048",
+   "hands": 13,
+   "copies": 17,
+   "held": 0.5142140468227425,
+   "rest": 0.4832015810276679
+  },
+  {
+   "t": "magnet",
+   "hands": 16,
+   "copies": 23,
+   "held": 0.5108695652173912,
+   "rest": 0.47826086956521746
+  },
+  {
+   "t": "rotate",
+   "hands": 14,
+   "copies": 20,
+   "held": 0.4860248447204968,
+   "rest": 0.5195652173913043
+  }
+ ],
+ "byLine": 0.9112318840579711,
+ "turns": 5.322010869565218
+}

@@ -21,8 +21,8 @@ function check(name, actual, expected) {
 // A board from nine cells, each 'Xsh' / 'Omo' / '.' -- player letter plus the
 // two-letter type code. Ids are the index, so a cell is traceable after a move.
 const CODES = {
-  sh: 'shift', 20: '2048', ro: 'rotate', sw: 'swap',
-  mi: 'mimic', le: 'leech', mo: 'mountain', mg: 'magnet', sk: 'stinky',
+  sh: 'shift', 20: '2048', ro: 'rotate',
+  le: 'leech', mo: 'mountain', mg: 'magnet',
 };
 function board(spec) {
   return spec.map((cell, i) =>
@@ -54,14 +54,14 @@ function resolve(spec, setup, action) {
 // ── Shift ───────────────────────────────────────────────────────────────────
 
 check('shift wraps with no Mountain in the line',
-  resolve(['Xsh', 'Osk', '.', '.', '.', '.', '.', '.', '.'],
+  resolve(['Xsh', 'Omg', '.', '.', '.', '.', '.', '.', '.'],
     { at: 0, selected: 'shift' }, { direction: 'right' }),
-  ['.', 'Xsh', 'Osk', '.', '.', '.', '.', '.', '.']);
+  ['.', 'Xsh', 'Omg', '.', '.', '.', '.', '.', '.']);
 
 check('a stone facing a Mountain stays, and so does the one queued behind it',
-  resolve(['Xsh', 'Omo', 'Osk', '.', '.', '.', '.', '.', '.'],
+  resolve(['Xsh', 'Omo', 'Omg', '.', '.', '.', '.', '.', '.'],
     { at: 0, selected: 'shift' }, { direction: 'right' }),
-  ['Xsh', 'Omo', 'Osk', '.', '.', '.', '.', '.', '.']);
+  ['Xsh', 'Omo', 'Omg', '.', '.', '.', '.', '.', '.']);
 
 check('a stone still wraps into free space on the far side of a Mountain',
   resolve(['.', 'Omo', 'Xsh', '.', '.', '.', '.', '.', '.'],
@@ -76,9 +76,9 @@ check('the Mountain keeps its square while the rest of the column wraps',
 // ── 2048 ────────────────────────────────────────────────────────────────────
 
 check('2048 still slides everything that has room',
-  resolve(['Xsh', '.', '.', '.', 'Osk', '.', '.', '.', '.'],
+  resolve(['Xsh', '.', '.', '.', 'Omg', '.', '.', '.', '.'],
     { at: 0, selected: '2048' }, { direction: 'right' }),
-  ['.', '.', 'Xsh', '.', '.', 'Osk', '.', '.', '.']);
+  ['.', '.', 'Xsh', '.', '.', 'Omg', '.', '.', '.']);
 
 check('nothing slides past a Mountain, and the far side packs on its own',
   resolve(['Xsh', 'Omo', '.', '.', '.', '.', '.', '.', '.'],
@@ -91,45 +91,33 @@ check('a stone slides up to the Mountain and stops',
   ['.', 'Xsh', 'Omo', '.', '.', '.', '.', '.', '.']);
 
 check('every line resolves, not just the one the stone sits in',
-  resolve(['Xsh', '.', '.', 'Osk', '.', '.', 'Xmo', '.', '.'],
+  resolve(['Xsh', '.', '.', 'Omg', '.', '.', 'Xmo', '.', '.'],
     { at: 0, selected: '2048' }, { direction: 'right' }),
-  ['.', '.', 'Xsh', '.', '.', 'Osk', 'Xmo', '.', '.']);
+  ['.', '.', 'Xsh', '.', '.', 'Omg', 'Xmo', '.', '.']);
 
 // ── Rotate ──────────────────────────────────────────────────────────────────
 
 check('rotate turns the whole square with no Mountain in it',
-  resolve(['Xro', 'Osk', '.', '.', '.', '.', '.', '.', '.'],
+  resolve(['Xro', 'Omg', '.', '.', '.', '.', '.', '.', '.'],
     { at: 0, selected: 'rotate' }, { square: 'TL' }),
-  ['.', 'Xro', '.', '.', 'Osk', '.', '.', '.', '.']);
+  ['.', 'Xro', '.', '.', 'Omg', '.', '.', '.', '.']);
 
 check('a Mountain in the square blocks its follower and frees the rest',
-  resolve(['Xro', 'Omo', '.', '.', 'Osk', '.', '.', '.', '.'],
+  resolve(['Xro', 'Omo', '.', '.', 'Omg', '.', '.', '.', '.'],
     { at: 0, selected: 'rotate' }, { square: 'TL' }),
-  ['Xro', 'Omo', '.', 'Osk', '.', '.', '.', '.', '.']);
-
-// ── Swap ────────────────────────────────────────────────────────────────────
-
-check('swap trades two lines',
-  resolve(['Xsw', 'Osk', '.', '.', '.', '.', 'Xmg', '.', '.'],
-    { at: 0, selected: 'swap' }, { axis: 'row', index: 2 }),
-  ['Xmg', '.', '.', '.', '.', '.', 'Xsw', 'Osk', '.']);
-
-check('a Mountain on either side of the trade keeps its square',
-  resolve(['Xsw', 'Omo', '.', '.', '.', '.', 'Xmg', 'Xsk', '.'],
-    { at: 0, selected: 'swap' }, { axis: 'row', index: 2 }),
-  ['Xmg', 'Omo', '.', '.', '.', '.', 'Xsw', 'Xsk', '.']);
+  ['Xro', 'Omo', '.', 'Omg', '.', '.', '.', '.', '.']);
 
 // ── Leech ───────────────────────────────────────────────────────────────────
 
 check('leech trades places with the enemy stone it names',
-  resolve(['Xle', 'Osk', '.', '.', '.', '.', '.', '.', '.'],
+  resolve(['Xle', 'Omg', '.', '.', '.', '.', '.', '.', '.'],
     { at: 0, selected: 'leech' }, { target: 1 }),
-  ['Osk', 'Xle', '.', '.', '.', '.', '.', '.', '.']);
+  ['Omg', 'Xle', '.', '.', '.', '.', '.', '.', '.']);
 
 {
   // Placement is free, and the effect is compulsory wherever it can happen.
   const s = createGame({ handX: ['leech'], handO: ['mountain'], first: 'X' });
-  s.board = board(['.', 'Osk', '.', '.', '.', '.', '.', '.', '.']);
+  s.board = board(['.', 'Omg', '.', '.', '.', '.', '.', '.', '.']);
   applyAction(s, { type: 'select', stone: 'leech' });
   check('leech may be placed on any free square',
     legalActions(s).map((a) => a.pos), [0, 2, 3, 4, 5, 6, 7, 8]);
@@ -146,7 +134,7 @@ check('leech trades places with the enemy stone it names',
 }
 
 {
-  const s = pending(['Xle', 'Omo', '.', 'Osk', '.', '.', '.', '.', '.'],
+  const s = pending(['Xle', 'Omo', '.', 'Omg', '.', '.', '.', '.', '.'],
     { at: 0, selected: 'leech' });
   check('an enemy Mountain is not a leech target',
     legalActions(s), [{ type: 'effect', target: 3 }]);
@@ -160,7 +148,7 @@ check('leech trades places with the enemy stone it names',
   check('a leech with only a Mountain beside it resolves nothing', s.phase, 'select');
 }
 
-// ── Restrictions still bind ─────────────────────────────────────────────────
+// ── The Magnet still binds ──────────────────────────────────────────────────
 
 {
   const s = createGame({ handX: ['magnet'], handO: ['shift'], first: 'X' });
@@ -169,15 +157,6 @@ check('leech trades places with the enemy stone it names',
   applyAction(s, { type: 'select', stone: 'shift' });
   check('a Magnet still compels the opponent to place adjacent to it',
     legalActions(s).map((a) => a.pos), [1, 3, 5, 7]);
-}
-
-{
-  const s = createGame({ handX: ['stinky'], handO: ['shift'], first: 'X' });
-  applyAction(s, { type: 'select', stone: 'stinky' });
-  applyAction(s, { type: 'place', pos: 4 });
-  applyAction(s, { type: 'select', stone: 'shift' });
-  check('a Stinky still forbids the squares beside it',
-    legalActions(s).map((a) => a.pos), [0, 2, 6, 8]);
 }
 
 // ── A Mountain never removes a choice ───────────────────────────────────────
@@ -191,8 +170,8 @@ check('leech trades places with the enemy stone it names',
 
 // ── The pool, and a game that finishes ──────────────────────────────────────
 
-check('Glue and Regular are gone', STONE_TYPES,
-  ['shift', '2048', 'rotate', 'swap', 'mimic', 'leech', 'mountain', 'magnet', 'stinky']);
+check('the pool is six stones', STONE_TYPES,
+  ['shift', '2048', 'rotate', 'leech', 'mountain', 'magnet']);
 
 {
   const rng = makeRng(11);

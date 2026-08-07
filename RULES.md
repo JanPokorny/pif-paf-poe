@@ -52,20 +52,17 @@ of their five stones. They still hold five, so the one left behind is a choice t
 playing the others.
 
 Do not expect this to even the game out on its own. Measured over 2208 games between random
-hands, each hand opening as often as it replies, the first player takes 73.0% and only 7.3%
-of games reach a full board — the tiebreak decides about one game in fourteen. It is a
+hands, each hand opening as often as it replies, the first player takes 73.6% and only 8.9%
+of games reach a full board — the tiebreak decides about one game in eleven. It is a
 simplification that leans the right way, not a fix, and the first-mover problem is currently
 the largest open question about this game.
 
 ## Restrictions
 
-A Magnet or a Stinky placed by your opponent on their last turn constrains where you may
-place:
+A Magnet placed by your opponent on their last turn constrains where you may place: you must
+place adjacent to it.
 
-- **Magnet** — you must place adjacent to it.
-- **Stinky** — you must not place adjacent to it.
-
-If no free square satisfies the restriction, it does not apply this turn. A restriction only
+If no free square is adjacent to it, the restriction does not apply this turn. It only
 constrains the opponent, never its owner, and it lasts one turn.
 
 ## Immobility
@@ -81,12 +78,10 @@ not a veto on your choice:
   breaks the wrap-around: nothing travels through it to reach the other end.
 - **Rotate** — the same, around the four squares: the Mountain holds its corner, and the
   other stones each advance one step if the corner ahead of them is free or is freed.
-- **Swap** — a Mountain on either side of the trade keeps its square, and the rest of the
-  two lines change places around it.
 - **Leech** — a Mountain cannot be taken, so it is never a valid target.
 
-Every direction, square and line stays on the menu regardless. An effect that turns out to
-move nothing is still a legal thing to do.
+Every direction and square stays on the menu regardless. An effect that turns out to move
+nothing is still a legal thing to do.
 
 ## Stones
 
@@ -102,15 +97,7 @@ the free space allows, exactly like the tile game.
 **Rotate** — choose one of the 2x2 sub-squares this stone belongs to. Those four squares
 rotate one step clockwise.
 
-**Swap** — choose a row or a column that this stone was *not* placed in. That line trades
-contents with the stone's own line: pick a row and it swaps with the stone's row, pick a
-column and it swaps with the stone's column.
-
 ### Reactive
-
-**Mimic** — resolves the movement effect of the stone your opponent placed on their last turn,
-with you choosing the direction or target. If they placed a stone with no movement effect, or
-this is the first move of the game, Mimic does nothing. Mimic cannot copy a Mimic.
 
 **Leech** — if it lands adjacent to an enemy stone, it trades places with one of them, your
 choice. Otherwise it does nothing.
@@ -122,5 +109,3 @@ choice. Otherwise it does nothing.
 ### Restriction
 
 **Magnet** — the opponent must place their next stone adjacent to this one.
-
-**Stinky** — the opponent must not place their next stone adjacent to this one.

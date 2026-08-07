@@ -18,8 +18,8 @@ import { createGame, applyAction, STONE_TYPES } from './engine.js';
 import { chooseAction, makeRng } from './ai.js';
 
 export const CODE = {
-  shift: 'shi', '2048': '204', rotate: 'rot', swap: 'swa',
-  mimic: 'mim', leech: 'lee', mountain: 'mou', magnet: 'mag', stinky: 'sti',
+  shift: 'shi', '2048': '204', rotate: 'rot',
+  leech: 'lee', mountain: 'mou', magnet: 'mag',
 };
 
 // ── One game ────────────────────────────────────────────────────────────────

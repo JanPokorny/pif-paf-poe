@@ -19,22 +19,19 @@ const SUBSQUARES = { TL: [0, 1, 3, 4], TR: [1, 2, 4, 5], BL: [3, 4, 6, 7], BR: [
 const DIRECTIONS = ['up', 'down', 'left', 'right'];
 
 export const STONE_TYPES = [
-  'shift', '2048', 'rotate', 'swap',   // movement
-  'mimic', 'leech',                    // reactive
-  'mountain',                          // static
-  'magnet', 'stinky',                  // restriction
+  'shift', '2048', 'rotate',   // movement
+  'leech',                     // reactive
+  'mountain',                  // static
+  'magnet',                    // restriction
 ];
 
-// Stones that resolve something after being placed. Mimic only does if it finds
-// an effect to borrow, Leech only if it landed next to a movable enemy stone.
-const EFFECT_TYPES = ['shift', '2048', 'rotate', 'swap', 'leech', 'mimic'];
-// What Mimic can borrow. It is not in the list itself, so copies never chain.
-const MIMIC_COPIES = ['shift', '2048', 'rotate', 'swap', 'leech'];
-const RESTRICTION_TYPES = ['magnet', 'stinky'];
+// Stones that resolve something after being placed. Leech only does if it
+// landed next to a movable enemy stone.
+const EFFECT_TYPES = ['shift', '2048', 'rotate', 'leech'];
 
 const TYPE_CODE = {
-  shift: 'sh', '2048': '20', rotate: 'ro', swap: 'sw',
-  mimic: 'mi', leech: 'le', mountain: 'mo', magnet: 'mg', stinky: 'sk',
+  shift: 'sh', '2048': '20', rotate: 'ro',
+  leech: 'le', mountain: 'mo', magnet: 'mg',
 };
 
 // ── Geometry ────────────────────────────────────────────────────────────────
@@ -74,11 +71,9 @@ export function createGame({ handX, handO, first = 'X' }) {
     first,                           // who opened; the other one wins a filled board
     player: first,                   // whose turn it is
     phase: 'select',                 // 'select' | 'place' | 'effect' | 'over'
-    restriction: null,               // {type, pos, owner} imposed on the other player
-    lastPlaced: { X: null, O: null },// stone type each player placed last turn (Mimic)
+    restriction: null,               // {pos, owner}: a Magnet imposed on the other player
     selected: null,                  // stone type taken from hand, awaiting placement
     placedAt: null,                  // where it was placed, awaiting its effect
-    borrowed: null,                  // effect a Mimic is resolving this turn
     over: false,
     winner: null,
     reason: null,                    // 'line' | 'full'
@@ -95,10 +90,8 @@ export function cloneState(s) {
     player: s.player,
     phase: s.phase,
     restriction: s.restriction ? { ...s.restriction } : null,
-    lastPlaced: { ...s.lastPlaced },
     selected: s.selected,
     placedAt: s.placedAt,
-    borrowed: s.borrowed,
     over: s.over,
     winner: s.winner,
     reason: s.reason,
@@ -186,19 +179,6 @@ function applyRotate(board, square) {
   stepAlong(board, [tl, tr, br, bl]);   // clockwise
 }
 
-function applySwap(board, pos, axis, index) {
-  const own = axis === 'row' ? rowSquares(row(pos)) : colSquares(col(pos));
-  const target = axis === 'row' ? rowSquares(index) : colSquares(index);
-  for (let i = 0; i < 3; i++) {
-    // A Mountain on either side of the trade keeps its square; the rest of the
-    // line changes places around it.
-    if (isStuck(board, own[i]) || isStuck(board, target[i])) continue;
-    const tmp = board[own[i]];
-    board[own[i]] = board[target[i]];
-    board[target[i]] = tmp;
-  }
-}
-
 function applyLeech(board, pos, target) {
   const tmp = board[target];
   board[target] = board[pos];
@@ -212,13 +192,9 @@ function resolveOnto(board, type, pos, action) {
     case 'shift': return applyShift(board, pos, action.direction);
     case '2048': return apply2048(board, action.direction);
     case 'rotate': return applyRotate(board, action.square);
-    case 'swap': return applySwap(board, pos, action.axis, action.index);
     case 'leech': return applyLeech(board, pos, action.target);
   }
 }
-
-// The effect being resolved this turn: Mimic borrows, everything else uses its own.
-function effectType(s) { return s.borrowed ?? s.selected; }
 
 // ── Legal actions ───────────────────────────────────────────────────────────
 
@@ -231,8 +207,7 @@ function placeActions(s) {
 
   const r = s.restriction;
   if (r && r.owner === other(s.player)) {
-    const allowed = free.filter((i) =>
-      r.type === 'magnet' ? adjacent(i, r.pos) : !adjacent(i, r.pos));
+    const allowed = free.filter((i) => adjacent(i, r.pos));
     if (allowed.length) free = allowed;
   }
 
@@ -243,7 +218,7 @@ function placeActions(s) {
 }
 
 function effectActions(s) {
-  const type = effectType(s);
+  const type = s.selected;
   const pos = s.placedAt;
   let out = [];
 
@@ -253,11 +228,6 @@ function effectActions(s) {
     out = Object.keys(SUBSQUARES)
       .filter((k) => SUBSQUARES[k].includes(pos))
       .map((square) => ({ type: 'effect', square }));
-  } else if (type === 'swap') {
-    for (let i = 0; i < 3; i++) {
-      if (i !== row(pos)) out.push({ type: 'effect', axis: 'row', index: i });
-      if (i !== col(pos)) out.push({ type: 'effect', axis: 'col', index: i });
-    }
   } else if (type === 'leech') {
     // An adjacent enemy stone, and a Mountain is not one that can be taken.
     const opponent = other(s.player);
@@ -293,10 +263,9 @@ function finish(s, winner, reason) {
 // gives them. Returns true if the game ended.
 function endTurn(s) {
   const player = s.player;
-  s.lastPlaced[player] = s.selected;
 
-  if (RESTRICTION_TYPES.includes(s.selected)) {
-    s.restriction = { type: s.selected, pos: s.placedAt, owner: player };
+  if (s.selected === 'magnet') {
+    s.restriction = { pos: s.placedAt, owner: player };
   } else if (s.restriction?.owner === other(player)) {
     s.restriction = null;   // it bound us for this turn and is now spent
   }
@@ -308,7 +277,6 @@ function endTurn(s) {
   s.turns++;
   s.selected = null;
   s.placedAt = null;
-  s.borrowed = null;
   s.phase = 'select';
 
   // Out of room, or out of stones: the game is over and the player who did not
@@ -322,18 +290,9 @@ function endTurn(s) {
 }
 
 function afterPlacement(s) {
-  s.borrowed = null;
+  if (!EFFECT_TYPES.includes(s.selected)) { endTurn(s); return; }
 
-  if (s.selected === 'mimic') {
-    const copied = s.lastPlaced[other(s.player)];
-    if (!copied || !MIMIC_COPIES.includes(copied)) { endTurn(s); return; }
-    s.borrowed = copied;
-  }
-
-  if (!EFFECT_TYPES.includes(effectType(s))) { endTurn(s); return; }
-
-  // Every option vetoed by a stuck stone, or a Leech with nothing to grab: the
-  // stone is placed and resolves nothing.
+  // A Leech with nothing to grab: the stone is placed and resolves nothing.
   s.phase = 'effect';
   if (!effectActions(s).length) endTurn(s);
 }
@@ -358,7 +317,7 @@ export function applyAction(s, action) {
       break;
     }
     case 'effect': {
-      resolveOnto(s.board, effectType(s), s.placedAt, action);
+      resolveOnto(s.board, s.selected, s.placedAt, action);
       endTurn(s);
       break;
     }
