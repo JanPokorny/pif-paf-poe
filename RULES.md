@@ -2,7 +2,7 @@
 
 A two-player board game based on tic-tac-toe. Stones are placed on a 3x3 grid and the goal is
 three in a row, orthogonally or diagonally. Unlike tic-tac-toe, each player arrives with a
-hand of five stones, most of which do something when placed. A game lasts at most nine
+hand of five stones, each of which does something when placed. A game lasts at most nine
 placements, and if the board fills with nobody in a line, the player who moved *second* wins.
 
 ## Board
@@ -25,9 +25,12 @@ randomly.
 
 On your turn, in order:
 
-1. **Place** — choose a stone from your hand and place it on a free square, obeying any
-   restriction the opponent has on you (see below).
-2. **Resolve** — if the stone you placed has an effect, resolve it now.
+1. **Place** — choose a stone from your hand and place it on any free square. The only
+   thing that narrows your choice is a restriction the opponent has on you (see below);
+   no stone has a placement requirement of its own.
+2. **Resolve** — if the stone you placed has an effect, resolve it now. Resolving is not
+   optional. You may place a stone where its effect has nothing to do, and then it does
+   nothing; you may not place it where the effect can happen and decline to take it.
 3. **Check** — if you have three in a row, **you win**; otherwise if your opponent has three
    in a row, **they win**.
 4. Pass the turn.
@@ -48,10 +51,11 @@ The board filling on the ninth placement is also why the second player only ever
 of their five stones. They still hold five, so the one left behind is a choice they make by
 playing the others.
 
-Do not expect this to even the game out on its own. Measured over mirror matches, it moves the
-first player from 67.5% to 65.3% and decides about one game in seven — most games end in a
-line well before the ninth stone. It is a simplification that happens to lean the right way,
-not a fix.
+Do not expect this to even the game out on its own. Measured over 2208 games between random
+hands, each hand opening as often as it replies, the first player takes 73.0% and only 7.3%
+of games reach a full board — the tiebreak decides about one game in fourteen. It is a
+simplification that leans the right way, not a fix, and the first-mover problem is currently
+the largest open question about this game.
 
 ## Restrictions
 
@@ -66,15 +70,25 @@ constrains the opponent, never its owner, and it lasts one turn.
 
 ## Immobility
 
-A stone may be *stuck*: Mountain is always stuck, and Glue makes itself and its neighbours
-stuck. A stuck stone cannot be moved by any effect. Concretely:
+A Mountain cannot be moved by any effect. It does not cancel the effect — it stands still
+and everything else moves as far as the space allows. A Mountain is a wall on the board,
+not a veto on your choice:
 
-- You may not choose an effect that would move a stuck stone.
-- If that leaves no legal choice, the stone is still placed but resolves nothing.
+- **2048** — stones still slide, they just cannot slide past a Mountain. Each stretch of
+  the line on either side of a Mountain packs on its own.
+- **Shift** — the line still moves one step, except that a stone whose destination is the
+  Mountain stays where it is, and so does anything queued behind it. A Mountain also
+  breaks the wrap-around: nothing travels through it to reach the other end.
+- **Rotate** — the same, around the four squares: the Mountain holds its corner, and the
+  other stones each advance one step if the corner ahead of them is free or is freed.
+- **Swap** — a Mountain on either side of the trade keeps its square, and the rest of the
+  two lines change places around it.
+- **Leech** — a Mountain cannot be taken, so it is never a valid target.
+
+Every direction, square and line stays on the menu regardless. An effect that turns out to
+move nothing is still a legal thing to do.
 
 ## Stones
-
-**Regular** — no effect.
 
 ### Movement
 
@@ -98,15 +112,12 @@ column and it swaps with the stone's column.
 with you choosing the direction or target. If they placed a stone with no movement effect, or
 this is the first move of the game, Mimic does nothing. Mimic cannot copy a Mimic.
 
-**Leech** — must be placed adjacent to an enemy stone. It then trades places with one enemy
-stone it is adjacent to, your choice. If no free square is adjacent to an enemy stone, Leech
-may be placed anywhere and does nothing.
+**Leech** — if it lands adjacent to an enemy stone, it trades places with one of them, your
+choice. Otherwise it does nothing.
 
 ### Static
 
-**Glue** — this stone and every stone adjacent to it are stuck.
-
-**Mountain** — this stone is stuck.
+**Mountain** — this stone is never moved by an effect.
 
 ### Restriction
 
