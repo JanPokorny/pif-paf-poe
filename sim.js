@@ -28,7 +28,10 @@ export const CODE = {
 // which hand is X. Both sides search with the same budget off the same stream.
 export function playGame(spec) {
   const rng = makeRng(spec.seed);
-  const s = createGame({ handX: spec.opener, handO: spec.replier, first: 'X' });
+  const s = createGame({
+    handX: spec.opener, handO: spec.replier, first: 'X',
+    stickyMagnet: !!spec.sticky,   // the rules variant, when a caller asks for it
+  });
   while (!s.over) applyAction(s, chooseAction(s, { iterations: spec.iters, rng }));
   return {
     opener: spec.i,

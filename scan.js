@@ -59,7 +59,7 @@ function runSpecs(specs, workers) {
 
 function emptyState(hands, opts) {
   return {
-    opts: { iters: opts.iters, games: opts.games, of: opts.of },
+    opts: { iters: opts.iters, games: opts.games, of: opts.of, sticky: opts.sticky },
     parts: [],
     hands: hands.map((h) => h.join(',')),
     // per hand: games and wins from each seat, plus turns for the mean
@@ -73,6 +73,9 @@ function load(hands, opts) {
   const state = JSON.parse(readFileSync(opts.out, 'utf8'));
   if (state.hands.length !== hands.length) {
     throw new Error(`${opts.out} holds ${state.hands.length} hands, this pool has ${hands.length}`);
+  }
+  if (!state.opts.sticky !== !opts.sticky && !opts.reportOnly) {
+    throw new Error(`${opts.out} was built with sticky=${!!state.opts.sticky}`);
   }
   return state;
 }
@@ -97,7 +100,8 @@ function report(state, hands, opts) {
     meanTurns: t.turns / (t.fg + t.sg),
   })).sort((a, b) => b.rate - a.rate);
 
-  console.log(`\ncensus: all ${hands.length} hands, every ordered pair, ` +
+  console.log(`\ncensus${state.opts.sticky ? ' (persistent Magnet)' : ''}: ` +
+    `all ${hands.length} hands, every ordered pair, ` +
     `${state.games} of ${total} games played (${(state.games / total * 100).toFixed(1)}%), ` +
     `parts ${state.parts.join(',') || 'none'} of ${state.opts.of}, iters=${state.opts.iters}`);
   console.log(`${rows[0].n} games per hand, ${state.tally[0].fg} opening and ${state.tally[0].sg} replying\n`);
@@ -154,6 +158,73 @@ function report(state, hands, opts) {
   console.log('  mean game length     ' + (state.turns / state.games).toFixed(1) + ' turns');
 }
 
+// ── Comparing two censuses ──────────────────────────────────────────────────
+
+// A hand is the multiset, so this key survives both the stone order and the
+// Leech -> Swap rename that an older checkpoint may still be written in.
+const RENAMED = { leech: 'swap' };
+function handKey(hand) {
+  const types = hand.map((t) => RENAMED[t] ?? t);
+  return STONE_TYPES.map((t) => types.filter((x) => x === t).length).join('');
+}
+
+function ranked(state) {
+  return state.tally
+    .map((t, i) => {
+      const hand = state.hands[i].split(',').map((x) => RENAMED[x] ?? x);
+      return { hand, key: handKey(hand), label: label(hand), rate: (t.fw + t.sw) / (t.fg + t.sg) };
+    })
+    .sort((a, b) => b.rate - a.rate);
+}
+
+// What changed between two whole-space censuses: which hands moved, and which
+// stones the top of the table is now made of.
+function compare(state, otherFile, top = 15) {
+  const now = ranked(state);
+  const was = ranked(JSON.parse(readFileSync(otherFile, 'utf8')));
+  const wasBy = Object.fromEntries(was.map((r, i) => [r.key, { ...r, rank: i + 1 }]));
+
+  console.log(`\nagainst ${otherFile}\n`);
+  console.log(pad('now', 5) + pad('was', 5) + pad('hand', 24) +
+    pad('total', 9) + pad('before', 9) + 'move');
+  console.log('-'.repeat(60));
+  for (const [i, r] of now.slice(0, top).entries()) {
+    const o = wasBy[r.key];
+    console.log(pad(i + 1, 5) + pad(o.rank, 5) + pad(r.label, 24) +
+      pad(pct(r.rate) + '%', 9) + pad(pct(o.rate) + '%', 9) +
+      (r.rate >= o.rate ? '+' : '') + ((r.rate - o.rate) * 100).toFixed(1) + 'pp');
+  }
+
+  // A stone is over-represented when the good hands hold it more often than the
+  // hand space does. The quartile is 63 of the 252 hands.
+  const quartile = Math.round(now.length / 4);
+  console.log(`\nhow often a stone is held, in the top ${quartile} hands and in all ${now.length}\n`);
+  console.log(pad('stone', 10) + pad('now', 16) + pad('before', 16) + 'mean rate by copies held, now vs before');
+  console.log('-'.repeat(96));
+  for (const t of STONE_TYPES) {
+    const share = (list) => {
+      const held = list.slice(0, quartile).filter((r) => r.hand.includes(t)).length;
+      return `${held}/${quartile}`;
+    };
+    const curve = (list) => [0, 1, 2].map((k) => {
+      const held = list.filter((r) => r.hand.filter((x) => x === t).length === k);
+      return held.length ? pct(held.reduce((s, r) => s + r.rate, 0) / held.length) + '%' : '  -  ';
+    }).join(' ');
+    console.log(pad(t, 10) + pad(share(now), 16) + pad(share(was), 16) +
+      curve(now) + '   ' + curve(was));
+  }
+
+  // The ceiling for a hand that does without the stone entirely.
+  console.log('\nbest hand holding none of each stone\n');
+  for (const t of STONE_TYPES) {
+    const pick = (list) => {
+      const at = list.findIndex((r) => !r.hand.includes(t));
+      return `${list[at].label} ${pct(list[at].rate)}% at rank ${at + 1}`;
+    };
+    console.log('  ' + pad(t, 10) + pad(pick(now), 40) + 'was ' + pick(was));
+  }
+}
+
 // ── CLI ─────────────────────────────────────────────────────────────────────
 
 async function main() {
@@ -166,6 +237,8 @@ async function main() {
     workers: parseInt(arg('workers', String(Math.max(1, cpus().length - 1))), 10),
     out: arg('out', 'results/scan.json'),
     reportOnly: process.argv.includes('--report'),
+    sticky: process.argv.includes('--sticky'),   // census under the persistent-Magnet variant
+    compare: arg('compare', null),               // another census to read this one against
   };
 
   const hands = allHands();
@@ -184,7 +257,10 @@ async function main() {
         if (i === j) continue;
         for (let g = 0; g < opts.games; g++, index++, seed++) {
           if (index % opts.of !== opts.part) continue;
-          specs.push({ i, j, opener: hands[i], replier: hands[j], iters: opts.iters, seed });
+          specs.push({
+            i, j, opener: hands[i], replier: hands[j],
+            iters: opts.iters, seed, sticky: opts.sticky,
+          });
         }
       }
     }
@@ -210,6 +286,7 @@ async function main() {
   }
 
   report(state, hands, opts);
+  if (opts.compare) compare(state, opts.compare);
 }
 
 const isEntryPoint = process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href;
