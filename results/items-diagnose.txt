@@ -22,3 +22,19 @@ second-wind: 400 games, spent in 400, mean turn 1.0
 fizzle: 400 games, spent in 265 of 781 chances, mean turn 3.2
 
   24.5%   denied a move that would have won on the spot
+
+bipolar: 400 games, spent in 0
+shares below are of the games
+
+  35.3%   a placement of theirs was pushed off their own Magnet
+
+encore: 400 games, spent in 353 of 569 chances, mean turn 1.5
+shares below are of the spends
+
+  10.5%   unmade a line that had just won the opponent the game
+
+obstruction: 400 games, spent in 277, mean turn 3.9
+shares below are of the spends
+
+  9.7%    the banned line was completed anyway, and lost
+  0.4%    spent on the holder's first turn

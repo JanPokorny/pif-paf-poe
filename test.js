@@ -431,6 +431,98 @@ const empty = ['.', '.', '.', '.', '.', '.', '.', '.', '.'];
 }
 
 {
+  // X's Magnet pulls O in as usual; with Bipolar it also pushes X off its own
+  // neighbours on X's next turn.
+  const s = createGame({
+    handX: ['magnet', 'shift'], handO: ['shift', 'shift'], first: 'X', itemO: 'bipolar',
+  });
+  applyAction(s, { type: 'select', stone: 'magnet' });
+  applyAction(s, { type: 'place', pos: 4 });
+  applyAction(s, { type: 'select', stone: 'shift' });
+  check('the Magnet still pulls the other player in',
+    legalActions(s).map((a) => a.pos), [1, 3, 5, 7]);
+  applyAction(s, { type: 'place', pos: 1 });
+  applyAction(s, { type: 'effect', direction: 'right', index: 0 });
+
+  applyAction(s, { type: 'select', stone: 'shift' });
+  check('Bipolar pushes the Magnet\'s owner off its neighbours',
+    legalActions(s).map((a) => a.pos), [0, 6, 8]);
+}
+
+{
+  // O borrows X's shift and runs it on a line of O's own choosing.
+  const s = createGame({ handX: ['shift'], handO: ['shift'], first: 'X', itemO: 'encore' });
+  s.board = board(['.', '.', '.', '.', '.', '.', 'Omg', '.', '.']);
+  applyAction(s, { type: 'select', stone: 'shift' });
+  applyAction(s, { type: 'place', pos: 0 });
+  applyAction(s, { type: 'effect', direction: 'right' });
+  check('Encore asks after the effect has run, and the other player chooses',
+    [s.phase, toMove(s), show(s.board)[1]], ['encore', 'O', 'Xsh']);
+  check('and it offers every line and direction of that same effect',
+    legalActions(s).length, 13);
+  applyAction(s, { type: 'encore', direction: 'right', index: 2 });
+  check('the borrowed shift moves a line the opponent never touched',
+    show(s.board), ['.', 'Xsh', '.', '.', '.', '.', '.', 'Omg', '.']);
+  check('Encore is once per game', s.spent.O, true);
+}
+
+{
+  // X is one square from a line; Obstruction turns that line into a loss.
+  const s = createGame({
+    handX: ['mountain'], handO: ['mountain'], first: 'X', itemO: 'obstruction',
+  });
+  s.board = board(['Xmo', 'Xmo', '.', '.', '.', '.', '.', '.', '.']);
+  s.player = 'O';
+  applyAction(s, { type: 'select', stone: 'mountain' });
+  applyAction(s, { type: 'place', pos: 8 });
+  check('Obstruction is declared at the end of the turn', s.phase, 'counter');
+  applyAction(s, { type: 'counter', use: 'obstruction' });
+  check('and it is once per game', s.spent.O, true);
+
+  applyAction(s, { type: 'select', stone: 'mountain' });
+  check('the opponent may still complete the line', legalActions(s).some((a) => a.pos === 2), true);
+  applyAction(s, { type: 'place', pos: 2 });
+  check('but three in a row loses it for them',
+    [s.over, s.winner, s.reason], [true, 'O', 'line']);
+}
+
+// ── Rules variant: a Magnet that never lets go ──────────────────────────────
+
+{
+  const s = createGame({
+    handX: ['magnet', 'shift'], handO: ['shift', 'shift'], first: 'X', stickyMagnet: true,
+  });
+  applyAction(s, { type: 'select', stone: 'magnet' });
+  applyAction(s, { type: 'place', pos: 0 });
+  applyAction(s, { type: 'select', stone: 'shift' });
+  applyAction(s, { type: 'place', pos: 1 });
+  applyAction(s, { type: 'effect', direction: 'right', index: 0 });
+  applyAction(s, { type: 'select', stone: 'shift' });
+  applyAction(s, { type: 'place', pos: 6 });
+  applyAction(s, { type: 'effect', direction: 'up', index: 0 });
+  applyAction(s, { type: 'select', stone: 'shift' });
+  check('a persistent Magnet is still binding two turns later, from where it now is',
+    legalActions(s).map((a) => a.pos), [0, 4]);   // it rode O's shift from 0 to 1
+}
+
+{
+  const s = createGame({
+    handX: ['magnet', 'shift'], handO: ['shift', 'shift'], first: 'X', stickyMagnet: false,
+  });
+  applyAction(s, { type: 'select', stone: 'magnet' });
+  applyAction(s, { type: 'place', pos: 0 });
+  applyAction(s, { type: 'select', stone: 'shift' });
+  applyAction(s, { type: 'place', pos: 1 });
+  applyAction(s, { type: 'effect', direction: 'right', index: 0 });
+  applyAction(s, { type: 'select', stone: 'shift' });
+  applyAction(s, { type: 'place', pos: 6 });
+  applyAction(s, { type: 'effect', direction: 'up', index: 0 });
+  applyAction(s, { type: 'select', stone: 'shift' });
+  check('while under the normal rules it has already let go',
+    legalActions(s).length, 6);
+}
+
+{
   // Every item, played out at random, has to reach a legal finish.
   const rng = makeRng(29);
   const stuck = [];

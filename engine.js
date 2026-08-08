@@ -10,10 +10,11 @@
 //   while (!g.over) applyAction(g, pickOne(legalActions(g)));
 //   g.winner;  // 'X' | 'O'
 //
-// Most turns are select -> place -> resolve. A Counterattack can add two more
+// Most turns are select -> place -> resolve. A Counterattack can add three more
 // decision points: `reverse`, where the player who is NOT to move answers the
-// movement effect just chosen, and `counter`, where the player to move spends an
-// end-of-turn item. `toMove` is who chooses now; it is not always `player`.
+// movement effect just chosen, `encore`, where that player borrows the effect
+// once it has run, and `counter`, where the player to move spends an end-of-turn
+// item. `toMove` is who chooses now; it is not always `player`.
 
 export const LINES = [
   [0, 1, 2], [3, 4, 5], [6, 7, 8],
@@ -46,6 +47,8 @@ export const ITEMS = [
   'overtake', 'antipolar', 'mind-control', 'uno-reverse',
   // Aimed at the seat gap rather than at a stone: three buy a tempo, three deny one.
   'second-wind', 'echo', 'blind-spot', 'fizzle', 'anchor',
+  // A Magnet that pushes its owner, a borrowed movement effect, a banned win.
+  'bipolar', 'encore', 'obstruction',
 ];
 // Items that interrupt the opponent's resolution, and what each can answer.
 const INTERRUPTS = {
@@ -91,7 +94,9 @@ function freeSquares(board) {
 
 // ── State ───────────────────────────────────────────────────────────────────
 
-export function createGame({ handX, handO, first = 'X', itemX = null, itemO = null }) {
+export function createGame({
+  handX, handO, first = 'X', itemX = null, itemO = null, stickyMagnet = false,
+}) {
   for (const t of [...handX, ...handO]) {
     if (!STONE_TYPES.includes(t)) throw new Error(`unknown stone type: ${t}`);
   }
@@ -107,9 +112,12 @@ export function createGame({ handX, handO, first = 'X', itemX = null, itemO = nu
     player: first,                   // whose turn it is
     actor: null,                     // who chooses now, when that is not `player`
     phase: 'select',                 // select | place | effect | reverse | counter | over
+    stickyMagnet,                    // rules variant: a Magnet binds until replaced
     restriction: null,               // {id, owner, sticky}: a Magnet on the other player
     forced: null,                    // {player, stone}: Mind Control on their next turn
     forbidden: null,                 // {player, pos}: Blind Spot on their next turn
+    repel: null,                     // {player, id}: Bipolar on their next turn
+    blocked: null,                   // {player}: Obstruction on their next turn
     selected: null,                  // stone type taken from hand, awaiting placement
     placedAt: null,                  // where it was placed, awaiting its effect
     pending: null,                   // effect chosen, awaiting a possible Uno Reverse
@@ -131,9 +139,12 @@ export function cloneState(s) {
     player: s.player,
     actor: s.actor,
     phase: s.phase,
+    stickyMagnet: s.stickyMagnet,
     restriction: s.restriction ? { ...s.restriction } : null,
     forced: s.forced ? { ...s.forced } : null,
     forbidden: s.forbidden ? { ...s.forbidden } : null,
+    repel: s.repel ? { ...s.repel } : null,
+    blocked: s.blocked ? { ...s.blocked } : null,
     selected: s.selected,
     placedAt: s.placedAt,
     pending: s.pending ? { ...s.pending } : null,
@@ -296,6 +307,14 @@ function placeActions(s) {
     if (allowed.length) free = allowed;
   }
 
+  // Bipolar: a Magnet does not only pull the other player in, it pushes its own
+  // owner off its neighbours on the turn after it lands.
+  if (s.repel?.player === p) {
+    const own = s.board.findIndex((c) => c?.id === s.repel.id);
+    const allowed = own < 0 ? free : free.filter((i) => !adjacent(i, own));
+    if (allowed.length) free = allowed;
+  }
+
   // Blind Spot closes one square, unless that would leave nowhere to play.
   if (s.forbidden?.player === p) {
     const allowed = free.filter((i) => i !== s.forbidden.pos);
@@ -363,6 +382,22 @@ function reverseActions(s) {
   return [{ type: 'reverse', use: 'none' }, { type: 'reverse', use: itemOf(s, toMove(s)) }];
 }
 
+// Encore borrows the movement effect the opponent has just resolved and runs the
+// same kind again, anywhere on the board and in any direction.
+function encoreActions(s) {
+  const out = [{ type: 'encore', use: 'none' }];
+  if (s.selected === 'shift') {
+    for (const direction of DIRECTIONS) {
+      for (const index of [0, 1, 2]) out.push({ type: 'encore', direction, index });
+    }
+  } else if (s.selected === '2048') {
+    for (const direction of DIRECTIONS) out.push({ type: 'encore', direction });
+  } else if (s.selected === 'rotate') {
+    for (const square of Object.keys(SUBSQUARES)) out.push({ type: 'encore', square });
+  }
+  return out;
+}
+
 // End-of-turn items, spent by the player whose turn is ending.
 function counterActions(s) {
   const p = s.player;
@@ -384,6 +419,8 @@ function counterActions(s) {
     out.push({ type: 'counter', use: 'second-wind' });
   } else if (item === 'echo' && effectActions(s).length) {
     out.push({ type: 'counter', use: 'echo' });
+  } else if (item === 'obstruction') {
+    out.push({ type: 'counter', use: 'obstruction' });
   }
   return out;
 }
@@ -394,6 +431,7 @@ export function legalActions(s) {
     case 'place': return placeActions(s);
     case 'effect': return effectActions(s);
     case 'reverse': return reverseActions(s);
+    case 'encore': return encoreActions(s);
     case 'counter': return counterActions(s);
     default: return [];
   }
@@ -413,11 +451,17 @@ function finish(s, winner, reason) {
 function endTurn(s, keepTurn = false) {
   const player = s.player;
 
+  // Bipolar's push covered the turn that is ending and is now spent.
+  if (s.repel?.player === player) s.repel = null;
+
   if (s.selected === 'magnet') {
     s.restriction = {
       id: s.board[s.placedAt].id, owner: player,
-      sticky: itemOf(s, player) === 'super-magnet',
+      sticky: s.stickyMagnet || itemOf(s, player) === 'super-magnet',
     };
+    if (itemOf(s, other(player)) === 'bipolar') {
+      s.repel = { player, id: s.board[s.placedAt].id };
+    }
   } else if (s.restriction?.owner === other(player) && !s.restriction.sticky) {
     s.restriction = null;   // it bound us for this turn and is now spent
   }
@@ -426,8 +470,15 @@ function endTurn(s, keepTurn = false) {
   if (s.forced?.player === player) s.forced = null;         // Mind Control is spent
   if (s.forbidden?.player === player) s.forbidden = null;   // Blind Spot is spent
 
-  if (hasLine(s.board, player)) { finish(s, player, 'line'); return true; }
+  // Obstruction: the player it names cannot win this turn. A line of theirs
+  // loses on the spot instead of winning; either way the holder takes the game.
+  const banned = s.blocked?.player === player;
+  if (hasLine(s.board, player)) {
+    finish(s, banned ? other(player) : player, 'line');
+    return true;
+  }
   if (hasLine(s.board, other(player))) { finish(s, other(player), 'line'); return true; }
+  if (banned) s.blocked = null;   // it covered this turn and is now spent
 
   s.player = keepTurn ? player : other(player);   // Second Wind holds the turn
   s.actor = null;
@@ -452,7 +503,7 @@ function afterEffect(s) {
   const p = s.player;
   const item = itemOf(s, p);
   if (!s.spent[p] && item && ['overtake', 'mind-control', 'blind-spot',
-    'second-wind', 'echo'].includes(item)) {
+    'second-wind', 'echo', 'obstruction'].includes(item)) {
     s.phase = 'counter';
     s.actor = null;
     if (counterActions(s).length > 1) return;   // something to choose
@@ -474,6 +525,23 @@ function interruptAvailable(s) {
   const foe = other(s.player);
   const item = itemOf(s, foe);
   return !!item && !s.spent[foe] && (INTERRUPTS[item]?.includes(s.selected) ?? false);
+}
+
+// Encore answers a movement effect once the effect has run, so the choice is
+// made knowing what the board looks like afterwards.
+function encoreAvailable(s) {
+  const foe = other(s.player);
+  return itemOf(s, foe) === 'encore' && !s.spent[foe] && MOVEMENT_TYPES.includes(s.selected);
+}
+
+// Once an effect has settled, the other player may still borrow it.
+function afterResolution(s) {
+  if (encoreAvailable(s)) {
+    s.phase = 'encore';
+    s.actor = other(s.player);
+    return;
+  }
+  afterEffect(s);
 }
 
 export function applyAction(s, action) {
@@ -503,7 +571,7 @@ export function applyAction(s, action) {
         break;
       }
       resolveOnto(s.board, s.selected, s.placedAt, action);
-      afterEffect(s);
+      afterResolution(s);
       break;
     }
     case 'reverse': {
@@ -517,6 +585,16 @@ export function applyAction(s, action) {
           action.use === 'anchor' ? holder : null);
       }
       s.pending = null;
+      s.actor = null;
+      afterResolution(s);
+      break;
+    }
+    case 'encore': {
+      const holder = toMove(s);
+      if (action.use !== 'none') {
+        s.spent[holder] = true;
+        resolveOnto(s.board, s.selected, s.placedAt, action);
+      }
       s.actor = null;
       afterEffect(s);
       break;
@@ -538,6 +616,9 @@ export function applyAction(s, action) {
         s.spent[p] = true;
         endTurn(s, true);   // the turn passes back to the same player
         break;
+      } else if (action.use === 'obstruction') {
+        s.blocked = { player: other(p) };
+        s.spent[p] = true;
       } else if (action.use === 'echo') {
         // Resolve the stone a second time, choosing again.
         s.spent[p] = true;

@@ -130,3 +130,35 @@ hand. That is the stone they must play on their next turn.
 **Uno Reverse** — once per game, after your opponent resolves a Shift, a 2048 or a Rotate,
 you may make it run the other way instead: the opposite direction for Shift and 2048,
 anticlockwise for Rotate.
+
+Five more were designed against the first-mover advantage rather than against a stone. Two buy
+you a tempo, three take one off your opponent:
+
+**Second Wind** — once per game, at the end of your turn, take another turn.
+
+**Echo** — once per game, resolve the stone you have just placed a second time, choosing
+again.
+
+**Blind Spot** — once per game, at the end of your turn, name a free square. Your opponent may
+not place there on their next turn, unless it is the only square left.
+
+**Fizzle** — once per game, after your opponent chooses an effect, cancel it. The stone stays
+where it was placed and nothing else moves.
+
+**Anchor** — once per game, after your opponent chooses a Shift, a 2048 or a Rotate, the
+effect runs as normal except that *your* stones do not move. They behave like Mountains for
+that one effect, so stones blocked by them move as far as the space allows.
+
+And three more after that:
+
+**Bipolar** — your opponent's Magnets push their owner as well as pulling you. On the turn
+after they place a Magnet, they may not place adjacent to it, unless no other free square is
+left.
+
+**Encore** — once per game, after your opponent has resolved a Shift, a 2048 or a Rotate,
+resolve the same kind of effect yourself: any row or column for Shift, any direction for 2048,
+any sub-square for Rotate. It happens before the check for three in a row, so it can break up
+a line your opponent has just made.
+
+**Obstruction** — once per game, at the end of your turn, declare an obstruction. Your
+opponent cannot win on their next turn: if they make three in a row, they lose instead.

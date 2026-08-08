@@ -1,0 +1,22 @@
+2 arms x 1000 pairings on 3 workers...
+  base         37s
+  sticky       37s
+
+persistent Magnet: 1000 hand pairings per arm, 2 arms, iters=300
+
+                        one turn    persistent  change
+------------------------------------------------------------
+opening seat wins        73.9%       68.5%      -5.4pp [-8.9,-1.9]
+  95% CI                [ 71.1, 76.5] [ 65.6, 71.3]
+placements under a pull  11.6%       25.6%      14.0pp
+games decided by a line  93.1%       93.4%      0.3pp
+mean game length        5.16        5.36        0.21 turns
+
+win rate by Magnets held, over every hand-side played
+
+rules       0 held      1 held      2 held      3 held      4 held      5 held      
+------------------------------------------------------------------------------------
+one turn     52.2% 791   52.7% 821   41.7% 321   32.3% 62     0.0% 4      0.0% 1    
+persistent   46.5% 791   53.3% 821   53.0% 321   37.1% 62    25.0% 4      0.0% 1    
+
+  a hand-side is one hand in one seat; every pairing contributes two

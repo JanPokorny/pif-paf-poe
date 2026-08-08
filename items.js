@@ -15,7 +15,9 @@ import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { dirname } from 'node:path';
 import { pathToFileURL } from 'node:url';
 
-import { createGame, applyAction, cloneState, hasLine, other, ITEMS, LINES } from './engine.js';
+import {
+  createGame, applyAction, cloneState, hasLine, other, toMove, ITEMS, LINES,
+} from './engine.js';
 import { chooseAction, makeRng } from './ai.js';
 import { arg, pad, pct, randomHand, wilson } from './sim.js';
 
@@ -76,13 +78,31 @@ function diagnose(item, opts) {
     while (!s.over && plies++ < 200) {
       const action = chooseAction(s, { iterations: opts.iters, rng });
 
-      if (action.type === 'reverse') tally.offered++;
-      const spending = action.use && action.use !== 'pass' && action.use !== 'none';
+      if (action.type === 'reverse' || action.type === 'encore') tally.offered++;
+      // A passive item is never spent; what it does shows up in the choices the
+      // opponent is left with instead.
+      if (item === 'bipolar' && action.type === 'place' && s.repel?.player === s.player) {
+        note('a placement of theirs was pushed off their own Magnet');
+      }
+      const spending = action.type === 'encore'
+        ? action.use !== 'none'
+        : action.use && action.use !== 'pass' && action.use !== 'none';
 
       if (spending) {
         tally.spent++;
         tally.turnSum += s.turns;
-        if (action.use === 'overtake') {
+        if (action.type === 'encore') {
+          // Encore runs after the effect but before the win check, so a line
+          // that has just appeared is still on the board and can be broken up.
+          const owner = other(toMove(s));
+          const after = cloneState(s);
+          applyAction(after, action);
+          if (hasLine(s.board, owner) && !hasLine(after.board, owner)) {
+            note('unmade a line that had just won the opponent the game');
+          } else if (hasLine(after.board, toMove(s))) note('made a line of the holder\'s own');
+        } else if (action.use === 'obstruction') {
+          if (s.turns === 1) note('spent on the holder\'s first turn');
+        } else if (action.use === 'overtake') {
           if (s.turns === 1) note('spent on the holder\'s first turn');
           if (hasLine(s.board, other(s.player))) note('undid a line the holder\'s own effect gave away');
           else if (inLiveThreat(s.board, action.pos)) note('took a stone out of a live two-in-a-row');
@@ -99,14 +119,22 @@ function diagnose(item, opts) {
       }
       applyAction(s, action);
     }
+    // Obstruction hands the game to the holder while the loser's own line sits
+    // finished on the board -- that is the ban having actually bitten.
+    if (item === 'obstruction' && s.reason === 'line' && hasLine(s.board, other(s.winner))) {
+      note('the banned line was completed anyway, and lost');
+    }
     tally.games++;
   }
 
+  // A passive item has no spends to divide by, so its counts are per game.
+  const base = tally.spent || tally.games;
   console.log(`\n${item}: ${tally.games} games, spent in ${tally.spent}` +
     (tally.offered ? ` of ${tally.offered} chances` : '') +
-    `, mean turn ${(tally.turnSum / tally.spent).toFixed(1)}\n`);
+    (tally.spent ? `, mean turn ${(tally.turnSum / tally.spent).toFixed(1)}` : '') +
+    `\nshares below are of ${tally.spent ? 'the spends' : 'the games'}\n`);
   for (const [k, v] of Object.entries(tally.notes).sort((a, b) => b[1] - a[1])) {
-    console.log('  ' + pad((v / tally.spent * 100).toFixed(1) + '%', 8) + k);
+    console.log('  ' + pad((v / base * 100).toFixed(1) + '%', 8) + k);
   }
 }
 
