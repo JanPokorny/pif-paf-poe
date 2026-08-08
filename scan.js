@@ -197,8 +197,8 @@ function compare(state, otherFile, top = 15) {
   const was = ranked(other);
   const wasBy = Object.fromEntries(was.map((r, i) => [r.key, { ...r, rank: i + 1 }]));
   // Two censuses of different pools share only the hands the smaller one deals.
-  const pool = (state.opts.pool ?? STONE_TYPES).filter((t) =>
-    (other.opts.pool ?? STONE_TYPES).includes(t));
+  const pool = state.opts.pool ?? STONE_TYPES;
+  const alsoThere = (t) => (other.opts.pool ?? STONE_TYPES).includes(t);
   const shared = now.filter((r) => wasBy[r.key]);
 
   console.log(`\nagainst ${otherFile}${rulesLabel(rulesOf(other.opts))}` +
@@ -217,22 +217,26 @@ function compare(state, otherFile, top = 15) {
   }
 
   // A stone is over-represented when the good hands hold it more often than the
-  // hand space does. The quartile is 63 of the 252 hands.
-  const quartile = Math.round(now.length / 4);
-  console.log(`\nhow often a stone is held, in the top ${quartile} hands and in all ${now.length}\n`);
-  console.log(pad('stone', 10) + pad('now', 16) + pad('before', 16) + 'mean rate by copies held, now vs before');
+  // hand space does. Each census gets its own quartile, since the two need not
+  // be the same size.
+  console.log(`\nhow often a stone is held, in the top quarter of hands ` +
+    `(${Math.round(now.length / 4)} of ${now.length}, ` +
+    `${Math.round(was.length / 4)} of ${was.length})\n`);
+  console.log(pad('stone', 10) + pad('now', 16) + pad('before', 16) +
+    'mean rate by copies held, now vs before');
   console.log('-'.repeat(96));
   for (const t of pool) {
     const share = (list) => {
-      const held = list.slice(0, quartile).filter((r) => r.hand.includes(t)).length;
-      return `${held}/${quartile}`;
+      const q = Math.round(list.length / 4);
+      const held = list.slice(0, q).filter((r) => r.hand.includes(t)).length;
+      return `${held}/${q} ${pct(held / q)}%`;
     };
     const curve = (list) => [0, 1, 2].map((k) => {
       const held = list.filter((r) => r.hand.filter((x) => x === t).length === k);
       return held.length ? pct(held.reduce((s, r) => s + r.rate, 0) / held.length) + '%' : '  -  ';
     }).join(' ');
-    console.log(pad(t, 10) + pad(share(now), 16) + pad(share(was), 16) +
-      curve(now) + '   ' + curve(was));
+    console.log(pad(t, 10) + pad(share(now), 16) + pad(alsoThere(t) ? share(was) : '-', 16) +
+      curve(now) + '   ' + (alsoThere(t) ? curve(was) : ''));
   }
 
   // The ceiling for a hand that does without the stone entirely.
@@ -242,7 +246,8 @@ function compare(state, otherFile, top = 15) {
       const at = list.findIndex((r) => !r.hand.includes(t));
       return `${list[at].label} ${pct(list[at].rate)}% at rank ${at + 1}`;
     };
-    console.log('  ' + pad(t, 10) + pad(pick(now), 40) + 'was ' + pick(was));
+    console.log('  ' + pad(t, 10) + pad(pick(now), 40) +
+      (alsoThere(t) ? 'was ' + pick(was) : ''));
   }
 }
 
