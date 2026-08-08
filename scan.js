@@ -16,23 +16,34 @@ import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { dirname } from 'node:path';
 import { pathToFileURL } from 'node:url';
 
-import { STONE_TYPES } from './engine.js';
+import { ALL_TYPES, STONE_TYPES } from './engine.js';
 import { CODE, arg, pad, pct, playGame, wilson } from './sim.js';
 
 // Every multiset of five stones, in a fixed order so a hand's index means the
 // same thing in every part of the run.
-export function allHands() {
+export function allHands(pool = STONE_TYPES) {
   const out = [];
   const build = (start, hand) => {
     if (hand.length === 5) { out.push(hand.slice()); return; }
-    for (let i = start; i < STONE_TYPES.length; i++) {
-      hand.push(STONE_TYPES[i]);
+    for (let i = start; i < pool.length; i++) {
+      hand.push(pool[i]);
       build(i, hand);
       hand.pop();
     }
   };
   build(0, []);
   return out;
+}
+
+// How a census labels itself: the rules it was played under, if not the current
+// ones. An older checkpoint predates `rules` and recorded `sticky` instead.
+function rulesOf(stateOpts) {
+  const r = stateOpts.rules ?? { oneTurnMagnet: !stateOpts.sticky };
+  return { oneTurnMagnet: !!r.oneTurnMagnet, oneTurnStinky: !!r.oneTurnStinky };
+}
+function rulesLabel(rules) {
+  const on = Object.keys(rules).filter((k) => rules[k]);
+  return on.length ? ` (${on.join(', ')})` : '';
 }
 
 const label = (hand) => hand.map((t) => CODE[t]).join(' ');
@@ -59,7 +70,7 @@ function runSpecs(specs, workers) {
 
 function emptyState(hands, opts) {
   return {
-    opts: { iters: opts.iters, games: opts.games, of: opts.of, sticky: opts.sticky },
+    opts: { iters: opts.iters, games: opts.games, of: opts.of, rules: opts.rules, pool: opts.pool },
     parts: [],
     hands: hands.map((h) => h.join(',')),
     // per hand: games and wins from each seat, plus turns for the mean
@@ -74,8 +85,9 @@ function load(hands, opts) {
   if (state.hands.length !== hands.length) {
     throw new Error(`${opts.out} holds ${state.hands.length} hands, this pool has ${hands.length}`);
   }
-  if (!state.opts.sticky !== !opts.sticky && !opts.reportOnly) {
-    throw new Error(`${opts.out} was built with sticky=${!!state.opts.sticky}`);
+  if (!opts.reportOnly &&
+    JSON.stringify(rulesOf(state.opts)) !== JSON.stringify(rulesOf({ rules: opts.rules }))) {
+    throw new Error(`${opts.out} was built under ${JSON.stringify(rulesOf(state.opts))}`);
   }
   return state;
 }
@@ -100,7 +112,7 @@ function report(state, hands, opts) {
     meanTurns: t.turns / (t.fg + t.sg),
   })).sort((a, b) => b.rate - a.rate);
 
-  console.log(`\ncensus${state.opts.sticky ? ' (persistent Magnet)' : ''}: ` +
+  console.log(`\ncensus${rulesLabel(rulesOf(state.opts))}: ` +
     `all ${hands.length} hands, every ordered pair, ` +
     `${state.games} of ${total} games played (${(state.games / total * 100).toFixed(1)}%), ` +
     `parts ${state.parts.join(',') || 'none'} of ${state.opts.of}, iters=${state.opts.iters}`);
@@ -128,7 +140,7 @@ function report(state, hands, opts) {
   console.log('\nwin rate by copies held, over every hand-side played\n');
   console.log(pad('stone', 10) + [0, 1, 2, 3, 4, 5].map((k) => pad(`${k} copies`, 12)).join(''));
   console.log('-'.repeat(82));
-  for (const t of STONE_TYPES) {
+  for (const t of state.opts.pool ?? STONE_TYPES) {
     let out = pad(t, 10);
     for (let k = 0; k <= 5; k++) {
       const held = rows.filter((r) => r.hand.filter((x) => x === t).length === k);
@@ -165,7 +177,7 @@ function report(state, hands, opts) {
 const RENAMED = { leech: 'swap' };
 function handKey(hand) {
   const types = hand.map((t) => RENAMED[t] ?? t);
-  return STONE_TYPES.map((t) => types.filter((x) => x === t).length).join('');
+  return ALL_TYPES.map((t) => types.filter((x) => x === t).length).join('');
 }
 
 function ranked(state) {
@@ -181,15 +193,24 @@ function ranked(state) {
 // stones the top of the table is now made of.
 function compare(state, otherFile, top = 15) {
   const now = ranked(state);
-  const was = ranked(JSON.parse(readFileSync(otherFile, 'utf8')));
+  const other = JSON.parse(readFileSync(otherFile, 'utf8'));
+  const was = ranked(other);
   const wasBy = Object.fromEntries(was.map((r, i) => [r.key, { ...r, rank: i + 1 }]));
+  // Two censuses of different pools share only the hands the smaller one deals.
+  const pool = (state.opts.pool ?? STONE_TYPES).filter((t) =>
+    (other.opts.pool ?? STONE_TYPES).includes(t));
+  const shared = now.filter((r) => wasBy[r.key]);
 
-  console.log(`\nagainst ${otherFile}\n`);
+  console.log(`\nagainst ${otherFile}${rulesLabel(rulesOf(other.opts))}` +
+    (shared.length < now.length
+      ? `, which deals ${shared.length} of these ${now.length} hands`
+      : '') + '\n');
   console.log(pad('now', 5) + pad('was', 5) + pad('hand', 24) +
     pad('total', 9) + pad('before', 9) + 'move');
   console.log('-'.repeat(60));
   for (const [i, r] of now.slice(0, top).entries()) {
     const o = wasBy[r.key];
+    if (!o) { console.log(pad(i + 1, 5) + pad('-', 5) + r.label); continue; }
     console.log(pad(i + 1, 5) + pad(o.rank, 5) + pad(r.label, 24) +
       pad(pct(r.rate) + '%', 9) + pad(pct(o.rate) + '%', 9) +
       (r.rate >= o.rate ? '+' : '') + ((r.rate - o.rate) * 100).toFixed(1) + 'pp');
@@ -201,7 +222,7 @@ function compare(state, otherFile, top = 15) {
   console.log(`\nhow often a stone is held, in the top ${quartile} hands and in all ${now.length}\n`);
   console.log(pad('stone', 10) + pad('now', 16) + pad('before', 16) + 'mean rate by copies held, now vs before');
   console.log('-'.repeat(96));
-  for (const t of STONE_TYPES) {
+  for (const t of pool) {
     const share = (list) => {
       const held = list.slice(0, quartile).filter((r) => r.hand.includes(t)).length;
       return `${held}/${quartile}`;
@@ -216,7 +237,7 @@ function compare(state, otherFile, top = 15) {
 
   // The ceiling for a hand that does without the stone entirely.
   console.log('\nbest hand holding none of each stone\n');
-  for (const t of STONE_TYPES) {
+  for (const t of pool) {
     const pick = (list) => {
       const at = list.findIndex((r) => !r.hand.includes(t));
       return `${list[at].label} ${pct(list[at].rate)}% at rank ${at + 1}`;
@@ -237,11 +258,17 @@ async function main() {
     workers: parseInt(arg('workers', String(Math.max(1, cpus().length - 1))), 10),
     out: arg('out', 'results/scan.json'),
     reportOnly: process.argv.includes('--report'),
-    sticky: process.argv.includes('--sticky'),   // census under the persistent-Magnet variant
-    compare: arg('compare', null),               // another census to read this one against
+    compare: arg('compare', null),   // another census to read this one against
+    // A census of the game as it stands unless a variant is asked for, and of
+    // the six-stone pool unless a stone under evaluation is dealt in.
+    rules: {
+      oneTurnMagnet: process.argv.includes('--one-turn-magnet'),
+      oneTurnStinky: process.argv.includes('--one-turn-stinky'),
+    },
+    pool: process.argv.includes('--stinky') ? [...STONE_TYPES, 'stinky'] : STONE_TYPES,
   };
 
-  const hands = allHands();
+  const hands = allHands(opts.pool);
   const state = load(hands, opts);
 
   if (!opts.reportOnly) {
@@ -259,7 +286,7 @@ async function main() {
           if (index % opts.of !== opts.part) continue;
           specs.push({
             i, j, opener: hands[i], replier: hands[j],
-            iters: opts.iters, seed, sticky: opts.sticky,
+            iters: opts.iters, seed, rules: opts.rules,
           });
         }
       }

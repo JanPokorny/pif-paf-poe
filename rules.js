@@ -1,17 +1,18 @@
-// A rules variant, measured against the rules as they stand: what happens if a
-// Magnet's pull is permanent instead of lasting one turn?
+// How much is a restriction that never lets go worth? Each study plays a stone
+// whose restriction lasts one turn against the same stone whose restriction
+// holds until it is replaced.
 //
-//   node rules.js --pairs 1000 --iters 300 --out results/rules.json
-//   node rules.js --report --out results/rules.json
+//   node rules.js --study magnet --pairs 1000 --iters 300 --out results/rules-magnet.json
+//   node rules.js --study stinky --pairs 1000 --iters 300 --out results/rules-stinky.json
+//   node rules.js --study stinky --report --out results/rules-stinky.json
 //
 // Both arms replay the same list of (opening hand, replying hand, seed), so a
 // pairing differs between them only where the change actually mattered, and the
 // interval is on the per-pairing difference.
 //
-// The variant is the smallest one that is still recognisably "persistent": the
-// most recently placed Magnet binds its opponent until another Magnet replaces
-// it or it leaves the board, rather than for a single turn. Super Magnet is what
-// this already does for one item, so under the variant that item is a no-op.
+// "Permanent" is the smallest version that deserves the name: the most recently
+// placed restriction stone binds its opponent until another one replaces it or
+// it leaves the board. There is one restriction in force at a time either way.
 
 import { Worker, isMainThread, parentPort, workerData } from 'node:worker_threads';
 import { cpus } from 'node:os';
@@ -19,21 +20,29 @@ import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { dirname } from 'node:path';
 import { pathToFileURL } from 'node:url';
 
-import { createGame, applyAction } from './engine.js';
+import { createGame, applyAction, STONE_TYPES } from './engine.js';
 import { chooseAction, makeRng } from './ai.js';
 import { arg, pad, pct, randomHand, wilson } from './sim.js';
 
-const ARMS = ['base', 'sticky'];
+// A study is a stone, the pool it is dealt from, and the one-turn arm to beat.
+const STUDIES = {
+  magnet: {
+    stone: 'magnet', pool: STONE_TYPES,
+    arms: { 'one turn': { oneTurnMagnet: true }, permanent: {} },
+  },
+  stinky: {
+    // Stinky is not in the pool, so the study deals it in explicitly.
+    stone: 'stinky', pool: [...STONE_TYPES, 'stinky'],
+    arms: { 'one turn': { oneTurnStinky: true }, permanent: {} },
+  },
+};
 
 function playGame(spec) {
   const rng = makeRng(spec.seed);
-  const s = createGame({
-    handX: spec.opener, handO: spec.replier, first: 'X',
-    stickyMagnet: spec.arm === 'sticky',
-  });
+  const s = createGame({ handX: spec.opener, handO: spec.replier, first: 'X', ...spec.rules });
 
-  // How often a placement was actually made under a Magnet's pull: the variant
-  // is only worth anything to the extent that this number moves.
+  // How often a placement was actually made under a restriction: the change is
+  // only worth anything to the extent that this number moves.
   let placements = 0, pulled = 0;
   let plies = 0;
   while (!s.over && plies++ < 200) {
@@ -74,65 +83,72 @@ const count = (hand, type) => hand.filter((t) => t === type).length;
 
 function report(state) {
   const n = state.pairs;
-  const pairings = buildPairings(state.pairs, state.seed);
-  console.log(`\npersistent Magnet: ${n} hand pairings per arm, ` +
-    `${Object.keys(state.arms).length} arms, iters=${state.iters}\n`);
+  const study = STUDIES[state.study];
+  const names = Object.keys(study.arms);
+  const pairings = buildPairings(state.pairs, state.seed, study.pool);
+  console.log(`\npermanent ${study.stone}: ${n} hand pairings per arm, ` +
+    `${Object.keys(state.arms).length} of ${names.length} arms, iters=${state.iters}, ` +
+    `pool of ${study.pool.length}\n`);
 
+  const sum = (xs) => xs.reduce((x, y) => x + y, 0);
   const summary = {};
-  for (const arm of ARMS) {
+  for (const arm of names) {
     const a = state.arms[arm];
     if (!a) continue;
-    const sum = (xs) => xs.reduce((x, y) => x + y, 0);
     summary[arm] = {
       opener: sum(a.wins) / n,
       line: sum(a.line) / n,
       turns: sum(a.turns) / n,
-      pull: sum(a.pulled) / sum(a.placements),
+      bound: sum(a.pulled) / sum(a.placements),
     };
   }
-  const base = summary.base, sticky = summary.sticky;
-  if (!base || !sticky) { console.log('both arms are needed for a comparison'); return; }
+  const [first, second] = names;
+  if (!summary[first] || !summary[second]) {
+    console.log('both arms are needed for a comparison');
+    return;
+  }
 
-  const diffs = state.arms.sticky.wins.map((w, k) => w - state.arms.base.wins[k]);
-  const delta = diffs.reduce((x, y) => x + y, 0) / n;
+  const diffs = state.arms[second].wins.map((w, k) => w - state.arms[first].wins[k]);
+  const delta = sum(diffs) / n;
   const sd = Math.sqrt(diffs.reduce((s, d) => s + (d - delta) ** 2, 0) / (n - 1));
   const half = 1.96 * sd / Math.sqrt(n);
-  const [blo, bhi] = wilson(state.arms.base.wins.reduce((x, y) => x + y, 0), n);
-  const [slo, shi] = wilson(state.arms.sticky.wins.reduce((x, y) => x + y, 0), n);
+  const ci = (arm) => {
+    const [lo, hi] = wilson(sum(state.arms[arm].wins), n);
+    return '[' + pct(lo) + ',' + pct(hi) + ']';
+  };
 
-  console.log(pad('', 24) + pad('one turn', 12) + pad('persistent', 12) + 'change');
-  console.log('-'.repeat(60));
-  console.log(pad('opening seat wins', 24) + pad(pct(base.opener) + '%', 12) +
-    pad(pct(sticky.opener) + '%', 12) +
+  const row = (name, a, b, tail) =>
+    console.log(pad(name, 24) + pad(a, 15) + pad(b, 15) + tail);
+  row('', first, second, 'change');
+  console.log('-'.repeat(62));
+  row('opening seat wins', pct(summary[first].opener) + '%', pct(summary[second].opener) + '%',
     (delta >= 0 ? '+' : '') + (delta * 100).toFixed(1) + 'pp [' +
     ((delta - half) * 100).toFixed(1) + ',' + ((delta + half) * 100).toFixed(1) + ']');
-  console.log(pad('  95% CI', 24) + pad('[' + pct(blo) + ',' + pct(bhi) + ']', 14) +
-    '[' + pct(slo) + ',' + pct(shi) + ']');
-  console.log(pad('placements under a pull', 24) + pad(pct(base.pull) + '%', 12) +
-    pad(pct(sticky.pull) + '%', 12) +
-    ((sticky.pull - base.pull) * 100).toFixed(1) + 'pp');
-  console.log(pad('games decided by a line', 24) + pad(pct(base.line) + '%', 12) +
-    pad(pct(sticky.line) + '%', 12) + ((sticky.line - base.line) * 100).toFixed(1) + 'pp');
-  console.log(pad('mean game length', 24) + pad(base.turns.toFixed(2), 12) +
-    pad(sticky.turns.toFixed(2), 12) + (sticky.turns - base.turns).toFixed(2) + ' turns');
+  row('  95% CI', ci(first), ci(second), '');
+  row('placements under it', pct(summary[first].bound) + '%', pct(summary[second].bound) + '%',
+    ((summary[second].bound - summary[first].bound) * 100).toFixed(1) + 'pp');
+  row('games decided by a line', pct(summary[first].line) + '%', pct(summary[second].line) + '%',
+    ((summary[second].line - summary[first].line) * 100).toFixed(1) + 'pp');
+  row('mean game length', summary[first].turns.toFixed(2), summary[second].turns.toFixed(2),
+    (summary[second].turns - summary[first].turns).toFixed(2) + ' turns');
 
   // What the change is worth to the stone itself. Every pairing contributes two
-  // hand-sides, each with its own Magnet count, and the seats are balanced
+  // hand-sides, each with its own count of the stone, and the seats are balanced
   // across the arms because both arms play the identical list of pairings.
-  console.log('\nwin rate by Magnets held, over every hand-side played\n');
+  console.log(`\nwin rate by ${study.stone} held, over every hand-side played\n`);
   console.log(pad('rules', 12) + [0, 1, 2, 3, 4, 5].map((k) => pad(`${k} held`, 12)).join(''));
   console.log('-'.repeat(84));
-  for (const arm of ARMS) {
+  for (const arm of names) {
     const a = state.arms[arm];
     if (!a) continue;
     const tally = Array.from({ length: 6 }, () => ({ n: 0, w: 0 }));
     pairings.forEach((p, k) => {
-      const o = tally[count(p.opener, 'magnet')];
-      const r = tally[count(p.replier, 'magnet')];
+      const o = tally[count(p.opener, study.stone)];
+      const r = tally[count(p.replier, study.stone)];
       o.n++; o.w += a.wins[k];
       r.n++; r.w += 1 - a.wins[k];
     });
-    console.log(pad(arm === 'base' ? 'one turn' : 'persistent', 12) +
+    console.log(pad(arm, 12) +
       tally.map((t) => pad(t.n ? `${pct(t.w / t.n)}% ${t.n}` : '  -', 12)).join(''));
   }
   console.log('\n  a hand-side is one hand in one seat; every pairing contributes two');
@@ -141,40 +157,47 @@ function report(state) {
 // ── CLI ─────────────────────────────────────────────────────────────────────
 
 // The same pairings for both arms, and the same ones the report reads back.
-function buildPairings(pairs, seed) {
+function buildPairings(pairs, seed, pool) {
   const rng = makeRng(seed);
   return Array.from({ length: pairs }, (_, k) => ({
-    k, opener: randomHand(rng), replier: randomHand(rng), seed: seed + k * 7919,
+    k, opener: randomHand(rng, pool), replier: randomHand(rng, pool), seed: seed + k * 7919,
   }));
 }
 
 async function main() {
   const opts = {
+    study: arg('study', 'magnet'),
     pairs: parseInt(arg('pairs', '1000'), 10),
     iters: parseInt(arg('iters', '300'), 10),
     seed: parseInt(arg('seed', '54321'), 10),
     workers: parseInt(arg('workers', String(Math.max(1, cpus().length - 1))), 10),
     only: arg('only', null)?.split(','),
-    out: arg('out', 'results/rules.json'),
+    out: arg('out', null),
     reportOnly: process.argv.includes('--report'),
   };
+  const study = STUDIES[opts.study];
+  if (!study) throw new Error(`unknown study: ${opts.study}`);
+  opts.out ??= `results/rules-${opts.study}.json`;
 
   let state = existsSync(opts.out) ? JSON.parse(readFileSync(opts.out, 'utf8')) : null;
-  if (state && (state.pairs !== opts.pairs || state.iters !== opts.iters) && !opts.reportOnly) {
-    throw new Error(`${opts.out} was built with pairs=${state.pairs} iters=${state.iters}`);
+  if (state && !opts.reportOnly &&
+    (state.pairs !== opts.pairs || state.iters !== opts.iters || state.study !== opts.study)) {
+    throw new Error(`${opts.out} holds study=${state.study} pairs=${state.pairs} iters=${state.iters}`);
   }
-  state ??= { pairs: opts.pairs, iters: opts.iters, seed: opts.seed, arms: {} };
+  state ??= {
+    study: opts.study, pairs: opts.pairs, iters: opts.iters, seed: opts.seed, arms: {},
+  };
 
   if (!opts.reportOnly) {
-    const pairings = buildPairings(opts.pairs, opts.seed);
-    const arms = (opts.only ?? ARMS).filter((a) => !state.arms[a]);
+    const pairings = buildPairings(opts.pairs, opts.seed, study.pool);
+    const arms = (opts.only ?? Object.keys(study.arms)).filter((a) => !state.arms[a]);
     if (!arms.length) throw new Error('every requested arm is already in the file');
     console.error(`${arms.length} arms x ${opts.pairs} pairings on ${opts.workers} workers...`);
 
     for (const arm of arms) {
       const t0 = Date.now();
       const games = await runSpecs(
-        pairings.map((p) => ({ ...p, arm, iters: opts.iters })), opts.workers);
+        pairings.map((p) => ({ ...p, rules: study.arms[arm], iters: opts.iters })), opts.workers);
       const slot = {
         wins: Array(opts.pairs).fill(0), line: Array(opts.pairs).fill(0),
         turns: Array(opts.pairs).fill(0),

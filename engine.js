@@ -34,6 +34,14 @@ export const STONE_TYPES = [
   'magnet',                    // restriction
 ];
 
+// Under evaluation, and not part of the pool: a hand may hold one and the engine
+// plays it, but nothing that enumerates the hand space deals it unless asked.
+export const EXTRA_TYPES = ['stinky'];
+export const ALL_TYPES = [...STONE_TYPES, ...EXTRA_TYPES];
+
+// The two stones that constrain where the opponent may place.
+const RESTRICTION_TYPES = ['magnet', 'stinky'];
+
 // Stones that resolve something after being placed. Swap only does if it landed
 // next to a movable enemy stone.
 const EFFECT_TYPES = ['shift', '2048', 'rotate', 'swap'];
@@ -42,8 +50,10 @@ const MOVEMENT_TYPES = ['shift', '2048', 'rotate'];
 
 // A Counterattack is held by one player and only works when that player moves
 // second. Six sharpen a stone they hold; four stand on their own.
+// Super Magnet used to be here. It made one player's Magnet permanent, which is
+// now simply what a Magnet does, so it had nothing left to grant.
 export const ITEMS = [
-  'super-shift', 'super-2048', 'super-rotate', 'super-swap', 'super-mountain', 'super-magnet',
+  'super-shift', 'super-2048', 'super-rotate', 'super-swap', 'super-mountain',
   'overtake', 'antipolar', 'mind-control', 'uno-reverse',
   // Aimed at the seat gap rather than at a stone: three buy a tempo, three deny one.
   'second-wind', 'echo', 'blind-spot', 'fizzle', 'anchor',
@@ -59,7 +69,7 @@ const INTERRUPTS = {
 
 const TYPE_CODE = {
   shift: 'sh', '2048': '20', rotate: 'ro',
-  swap: 'sw', mountain: 'mo', magnet: 'mg',
+  swap: 'sw', mountain: 'mo', magnet: 'mg', stinky: 'st',
 };
 
 // ── Geometry ────────────────────────────────────────────────────────────────
@@ -95,10 +105,13 @@ function freeSquares(board) {
 // ── State ───────────────────────────────────────────────────────────────────
 
 export function createGame({
-  handX, handO, first = 'X', itemX = null, itemO = null, stickyMagnet = false,
+  handX, handO, first = 'X', itemX = null, itemO = null,
+  // The rules as they stand hold a restriction until it is replaced. These put
+  // one back to lasting a single turn, for studies that compare the two.
+  oneTurnMagnet = false, oneTurnStinky = false,
 }) {
   for (const t of [...handX, ...handO]) {
-    if (!STONE_TYPES.includes(t)) throw new Error(`unknown stone type: ${t}`);
+    if (!ALL_TYPES.includes(t)) throw new Error(`unknown stone type: ${t}`);
   }
   for (const i of [itemX, itemO]) {
     if (i !== null && !ITEMS.includes(i)) throw new Error(`unknown item: ${i}`);
@@ -112,8 +125,9 @@ export function createGame({
     player: first,                   // whose turn it is
     actor: null,                     // who chooses now, when that is not `player`
     phase: 'select',                 // select | place | effect | reverse | counter | over
-    stickyMagnet,                    // rules variant: a Magnet binds until replaced
-    restriction: null,               // {id, owner, sticky}: a Magnet on the other player
+    oneTurnMagnet,                   // rules variants, both off under the rules as they stand
+    oneTurnStinky,
+    restriction: null,               // {id, owner, kind, sticky}: a Magnet or Stinky on the other player
     forced: null,                    // {player, stone}: Mind Control on their next turn
     forbidden: null,                 // {player, pos}: Blind Spot on their next turn
     repel: null,                     // {player, id}: Bipolar on their next turn
@@ -139,7 +153,8 @@ export function cloneState(s) {
     player: s.player,
     actor: s.actor,
     phase: s.phase,
-    stickyMagnet: s.stickyMagnet,
+    oneTurnMagnet: s.oneTurnMagnet,
+    oneTurnStinky: s.oneTurnStinky,
     restriction: s.restriction ? { ...s.restriction } : null,
     forced: s.forced ? { ...s.forced } : null,
     forbidden: s.forbidden ? { ...s.forbidden } : null,
@@ -297,13 +312,14 @@ function placeActions(s) {
   const item = itemOf(s, p);
   const r = s.restriction;
 
-  // A Magnet the opponent owns pulls you next to it -- unless you are placing a
-  // Mountain and hold Super Mountain, or Antipolar has turned the pull into a
-  // push. A restriction that no free square can satisfy does not apply.
-  const at = r && r.owner === other(p) ? magnetSquare(s, r) : -1;
+  // A Magnet the opponent owns pulls you next to it and a Stinky pushes you off
+  // it -- unless you are placing a Mountain and hold Super Mountain, or
+  // Antipolar has turned the one into the other. A restriction that no free
+  // square can satisfy does not apply.
+  const at = r && r.owner === other(p) ? restrictionSquare(s, r) : -1;
   if (at >= 0 && !(item === 'super-mountain' && s.selected === 'mountain')) {
-    const allowed = free.filter((i) =>
-      item === 'antipolar' ? !adjacent(i, at) : adjacent(i, at));
+    const pull = (r.kind === 'magnet') !== (item === 'antipolar');
+    const allowed = free.filter((i) => adjacent(i, at) === pull);
     if (allowed.length) free = allowed;
   }
 
@@ -327,7 +343,7 @@ function placeActions(s) {
 // The restriction follows the Magnet itself, not the square it landed on: a
 // Magnet that gets shifted keeps pulling from wherever it ends up, and one that
 // leaves the board stops pulling at all.
-function magnetSquare(s, r) {
+function restrictionSquare(s, r) {
   return s.board.findIndex((c) => c?.id === r.id);
 }
 
@@ -454,19 +470,21 @@ function endTurn(s, keepTurn = false) {
   // Bipolar's push covered the turn that is ending and is now spent.
   if (s.repel?.player === player) s.repel = null;
 
-  if (s.selected === 'magnet') {
+  if (RESTRICTION_TYPES.includes(s.selected)) {
     s.restriction = {
-      id: s.board[s.placedAt].id, owner: player,
-      sticky: s.stickyMagnet || itemOf(s, player) === 'super-magnet',
+      id: s.board[s.placedAt].id, owner: player, kind: s.selected,
+      // A restriction holds until another one replaces it or its stone leaves
+      // the board, unless a study has asked for the one-turn version.
+      sticky: !(s.selected === 'magnet' ? s.oneTurnMagnet : s.oneTurnStinky),
     };
-    if (itemOf(s, other(player)) === 'bipolar') {
+    if (s.selected === 'magnet' && itemOf(s, other(player)) === 'bipolar') {
       s.repel = { player, id: s.board[s.placedAt].id };
     }
   } else if (s.restriction?.owner === other(player) && !s.restriction.sticky) {
     s.restriction = null;   // it bound us for this turn and is now spent
   }
   // A Magnet that has left the board -- taken by Overtake -- stops binding.
-  if (s.restriction && magnetSquare(s, s.restriction) < 0) s.restriction = null;
+  if (s.restriction && restrictionSquare(s, s.restriction) < 0) s.restriction = null;
   if (s.forced?.player === player) s.forced = null;         // Mind Control is spent
   if (s.forbidden?.player === player) s.forbidden = null;   // Blind Spot is spent
 

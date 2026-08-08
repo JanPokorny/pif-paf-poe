@@ -26,7 +26,7 @@ randomly.
 On your turn, in order:
 
 1. **Place** — choose a stone from your hand and place it on any free square. The only
-   thing that narrows your choice is a Magnet the opponent placed last turn; no stone has a
+   thing that narrows your choice is a Magnet the opponent has in force; no stone has a
    placement requirement of its own.
 2. **Resolve** — if the stone you placed has an effect, resolve it now. Resolving is not
    optional. You may place a stone where its effect has nothing to do, and then it does
@@ -88,9 +88,26 @@ so it is a wall on the board rather than a veto on your choice.
 Every direction and square stays on the menu regardless. An effect that turns out to move
 nothing is still a legal thing to do.
 
-**Magnet** — the opponent must place their next stone adjacent to this one. If no free square
-is adjacent to it, the restriction does not apply that turn. It constrains only the opponent,
-never its owner, and it lasts one turn.
+**Magnet** — the opponent must place their stones adjacent to this one. If no free square is
+adjacent to it, the restriction does not apply that turn. It constrains only the opponent,
+never its owner.
+
+A Magnet does not wear off. It holds until another Magnet is placed — by either player, so
+answering one with your own is how you get free of it — or until the Magnet itself leaves the
+board. It pulls from wherever it has been moved to, not from the square it was placed on, and
+only one Magnet is ever in force: the one placed most recently.
+
+Measured over the whole hand space, making the pull permanent rather than one-turn moved the
+opening seat from 71.7% to 69.8% and turned the Magnet from a stone you take one of into one
+every good hand holds. It is the one change so far that has closed part of the first-mover gap
+by a rule rather than by an item.
+
+### Stinky, under evaluation
+
+**Stinky** is the Magnet's mirror — the opponent must place their stones *not* adjacent to it —
+and it is in the engine but not in the pool: hands are dealt from the six stones above, and a
+study deals a Stinky in explicitly. A Stinky and a Magnet share the single restriction slot, so
+either one replaces the other.
 
 ## Counterattack
 
@@ -99,7 +116,7 @@ Moving first is a large advantage in this game, so the player who moves second b
 changes what you may do. A Counterattack held by the player who moves *first* does nothing at
 all. How a player acquires one is outside these rules.
 
-Six of them sharpen a stone you already hold:
+Five of them sharpen a stone you already hold:
 
 **Super Shift** — your Shift may move any row or column, not only the one it was placed in.
 
@@ -110,10 +127,7 @@ ring of eight squares, one step clockwise.
 
 **Super Swap** — your Swap may also take a stone diagonally adjacent to it.
 
-**Super Mountain** — when you place a Mountain, you may ignore an opponent's Magnet.
-
-**Super Magnet** — your Magnet does not wear off after one turn. It keeps its hold until the
-Magnet leaves the board, and it pulls from wherever the Magnet has been moved to.
+**Super Mountain** — when you place a Mountain, you may ignore an opponent's restriction.
 
 Four stand on their own:
 
@@ -121,8 +135,8 @@ Four stand on their own:
 from the board to their hand. This is not a movement effect, so a Mountain is not safe from
 it. The board has a hole in it again, and they have a stone back to place.
 
-**Antipolar** — your opponent's Magnets repel you instead of attracting you: you must place
-your stone *not* adjacent to one, if any free square allows it.
+**Antipolar** — your opponent's restrictions are turned inside out: their Magnets repel you and
+their Stinkies attract you, wherever a free square allows it.
 
 **Mind Control** — once per game, at the end of your turn, name a stone in your opponent's
 hand. That is the stone they must play on their next turn.

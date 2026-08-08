@@ -14,12 +14,12 @@ import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { dirname } from 'node:path';
 import { pathToFileURL } from 'node:url';
 
-import { createGame, applyAction, STONE_TYPES } from './engine.js';
+import { createGame, applyAction, ALL_TYPES, STONE_TYPES } from './engine.js';
 import { chooseAction, makeRng } from './ai.js';
 
 export const CODE = {
   shift: 'shi', '2048': '204', rotate: 'rot',
-  swap: 'swa', mountain: 'mou', magnet: 'mag',
+  swap: 'swa', mountain: 'mou', magnet: 'mag', stinky: 'sti',
 };
 
 // ── One game ────────────────────────────────────────────────────────────────
@@ -28,9 +28,9 @@ export const CODE = {
 // which hand is X. Both sides search with the same budget off the same stream.
 export function playGame(spec) {
   const rng = makeRng(spec.seed);
+  // `spec.rules` carries whatever rules variant the caller is studying, if any.
   const s = createGame({
-    handX: spec.opener, handO: spec.replier, first: 'X',
-    stickyMagnet: !!spec.sticky,   // the rules variant, when a caller asks for it
+    handX: spec.opener, handO: spec.replier, first: 'X', ...(spec.rules ?? {}),
   });
   while (!s.over) applyAction(s, chooseAction(s, { iterations: spec.iters, rng }));
   return {
@@ -66,18 +66,20 @@ function runSpecs(specs, workers) {
 // ── Setup ───────────────────────────────────────────────────────────────────
 
 export function sortHand(hand) {
-  return hand.slice().sort((a, b) => STONE_TYPES.indexOf(a) - STONE_TYPES.indexOf(b));
+  return hand.slice().sort((a, b) => ALL_TYPES.indexOf(a) - ALL_TYPES.indexOf(b));
 }
 
-export function randomHand(rng) {
-  return sortHand(Array.from({ length: 5 }, () => STONE_TYPES[(rng() * STONE_TYPES.length) | 0]));
+// `pool` is the set of stones being dealt: the game's own by default, something
+// wider when a stone is under evaluation.
+export function randomHand(rng, pool = STONE_TYPES) {
+  return sortHand(Array.from({ length: 5 }, () => pool[(rng() * pool.length) | 0]));
 }
 
-export function randomHands(count, rng) {
+export function randomHands(count, rng, pool = STONE_TYPES) {
   const hands = [];
   const seen = new Set();
   while (hands.length < count) {
-    const hand = randomHand(rng);
+    const hand = randomHand(rng, pool);
     const key = hand.join(',');
     if (seen.has(key)) continue;   // a repeat would be its own mirror match
     seen.add(key);

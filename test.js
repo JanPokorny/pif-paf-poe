@@ -5,7 +5,7 @@
 //   node test.js
 
 import {
-  createGame, applyAction, legalActions, render, STONE_TYPES, ITEMS, other, toMove,
+  createGame, applyAction, legalActions, render, ALL_TYPES, STONE_TYPES, ITEMS, other, toMove,
 } from './engine.js';
 import { makeRng, randomAction } from './ai.js';
 
@@ -22,7 +22,7 @@ function check(name, actual, expected) {
 // two-letter type code. Ids are the index, so a cell is traceable after a move.
 const CODES = {
   sh: 'shift', 20: '2048', ro: 'rotate',
-  sw: 'swap', mo: 'mountain', mg: 'magnet',
+  sw: 'swap', mo: 'mountain', mg: 'magnet', st: 'stinky',
 };
 function board(spec) {
   return spec.map((cell, i) =>
@@ -276,11 +276,10 @@ const empty = ['.', '.', '.', '.', '.', '.', '.', '.', '.'];
 }
 
 {
-  // O's Magnet binds X, and with Super Magnet it keeps binding -- from wherever
-  // the Magnet has got to by then, not from where it was placed.
+  // A Magnet binds until something replaces it, from wherever the Magnet has got
+  // to by then rather than from where it was placed.
   const s = createGame({
-    handX: ['shift', 'shift', 'shift'], handO: ['magnet', 'shift'],
-    first: 'X', itemO: 'super-magnet',
+    handX: ['shift', 'shift', 'shift'], handO: ['magnet', 'shift'], first: 'X',
   });
   applyAction(s, { type: 'select', stone: 'shift' });
   applyAction(s, { type: 'place', pos: 0 });
@@ -302,7 +301,7 @@ const empty = ['.', '.', '.', '.', '.', '.', '.', '.', '.'];
   check('the Magnet rode the shift to the far corner', show(s.board)[8], 'Omg');
 
   applyAction(s, { type: 'select', stone: 'shift' });
-  check('Super Magnet is still binding, and pulls from where the Magnet is now',
+  check('and it is still binding, pulling from where the Magnet is now',
     legalActions(s).map((a) => a.pos), [5]);
 }
 
@@ -486,28 +485,66 @@ const empty = ['.', '.', '.', '.', '.', '.', '.', '.', '.'];
     [s.over, s.winner, s.reason], [true, 'O', 'line']);
 }
 
-// ── Rules variant: a Magnet that never lets go ──────────────────────────────
+// ── Stinky, and the one-turn variants ──────────────────────────────────────
 
 {
+  // A Stinky is the Magnet's mirror: the opponent must place away from it.
+  const s = createGame({ handX: ['stinky'], handO: ['shift'], first: 'X' });
+  applyAction(s, { type: 'select', stone: 'stinky' });
+  applyAction(s, { type: 'place', pos: 4 });
+  applyAction(s, { type: 'select', stone: 'shift' });
+  check('a Stinky pushes the opponent off its neighbours',
+    legalActions(s).map((a) => a.pos), [0, 2, 6, 8]);
+}
+
+{
+  // And Antipolar turns that inside out, the same way it does a Magnet.
+  const s = createGame({ handX: ['stinky'], handO: ['shift'], first: 'X', itemO: 'antipolar' });
+  applyAction(s, { type: 'select', stone: 'stinky' });
+  applyAction(s, { type: 'place', pos: 4 });
+  applyAction(s, { type: 'select', stone: 'shift' });
+  check('Antipolar turns a Stinky into a Magnet',
+    legalActions(s).map((a) => a.pos), [1, 3, 5, 7]);
+}
+
+{
+  // Two turns on: the Stinky is still in force, and only a replacement clears it.
   const s = createGame({
-    handX: ['magnet', 'shift'], handO: ['shift', 'shift'], first: 'X', stickyMagnet: true,
+    handX: ['stinky', 'shift'], handO: ['shift', 'shift'], first: 'X',
   });
-  applyAction(s, { type: 'select', stone: 'magnet' });
+  applyAction(s, { type: 'select', stone: 'stinky' });
   applyAction(s, { type: 'place', pos: 0 });
   applyAction(s, { type: 'select', stone: 'shift' });
-  applyAction(s, { type: 'place', pos: 1 });
-  applyAction(s, { type: 'effect', direction: 'right', index: 0 });
+  applyAction(s, { type: 'place', pos: 8 });
+  applyAction(s, { type: 'effect', direction: 'right', index: 2 });
   applyAction(s, { type: 'select', stone: 'shift' });
-  applyAction(s, { type: 'place', pos: 6 });
-  applyAction(s, { type: 'effect', direction: 'up', index: 0 });
+  applyAction(s, { type: 'place', pos: 4 });
+  applyAction(s, { type: 'effect', direction: 'right', index: 1 });
   applyAction(s, { type: 'select', stone: 'shift' });
-  check('a persistent Magnet is still binding two turns later, from where it now is',
-    legalActions(s).map((a) => a.pos), [0, 4]);   // it rode O's shift from 0 to 1
+  check('a Stinky is still pushing two turns later',
+    legalActions(s).map((a) => a.pos).includes(1), false);
+}
+
+{
+  const one = createGame({
+    handX: ['stinky', 'shift'], handO: ['shift', 'shift'], first: 'X', oneTurnStinky: true,
+  });
+  applyAction(one, { type: 'select', stone: 'stinky' });
+  applyAction(one, { type: 'place', pos: 0 });
+  applyAction(one, { type: 'select', stone: 'shift' });
+  applyAction(one, { type: 'place', pos: 8 });
+  applyAction(one, { type: 'effect', direction: 'right', index: 2 });
+  applyAction(one, { type: 'select', stone: 'shift' });
+  applyAction(one, { type: 'place', pos: 4 });
+  applyAction(one, { type: 'effect', direction: 'right', index: 1 });
+  applyAction(one, { type: 'select', stone: 'shift' });
+  check('under the one-turn variant it has already let go',
+    legalActions(one).map((a) => a.pos).includes(1), true);
 }
 
 {
   const s = createGame({
-    handX: ['magnet', 'shift'], handO: ['shift', 'shift'], first: 'X', stickyMagnet: false,
+    handX: ['magnet', 'shift'], handO: ['shift', 'shift'], first: 'X', oneTurnMagnet: true,
   });
   applyAction(s, { type: 'select', stone: 'magnet' });
   applyAction(s, { type: 'place', pos: 0 });
@@ -518,8 +555,23 @@ const empty = ['.', '.', '.', '.', '.', '.', '.', '.', '.'];
   applyAction(s, { type: 'place', pos: 6 });
   applyAction(s, { type: 'effect', direction: 'up', index: 0 });
   applyAction(s, { type: 'select', stone: 'shift' });
-  check('while under the normal rules it has already let go',
-    legalActions(s).length, 6);
+  check('and the one-turn Magnet lets go too', legalActions(s).length, 6);
+}
+
+{
+  // A restriction stone of the other kind replaces the one in force.
+  const s = createGame({
+    handX: ['magnet', 'shift'], handO: ['stinky', 'shift'], first: 'X',
+  });
+  applyAction(s, { type: 'select', stone: 'magnet' });
+  applyAction(s, { type: 'place', pos: 0 });
+  applyAction(s, { type: 'select', stone: 'stinky' });
+  check('a Magnet holds the opponent while they answer it',
+    legalActions(s).map((a) => a.pos), [1, 3]);
+  applyAction(s, { type: 'place', pos: 1 });
+  applyAction(s, { type: 'select', stone: 'shift' });
+  check('and their Stinky takes over the restriction',
+    legalActions(s).map((a) => a.pos), [3, 5, 6, 7, 8]);
 }
 
 {
@@ -529,7 +581,7 @@ const empty = ['.', '.', '.', '.', '.', '.', '.', '.', '.'];
   for (const item of ITEMS) {
     for (let g = 0; g < 40; g++) {
       const hand = () => Array.from({ length: 5 },
-        () => STONE_TYPES[(rng() * STONE_TYPES.length) | 0]);
+        () => ALL_TYPES[(rng() * ALL_TYPES.length) | 0]);
       const s = createGame({
         handX: hand(), handO: hand(), first: rng() < 0.5 ? 'X' : 'O', itemO: item,
       });
