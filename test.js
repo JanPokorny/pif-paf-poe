@@ -22,7 +22,7 @@ function check(name, actual, expected) {
 // two-letter type code. Ids are the index, so a cell is traceable after a move.
 const CODES = {
   sh: 'shift', 20: '2048', ro: 'rotate',
-  sw: 'swap', mo: 'mountain', mg: 'magnet', st: 'stinky',
+  mo: 'mountain', mg: 'magnet', st: 'stinky',
 };
 function board(spec) {
   return spec.map((cell, i) =>
@@ -107,47 +107,6 @@ check('a Mountain in the square blocks its follower and frees the rest',
     { at: 0, selected: 'rotate' }, { square: 'TL' }),
   ['Xro', 'Omo', '.', 'Omg', '.', '.', '.', '.', '.']);
 
-// ── Swap ────────────────────────────────────────────────────────────────────
-
-check('swap trades places with the enemy stone it names',
-  resolve(['Xsw', 'Omg', '.', '.', '.', '.', '.', '.', '.'],
-    { at: 0, selected: 'swap' }, { target: 1 }),
-  ['Omg', 'Xsw', '.', '.', '.', '.', '.', '.', '.']);
-
-{
-  // Placement is free, and the effect is compulsory wherever it can happen.
-  const s = createGame({ handX: ['swap'], handO: ['mountain'], first: 'X' });
-  s.board = board(['.', 'Omg', '.', '.', '.', '.', '.', '.', '.']);
-  applyAction(s, { type: 'select', stone: 'swap' });
-  check('swap may be placed on any free square',
-    legalActions(s).map((a) => a.pos), [0, 2, 3, 4, 5, 6, 7, 8]);
-
-  const away = { ...s, board: s.board.slice(), hands: { X: [], O: ['mountain'] } };
-  applyAction(away, { type: 'place', pos: 8 });
-  check('swap placed away from the enemy resolves nothing and ends the turn',
-    [away.phase, show(away.board)[8]], ['select', 'Xsw']);
-
-  applyAction(s, { type: 'place', pos: 0 });
-  check('swap placed beside an enemy stone must swap', s.phase, 'effect');
-  check('and the only choice offered is that stone',
-    legalActions(s), [{ type: 'effect', target: 1 }]);
-}
-
-{
-  const s = pending(['Xsw', 'Omo', '.', 'Omg', '.', '.', '.', '.', '.'],
-    { at: 0, selected: 'swap' });
-  check('an enemy Mountain is not a swap target',
-    legalActions(s), [{ type: 'effect', target: 3 }]);
-}
-
-{
-  const s = createGame({ handX: ['swap'], handO: ['mountain'], first: 'X' });
-  s.board = board(['.', 'Omo', '.', '.', '.', '.', '.', '.', '.']);
-  applyAction(s, { type: 'select', stone: 'swap' });
-  applyAction(s, { type: 'place', pos: 0 });
-  check('a swap with only a Mountain beside it resolves nothing', s.phase, 'select');
-}
-
 // ── The Magnet still binds ──────────────────────────────────────────────────
 
 {
@@ -170,8 +129,8 @@ check('swap trades places with the enemy stone it names',
 
 // ── The pool, and a game that finishes ──────────────────────────────────────
 
-check('the pool is six stones', STONE_TYPES,
-  ['shift', '2048', 'rotate', 'swap', 'mountain', 'magnet']);
+check('the pool is five stones', STONE_TYPES,
+  ['shift', '2048', 'rotate', 'mountain', 'magnet']);
 
 {
   const rng = makeRng(11);
@@ -247,15 +206,6 @@ const empty = ['.', '.', '.', '.', '.', '.', '.', '.', '.'];
   applyAction(s, { type: 'effect', direction: 'right', second: 'down' });
   check('and both run, in order',
     show(s.board), ['.', '.', '.', '.', '.', '.', '.', '.', 'O20']);
-}
-
-{
-  const plain = held(['Osw', '.', '.', '.', 'Xmg', '.', '.', '.', '.'],
-    { at: 0, selected: 'swap', item: null });
-  const superb = held(['Osw', '.', '.', '.', 'Xmg', '.', '.', '.', '.'],
-    { at: 0, selected: 'swap', item: 'super-swap' });
-  check('swap normally cannot reach a diagonal', legalActions(plain).length, 0);
-  check('Super Swap can', legalActions(superb), [{ type: 'effect', target: 4 }]);
 }
 
 {

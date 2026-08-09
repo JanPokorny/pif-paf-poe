@@ -172,12 +172,14 @@ function report(state, hands, opts) {
 
 // ── Comparing two censuses ──────────────────────────────────────────────────
 
-// A hand is the multiset, so this key survives both the stone order and the
-// Leech -> Swap rename that an older checkpoint may still be written in.
+// A hand is the multiset, so this key survives the stone order. Older
+// checkpoints may hold stones that have since been cut, and the Leech -> Swap
+// rename, so the key covers those too.
 const RENAMED = { leech: 'swap' };
+const KEY_TYPES = [...ALL_TYPES, 'swap'];
 function handKey(hand) {
   const types = hand.map((t) => RENAMED[t] ?? t);
-  return ALL_TYPES.map((t) => types.filter((x) => x === t).length).join('');
+  return KEY_TYPES.map((t) => types.filter((x) => x === t).length).join('');
 }
 
 function ranked(state) {

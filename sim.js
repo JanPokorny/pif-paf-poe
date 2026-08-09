@@ -19,7 +19,8 @@ import { chooseAction, makeRng } from './ai.js';
 
 export const CODE = {
   shift: 'shi', '2048': '204', rotate: 'rot',
-  swap: 'swa', mountain: 'mou', magnet: 'mag', stinky: 'sti',
+  mountain: 'mou', magnet: 'mag', stinky: 'sti',
+  swap: 'swa',   // cut from the pool; older result files still name it
 };
 
 // ── One game ────────────────────────────────────────────────────────────────

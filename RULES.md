@@ -69,9 +69,6 @@ the free space allows, exactly like the tile game.
 **Rotate** — choose one of the 2x2 sub-squares this stone belongs to. Those four squares
 rotate one step clockwise.
 
-**Swap** — if it lands adjacent to an enemy stone, it trades places with one of them, your
-choice. Otherwise it does nothing.
-
 **Mountain** — does nothing when placed, and no effect ever moves it afterwards. It does not
 cancel effects, though: it stands still and everything else moves as far as the space allows,
 so it is a wall on the board rather than a veto on your choice.
@@ -83,7 +80,6 @@ so it is a wall on the board rather than a veto on your choice.
   the wrap-around: nothing travels through it to reach the other end.
 - **Rotate** — the same, around the four squares: the Mountain holds its corner, and the
   other stones each advance one step if the corner ahead of them is free or is freed.
-- **Swap** — a Mountain cannot be taken, so it is never a valid target.
 
 Every direction and square stays on the menu regardless. An effect that turns out to move
 nothing is still a legal thing to do.
@@ -105,7 +101,7 @@ by a rule rather than by an item.
 ### Stinky, under evaluation
 
 **Stinky** is the Magnet's mirror — the opponent must place their stones *not* adjacent to it —
-and it is in the engine but not in the pool: hands are dealt from the six stones above, and a
+and it is in the engine but not in the pool: hands are dealt from the five stones above, and a
 study deals a Stinky in explicitly. A Stinky and a Magnet share the single restriction slot, so
 either one replaces the other.
 
@@ -116,7 +112,7 @@ Moving first is a large advantage in this game, so the player who moves second b
 changes what you may do. A Counterattack held by the player who moves *first* does nothing at
 all. How a player acquires one is outside these rules.
 
-Five of them sharpen a stone you already hold:
+Four of them sharpen a stone you already hold:
 
 **Super Shift** — your Shift may move any row or column, not only the one it was placed in.
 
@@ -124,8 +120,6 @@ Five of them sharpen a stone you already hold:
 
 **Super Rotate** — your Rotate may turn any of the four 2x2 sub-squares, or the whole outer
 ring of eight squares, one step clockwise.
-
-**Super Swap** — your Swap may also take a stone diagonally adjacent to it.
 
 **Super Mountain** — when you place a Mountain, you may ignore an opponent's restriction.
 
@@ -156,8 +150,8 @@ again.
 **Blind Spot** — once per game, at the end of your turn, name a free square. Your opponent may
 not place there on their next turn, unless it is the only square left.
 
-**Fizzle** — once per game, after your opponent chooses an effect, cancel it. The stone stays
-where it was placed and nothing else moves.
+**Fizzle** — once per game, after your opponent chooses a movement effect, cancel it. The
+stone stays where it was placed and nothing else moves.
 
 **Anchor** — once per game, after your opponent chooses a Shift, a 2048 or a Rotate, the
 effect runs as normal except that *your* stones do not move. They behave like Mountains for

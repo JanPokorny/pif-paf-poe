@@ -29,7 +29,6 @@ const OPPOSITE = { up: 'down', down: 'up', left: 'right', right: 'left' };
 
 export const STONE_TYPES = [
   'shift', '2048', 'rotate',   // movement
-  'swap',                      // reactive
   'mountain',                  // static
   'magnet',                    // restriction
 ];
@@ -42,18 +41,18 @@ export const ALL_TYPES = [...STONE_TYPES, ...EXTRA_TYPES];
 // The two stones that constrain where the opponent may place.
 const RESTRICTION_TYPES = ['magnet', 'stinky'];
 
-// Stones that resolve something after being placed. Swap only does if it landed
-// next to a movable enemy stone.
-const EFFECT_TYPES = ['shift', '2048', 'rotate', 'swap'];
+// Stones that resolve something after being placed.
+const EFFECT_TYPES = ['shift', '2048', 'rotate'];
 // What Uno Reverse can answer: the effects that have an opposite.
 const MOVEMENT_TYPES = ['shift', '2048', 'rotate'];
 
 // A Counterattack is held by one player and only works when that player moves
-// second. Six sharpen a stone they hold; four stand on their own.
+// second. Four sharpen a stone they hold; four stand on their own.
 // Super Magnet used to be here. It made one player's Magnet permanent, which is
-// now simply what a Magnet does, so it had nothing left to grant.
+// now simply what a Magnet does, so it had nothing left to grant. Super Swap
+// went with the Swap stone.
 export const ITEMS = [
-  'super-shift', 'super-2048', 'super-rotate', 'super-swap', 'super-mountain',
+  'super-shift', 'super-2048', 'super-rotate', 'super-mountain',
   'overtake', 'antipolar', 'mind-control', 'uno-reverse',
   // Aimed at the seat gap rather than at a stone: three buy a tempo, three deny one.
   'second-wind', 'echo', 'blind-spot', 'fizzle', 'anchor',
@@ -63,13 +62,13 @@ export const ITEMS = [
 // Items that interrupt the opponent's resolution, and what each can answer.
 const INTERRUPTS = {
   'uno-reverse': ['shift', '2048', 'rotate'],
-  fizzle: ['shift', '2048', 'rotate', 'swap'],
+  fizzle: ['shift', '2048', 'rotate'],
   anchor: ['shift', '2048', 'rotate'],
 };
 
 const TYPE_CODE = {
   shift: 'sh', '2048': '20', rotate: 'ro',
-  swap: 'sw', mountain: 'mo', magnet: 'mg', stinky: 'st',
+  mountain: 'mo', magnet: 'mg', stinky: 'st',
 };
 
 // ── Geometry ────────────────────────────────────────────────────────────────
@@ -80,11 +79,6 @@ const col = (i) => i % 3;
 
 export function adjacent(a, b) {
   return Math.abs(row(a) - row(b)) + Math.abs(col(a) - col(b)) === 1;
-}
-
-// Adjacent including the corners: what Super Swap reaches.
-export function touching(a, b) {
-  return a !== b && Math.abs(row(a) - row(b)) <= 1 && Math.abs(col(a) - col(b)) <= 1;
 }
 
 const rowSquares = (r) => [r * 3, r * 3 + 1, r * 3 + 2];
@@ -260,12 +254,6 @@ function applyRotate(board, square, ccw, frozen) {
   stepAlong(board, ccw ? cycle.reverse() : cycle, frozen);
 }
 
-function applySwap(board, pos, target) {
-  const tmp = board[target];
-  board[target] = board[pos];
-  board[pos] = tmp;
-}
-
 // An effect answered by Uno Reverse runs the other way: the opposite direction
 // for Shift and 2048, anticlockwise for Rotate.
 function mirrored(action) {
@@ -293,7 +281,6 @@ function resolveOnto(board, type, pos, action, frozen) {
       return;
     }
     case 'rotate': return applyRotate(board, action.square, action.ccw, frozen);
-    case 'swap': return applySwap(board, pos, action.target);
   }
 }
 
@@ -377,16 +364,6 @@ function effectActions(s) {
       ? [...Object.keys(SUBSQUARES), 'RING']
       : Object.keys(SUBSQUARES).filter((k) => SUBSQUARES[k].includes(pos));
     for (const square of squares) out.push({ type: 'effect', square });
-  } else if (type === 'swap') {
-    // An adjacent enemy stone -- diagonally too with Super Swap -- and a
-    // Mountain is not one that can be taken.
-    const opponent = other(s.player);
-    const near = item === 'super-swap' ? touching : adjacent;
-    for (let i = 0; i < 9; i++) {
-      if (s.board[i]?.player === opponent && near(i, pos) && !isStuck(s.board, i)) {
-        out.push({ type: 'effect', target: i });
-      }
-    }
   }
 
   return out;
