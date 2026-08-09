@@ -1,0 +1,86 @@
+
+metagame with Counterattacks: 200 loadouts, 8 games each per round, 34 rounds, 54400 games, iters=300, dropping and copying 10% a round
+
+round  opener   distinct  shi    204    rot    mou    mag    commonest item    share   
+------------------------------------------------------------------------------------------------
+1       51.2%   184        20.9%  19.5%  19.7%  21.6%  18.3% second-wind         8.5%  
+2       48.8%   165        21.2%  20.6%  18.1%  21.2%  18.9% uno-reverse        10.0%  
+3       46.8%   149        21.2%  21.5%  17.2%  19.7%  20.4% second-wind        13.5%  
+4       37.8%   130        21.9%  21.9%  15.4%  19.9%  20.9% uno-reverse        15.0%  
+5       38.8%   113        22.3%  21.7%  14.0%  20.2%  21.8% second-wind        17.0%  
+6       35.7%   97         22.9%  21.4%  12.8%  19.9%  23.0% second-wind        19.5%  
+7       31.6%   82         23.7%  21.1%  11.3%  20.4%  23.5% second-wind        22.5%  
+8       28.5%   71         23.9%  21.0%  10.2%  20.1%  24.8% overtake           23.0%  
+9       28.5%   61         24.0%  21.5%   8.7%  20.0%  25.8% overtake           26.0%  
+10      27.1%   52         24.0%  20.8%   7.7%  20.8%  26.7% overtake           28.0%  
+11      30.6%   45         24.0%  20.2%   6.6%  20.6%  28.6% overtake           31.0%  
+12      29.9%   40         24.8%  19.5%   5.6%  20.2%  29.9% overtake           35.5%  
+13      29.3%   36         24.7%  18.1%   5.1%  20.6%  31.5% overtake           40.5%  
+14      29.9%   35         25.4%  16.8%   4.5%  20.4%  32.9% overtake           45.5%  
+15      28.1%   32         26.4%  15.9%   3.9%  19.6%  34.2% overtake           52.0%  
+16      26.5%   30         27.4%  14.3%   3.6%  19.9%  34.8% overtake           57.0%  
+17      26.4%   26         28.7%  13.3%   3.1%  19.3%  35.6% overtake           59.5%  
+18      27.6%   24         30.5%  11.7%   2.7%  19.1%  36.0% overtake           63.0%  
+19      25.1%   21         30.9%  10.9%   2.6%  19.0%  36.6% overtake           66.0%  
+20      25.3%   20         31.6%  10.2%   2.3%  19.0%  36.9% overtake           67.5%  
+21      25.3%   19         32.0%   9.5%   2.1%  18.9%  37.5% overtake           70.5%  
+22      23.2%   17         32.8%   8.3%   2.2%  18.7%  38.0% overtake           73.0%  
+23      23.9%   15         33.5%   7.2%   2.5%  18.5%  38.3% overtake           74.0%  
+24      23.8%   14         34.7%   6.1%   2.3%  18.2%  38.7% overtake           77.0%  
+25      22.6%   11         35.5%   5.3%   2.4%  18.0%  38.8% overtake           78.0%  
+26      24.1%   11         36.1%   4.7%   2.4%  17.9%  38.9% overtake           78.5%  
+27      22.1%   10         36.2%   4.6%   2.6%  17.5%  39.1% overtake           77.5%  
+28      20.6%   10         36.8%   3.9%   3.0%  17.1%  39.2% overtake           76.5%  
+29      21.5%   10         37.2%   3.4%   3.2%  16.9%  39.3% overtake           76.5%  
+30      22.5%   10         37.7%   3.0%   3.6%  16.6%  39.1% overtake           76.0%  
+31      23.3%   10         37.9%   2.8%   3.9%  16.3%  39.1% overtake           75.0%  
+32      23.2%   9          38.3%   2.3%   4.1%  16.1%  39.2% overtake           75.0%  
+33      24.6%   9          38.4%   2.2%   4.7%  15.7%  39.0% overtake           73.0%  
+34      24.4%   8          38.5%   2.0%   5.3%  15.0%  39.2% overtake           69.5%  
+
+Counterattacks: share of the population at the end, and how the holders did
+in the replying seat over the last 9 rounds
+
+counterattack   share    start    2nd seat  95% CI          games
+--------------------------------------------------------------------
+overtake         69.5%     6.5%    79.4%    [ 78.7, 80.2]   10914
+uno-reverse      24.0%     8.0%    69.6%    [ 67.7, 71.5]   2280
+encore            2.5%     5.5%    74.4%    [ 69.6, 78.7]   344
+second-wind       2.0%     8.5%    71.6%    [ 67.6, 75.3]   532
+fizzle            2.0%     5.0%    62.1%    [ 56.8, 67.2]   330
+none              0.0%     6.5%   -         -               0
+super-shift       0.0%     6.5%   -         -               0
+super-2048        0.0%     7.5%   -         -               0
+super-rotate      0.0%     5.0%   -         -               0
+super-mountain    0.0%     4.0%   -         -               0
+antipolar         0.0%     6.0%   -         -               0
+mind-control      0.0%     2.5%   -         -               0
+echo              0.0%     5.0%   -         -               0
+blind-spot        0.0%     4.5%   -         -               0
+anchor            0.0%     6.5%   -         -               0
+bipolar           0.0%     7.0%   -         -               0
+obstruction       0.0%     5.5%   -         -               0
+
+what the population ended up holding
+
+hand                    counterattack   copies   share   census rank   1st      2nd
+------------------------------------------------------------------------------------------------
+shi shi mou mag mag     overtake        137       68.5%  2 of 126       96.8%    40.8%
+shi shi rot mag mag     uno-reverse     48        24.0%  30 of 126      80.0%    36.8%
+204 204 mou mag mag     second-wind     5          2.5%  4 of 126       94.4%    42.4%
+shi rot mou mag mag     encore          3          1.5%  20 of 126      79.2%    44.8%
+shi shi 204 mou mag     fizzle          3          1.5%  10 of 126      88.8%    42.4%
+shi 204 204 mag mag     encore          2          1.0%  13 of 126      87.2%    40.0%
+shi shi 204 rot mou     overtake        1          0.5%  56 of 126      81.6%    24.8%
+204 204 mou mag mag     overtake        1          0.5%  4 of 126       94.4%    42.4%
+
+  the surviving hands take  92.1% of their census games from the opening seat and  39.9% from the replying seat
+  the hand space as a whole takes  72.7% and  27.3%
+
+summary
+  opening seat wins     51.2% in round 1,  24.4% [ 22.4, 26.6] in round 34
+  distinct loadouts    184 -> 8 of 200
+  commonest            shi shi mou mag mag + overtake at  68.0%
+  mean census rate      55.2% ->  65.9% of the population, weighted by copies
+  stone shares         shi  20.9-> 38.5%, 204  19.5->  2.0%, rot  19.7->  5.3%, mou  21.6-> 15.0%, mag  18.3-> 39.2%
+  mean game length     7.3 turns,  79.6% decided by a line

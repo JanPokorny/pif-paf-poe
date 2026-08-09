@@ -30,8 +30,11 @@ export const CODE = {
 export function playGame(spec) {
   const rng = makeRng(spec.seed);
   // `spec.rules` carries whatever rules variant the caller is studying, if any.
+  // Items are the seat's, not the hand's: only the replier's is ever live.
   const s = createGame({
-    handX: spec.opener, handO: spec.replier, first: 'X', ...(spec.rules ?? {}),
+    handX: spec.opener, handO: spec.replier, first: 'X',
+    itemX: spec.itemX ?? null, itemO: spec.itemO ?? null,
+    ...(spec.rules ?? {}),
   });
   while (!s.over) applyAction(s, chooseAction(s, { iterations: spec.iters, rng }));
   return {

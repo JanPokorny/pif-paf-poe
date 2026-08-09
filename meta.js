@@ -1,17 +1,21 @@
 // A metagame instead of a census. Real players do not meet the whole hand space
-// in equal proportion: they copy what wins. So a population of random hands
+// in equal proportion: they copy what wins. So a population of random loadouts
 // plays a round, the worst tenth is dropped, the best tenth is copied, and the
 // field the next round is played against is whatever that leaves.
 //
 //   node meta.js --pop 200 --games 8 --rounds 25 --iters 300 --out results/meta.json
-//   node meta.js --resume --rounds 25 --out results/meta.json
-//   node meta.js --report --out results/meta.json
+//   node meta.js --items --pop 200 --rounds 30 --out results/meta-items.json
+//   node meta.js --resume --rounds 8 --out results/meta-items.json
+//   node meta.js --report --out results/meta-items.json
 //
-// Each round every hand plays the same number of games, half of them opening and
-// half replying, against opponents drawn from the population -- so a hand's
-// score is its win rate against the field as it currently stands, and a hand
-// that beats the census field but loses to the field that actually forms will
-// not survive. That is the whole point of measuring this way.
+// A loadout is a hand and, with --items, a Counterattack. Both are selected
+// together, because an item is only worth what it is worth against the field
+// that forms, and the field that forms depends on what the items are doing.
+//
+// Each round every loadout plays the same number of games, half of them opening
+// and half replying, against opponents drawn from the population. A hand that
+// beats the census field but loses to the field that actually forms will not
+// survive, which is the whole point of measuring this way.
 //
 // The run is checkpointed after every round: --resume carries the population on,
 // which is how a long run is assembled out of chunks that each fit in a sitting.
@@ -22,12 +26,20 @@ import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { dirname } from 'node:path';
 import { pathToFileURL } from 'node:url';
 
-import { STONE_TYPES } from './engine.js';
+import { ITEMS, STONE_TYPES } from './engine.js';
 import { makeRng } from './ai.js';
 import { CODE, arg, pad, pct, playGame, randomHand, sortHand, wilson } from './sim.js';
 
+// Bringing nothing is on the menu, so an item has to beat the empty slot.
+const LOADOUT_ITEMS = [null, ...ITEMS];
+const itemName = (item) => item ?? 'none';
+
 const label = (hand) => hand.map((t) => CODE[t]).join(' ');
-const key = (hand) => hand.join(',');
+const handKey = (hand) => hand.join(',');
+const key = (b) => `${handKey(b.hand)}|${itemName(b.item)}`;
+
+// Older checkpoints stored bare hands.
+const asBuild = (b) => (Array.isArray(b) ? { hand: sortHand(b), item: null } : { hand: sortHand(b.hand), item: b.item ?? null });
 
 // ── Workers ─────────────────────────────────────────────────────────────────
 
@@ -49,8 +61,9 @@ function runSpecs(specs, workers) {
 
 // ── One round ───────────────────────────────────────────────────────────────
 
-// Every hand opens `games/2` times and replies `games/2` times, so a hand's
-// score cannot be inflated by drawing the better seat more often than its rivals.
+// Every loadout opens `games/2` times and replies `games/2` times, so a score
+// cannot be inflated by drawing the better seat more often than a rival does --
+// and every loadout gets its item into play exactly half the time.
 function buildSpecs(pop, opts, rng, seed) {
   const specs = [];
   const half = Math.max(1, opts.games >> 1);
@@ -60,12 +73,14 @@ function buildSpecs(pop, opts, rng, seed) {
     do { j = (rng() * pop.length) | 0; } while (j === i);
     return j;
   };
+  const match = (i, j, seed) => ({
+    i, j, opener: pop[i].hand, replier: pop[j].hand,
+    itemX: pop[i].item, itemO: pop[j].item, iters: opts.iters, seed,
+  });
   for (let i = 0; i < pop.length; i++) {
     for (let g = 0; g < half; g++) {
-      const j = someoneElse(i);
-      specs.push({ i, j, opener: pop[i], replier: pop[j], iters: opts.iters, seed: seed++ });
-      const k = someoneElse(i);
-      specs.push({ i: k, j: i, opener: pop[k], replier: pop[i], iters: opts.iters, seed: seed++ });
+      specs.push(match(i, someoneElse(i), seed++));
+      specs.push(match(someoneElse(i), i, seed++));
     }
   }
   return specs;
@@ -74,19 +89,26 @@ function buildSpecs(pop, opts, rng, seed) {
 // Drop the worst `cull` of the population, copy the best `cull`. Ties are broken
 // at random rather than by position, so nothing survives on index alone.
 function select(pop, scores, cull, rng) {
-  const order = pop.map((hand, i) => ({ i, hand, score: scores[i], jitter: rng() }))
+  const order = pop.map((build, i) => ({ build, score: scores[i], jitter: rng() }))
     .sort((a, b) => (b.score - a.score) || (a.jitter - b.jitter));
   const n = Math.max(1, Math.round(pop.length * cull));
-  const survivors = order.slice(0, order.length - n).map((r) => r.hand);
-  const copied = order.slice(0, n).map((r) => r.hand.slice());
-  return { next: survivors.concat(copied), dropped: order.slice(-n).map((r) => r.hand) };
+  return order.slice(0, order.length - n).map((r) => r.build)
+    .concat(order.slice(0, n).map((r) => ({ hand: r.build.hand.slice(), item: r.build.item })));
 }
 
 function shares(pop) {
   const out = {};
   for (const t of STONE_TYPES) out[t] = 0;
-  for (const hand of pop) for (const t of hand) out[t]++;
+  for (const b of pop) for (const t of b.hand) out[t]++;
   for (const t of STONE_TYPES) out[t] /= pop.length * 5;
+  return out;
+}
+
+function itemShares(pop) {
+  const out = {};
+  for (const item of LOADOUT_ITEMS) out[itemName(item)] = 0;
+  for (const b of pop) out[itemName(b.item)]++;
+  for (const k of Object.keys(out)) out[k] /= pop.length;
   return out;
 }
 
@@ -107,45 +129,84 @@ function census(file) {
 
 function report(state, ranks) {
   const rounds = state.history;
-  console.log(`\nmetagame: ${state.pop} hands, ${state.games} games each per round, ` +
-    `${rounds.length} rounds, ${state.totalGames} games, iters=${state.iters}, ` +
-    `dropping and copying ${(state.cull * 100).toFixed(0)}% a round\n`);
+  const withItems = !!state.items;
+  console.log(`\nmetagame${withItems ? ' with Counterattacks' : ''}: ${state.pop} loadouts, ` +
+    `${state.games} games each per round, ${rounds.length} rounds, ${state.totalGames} games, ` +
+    `iters=${state.iters}, dropping and copying ${(state.cull * 100).toFixed(0)}% a round\n`);
 
-  console.log(pad('round', 7) + pad('opener', 9) + pad('distinct', 10) + pad('commonest', 22) +
-    pad('share', 8) + STONE_TYPES.map((t) => pad(CODE[t], 7)).join('') +
-    (ranks ? 'census' : ''));
-  console.log('-'.repeat(ranks ? 105 : 99));
+  console.log(pad('round', 7) + pad('opener', 9) + pad('distinct', 10) +
+    STONE_TYPES.map((t) => pad(CODE[t], 7)).join('') +
+    (withItems ? pad('commonest item', 18) + pad('share', 8) : pad('commonest', 22) + 'share'));
+  console.log('-'.repeat(withItems ? 96 : 100));
   for (const r of rounds) {
+    const topItem = r.itemShares
+      ? Object.entries(r.itemShares).sort((a, b) => b[1] - a[1])[0]
+      : null;
     console.log(pad(r.round, 7) + pad(pct(r.openerRate) + '%', 9) + pad(r.distinct, 10) +
-      pad(r.commonest, 22) + pad(pct(r.topShare) + '%', 8) +
       STONE_TYPES.map((t) => pad(pct(r.shares[t]) + '%', 7)).join('') +
-      (ranks ? pct(r.censusRate ?? 0) + '%' : ''));
+      (topItem
+        ? pad(topItem[0], 18) + pad(pct(topItem[1]) + '%', 8)
+        : pad(r.commonest, 22) + pct(r.topShare) + '%'));
+  }
+
+  if (withItems) {
+    // Share is what selection did; the second-seat rate is why. Both are pooled
+    // over the last quarter of the run, once the field has stopped moving.
+    const tail = rounds.slice(Math.floor(rounds.length * 0.75));
+    const pooled = {};
+    for (const r of tail) {
+      for (const [item, v] of Object.entries(r.itemGames ?? {})) {
+        pooled[item] ??= { n: 0, wins: 0 };
+        pooled[item].n += v.n;
+        pooled[item].wins += v.wins;
+      }
+    }
+    const ending = rounds[rounds.length - 1].itemShares;
+    const rows = LOADOUT_ITEMS.map(itemName).map((item) => ({
+      item, share: ending[item] ?? 0,
+      n: pooled[item]?.n ?? 0,
+      rate: pooled[item]?.n ? pooled[item].wins / pooled[item].n : null,
+    })).sort((a, b) => b.share - a.share || (b.rate ?? 0) - (a.rate ?? 0));
+
+    console.log(`\nCounterattacks: share of the population at the end, and how the` +
+      ` holders did\nin the replying seat over the last ${tail.length} rounds\n`);
+    console.log(pad('counterattack', 16) + pad('share', 9) + pad('start', 9) +
+      pad('2nd seat', 10) + pad('95% CI', 16) + 'games');
+    console.log('-'.repeat(68));
+    for (const r of rows) {
+      const ci = r.rate === null ? null : wilson(pooled[r.item].wins, r.n);
+      console.log(pad(r.item, 16) + pad(pct(r.share) + '%', 9) +
+        pad(pct(rounds[0].itemShares[r.item] ?? 0) + '%', 9) +
+        pad(r.rate === null ? '-' : pct(r.rate) + '%', 10) +
+        pad(ci ? '[' + pct(ci[0]) + ',' + pct(ci[1]) + ']' : '-', 16) + r.n);
+    }
   }
 
   const counts = {};
-  for (const hand of state.population) counts[key(hand)] = (counts[key(hand)] ?? 0) + 1;
+  for (const b of state.population) counts[key(b)] = (counts[key(b)] ?? 0) + 1;
   const top = Object.entries(counts).sort((a, b) => b[1] - a[1]).slice(0, 12);
   console.log('\nwhat the population ended up holding\n');
-  console.log(pad('hand', 24) + pad('copies', 9) + pad('share', 8) +
-    (ranks ? pad('census rank', 14) + pad('census', 9) + pad('1st', 9) + '2nd' : ''));
-  console.log('-'.repeat(ranks ? 88 : 41));
+  console.log(pad('hand', 24) + pad('counterattack', 16) + pad('copies', 9) + pad('share', 8) +
+    (ranks ? pad('census rank', 14) + pad('1st', 9) + '2nd' : ''));
+  console.log('-'.repeat(ranks ? 96 : 57));
   for (const [k, n] of top) {
-    const r = ranks?.[k];
-    console.log(pad(label(k.split(',')), 24) + pad(n, 9) + pad(pct(n / state.pop) + '%', 8) +
+    const [hk, item] = k.split('|');
+    const r = ranks?.[hk];
+    console.log(pad(label(hk.split(',')), 24) + pad(item, 16) + pad(n, 9) +
+      pad(pct(n / state.pop) + '%', 8) +
       (ranks
         ? pad(r ? `${r.rank} of ${r.of}` : '-', 14) +
-          (r ? pad(pct(r.rate) + '%', 9) + pad(pct(r.first) + '%', 9) + pct(r.second) + '%' : '-')
+          (r ? pad(pct(r.first) + '%', 9) + pct(r.second) + '%' : '-')
         : ''));
   }
 
-  // Selection scores a hand on both seats, but what it is actually picking may
-  // be the opening seat alone -- so weight each census rate by how many copies
-  // of that hand the population ended up holding.
+  // Selection scores a loadout on both seats, but what it is actually picking
+  // may be the opening seat alone.
   if (ranks) {
     const weighted = (pick) => {
       let n = 0, sum = 0;
-      for (const hand of state.population) {
-        const r = ranks[key(hand)];
+      for (const b of state.population) {
+        const r = ranks[handKey(b.hand)];
         if (!r) continue;
         n++; sum += pick(r);
       }
@@ -165,9 +226,9 @@ function report(state, ranks) {
   console.log('\nsummary');
   console.log('  opening seat wins    ' + pct(first.openerRate) + '% in round 1, ' +
     pct(last.openerRate) + '% [' + pct(lo) + ',' + pct(hi) + '] in round ' + last.round);
-  console.log('  distinct hands       ' + first.distinct + ' -> ' + last.distinct +
+  console.log('  distinct loadouts    ' + first.distinct + ' -> ' + last.distinct +
     ' of ' + state.pop);
-  console.log('  commonest hand       ' + last.commonest + ' at ' + pct(last.topShare) + '%');
+  console.log('  commonest            ' + last.commonest + ' at ' + pct(last.topShare) + '%');
   if (ranks) {
     console.log('  mean census rate     ' + pct(first.censusRate) + '% -> ' +
       pct(last.censusRate) + '% of the population, weighted by copies');
@@ -191,6 +252,7 @@ async function main() {
     workers: parseInt(arg('workers', String(Math.max(1, cpus().length - 1))), 10),
     out: arg('out', 'results/meta.json'),
     censusFile: arg('census', 'results/scan.json'),
+    items: process.argv.includes('--items'),
     resume: process.argv.includes('--resume'),
     reportOnly: process.argv.includes('--report'),
   };
@@ -206,11 +268,14 @@ async function main() {
     const rng = makeRng(opts.seed + (state?.history.length ?? 0) * 104729);
     state ??= {
       pop: opts.pop, games: opts.games, iters: opts.iters, cull: opts.cull, seed: opts.seed,
-      population: Array.from({ length: opts.pop }, () => randomHand(rng)),
+      items: opts.items,
+      population: Array.from({ length: opts.pop }, () => ({
+        hand: randomHand(rng),
+        item: opts.items ? LOADOUT_ITEMS[(rng() * LOADOUT_ITEMS.length) | 0] : null,
+      })),
       history: [], totalGames: 0,
     };
-    state.startPopulation ??= state.population.map((h) => h.slice());
-    state.population = state.population.map(sortHand);
+    state.population = state.population.map(asBuild);
 
     for (let r = 0; r < opts.rounds; r++) {
       const round = state.history.length + 1;
@@ -218,18 +283,25 @@ async function main() {
       const games = await runSpecs(specs, opts.workers);
 
       const score = state.population.map(() => ({ n: 0, wins: 0 }));
+      // Every item's record from the seat it is live in.
+      const itemGames = {};
       let openerWins = 0, turns = 0, lineEnds = 0;
       for (const g of games) {
         score[g.opener].n++; score[g.opener].wins += g.openerWon;
         score[g.replier].n++; score[g.replier].wins += 1 - g.openerWon;
+        const item = itemName(state.population[g.replier].item);
+        itemGames[item] ??= { n: 0, wins: 0 };
+        itemGames[item].n++;
+        itemGames[item].wins += 1 - g.openerWon;
         openerWins += g.openerWon;
         turns += g.turns;
         if (g.reason === 'line') lineEnds++;
       }
 
       const counts = {};
-      for (const hand of state.population) counts[key(hand)] = (counts[key(hand)] ?? 0) + 1;
+      for (const b of state.population) counts[key(b)] = (counts[key(b)] ?? 0) + 1;
       const [commonest, topCount] = Object.entries(counts).sort((a, b) => b[1] - a[1])[0];
+      const [hk, item] = commonest.split('|');
       state.history.push({
         round,
         games: games.length,
@@ -238,21 +310,21 @@ async function main() {
         turns: turns / games.length,
         lineRate: lineEnds / games.length,
         distinct: Object.keys(counts).length,
-        commonest: label(commonest.split(',')),
+        commonest: label(hk.split(',')) + (state.items ? ` + ${item}` : ''),
         topShare: topCount / state.population.length,
         shares: shares(state.population),
-        // Where this population sits in the census, if there is one for this pool.
+        itemShares: state.items ? itemShares(state.population) : null,
+        itemGames: state.items ? itemGames : null,
         censusRate: ranks
-          ? state.population.reduce((s, h) => s + (ranks[key(h)]?.rate ?? 0), 0) / state.population.length
+          ? state.population.reduce((s, b) => s + (ranks[handKey(b.hand)]?.rate ?? 0), 0) / state.pop
           : null,
       });
       state.totalGames += games.length;
-
-      const { next } = select(state.population, score.map((s) => s.wins / s.n), state.cull, rng);
-      state.population = next;
+      state.population = select(state.population, score.map((s) => s.wins / s.n), state.cull, rng);
 
       console.error(`  round ${pad(round, 4)} opener ${pct(openerWins / games.length)}%  ` +
-        `distinct ${pad(Object.keys(counts).length, 5)} top ${commonest}`);
+        `distinct ${pad(Object.keys(counts).length, 5)} top ${label(hk.split(','))}` +
+        (state.items ? ` + ${item}` : ''));
       mkdirSync(dirname(opts.out), { recursive: true });
       writeFileSync(opts.out, JSON.stringify(state));
     }
