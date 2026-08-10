@@ -112,94 +112,35 @@ Moving first is a large advantage in this game, so the player who moves second b
 changes what you may do. A Counterattack held by the player who moves *first* does nothing at
 all. How a player acquires one is outside these rules.
 
-Four of them sharpen a stone you already hold:
-
 **Super Shift** — your Shift may move any row or column, not only the one it was placed in.
 
-**Super 2048** — your 2048 may run a second time, in a different direction of your choice.
+The other three are spent once per game, at the end of your turn and before the check for three
+in a row, so any of them can finish a line.
 
-**Super Rotate** — your Rotate may turn any of the four 2x2 sub-squares, or the whole outer
-ring of eight squares, one step clockwise.
+**Overtake** — take the stone on the centre square, if your opponent owns it, off the board and
+back into their hand. This is not a movement effect, so a Mountain is not safe from it. The
+centre has a hole in it again and they have a stone back to place.
 
-**Super Mountain** — when you place a Mountain, you may ignore an opponent's restriction.
+**King of the Hill** — place a Mountain from your hand on any free square, as an extra
+placement. It costs you the Mountain but not your turn.
 
-Four stand on their own:
+**Mirror** — choose one of the four pairs of squares that mirror each other through the centre —
+0 and 8, 1 and 7, 2 and 6, or 3 and 5 — and exchange what stands on them. Two stones trade
+places; a lone stone crosses to the empty square. Either player may own them.
 
-**Overtake** — once per game, at the end of your turn, return one of your opponent's stones
-from the board to their hand. This is not a movement effect, so a Mountain is not safe from
-it. The board has a hole in it again, and they have a stone back to place.
+### Twenty-two that did not survive
 
-**Antipolar** — your opponent's restrictions are turned inside out: their Magnets repel you and
-their Stinkies attract you, wherever a free square allows it.
+Every version of this list has been measured rather than argued about, first as the swing an
+item gives the replying seat against a random field, then as where it leaves the seat once a
+population of hands has converged on what wins. What that turned up, in short:
 
-**Mind Control** — once per game, at the end of your turn, name a stone in your opponent's
-hand. That is the stone they must play on their next turn.
+- **Subtracting from the opponent's move is worth tens of points; adding to your own options is
+  worth a few.** Cancelling an effect outright was worth +43pp to the replying seat. Resolving
+  your own stone twice, or rearranging stones you already have, was worth nothing at all.
+- **Naming what the opponent must play, or must not play, is worth nothing.** A hand of five
+  stones with one type barred still has four other placements.
+- **A free choice of Counterattack balances the game at the strongest item on the list**, not
+  the average one: given the whole list to choose from, a population converges on the best one
+  and everything else goes extinct. Either the list is flat or there is one item.
 
-**Shortlist** — the same, naming two: they must play one of them, their choice.
-
-**Veto** — the same, the other way round: name a stone they hold and they may not play it next
-turn.
-
-**Uno Reverse** — once per game, after your opponent resolves a Shift, a 2048 or a Rotate,
-you may make it run the other way instead: the opposite direction for Shift and 2048,
-anticlockwise for Rotate.
-
-Five more were designed against the first-mover advantage rather than against a stone. Two buy
-you a tempo, three take one off your opponent:
-
-**Second Wind** — once per game, at the end of your turn, take another turn.
-
-**Echo** — once per game, resolve the stone you have just placed a second time, choosing
-again.
-
-**Blind Spot** — once per game, at the end of your turn, name a free square. Your opponent may
-not place there on their next turn, unless it is the only square left.
-
-**Fizzle** — once per game, after your opponent chooses a movement effect, cancel it. The
-stone stays where it was placed and nothing else moves.
-
-**Anchor** — once per game, after your opponent chooses a Shift, a 2048 or a Rotate, the
-effect runs as normal except that *your* stones do not move. They behave like Mountains for
-that one effect, so stones blocked by them move as far as the space allows.
-
-**Pin** — the same, for one stone: name a single stone of yours and only that one holds its
-square.
-
-Six more do something of yours instead of undoing something of theirs. All of them resolve at
-the end of your turn, before the check for three in a row, so any of them can finish a line.
-
-**Nudge** — once per game, slide one of your stones to an adjacent free square. It does not
-resolve anything on arrival.
-
-**Relocate** — the same, to any free square rather than an adjacent one.
-
-**Rehearse** — once per game, resolve the effect of one of your stones already on the board,
-from wherever it now stands.
-
-**King of the Hill** — once per game, place a Mountain on a free square. It does not come out
-of your hand.
-
-**Exchange** — once per game, swap two stones standing on squares that mirror each other
-through the centre: 0 and 8, 1 and 7, 2 and 6, or 3 and 5. Either player may own them, and both
-squares have to be occupied, which they are in about half of all games.
-
-**Mirror** — the same without that requirement: if only one of the two squares holds a stone,
-that stone moves to the other one.
-
-**Rearrange** — once per game, rearrange your own stones among the squares they already stand
-on. You keep the same squares; what changes is which stone is where, which is how a Magnet or a
-Mountain ends up somewhere better.
-
-And three more after that:
-
-**Bipolar** — your opponent's Magnets push their owner as well as pulling you. On the turn
-after they place a Magnet, they may not place adjacent to it, unless no other free square is
-left.
-
-**Encore** — once per game, after your opponent has resolved a Shift, a 2048 or a Rotate,
-resolve the same kind of effect yourself: any row or column for Shift, any direction for 2048,
-any sub-square for Rotate. It happens before the check for three in a row, so it can break up
-a line your opponent has just made.
-
-**Obstruction** — once per game, at the end of your turn, declare an obstruction. Your
-opponent cannot win on their next turn: if they make three in a row, they lose instead.
+git history and `results/` hold the numbers for all of them.

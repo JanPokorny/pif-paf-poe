@@ -39,6 +39,16 @@ function peek(s, action) {
 // evaluation turns into noise; this looks one ply ahead — take a line if one is
 // available, otherwise avoid handing the opponent one — and is the same for both
 // sides, so it cannot favour either.
+//
+// The `counter` phase gets one more rule, and it matters more than it looks. A
+// Counterattack is once per game, and the menu there is one `pass` against
+// several ways to spend it, so a uniform choice burns the item on the first
+// opportunity in four rollouts out of five. That happens in every rollout below
+// every branch, including the branch where the item was just kept, so the search
+// compares spending now against spending a moment later rather than against
+// keeping it -- and the value of holding it is invisible. In a rollout the item
+// is therefore spent only when it wins on the spot, which is the same one ply of
+// sight the rest of the policy uses.
 export function policyAction(s, actions, rng) {
   // Choosing a stone does not touch the board, so there is nothing to look at;
   // every other phase moves something and is worth one ply of sight.
@@ -54,6 +64,12 @@ export function policyAction(s, actions, rng) {
     else if (!hasLine(after.board, other(me))) safe.push(action);
   }
   if (winning.length) return pick(winning, rng);
+
+  if (s.phase === 'counter') {
+    const keep = actions.find((a) => a.use === 'pass');
+    if (keep) return keep;
+  }
+
   if (safe.length) return pick(safe, rng);
   return pick(actions, rng);
 }
