@@ -127,11 +127,19 @@ placement. It costs you the Mountain but not your turn.
 0 and 8, 1 and 7, 2 and 6, or 3 and 5 — and exchange what stands on them. Two stones trade
 places; a lone stone crosses to the empty square. Either player may own them.
 
-Mirror is the one that balances the game. Against a field of hands that has converged on
-whatever wins, a game where the replying seat holds Mirror goes 52.1% to the opening seat
-[48.9, 55.2] — even, within the interval. Overtake leaves the opener on 46.0% and King of the
-Hill on 34.2%, so those two overshoot; Super Shift barely moves it. If only one Counterattack
-is to exist, it is Mirror.
+Mirror is the one that balances the game, and it leans the way it should. Against fields of
+hands that have converged on whatever wins, a game where the replying seat holds Mirror goes
+**56.8%** to the opening seat [55.9, 57.7] over 11520 games, pooled across two independent
+runs — the opener a few points ahead rather than level, which is the intended lean.
+
+The two runs settled on 53.8% and 59.9%, on two different fields: one built around a Mountain
+and a Magnet, the other around two 2048s and two Magnets. The spread between fields is wider
+than the interval within either, so the honest figure for Mirror is a few points of opener
+advantage rather than one exact number.
+
+Overtake leaves the opener on 46.0% and King of the Hill on 34.2% — both hand the game to the
+replying seat, so they are out. Super Shift barely moves it. If only one Counterattack is to
+exist, it is Mirror.
 
 ### Twenty-two that did not survive
 
