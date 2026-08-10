@@ -49,6 +49,12 @@ export const ITEMS = [
   'overtake',           // takes one back off the board
   'king-of-the-hill',   // an extra Mountain, out of hand
   'mirror',             // trades a pair of squares through the centre
+  // Under evaluation rather than kept: four that measured too weak under the old
+  // rollout policy, back in so the comparison can be made under the new one.
+  'relocate',           // moves a stone of yours anywhere
+  'rehearse',           // resolves a stone of yours already on the board
+  'veto',               // bars a stone in their hand
+  'mind-control',       // names the stone they must play
 ];
 
 const TYPE_CODE = {
@@ -106,6 +112,7 @@ export function createGame({
     oneTurnMagnet,                   // rules variants, both off under the rules as they stand
     oneTurnStinky,
     restriction: null,               // {id, owner, kind, sticky}: a Magnet or Stinky on the other player
+    forced: null,                    // {player, stones, deny}: Mind Control or Veto, next turn
     selected: null,                  // stone type taken from hand, awaiting placement
     placedAt: null,                  // where it was placed, awaiting its effect
     placedId: null,                  // and which stone it is, since it may move again
@@ -129,6 +136,7 @@ export function cloneState(s) {
     oneTurnMagnet: s.oneTurnMagnet,
     oneTurnStinky: s.oneTurnStinky,
     restriction: s.restriction ? { ...s.restriction } : null,
+    forced: s.forced ? { ...s.forced } : null,
     selected: s.selected,
     placedAt: s.placedAt,
     placedId: s.placedId,
@@ -247,7 +255,15 @@ function resolveOnto(board, type, pos, action) {
 // ── Legal actions ───────────────────────────────────────────────────────────
 
 function selectActions(s) {
-  return [...new Set(s.hands[s.player])].map((stone) => ({ type: 'select', stone }));
+  let hand = [...new Set(s.hands[s.player])];
+  // Mind Control named the stone to play, Veto named one not to play. A demand
+  // the hand cannot meet does not apply.
+  if (s.forced?.player === s.player) {
+    const { stones, deny } = s.forced;
+    const left = hand.filter((t) => stones.includes(t) !== !!deny);
+    if (left.length) hand = left;
+  }
+  return hand.map((stone) => ({ type: 'select', stone }));
 }
 
 function placeActions(s) {
@@ -326,6 +342,24 @@ function counterActions(s) {
     for (const [a, b] of SYMMETRIC) {
       if (s.board[a] || s.board[b]) out.push({ type: 'counter', use: 'mirror', a, b });
     }
+  } else if (item === 'relocate') {
+    const free = freeSquares(s.board);
+    for (let i = 0; i < 9; i++) {
+      if (s.board[i]?.player !== p) continue;
+      for (const to of free) out.push({ type: 'counter', use: 'relocate', from: i, to });
+    }
+  } else if (item === 'rehearse') {
+    for (let i = 0; i < 9; i++) {
+      const cell = s.board[i];
+      if (cell?.player !== p || !EFFECT_TYPES.includes(cell.type)) continue;
+      for (const o of effectOptions(s, cell.type, i)) {
+        out.push({ type: 'counter', use: 'rehearse', pos: i, ...o });
+      }
+    }
+  } else if (item === 'veto' || item === 'mind-control') {
+    for (const stone of new Set(s.hands[other(p)])) {
+      out.push({ type: 'counter', use: item, stones: [stone] });
+    }
   }
   return out;
 }
@@ -369,6 +403,7 @@ function endTurn(s) {
   }
   // A Magnet that has left the board -- taken by Overtake -- stops binding.
   if (s.restriction && restrictionSquare(s, s.restriction) < 0) s.restriction = null;
+  if (s.forced?.player === player) s.forced = null;   // it covered this turn
 
   if (hasLine(s.board, player)) { finish(s, player, 'line'); return true; }
   if (hasLine(s.board, other(player))) { finish(s, other(player), 'line'); return true; }
@@ -395,7 +430,8 @@ function endTurn(s) {
 function afterEffect(s) {
   const p = s.player;
   const item = itemOf(s, p);
-  if (!s.spent[p] && item && ['overtake', 'king-of-the-hill', 'mirror'].includes(item)) {
+  if (!s.spent[p] && item && ['overtake', 'king-of-the-hill', 'mirror',
+    'relocate', 'rehearse', 'veto', 'mind-control'].includes(item)) {
     s.phase = 'counter';
     s.actor = null;
     if (counterActions(s).length > 1) return;   // something to choose
@@ -451,6 +487,18 @@ export function applyAction(s, action) {
         const held = s.board[action.a];
         s.board[action.a] = s.board[action.b];
         s.board[action.b] = held;
+        s.spent[p] = true;
+      } else if (action.use === 'relocate') {
+        s.board[action.to] = s.board[action.from];
+        s.board[action.from] = null;
+        s.spent[p] = true;
+      } else if (action.use === 'rehearse') {
+        resolveOnto(s.board, s.board[action.pos].type, action.pos, action);
+        s.spent[p] = true;
+      } else if (action.use === 'veto' || action.use === 'mind-control') {
+        s.forced = {
+          player: other(p), stones: action.stones, deny: action.use === 'veto',
+        };
         s.spent[p] = true;
       }
       endTurn(s);

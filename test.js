@@ -272,6 +272,52 @@ const empty = ['.', '.', '.', '.', '.', '.', '.', '.', '.'];
     [show(s.board)[2], show(s.board)[6]], ['.', 'Omg']);
 }
 
+// ── The four under evaluation ───────────────────────────────────────────────
+
+{
+  const ending = (item, hand = ['mountain']) => {
+    const s = createGame({
+      handX: ['shift', 'mountain', 'magnet'], handO: hand, first: 'X', itemO: item,
+    });
+    s.board = board(['Xsh', '.', '.', '.', 'Omg', '.', '.', '.', '.']);
+    s.player = 'O';
+    applyAction(s, { type: 'select', stone: hand[0] });
+    applyAction(s, { type: 'place', pos: 8 });
+    return s;
+  };
+
+  const relocate = ending('relocate');
+  check('Relocate reaches every free square from every stone of yours',
+    legalActions(relocate).filter((a) => a.use === 'relocate').length, 12);
+  applyAction(relocate, { type: 'counter', use: 'relocate', from: 4, to: 2 });
+  check('and the stone moves without resolving anything',
+    [show(relocate.board)[4], show(relocate.board)[2]], ['.', 'Omg']);
+
+  const veto = ending('veto');
+  applyAction(veto, { type: 'counter', use: 'veto', stones: ['shift'] });
+  check('Veto bars the stone it names',
+    legalActions(veto).map((a) => a.stone), ['mountain', 'magnet']);
+
+  const mind = ending('mind-control');
+  applyAction(mind, { type: 'counter', use: 'mind-control', stones: ['mountain'] });
+  check('Mind Control leaves only the stone it names',
+    legalActions(mind).map((a) => a.stone), ['mountain']);
+}
+
+{
+  // Rehearse resolves a stone already on the board, from where it now stands.
+  const s = createGame({ handX: ['shift'], handO: ['mountain'], first: 'X', itemO: 'rehearse' });
+  s.board = board(['Osh', '.', '.', '.', '.', '.', '.', '.', '.']);
+  s.player = 'O';
+  applyAction(s, { type: 'select', stone: 'mountain' });
+  applyAction(s, { type: 'place', pos: 4 });
+  check('Rehearse offers the older stone\'s own effect menu',
+    legalActions(s).filter((a) => a.use === 'rehearse').length, 4);
+  applyAction(s, { type: 'counter', use: 'rehearse', pos: 0, direction: 'right', index: 0 });
+  check('and it runs from that stone\'s square',
+    show(s.board), ['.', 'Osh', '.', '.', 'Omo', '.', '.', '.', '.']);
+}
+
 {
   // Every item, played out at random, has to reach a legal finish.
   const rng = makeRng(29);
