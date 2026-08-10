@@ -1,0 +1,20 @@
+5 arms x 1000 pairings on 3 workers...
+  none            40s
+  super-shift     48s
+  overtake        54s
+  king-of-the-hill 43s
+  mirror          56s
+
+counterattack: 1000 hand pairings per arm, 5 arms, 5000 games, iters=300
+the second player wins  28.9% of these pairings with no Counterattack at all
+
+counterattack   2nd wins  95% CI           swing    95% CI          flipped  used
+--------------------------------------------------------------------------------------
+king-of-the-hill 61.7%    [ 58.6, 64.7]    +32.8pp  [29.5,36.1]     39.0%    68%
+overtake         61.2%    [ 58.1, 64.2]    +32.3pp  [28.4,36.2]     50.7%    62%
+mirror           46.7%    [ 43.6, 49.8]    +17.8pp  [13.9,21.7]     43.6%    81%
+super-shift      34.8%    [ 31.9, 37.8]    +5.9pp   [2.7,9.1]       26.5%    -
+
+  swing    change in the second player's win rate, same pairings with and without
+  flipped  pairings whose winner changed, in either direction
+  used     once-per-game items that were actually spent

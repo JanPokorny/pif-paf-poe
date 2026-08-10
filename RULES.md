@@ -51,11 +51,10 @@ The board filling on the ninth placement is also why the second player only ever
 of their five stones. They still hold five, so the one left behind is a choice they make by
 playing the others.
 
-Do not expect this to even the game out on its own. Measured over 2208 games between random
-hands, each hand opening as often as it replies, the first player takes 73.6% and only 8.9%
-of games reach a full board — the tiebreak decides about one game in eleven. It is a
-simplification that leans the right way, not a fix, and the first-mover problem is currently
-the largest open question about this game.
+Do not expect this to even the game out on its own. Over the whole hand space — all 126 hands,
+every ordered pair, both seats — the first player takes 72.7% and only 9.3% of games reach a
+full board, so the tiebreak decides about one game in eleven. It leans the right way without
+being a fix. What does even the game is the Counterattack the second player brings.
 
 ## Stones
 
@@ -127,6 +126,12 @@ placement. It costs you the Mountain but not your turn.
 **Mirror** — choose one of the four pairs of squares that mirror each other through the centre —
 0 and 8, 1 and 7, 2 and 6, or 3 and 5 — and exchange what stands on them. Two stones trade
 places; a lone stone crosses to the empty square. Either player may own them.
+
+Mirror is the one that balances the game. Against a field of hands that has converged on
+whatever wins, a game where the replying seat holds Mirror goes 52.1% to the opening seat
+[48.9, 55.2] — even, within the interval. Overtake leaves the opener on 46.0% and King of the
+Hill on 34.2%, so those two overshoot; Super Shift barely moves it. If only one Counterattack
+is to exist, it is Mirror.
 
 ### Twenty-two that did not survive
 

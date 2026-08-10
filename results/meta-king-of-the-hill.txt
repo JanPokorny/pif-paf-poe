@@ -1,0 +1,45 @@
+
+metagame, everybody replying with king-of-the-hill: 120 loadouts, 8 games each per round, 18 rounds, 17280 games, iters=300, dropping and copying 10% a round
+
+round  opener   distinct  shi    204    rot    mou    mag    commonest             share
+----------------------------------------------------------------------------------------------------
+1       36.0%   60         19.0%  21.8%  20.0%  20.8%  18.3% shi 204 rot mou mag     7.5%
+2       29.0%   56         17.7%  21.3%  18.8%  23.5%  18.7% shi 204 rot mou mag     8.3%
+3       29.7%   50         18.0%  20.0%  16.5%  26.5%  19.0% shi 204 rot mou mag     9.2%
+4       28.0%   41         18.0%  19.3%  14.7%  28.2%  19.8% shi 204 rot mou mag    10.0%
+5       25.8%   36         19.3%  18.2%  12.3%  29.5%  20.7% shi 204 rot mou mag    10.8%
+6       28.7%   32         21.3%  16.8%  10.5%  29.0%  22.3% shi shi shi mou mag    11.7%
+7       31.4%   30         22.8%  15.2%   9.2%  29.0%  23.8% shi shi shi mou mag    14.2%
+8       30.4%   25         25.8%  13.7%   7.3%  28.0%  25.2% shi shi shi mou mag    20.0%
+9       31.7%   24         28.5%  13.0%   6.2%  27.3%  25.0% shi shi shi mou mag    25.8%
+10      29.1%   22         31.8%  11.2%   5.0%  26.7%  25.3% shi shi shi mou mag    33.3%
+11      32.4%   17         35.8%   9.7%   4.2%  25.3%  25.0% shi shi shi mou mag    42.5%
+12      32.7%   15         39.2%   8.7%   3.0%  25.0%  24.2% shi shi shi mou mag    50.0%
+13      35.0%   14         42.3%   7.3%   2.2%  24.5%  23.7% shi shi shi mou mag    58.3%
+14      34.2%   13         45.3%   6.0%   1.0%  24.3%  23.3% shi shi shi mou mag    65.8%
+15      35.9%   13         48.7%   4.5%   0.8%  23.7%  22.3% shi shi shi mou mag    72.5%
+16      33.4%   13         52.3%   3.0%   0.7%  22.7%  21.3% shi shi shi mou mag    80.0%
+17      33.0%   10         53.7%   2.5%   0.7%  22.5%  20.7% shi shi shi mou mag    82.5%
+18      34.2%   8          55.0%   2.0%   0.3%  22.3%  20.3% shi shi shi mou mag    85.8%
+
+what the population ended up holding
+
+hand                    counterattack   copies   share   census rank   1st      2nd
+------------------------------------------------------------------------------------------------
+shi shi shi mou mag     king-of-the-hill107       89.2%  11 of 126      92.0%    38.4%
+shi 204 mou mou mag     king-of-the-hill6          5.0%  31 of 126      83.2%    32.8%
+shi shi mou mou mag     king-of-the-hill4          3.3%  3 of 126       91.2%    45.6%
+shi shi 204 mou mag     king-of-the-hill1          0.8%  10 of 126      88.8%    42.4%
+shi 204 mou mag mag     king-of-the-hill1          0.8%  8 of 126       88.8%    43.2%
+shi 204 rot rot mou     king-of-the-hill1          0.8%  45 of 126      79.2%    31.2%
+
+  the surviving hands take  91.4% of their census games from the opening seat and  38.4% from the replying seat
+  the hand space as a whole takes  72.7% and  27.3%
+
+summary
+  opening seat wins     36.0% in round 1,  34.2% [ 31.2, 37.2] in round 18
+  distinct loadouts    60 -> 8 of 120
+  commonest            shi shi shi mou mag at  85.8%
+  mean census rate      55.7% ->  64.7% of the population, weighted by copies
+  stone shares         shi  19.0-> 55.0%, 204  21.8->  2.0%, rot  20.0->  0.3%, mou  20.8-> 22.3%, mag  18.3-> 20.3%
+  mean game length     4.2 turns,  94.9% decided by a line
