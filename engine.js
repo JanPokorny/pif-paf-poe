@@ -22,6 +22,8 @@ export const LINES = [
   [0, 4, 8], [2, 4, 6],
 ];
 const SUBSQUARES = { TL: [0, 1, 3, 4], TR: [1, 2, 4, 5], BL: [3, 4, 6, 7], BR: [4, 5, 7, 8] };
+// Squares that map onto each other through the centre. What Exchange trades.
+const SYMMETRIC = [[0, 8], [1, 7], [2, 6], [3, 5]];
 // The eight outer squares, clockwise from the top left. Super Rotate turns these.
 const RING = [0, 1, 2, 5, 8, 7, 6, 3];
 const DIRECTIONS = ['up', 'down', 'left', 'right'];
@@ -63,6 +65,9 @@ export const ITEMS = [
   // Mind Control loosened: name two stones and let them pick, or name one type
   // and only bar it.
   'shortlist', 'veto',
+  // Half a turn's worth of doing something, rather than undoing something of
+  // theirs: move a stone you have, resolve one again, or add a Mountain.
+  'nudge', 'relocate', 'rehearse', 'king-of-the-hill', 'exchange', 'rearrange',
 ];
 // Items that interrupt the opponent's resolution, and what each can answer.
 const INTERRUPTS = {
@@ -134,6 +139,7 @@ export function createGame({
     blocked: null,                   // {player}: Obstruction on their next turn
     selected: null,                  // stone type taken from hand, awaiting placement
     placedAt: null,                  // where it was placed, awaiting its effect
+    placedId: null,                  // and which stone it is, since it may move again
     pending: null,                   // effect chosen, awaiting a possible Uno Reverse
     over: false,
     winner: null,
@@ -162,6 +168,7 @@ export function cloneState(s) {
     blocked: s.blocked ? { ...s.blocked } : null,
     selected: s.selected,
     placedAt: s.placedAt,
+    placedId: s.placedId,
     pending: s.pending ? { ...s.pending } : null,
     over: s.over,
     winner: s.winner,
@@ -350,9 +357,9 @@ function restrictionSquare(s, r) {
   return s.board.findIndex((c) => c?.id === r.id);
 }
 
-function effectActions(s) {
-  const type = s.selected;
-  const pos = s.placedAt;
+// The effect menu for a stone of `type` sitting on `pos`. Usually that is the
+// stone just placed, but Rehearse asks the same question about an older one.
+function effectOptions(s, type, pos) {
   const item = itemOf(s, s.player);
   const out = [];
 
@@ -362,15 +369,15 @@ function effectActions(s) {
       const horizontal = direction === 'left' || direction === 'right';
       const own = horizontal ? row(pos) : col(pos);
       const lines = item === 'super-shift' ? [0, 1, 2] : [own];
-      for (const index of lines) out.push({ type: 'effect', direction, index });
+      for (const index of lines) out.push({ direction, index });
     }
   } else if (type === '2048') {
     for (const direction of DIRECTIONS) {
-      out.push({ type: 'effect', direction });
+      out.push({ direction });
       // Super 2048 may run a second time, in a different direction.
       if (item === 'super-2048') {
         for (const second of DIRECTIONS) {
-          if (second !== direction) out.push({ type: 'effect', direction, second });
+          if (second !== direction) out.push({ direction, second });
         }
       }
     }
@@ -379,9 +386,37 @@ function effectActions(s) {
     const squares = item === 'super-rotate'
       ? [...Object.keys(SUBSQUARES), 'RING']
       : Object.keys(SUBSQUARES).filter((k) => SUBSQUARES[k].includes(pos));
-    for (const square of squares) out.push({ type: 'effect', square });
+    for (const square of squares) out.push({ square });
   }
 
+  return out;
+}
+
+function effectActions(s) {
+  return effectOptions(s, s.selected, s.placedAt).map((o) => ({ type: 'effect', ...o }));
+}
+
+// Every distinct way to permute the player's own stones across the squares they
+// already stand on. The identity, and any permutation that only swaps stones of
+// the same type, would change nothing and are left out.
+function rearrangements(s, player) {
+  const squares = [];
+  for (let i = 0; i < 9; i++) if (s.board[i]?.player === player) squares.push(i);
+  const cells = squares.map((i) => s.board[i]);
+  const here = cells.map((c) => c.type).join(',');
+  const seen = new Set([here]);
+  const out = [];
+  const walk = (left, taken) => {
+    if (!left.length) {
+      const sig = taken.map((c) => c.type).join(',');
+      if (!seen.has(sig)) { seen.add(sig); out.push(taken.map((c) => c.id)); }
+      return;
+    }
+    for (let k = 0; k < left.length; k++) {
+      walk(left.filter((_, j) => j !== k), taken.concat(left[k]));
+    }
+  };
+  if (cells.length > 1) walk(cells, []);
   return out;
 }
 
@@ -448,6 +483,38 @@ function counterActions(s) {
     out.push({ type: 'counter', use: 'echo' });
   } else if (item === 'obstruction') {
     out.push({ type: 'counter', use: 'obstruction' });
+  } else if (item === 'nudge' || item === 'relocate') {
+    // Buy the square you should have placed on: a step for Nudge, anywhere for
+    // Relocate. The stone itself does not resolve anything again.
+    const free = freeSquares(s.board);
+    for (let i = 0; i < 9; i++) {
+      if (s.board[i]?.player !== p) continue;
+      for (const to of free) {
+        if (item === 'nudge' && !adjacent(i, to)) continue;
+        out.push({ type: 'counter', use: item, from: i, to });
+      }
+    }
+  } else if (item === 'rehearse') {
+    for (let i = 0; i < 9; i++) {
+      const cell = s.board[i];
+      if (cell?.player !== p || !EFFECT_TYPES.includes(cell.type)) continue;
+      for (const o of effectOptions(s, cell.type, i)) {
+        out.push({ type: 'counter', use: 'rehearse', pos: i, ...o });
+      }
+    }
+  } else if (item === 'king-of-the-hill') {
+    // A Mountain from nowhere: no hand cost, and nothing to resolve.
+    for (const pos of freeSquares(s.board)) {
+      out.push({ type: 'counter', use: 'king-of-the-hill', pos });
+    }
+  } else if (item === 'exchange') {
+    for (const [a, b] of SYMMETRIC) {
+      if (s.board[a] && s.board[b]) out.push({ type: 'counter', use: 'exchange', a, b });
+    }
+  } else if (item === 'rearrange') {
+    for (const order of rearrangements(s, p)) {
+      out.push({ type: 'counter', use: 'rearrange', order });
+    }
   }
   return out;
 }
@@ -481,15 +548,18 @@ function endTurn(s, keepTurn = false) {
   // Bipolar's push covered the turn that is ending and is now spent.
   if (s.repel?.player === player) s.repel = null;
 
-  if (RESTRICTION_TYPES.includes(s.selected)) {
+  // The stone placed this turn may have been moved since -- by its own effect,
+  // or by an item -- so it is found by id rather than by the square it landed on.
+  const placed = s.board.findIndex((c) => c?.id === s.placedId);
+  if (RESTRICTION_TYPES.includes(s.selected) && placed >= 0) {
     s.restriction = {
-      id: s.board[s.placedAt].id, owner: player, kind: s.selected,
+      id: s.placedId, owner: player, kind: s.selected,
       // A restriction holds until another one replaces it or its stone leaves
       // the board, unless a study has asked for the one-turn version.
       sticky: !(s.selected === 'magnet' ? s.oneTurnMagnet : s.oneTurnStinky),
     };
     if (s.selected === 'magnet' && itemOf(s, other(player)) === 'bipolar') {
-      s.repel = { player, id: s.board[s.placedAt].id };
+      s.repel = { player, id: s.placedId };
     }
   } else if (s.restriction?.owner === other(player) && !s.restriction.sticky) {
     s.restriction = null;   // it bound us for this turn and is now spent
@@ -514,6 +584,7 @@ function endTurn(s, keepTurn = false) {
   s.turns++;
   s.selected = null;
   s.placedAt = null;
+  s.placedId = null;
   s.pending = null;
   s.phase = 'select';
 
@@ -532,7 +603,8 @@ function afterEffect(s) {
   const p = s.player;
   const item = itemOf(s, p);
   if (!s.spent[p] && item && ['overtake', 'mind-control', 'shortlist', 'veto',
-    'blind-spot', 'second-wind', 'echo', 'obstruction'].includes(item)) {
+    'blind-spot', 'second-wind', 'echo', 'obstruction',
+    'nudge', 'relocate', 'rehearse', 'king-of-the-hill', 'exchange', 'rearrange'].includes(item)) {
     s.phase = 'counter';
     s.actor = null;
     if (counterActions(s).length > 1) return;   // something to choose
@@ -589,7 +661,8 @@ export function applyAction(s, action) {
       break;
     }
     case 'place': {
-      s.board[action.pos] = { player: s.player, type: s.selected, id: s.nextId++ };
+      s.placedId = s.nextId++;
+      s.board[action.pos] = { player: s.player, type: s.selected, id: s.placedId };
       s.placedAt = action.pos;
       afterPlacement(s);
       break;
@@ -651,6 +724,31 @@ export function applyAction(s, action) {
         s.spent[p] = true;
         endTurn(s, true);   // the turn passes back to the same player
         break;
+      } else if (action.use === 'nudge' || action.use === 'relocate') {
+        s.board[action.to] = s.board[action.from];
+        s.board[action.from] = null;
+        s.spent[p] = true;
+      } else if (action.use === 'rehearse') {
+        resolveOnto(s.board, s.board[action.pos].type, action.pos, action);
+        s.spent[p] = true;
+      } else if (action.use === 'king-of-the-hill') {
+        s.board[action.pos] = { player: p, type: 'mountain', id: s.nextId++ };
+        s.spent[p] = true;
+      } else if (action.use === 'exchange') {
+        const held = s.board[action.a];
+        s.board[action.a] = s.board[action.b];
+        s.board[action.b] = held;
+        s.spent[p] = true;
+      } else if (action.use === 'rearrange') {
+        const squares = [], byId = new Map();
+        for (let i = 0; i < 9; i++) {
+          const cell = s.board[i];
+          if (cell?.player !== p) continue;
+          squares.push(i);
+          byId.set(cell.id, cell);
+        }
+        squares.forEach((i, k) => { s.board[i] = byId.get(action.order[k]); });
+        s.spent[p] = true;
       } else if (action.use === 'obstruction') {
         s.blocked = { player: other(p) };
         s.spent[p] = true;

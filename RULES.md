@@ -165,6 +165,27 @@ that one effect, so stones blocked by them move as far as the space allows.
 **Pin** — the same, for one stone: name a single stone of yours and only that one holds its
 square.
 
+Six more do something of yours instead of undoing something of theirs. All of them resolve at
+the end of your turn, before the check for three in a row, so any of them can finish a line.
+
+**Nudge** — once per game, slide one of your stones to an adjacent free square. It does not
+resolve anything on arrival.
+
+**Relocate** — the same, to any free square rather than an adjacent one.
+
+**Rehearse** — once per game, resolve the effect of one of your stones already on the board,
+from wherever it now stands.
+
+**King of the Hill** — once per game, place a Mountain on a free square. It does not come out
+of your hand.
+
+**Exchange** — once per game, swap two stones standing on squares that mirror each other
+through the centre: 0 and 8, 1 and 7, 2 and 6, or 3 and 5. Either player may own them.
+
+**Rearrange** — once per game, rearrange your own stones among the squares they already stand
+on. You keep the same squares; what changes is which stone is where, which is how a Magnet or a
+Mountain ends up somewhere better.
+
 And three more after that:
 
 **Bipolar** — your opponent's Magnets push their owner as well as pulling you. On the turn

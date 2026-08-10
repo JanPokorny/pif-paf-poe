@@ -566,6 +566,106 @@ const empty = ['.', '.', '.', '.', '.', '.', '.', '.', '.'];
     legalActions(s).map((a) => a.pos), [3, 5, 6, 7, 8]);
 }
 
+// ── Half a turn of doing something ──────────────────────────────────────────
+
+{
+  // A board where O has two stones and the turn is O's to finish.
+  const ending = (item, board_) => {
+    const s = createGame({ handX: ['shift'], handO: ['mountain', 'shift'], first: 'X', itemO: item });
+    s.board = board(board_);
+    s.player = 'O';
+    applyAction(s, { type: 'select', stone: 'mountain' });
+    applyAction(s, { type: 'place', pos: 8 });
+    return s;
+  };
+  const start = ['Xsh', '.', '.', '.', 'Omg', '.', '.', '.', '.'];
+
+  const nudge = ending('nudge', start);
+  check('Nudge only offers a step into a free square',
+    legalActions(nudge).filter((a) => a.use === 'nudge').map((a) => [a.from, a.to]),
+    [[4, 1], [4, 3], [4, 5], [4, 7], [8, 5], [8, 7]]);
+  applyAction(nudge, { type: 'counter', use: 'nudge', from: 4, to: 5 });
+  check('and the stone moves without resolving anything',
+    [show(nudge.board)[4], show(nudge.board)[5]], ['.', 'Omg']);
+
+  const relocate = ending('relocate', start);
+  check('Relocate reaches every free square',
+    legalActions(relocate).filter((a) => a.use === 'relocate').length, 12);
+}
+
+{
+  // A Magnet that an item moves keeps binding, from where it now stands.
+  const s = createGame({
+    handX: ['shift'], handO: ['magnet', 'shift'], first: 'X', itemO: 'relocate',
+  });
+  s.board = board(['Xsh', '.', '.', '.', '.', '.', '.', '.', '.']);
+  s.player = 'O';
+  applyAction(s, { type: 'select', stone: 'magnet' });
+  applyAction(s, { type: 'place', pos: 4 });
+  applyAction(s, { type: 'counter', use: 'relocate', from: 4, to: 2 });
+  applyAction(s, { type: 'select', stone: 'shift' });
+  check('a Magnet an item moved binds from its new square',
+    legalActions(s).map((a) => a.pos), [1, 5]);
+}
+
+{
+  // Rehearse resolves a stone already on the board, of the holder's choosing.
+  const s = createGame({ handX: ['shift'], handO: ['mountain'], first: 'X', itemO: 'rehearse' });
+  s.board = board(['Osh', '.', '.', '.', '.', '.', '.', '.', '.']);
+  s.player = 'O';
+  applyAction(s, { type: 'select', stone: 'mountain' });
+  applyAction(s, { type: 'place', pos: 4 });
+  check('Rehearse offers the older stone\'s own effect menu',
+    legalActions(s).filter((a) => a.use === 'rehearse').length, 4);
+  applyAction(s, { type: 'counter', use: 'rehearse', pos: 0, direction: 'right', index: 0 });
+  check('and it runs from where that stone stands',
+    show(s.board), ['.', 'Osh', '.', '.', 'Omo', '.', '.', '.', '.']);
+}
+
+{
+  const s = createGame({ handX: ['shift'], handO: ['mountain'], first: 'X', itemO: 'king-of-the-hill' });
+  s.board = board(['Xsh', '.', '.', '.', '.', '.', '.', '.', '.']);
+  s.player = 'O';
+  applyAction(s, { type: 'select', stone: 'mountain' });
+  applyAction(s, { type: 'place', pos: 8 });
+  check('King of the Hill offers every free square', 
+    legalActions(s).filter((a) => a.use === 'king-of-the-hill').length, 7);
+  applyAction(s, { type: 'counter', use: 'king-of-the-hill', pos: 4 });
+  check('and the Mountain arrives without costing a stone',
+    [show(s.board)[4], s.hands.O.length], ['Omo', 0]);
+}
+
+{
+  // Exchange trades a pair of squares that mirror each other through the centre.
+  const s = createGame({ handX: ['shift'], handO: ['mountain'], first: 'X', itemO: 'exchange' });
+  s.board = board(['Xsh', '.', 'Omg', '.', '.', '.', 'Xmo', '.', '.']);
+  s.player = 'O';
+  applyAction(s, { type: 'select', stone: 'mountain' });
+  applyAction(s, { type: 'place', pos: 8 });
+  check('Exchange only offers pairs with a stone on both squares',
+    legalActions(s).filter((a) => a.use === 'exchange').map((a) => [a.a, a.b]), [[0, 8], [2, 6]]);
+  applyAction(s, { type: 'counter', use: 'exchange', a: 2, b: 6 });
+  check('and they trade places, whoever owns them',
+    [show(s.board)[2], show(s.board)[6]], ['Xmo', 'Omg']);
+}
+
+{
+  // Rearrange permutes the holder's own stones over their own squares.
+  const s = createGame({ handX: ['shift'], handO: ['shift'], first: 'X', itemO: 'rearrange' });
+  s.board = board(['Omg', '.', 'Omo', '.', '.', '.', '.', '.', '.']);
+  s.player = 'O';
+  applyAction(s, { type: 'select', stone: 'shift' });
+  applyAction(s, { type: 'place', pos: 4 });
+  applyAction(s, { type: 'effect', direction: 'up', index: 1 });
+  check('Rearrange offers every arrangement but the one already on the board',
+    legalActions(s).filter((a) => a.use === 'rearrange').length, 5);
+  const order = legalActions(s).find((a) => a.use === 'rearrange').order;
+  applyAction(s, { type: 'counter', use: 'rearrange', order });
+  check('the squares are the same ones, holding different stones',
+    show(s.board).filter((c) => c[0] === 'O').sort(), ['Omg', 'Omo', 'Osh']);
+  check('and it is once per game', s.spent.O, true);
+}
+
 {
   // Every item, played out at random, has to reach a legal finish.
   const rng = makeRng(29);
