@@ -285,9 +285,35 @@ const empty = ['.', '.', '.', '.', '.', '.', '.', '.', '.'];
   s.player = 'O';
   applyAction(s, { type: 'select', stone: 'mountain' });
   applyAction(s, { type: 'place', pos: 8 });
-  applyAction(s, { type: 'counter', use: 'mind-control', stone: 'mountain' });
+  applyAction(s, { type: 'counter', use: 'mind-control', stones: ['mountain'] });
   check('Mind Control names the stone the opponent must play',
     legalActions(s), [{ type: 'select', stone: 'mountain' }]);
+}
+
+{
+  // Shortlist names two and lets them choose; Veto names one and only bars it.
+  const setup = (item) => {
+    const s = createGame({
+      handX: ['shift', 'mountain', 'magnet'], handO: ['mountain'], first: 'X', itemO: item,
+    });
+    s.board = board(['Xsh', '.', '.', '.', '.', '.', '.', '.', '.']);
+    s.player = 'O';
+    applyAction(s, { type: 'select', stone: 'mountain' });
+    applyAction(s, { type: 'place', pos: 8 });
+    return s;
+  };
+
+  const two = setup('shortlist');
+  check('Shortlist offers every pair of stones the opponent holds',
+    legalActions(two).filter((a) => a.use === 'shortlist').length, 3);
+  applyAction(two, { type: 'counter', use: 'shortlist', stones: ['shift', 'magnet'] });
+  check('and the opponent picks between the two named',
+    legalActions(two).map((a) => a.stone), ['shift', 'magnet']);
+
+  const no = setup('veto');
+  applyAction(no, { type: 'counter', use: 'veto', stones: ['shift'] });
+  check('Veto only takes the named stone away',
+    legalActions(no).map((a) => a.stone), ['mountain', 'magnet']);
 }
 
 {
@@ -348,6 +374,22 @@ const empty = ['.', '.', '.', '.', '.', '.', '.', '.', '.'];
   applyAction(s, { type: 'reverse', use: 'anchor' });
   check('Anchor holds the holder\'s stones while everything else slides',
     show(s.board), ['Omg', '.', '.', '.', '.', 'X20', '.', '.', '.']);
+}
+
+{
+  // Pin is Anchor for one named stone: X sweeps the top row right, and only the
+  // stone O names holds its square.
+  const s = createGame({ handX: ['2048'], handO: ['shift'], first: 'X', itemO: 'pin' });
+  s.board = board(['Omg', 'Osh', '.', '.', '.', '.', '.', '.', '.']);
+  applyAction(s, { type: 'select', stone: '2048' });
+  applyAction(s, { type: 'place', pos: 3 });
+  applyAction(s, { type: 'effect', direction: 'right' });
+  check('Pin offers one choice per stone the holder has, plus declining',
+    legalActions(s).map((a) => a.pos ?? 'none'), ['none', 0, 1]);
+  applyAction(s, { type: 'reverse', use: 'pin', pos: 0 });
+  check('the named stone stays and everything else slides',
+    show(s.board), ['Omg', '.', 'Osh', '.', '.', 'X20', '.', '.', '.']);
+  check('Pin is once per game', s.spent.O, true);
 }
 
 {

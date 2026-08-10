@@ -1,0 +1,43 @@
+
+metagame, everybody replying with shortlist: 120 loadouts, 8 games each per round, 10 rounds, 9600 games, iters=300, dropping and copying 10% a round
+
+round  opener   distinct  shi    204    rot    mou    mag    commonest             share
+----------------------------------------------------------------------------------------------------
+1       70.3%   60         19.0%  21.8%  20.0%  20.8%  18.3% shi 204 rot mou mag     7.5%
+2       69.7%   56         19.0%  21.3%  19.5%  21.3%  18.8% shi 204 rot mou mag     8.3%
+3       68.3%   55         20.2%  21.0%  17.7%  21.2%  20.0% shi 204 rot mou mag     8.3%
+4       69.2%   50         20.7%  21.3%  17.3%  20.0%  20.7% shi 204 mou mou mag    10.0%
+5       70.3%   46         21.5%  20.3%  16.8%  19.8%  21.5% shi 204 rot mou mag    11.7%
+6       68.6%   43         20.8%  19.7%  16.3%  20.7%  22.5% shi 204 rot mou mag    15.0%
+7       68.0%   38         20.8%  19.5%  14.8%  20.7%  24.2% shi 204 rot mou mag    12.5%
+8       67.7%   35         21.2%  18.3%  13.8%  21.5%  25.2% shi 204 mou mag mag    12.5%
+9       67.7%   32         21.7%  17.7%  12.5%  22.7%  25.5% shi 204 mou mag mag    13.3%
+10      71.3%   26         23.5%  17.2%  11.2%  23.0%  25.2% shi 204 mou mag mag    14.2%
+
+what the population ended up holding
+
+hand                    counterattack   copies   share   census rank   1st      2nd
+------------------------------------------------------------------------------------------------
+shi 204 mou mag mag     shortlist       20        16.7%  8 of 126       88.8%    43.2%
+shi 204 mou mou mag     shortlist       14        11.7%  31 of 126      83.2%    32.8%
+shi 204 rot mou mag     shortlist       10         8.3%  16 of 126      84.0%    41.6%
+shi shi shi mou mag     shortlist       8          6.7%  11 of 126      92.0%    38.4%
+shi 204 204 mou mag     shortlist       8          6.7%  1 of 126       95.2%    44.0%
+shi shi mou mou mag     shortlist       8          6.7%  3 of 126       91.2%    45.6%
+shi shi rot mou mag     shortlist       6          5.0%  5 of 126       88.8%    47.2%
+204 204 mou mou mag     shortlist       6          5.0%  18 of 126      86.4%    38.4%
+shi 204 rot rot mag     shortlist       5          4.2%  23 of 126      82.4%    40.0%
+204 mou mag mag mag     shortlist       4          3.3%  22 of 126      84.0%    39.2%
+204 rot rot mou mag     shortlist       4          3.3%  37 of 126      74.4%    40.0%
+shi rot mou mag mag     shortlist       4          3.3%  20 of 126      79.2%    44.8%
+
+  the surviving hands take  86.1% of their census games from the opening seat and  40.6% from the replying seat
+  the hand space as a whole takes  72.7% and  27.3%
+
+summary
+  opening seat wins     70.3% in round 1,  71.3% [ 68.3, 74.0] in round 10
+  distinct loadouts    60 -> 26 of 120
+  commonest            shi 204 mou mag mag at  14.2%
+  mean census rate      55.7% ->  62.7% of the population, weighted by copies
+  stone shares         shi  19.0-> 23.5%, 204  21.8-> 17.2%, rot  20.0-> 11.2%, mou  20.8-> 23.0%, mag  18.3-> 25.2%
+  mean game length     5.4 turns,  93.9% decided by a line

@@ -5,12 +5,18 @@
 //
 //   node meta.js --pop 200 --games 8 --rounds 25 --iters 300 --out results/meta.json
 //   node meta.js --items --pop 200 --rounds 30 --out results/meta-items.json
+//   node meta.js --item anchor --pop 120 --rounds 18 --out results/meta-anchor.json
 //   node meta.js --resume --rounds 8 --out results/meta-items.json
 //   node meta.js --report --out results/meta-items.json
 //
 // A loadout is a hand and, with --items, a Counterattack. Both are selected
 // together, because an item is only worth what it is worth against the field
 // that forms, and the field that forms depends on what the items are doing.
+//
+// --item fixes one Counterattack on everybody instead, which is the other way
+// the element could work: not a thing a player chooses but a thing the rules
+// hand the replying seat. Then only the hands evolve, and the question the run
+// answers is where that one item leaves the seat once the field has settled.
 //
 // Each round every loadout plays the same number of games, half of them opening
 // and half replying, against opponents drawn from the population. A hand that
@@ -130,7 +136,8 @@ function census(file) {
 function report(state, ranks) {
   const rounds = state.history;
   const withItems = !!state.items;
-  console.log(`\nmetagame${withItems ? ' with Counterattacks' : ''}: ${state.pop} loadouts, ` +
+  console.log(`\nmetagame${withItems ? ' with Counterattacks' : ''}` +
+    `${state.fixedItem ? `, everybody replying with ${state.fixedItem}` : ''}: ${state.pop} loadouts, ` +
     `${state.games} games each per round, ${rounds.length} rounds, ${state.totalGames} games, ` +
     `iters=${state.iters}, dropping and copying ${(state.cull * 100).toFixed(0)}% a round\n`);
 
@@ -253,6 +260,7 @@ async function main() {
     out: arg('out', 'results/meta.json'),
     censusFile: arg('census', 'results/scan.json'),
     items: process.argv.includes('--items'),
+    item: arg('item', null),   // one Counterattack, given to everybody
     resume: process.argv.includes('--resume'),
     reportOnly: process.argv.includes('--report'),
   };
@@ -269,9 +277,10 @@ async function main() {
     state ??= {
       pop: opts.pop, games: opts.games, iters: opts.iters, cull: opts.cull, seed: opts.seed,
       items: opts.items,
+      fixedItem: opts.item,
       population: Array.from({ length: opts.pop }, () => ({
         hand: randomHand(rng),
-        item: opts.items ? LOADOUT_ITEMS[(rng() * LOADOUT_ITEMS.length) | 0] : null,
+        item: opts.items ? LOADOUT_ITEMS[(rng() * LOADOUT_ITEMS.length) | 0] : opts.item,
       })),
       history: [], totalGames: 0,
     };

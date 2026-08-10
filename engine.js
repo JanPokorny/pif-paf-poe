@@ -58,12 +58,18 @@ export const ITEMS = [
   'second-wind', 'echo', 'blind-spot', 'fizzle', 'anchor',
   // A Magnet that pushes its owner, a borrowed movement effect, a banned win.
   'bipolar', 'encore', 'obstruction',
+  // Anchor cut down to one stone, to sit in the gap the others leave.
+  'pin',
+  // Mind Control loosened: name two stones and let them pick, or name one type
+  // and only bar it.
+  'shortlist', 'veto',
 ];
 // Items that interrupt the opponent's resolution, and what each can answer.
 const INTERRUPTS = {
   'uno-reverse': ['shift', '2048', 'rotate'],
   fizzle: ['shift', '2048', 'rotate'],
   anchor: ['shift', '2048', 'rotate'],
+  pin: ['shift', '2048', 'rotate'],
 };
 
 const TYPE_CODE = {
@@ -122,7 +128,7 @@ export function createGame({
     oneTurnMagnet,                   // rules variants, both off under the rules as they stand
     oneTurnStinky,
     restriction: null,               // {id, owner, kind, sticky}: a Magnet or Stinky on the other player
-    forced: null,                    // {player, stone}: Mind Control on their next turn
+    forced: null,                    // {player, stones, deny}: Mind Control and kin, next turn
     forbidden: null,                 // {player, pos}: Blind Spot on their next turn
     repel: null,                     // {player, id}: Bipolar on their next turn
     blocked: null,                   // {player}: Obstruction on their next turn
@@ -179,8 +185,13 @@ export function itemOf(s, player) {
 // A Mountain is never moved by an effect. It does not cancel the effect: it
 // stands still and everything else moves as far as the space allows, so a
 // Mountain reads as a wall on the board rather than as a veto on the menu.
+//
+// `frozen` is what an interrupt has nailed down for this one effect: a player,
+// whose whole side stands still (Anchor), or a single square (Pin).
 export function isStuck(board, i, frozen) {
-  return board[i]?.type === 'mountain' || (!!frozen && board[i]?.player === frozen);
+  if (board[i]?.type === 'mountain') return true;
+  if (frozen === null || frozen === undefined) return false;
+  return typeof frozen === 'number' ? i === frozen : board[i]?.player === frozen;
 }
 
 // ── Effects ─────────────────────────────────────────────────────────────────
@@ -288,8 +299,13 @@ function resolveOnto(board, type, pos, action, frozen) {
 
 function selectActions(s) {
   let hand = [...new Set(s.hands[s.player])];
-  // Mind Control named the stone for this turn.
-  if (s.forced?.player === s.player && hand.includes(s.forced.stone)) hand = [s.forced.stone];
+  // Mind Control named the stone to play, Shortlist named two of them, Veto
+  // named one not to play. A demand the hand cannot meet does not apply.
+  if (s.forced?.player === s.player) {
+    const { stones, deny } = s.forced;
+    const left = hand.filter((t) => stones.includes(t) !== !!deny);
+    if (left.length) hand = left;
+  }
   return hand.map((stone) => ({ type: 'select', stone }));
 }
 
@@ -372,7 +388,15 @@ function effectActions(s) {
 // The other player answers the effect just chosen, once per game. `use: 'none'`
 // always sits on the menu -- the interrupt is an option, not a duty.
 function reverseActions(s) {
-  return [{ type: 'reverse', use: 'none' }, { type: 'reverse', use: itemOf(s, toMove(s)) }];
+  const holder = toMove(s);
+  const item = itemOf(s, holder);
+  // Pin names the stone it saves, so it is one choice per stone the holder has.
+  if (item !== 'pin') return [{ type: 'reverse', use: 'none' }, { type: 'reverse', use: item }];
+  const out = [{ type: 'reverse', use: 'none' }];
+  for (let i = 0; i < 9; i++) {
+    if (s.board[i]?.player === holder) out.push({ type: 'reverse', use: 'pin', pos: i });
+  }
+  return out;
 }
 
 // Encore borrows the movement effect the opponent has just resolved and runs the
@@ -402,9 +426,19 @@ function counterActions(s) {
     for (let i = 0; i < 9; i++) {
       if (s.board[i]?.player === other(p)) out.push({ type: 'counter', use: 'overtake', pos: i });
     }
-  } else if (item === 'mind-control') {
+  } else if (item === 'mind-control' || item === 'veto') {
     for (const stone of new Set(s.hands[other(p)])) {
-      out.push({ type: 'counter', use: 'mind-control', stone });
+      out.push({ type: 'counter', use: item, stones: [stone] });
+    }
+  } else if (item === 'shortlist') {
+    // Two of the stones they hold; with only one kind in hand there is only the
+    // one pair to name, and it is the same demand Mind Control would make.
+    const kinds = [...new Set(s.hands[other(p)])];
+    if (kinds.length < 2) out.push({ type: 'counter', use: 'shortlist', stones: kinds });
+    for (let a = 0; a < kinds.length; a++) {
+      for (let b = a + 1; b < kinds.length; b++) {
+        out.push({ type: 'counter', use: 'shortlist', stones: [kinds[a], kinds[b]] });
+      }
     }
   } else if (item === 'blind-spot') {
     for (const pos of freeSquares(s.board)) out.push({ type: 'counter', use: 'blind-spot', pos });
@@ -497,8 +531,8 @@ function endTurn(s, keepTurn = false) {
 function afterEffect(s) {
   const p = s.player;
   const item = itemOf(s, p);
-  if (!s.spent[p] && item && ['overtake', 'mind-control', 'blind-spot',
-    'second-wind', 'echo', 'obstruction'].includes(item)) {
+  if (!s.spent[p] && item && ['overtake', 'mind-control', 'shortlist', 'veto',
+    'blind-spot', 'second-wind', 'echo', 'obstruction'].includes(item)) {
     s.phase = 'counter';
     s.actor = null;
     if (counterActions(s).length > 1) return;   // something to choose
@@ -519,7 +553,9 @@ function afterPlacement(s) {
 function interruptAvailable(s) {
   const foe = other(s.player);
   const item = itemOf(s, foe);
-  return !!item && !s.spent[foe] && (INTERRUPTS[item]?.includes(s.selected) ?? false);
+  if (!item || s.spent[foe] || !(INTERRUPTS[item]?.includes(s.selected) ?? false)) return false;
+  // Pin has nothing to name until the holder has a stone on the board.
+  return item !== 'pin' || s.board.some((c) => c?.player === foe);
 }
 
 // Encore answers a movement effect once the effect has run, so the choice is
@@ -574,10 +610,12 @@ export function applyAction(s, action) {
       if (action.use !== 'none') s.spent[holder] = true;
       if (action.use !== 'fizzle') {
         // Uno Reverse runs it backwards; Anchor runs it with the holder's own
-        // stones nailed down; Fizzle means it does not run at all.
+        // stones nailed down and Pin with just the one they named; Fizzle means
+        // it does not run at all.
+        const frozen = action.use === 'anchor' ? holder
+          : action.use === 'pin' ? action.pos : null;
         resolveOnto(s.board, s.selected, s.placedAt,
-          action.use === 'uno-reverse' ? mirrored(s.pending) : s.pending,
-          action.use === 'anchor' ? holder : null);
+          action.use === 'uno-reverse' ? mirrored(s.pending) : s.pending, frozen);
       }
       s.pending = null;
       s.actor = null;
@@ -601,8 +639,10 @@ export function applyAction(s, action) {
         s.hands[cell.player].push(cell.type);
         s.board[action.pos] = null;
         s.spent[p] = true;
-      } else if (action.use === 'mind-control') {
-        s.forced = { player: other(p), stone: action.stone };
+      } else if (['mind-control', 'shortlist', 'veto'].includes(action.use)) {
+        s.forced = {
+          player: other(p), stones: action.stones, deny: action.use === 'veto',
+        };
         s.spent[p] = true;
       } else if (action.use === 'blind-spot') {
         s.forbidden = { player: other(p), pos: action.pos };

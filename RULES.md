@@ -135,6 +135,11 @@ their Stinkies attract you, wherever a free square allows it.
 **Mind Control** — once per game, at the end of your turn, name a stone in your opponent's
 hand. That is the stone they must play on their next turn.
 
+**Shortlist** — the same, naming two: they must play one of them, their choice.
+
+**Veto** — the same, the other way round: name a stone they hold and they may not play it next
+turn.
+
 **Uno Reverse** — once per game, after your opponent resolves a Shift, a 2048 or a Rotate,
 you may make it run the other way instead: the opposite direction for Shift and 2048,
 anticlockwise for Rotate.
@@ -156,6 +161,9 @@ stone stays where it was placed and nothing else moves.
 **Anchor** — once per game, after your opponent chooses a Shift, a 2048 or a Rotate, the
 effect runs as normal except that *your* stones do not move. They behave like Mountains for
 that one effect, so stones blocked by them move as far as the space allows.
+
+**Pin** — the same, for one stone: name a single stone of yours and only that one holds its
+square.
 
 And three more after that:
 
