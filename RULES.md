@@ -104,6 +104,37 @@ and it is in the engine but not in the pool: hands are dealt from the five stone
 study deals a Stinky in explicitly. A Stinky and a Magnet share the single restriction slot, so
 either one replaces the other.
 
+## Spaces
+
+A game is fought on a **space**, and a space switches one stone type off for both players. A
+stone of that type is still placed, still occupies its square and still counts towards three in
+a row — it simply has no effect. A switched-off Magnet binds nobody; a switched-off Mountain is
+an ordinary stone and moves like one. There is a space for each of the five types, and a neutral
+space that switches nothing off.
+
+Which space a game is fought on is a matter for the players, and outside these rules.
+
+### What the spaces are for
+
+They are the reason to hold a mixed hand. Measured over a population of hands that keeps whatever
+wins and discards whatever loses, on a single space the field collapses onto Shift and Magnet —
+38.5% and 39.2% of every hand played, with Rotate down to 3.6% — and the opening seat climbs to
+**86.1%**, because the hands that survive are the ones that open best.
+
+Put the same population on a circuit that draws a space per game and the collapse does not
+happen. The field settles at Shift 24.8%, Magnet 22.5%, 2048 19.2%, Mountain 18.0%, Rotate 15.5%
+— within ten points of even across all five — and the commonest hand is one of each, held by
+55.8% of the population. The opening seat takes **72.1%**, fourteen points less than on a single
+space.
+
+A hand that cannot play on a vetoed space is a hand that loses a game in six, and a hand tuned to
+one stone loses more than that. The spaces buy hand diversity, and hand diversity is most of what
+keeps the opening seat from running away.
+
+The spaces do not fall evenly, though. Over the same run: the Magnet space gives the opener
+77.7%, the 2048 space 65.3%. Switching off the Magnet takes away the main thing that slows an
+opening run; switching off 2048 costs the opener more than it costs the reply.
+
 ## Counterattack
 
 Moving first is a large advantage in this game, so the player who moves second brings one
@@ -111,35 +142,46 @@ Moving first is a large advantage in this game, so the player who moves second b
 changes what you may do. A Counterattack held by the player who moves *first* does nothing at
 all. How a player acquires one is outside these rules.
 
-**Super Shift** — your Shift may move any row or column, not only the one it was placed in.
-
-The other three are spent once per game, at the end of your turn and before the check for three
-in a row, so any of them can finish a line.
+There are five to pick from. All of them are spent once per game, at the end of your turn and
+before the check for three in a row, so any of them can finish a line.
 
 **Overtake** — take the stone on the centre square, if your opponent owns it, off the board and
 back into their hand. This is not a movement effect, so a Mountain is not safe from it. The
 centre has a hole in it again and they have a stone back to place.
 
-**King of the Hill** — place a Mountain from your hand on any free square, as an extra
-placement. It costs you the Mountain but not your turn.
+**Relocate** — move one of your stones to any free square. It resolves nothing on arrival.
+
+**Mind Control** — name a stone in your opponent's hand. That is the stone they must play on
+their next turn.
+
+**Rehearse** — resolve the effect of one of your stones already on the board, from wherever it
+now stands. A stone the space has switched off cannot be rehearsed.
 
 **Mirror** — choose one of the four pairs of squares that mirror each other through the centre —
 0 and 8, 1 and 7, 2 and 6, or 3 and 5 — and exchange what stands on them. Two stones trade
 places; a lone stone crosses to the empty square. Either player may own them.
 
-Mirror is the one that balances the game, and it leans the way it should. Against fields of
-hands that have converged on whatever wins, a game where the replying seat holds Mirror goes
-**56.8%** to the opening seat [55.9, 57.7] over 11520 games, pooled across two independent
-runs — the opener a few points ahead rather than level, which is the intended lean.
+### What each pick is worth
 
-The two runs settled on 53.8% and 59.9%, on two different fields: one built around a Mountain
-and a Magnet, the other around two 2048s and two Magnets. The spread between fields is wider
-than the interval within either, so the honest figure for Mirror is a few points of opener
-advantage rather than one exact number.
+Against a field of hands that has converged on whatever wins, with every replying player holding
+the same one, the opening seat takes:
 
-Overtake leaves the opener on 46.0% and King of the Hill on 34.2% — both hand the game to the
-replying seat, so they are out. Super Shift barely moves it. If only one Counterattack is to
-exist, it is Mirror.
+| pick | opening seat | |
+|---|---|---|
+| Overtake | 42.8% | hands the game to the reply |
+| Relocate | 53.5% | |
+| Mirror | 56.8% | pooled over two runs, which gave 53.8% and 59.9% |
+| Mind Control | 64.6% | barely moves it |
+| Rehearse | 71.4% | barely moves it |
+
+Relocate and Mirror are the two that leave the opener a little ahead, which is the intended
+lean. Overtake overshoots and the other two do too little.
+
+Note what that means for a free pick: a population given the whole list to choose from converges
+on the strongest item and abandons the rest, so a menu is balanced at its best member, not its
+average. With this list that is Overtake, and the game would settle near its 42.8% rather than
+near Mirror's 56.8%. Either the picks get levelled up to Overtake's strength, or Overtake comes
+down to theirs.
 
 ### Twenty-two that did not survive
 

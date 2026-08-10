@@ -170,19 +170,15 @@ function held(spec, { at, selected, item, player = 'O' }) {
 const empty = ['.', '.', '.', '.', '.', '.', '.', '.', '.'];
 
 {
-  const plain = held([...empty], { at: 0, selected: 'shift', item: null });
-  const superb = held([...empty], { at: 0, selected: 'shift', item: 'super-shift' });
-  check('shift normally moves only its own line', legalActions(plain).length, 4);
-  check('Super Shift moves any row or column', legalActions(superb).length, 12);
-
-  const s = held(['Osh', '.', '.', '.', '.', '.', 'Xmg', '.', '.'],
-    { at: 0, selected: 'shift', item: 'super-shift' });
-  applyAction(s, { type: 'effect', direction: 'right', index: 2 });
-  check('and it reaches a line the stone is not in',
-    show(s.board), ['Osh', '.', '.', '.', '.', '.', '.', 'Xmg', '.']);
-
-  const opener = held([...empty], { at: 0, selected: 'shift', item: 'super-shift', player: 'X' });
-  check('a Counterattack is inert for whoever opened', legalActions(opener).length, 4);
+  // An item is inert in the hands of whoever opened the game.
+  const opener = createGame({
+    handX: ['shift', 'shift'], handO: ['shift'], first: 'X', itemX: 'relocate',
+  });
+  opener.board = board(['Xsh', '.', '.', '.', '.', '.', '.', '.', '.']);
+  applyAction(opener, { type: 'select', stone: 'shift' });
+  applyAction(opener, { type: 'place', pos: 4 });
+  applyAction(opener, { type: 'effect', direction: 'right', index: 1 });
+  check('a Counterattack is inert for whoever opened', opener.phase, 'select');
 }
 
 {
@@ -218,33 +214,6 @@ const empty = ['.', '.', '.', '.', '.', '.', '.', '.', '.'];
 }
 
 {
-  // King of the Hill spends a Mountain from hand for an extra placement.
-  const s = createGame({
-    handX: ['shift'], handO: ['shift', 'mountain'], first: 'X', itemO: 'king-of-the-hill',
-  });
-  s.board = board(['Xsh', '.', '.', '.', '.', '.', '.', '.', '.']);
-  s.player = 'O';
-  applyAction(s, { type: 'select', stone: 'shift' });
-  applyAction(s, { type: 'place', pos: 8 });
-  applyAction(s, { type: 'effect', direction: 'left', index: 2 });
-  check('King of the Hill offers every free square',
-    legalActions(s).filter((a) => a.use === 'king-of-the-hill').length, 7);
-  applyAction(s, { type: 'counter', use: 'king-of-the-hill', pos: 4 });
-  check('and the Mountain comes out of hand',
-    [show(s.board)[4], s.hands.O], ['Omo', []]);
-
-  const broke = createGame({
-    handX: ['shift'], handO: ['shift', 'shift'], first: 'X', itemO: 'king-of-the-hill',
-  });
-  broke.board = board(['Xsh', '.', '.', '.', '.', '.', '.', '.', '.']);
-  broke.player = 'O';
-  applyAction(broke, { type: 'select', stone: 'shift' });
-  applyAction(broke, { type: 'place', pos: 8 });
-  applyAction(broke, { type: 'effect', direction: 'left', index: 2 });
-  check('with no Mountain in hand it is not on the menu', broke.phase, 'select');
-}
-
-{
   // Mirror trades a pair of squares that mirror each other through the centre.
   const s = createGame({ handX: ['shift'], handO: ['mountain'], first: 'X', itemO: 'mirror' });
   s.board = board(['Xsh', '.', 'Omg', '.', '.', '.', 'Xmo', '.', '.']);
@@ -272,7 +241,7 @@ const empty = ['.', '.', '.', '.', '.', '.', '.', '.', '.'];
     [show(s.board)[2], show(s.board)[6]], ['.', 'Omg']);
 }
 
-// ── The four under evaluation ───────────────────────────────────────────────
+// ── The other three picks ───────────────────────────────────────────────────
 
 {
   const ending = (item, hand = ['mountain']) => {
@@ -292,11 +261,6 @@ const empty = ['.', '.', '.', '.', '.', '.', '.', '.', '.'];
   applyAction(relocate, { type: 'counter', use: 'relocate', from: 4, to: 2 });
   check('and the stone moves without resolving anything',
     [show(relocate.board)[4], show(relocate.board)[2]], ['.', 'Omg']);
-
-  const veto = ending('veto');
-  applyAction(veto, { type: 'counter', use: 'veto', stones: ['shift'] });
-  check('Veto bars the stone it names',
-    legalActions(veto).map((a) => a.stone), ['mountain', 'magnet']);
 
   const mind = ending('mind-control');
   applyAction(mind, { type: 'counter', use: 'mind-control', stones: ['mountain'] });
@@ -318,6 +282,54 @@ const empty = ['.', '.', '.', '.', '.', '.', '.', '.', '.'];
     show(s.board), ['.', 'Osh', '.', '.', 'Omo', '.', '.', '.', '.']);
 }
 
+// ── A space that switches a stone type off ──────────────────────────────────
+
+{
+  // On a Shift space, a Shift is an ordinary stone: it is placed and that is all.
+  const s = createGame({ handX: ['shift'], handO: ['shift'], first: 'X', disabled: 'shift' });
+  s.board = board(['.', 'Omg', '.', '.', '.', '.', '.', '.', '.']);
+  applyAction(s, { type: 'select', stone: 'shift' });
+  applyAction(s, { type: 'place', pos: 0 });
+  check('a switched-off Shift resolves nothing and ends the turn',
+    [s.phase, show(s.board)], ['select', ['Xsh', 'Omg', '.', '.', '.', '.', '.', '.', '.']]);
+}
+
+{
+  // On a Magnet space, a Magnet binds nobody.
+  const s = createGame({ handX: ['magnet'], handO: ['shift'], first: 'X', disabled: 'magnet' });
+  applyAction(s, { type: 'select', stone: 'magnet' });
+  applyAction(s, { type: 'place', pos: 4 });
+  applyAction(s, { type: 'select', stone: 'shift' });
+  check('a switched-off Magnet leaves every square open',
+    legalActions(s).map((a) => a.pos), [0, 1, 2, 3, 5, 6, 7, 8]);
+}
+
+{
+  // On a Mountain space, a Mountain is no longer a wall: it moves like anything.
+  const wall = pending(['Xsh', 'Omo', '.', '.', '.', '.', '.', '.', '.'],
+    { at: 0, selected: 'shift' });
+  applyAction(wall, { type: 'effect', direction: 'right' });
+  check('a Mountain normally blocks the line', show(wall.board).slice(0, 3), ['Xsh', 'Omo', '.']);
+
+  const off = createGame({ handX: ['shift'], handO: ['shift'], first: 'X', disabled: 'mountain' });
+  off.board = board(['.', 'Omo', '.', '.', '.', '.', '.', '.', '.']);
+  applyAction(off, { type: 'select', stone: 'shift' });
+  applyAction(off, { type: 'place', pos: 0 });
+  applyAction(off, { type: 'effect', direction: 'right' });
+  check('and on its own space it shifts along with everything else',
+    show(off.board).slice(0, 3), ['.', 'Xsh', 'Omo']);
+}
+
+{
+  // It still counts towards a line -- only the effect is gone.
+  const s = createGame({ handX: ['shift'], handO: ['shift'], first: 'X', disabled: 'shift' });
+  s.board = board(['Xsh', 'Xsh', '.', '.', '.', '.', '.', '.', '.']);
+  applyAction(s, { type: 'select', stone: 'shift' });
+  applyAction(s, { type: 'place', pos: 2 });
+  check('three switched-off stones in a row still win',
+    [s.over, s.winner, s.reason], [true, 'X', 'line']);
+}
+
 {
   // Every item, played out at random, has to reach a legal finish.
   const rng = makeRng(29);
@@ -326,8 +338,11 @@ const empty = ['.', '.', '.', '.', '.', '.', '.', '.', '.'];
     for (let g = 0; g < 40; g++) {
       const hand = () => Array.from({ length: 5 },
         () => ALL_TYPES[(rng() * ALL_TYPES.length) | 0]);
+      // Every space too, since a switched-off stone changes what resolves.
+      const spaces = [null, ...STONE_TYPES];
       const s = createGame({
         handX: hand(), handO: hand(), first: rng() < 0.5 ? 'X' : 'O', itemO: item,
+        disabled: spaces[(rng() * spaces.length) | 0],
       });
       let plies = 0;
       while (!s.over && plies++ < 200) applyAction(s, randomAction(s, rng));

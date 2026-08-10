@@ -41,20 +41,15 @@ const RESTRICTION_TYPES = ['magnet', 'stinky'];
 // Stones that resolve something after being placed.
 const EFFECT_TYPES = ['shift', '2048', 'rotate'];
 
-// A Counterattack is held by one player and only works when that player moves
-// second. Twenty-two others were built and measured before these four were kept;
-// git history and results/ hold what each of them was worth.
+// The Counterattack the player moving second picks one of. Twenty-odd others
+// were built and measured on the way to these five; git history and results/
+// hold what each of them was worth.
 export const ITEMS = [
-  'super-shift',        // sharpens a stone
-  'overtake',           // takes one back off the board
-  'king-of-the-hill',   // an extra Mountain, out of hand
-  'mirror',             // trades a pair of squares through the centre
-  // Under evaluation rather than kept: four that measured too weak under the old
-  // rollout policy, back in so the comparison can be made under the new one.
+  'overtake',           // takes the centre stone back off the board
   'relocate',           // moves a stone of yours anywhere
-  'rehearse',           // resolves a stone of yours already on the board
-  'veto',               // bars a stone in their hand
+  'mirror',             // trades a pair of squares through the centre
   'mind-control',       // names the stone they must play
+  'rehearse',           // resolves a stone of yours already on the board
 ];
 
 const TYPE_CODE = {
@@ -91,10 +86,17 @@ function freeSquares(board) {
 
 export function createGame({
   handX, handO, first = 'X', itemX = null, itemO = null,
+  // The space being fought on switches one stone type off for both players: it
+  // still occupies its square and still counts towards a line, but it has no
+  // effect, no restriction and, for a Mountain, no immovability.
+  disabled = null,
   // The rules as they stand hold a restriction until it is replaced. These put
   // one back to lasting a single turn, for studies that compare the two.
   oneTurnMagnet = false, oneTurnStinky = false,
 }) {
+  if (disabled !== null && !ALL_TYPES.includes(disabled)) {
+    throw new Error(`unknown stone type: ${disabled}`);
+  }
   for (const t of [...handX, ...handO]) {
     if (!ALL_TYPES.includes(t)) throw new Error(`unknown stone type: ${t}`);
   }
@@ -109,6 +111,7 @@ export function createGame({
     first,                           // who opened; the other one wins a filled board
     player: first,                   // whose turn it is
     phase: 'select',                 // select | place | effect | counter | over
+    disabled,                        // the stone type this space switches off
     oneTurnMagnet,                   // rules variants, both off under the rules as they stand
     oneTurnStinky,
     restriction: null,               // {id, owner, kind, sticky}: a Magnet or Stinky on the other player
@@ -133,6 +136,7 @@ export function cloneState(s) {
     first: s.first,
     player: s.player,
     phase: s.phase,
+    disabled: s.disabled,
     oneTurnMagnet: s.oneTurnMagnet,
     oneTurnStinky: s.oneTurnStinky,
     restriction: s.restriction ? { ...s.restriction } : null,
@@ -163,8 +167,8 @@ export function itemOf(s, player) {
 // A Mountain is never moved by an effect. It does not cancel the effect: it
 // stands still and everything else moves as far as the space allows, so a
 // Mountain reads as a wall on the board rather than as a veto on the menu.
-export function isStuck(board, i) {
-  return board[i]?.type === 'mountain';
+export function isStuck(board, i, disabled) {
+  return board[i]?.type === 'mountain' && disabled !== 'mountain';
 }
 
 // ── Effects ─────────────────────────────────────────────────────────────────
@@ -175,9 +179,9 @@ export function isStuck(board, i) {
 // cycle into strips: inside a strip a stone advances if the square ahead is
 // empty or is emptied by the stone ahead of it, and the stone facing the
 // Mountain stays put along with anything queued behind it.
-function stepAlong(board, cells) {
+function stepAlong(board, cells, disabled) {
   const n = cells.length;
-  const wall = cells.map((i) => isStuck(board, i));
+  const wall = cells.map((i) => isStuck(board, i, disabled));
 
   if (!wall.some(Boolean)) {
     const before = cells.map((i) => board[i]);
@@ -207,8 +211,8 @@ function lineOrder(index, dir) {
   return dir === 'right' || dir === 'down' ? idx : idx.slice().reverse();
 }
 
-function applyShift(board, dir, index) {
-  stepAlong(board, lineOrder(index, dir));
+function applyShift(board, dir, index, disabled) {
+  stepAlong(board, lineOrder(index, dir), disabled);
 }
 
 // Pack `cells` toward cells[0], which is the end the stones are sliding to.
@@ -217,7 +221,7 @@ function packToward(board, cells) {
   cells.forEach((i, k) => { board[i] = stones[k] ?? null; });
 }
 
-function apply2048(board, dir) {
+function apply2048(board, dir, disabled) {
   const horizontal = dir === 'left' || dir === 'right';
   for (let i = 0; i < 3; i++) {
     const idx = horizontal ? rowSquares(i) : colSquares(i);
@@ -226,31 +230,33 @@ function apply2048(board, dir) {
     const cells = dir === 'right' || dir === 'down' ? idx.slice().reverse() : idx;
     let segment = [];
     for (const c of cells) {
-      if (isStuck(board, c)) { packToward(board, segment); segment = []; } else segment.push(c);
+      if (isStuck(board, c, disabled)) { packToward(board, segment); segment = []; } else segment.push(c);
     }
     packToward(board, segment);
   }
 }
 
-function applyRotate(board, square) {
+function applyRotate(board, square, disabled) {
   const [tl, tr, bl, br] = SUBSQUARES[square];
-  stepAlong(board, [tl, tr, br, bl]);
+  stepAlong(board, [tl, tr, br, bl], disabled);
 }
 
 // The single place an effect is resolved, shared by the real move and any
 // lookahead, so the two cannot disagree.
-function resolveOnto(board, type, pos, action) {
+function resolveOnto(board, type, pos, action, disabled) {
   switch (type) {
     case 'shift': {
-      // Without Super Shift the line is the one the stone sits in.
       const horizontal = action.direction === 'left' || action.direction === 'right';
       const index = action.index ?? (horizontal ? row(pos) : col(pos));
-      return applyShift(board, action.direction, index);
+      return applyShift(board, action.direction, index, disabled);
     }
-    case '2048': return apply2048(board, action.direction);
-    case 'rotate': return applyRotate(board, action.square);
+    case '2048': return apply2048(board, action.direction, disabled);
+    case 'rotate': return applyRotate(board, action.square, disabled);
   }
 }
+
+// What a stone does here, which is nothing at all if this space switched it off.
+function resolves(s, type) { return EFFECT_TYPES.includes(type) && type !== s.disabled; }
 
 // ── Legal actions ───────────────────────────────────────────────────────────
 
@@ -293,16 +299,12 @@ function restrictionSquare(s, r) {
 // The effect menu for a stone of `type` sitting on `pos`. Usually that is the
 // stone just placed, but Rehearse asks the same question about an older one.
 function effectOptions(s, type, pos) {
-  const item = itemOf(s, s.player);
   const out = [];
 
   if (type === 'shift') {
-    // Super Shift picks the line as well as the direction.
     for (const direction of DIRECTIONS) {
       const horizontal = direction === 'left' || direction === 'right';
-      const own = horizontal ? row(pos) : col(pos);
-      const lines = item === 'super-shift' ? [0, 1, 2] : [own];
-      for (const index of lines) out.push({ direction, index });
+      out.push({ direction, index: horizontal ? row(pos) : col(pos) });
     }
   } else if (type === '2048') {
     for (const direction of DIRECTIONS) out.push({ direction });
@@ -351,7 +353,7 @@ function counterActions(s) {
   } else if (item === 'rehearse') {
     for (let i = 0; i < 9; i++) {
       const cell = s.board[i];
-      if (cell?.player !== p || !EFFECT_TYPES.includes(cell.type)) continue;
+      if (cell?.player !== p || !resolves(s, cell.type)) continue;
       for (const o of effectOptions(s, cell.type, i)) {
         out.push({ type: 'counter', use: 'rehearse', pos: i, ...o });
       }
@@ -391,7 +393,7 @@ function endTurn(s) {
   // The stone placed this turn may have been moved since -- by its own effect,
   // or by an item -- so it is found by id rather than by the square it landed on.
   const placed = s.board.findIndex((c) => c?.id === s.placedId);
-  if (RESTRICTION_TYPES.includes(s.selected) && placed >= 0) {
+  if (RESTRICTION_TYPES.includes(s.selected) && s.selected !== s.disabled && placed >= 0) {
     s.restriction = {
       id: s.placedId, owner: player, kind: s.selected,
       // A restriction holds until another one replaces it or its stone leaves
@@ -440,7 +442,7 @@ function afterEffect(s) {
 }
 
 function afterPlacement(s) {
-  if (!EFFECT_TYPES.includes(s.selected)) { afterEffect(s); return; }
+  if (!resolves(s, s.selected)) { afterEffect(s); return; }
 
   // A Swap with nothing to take: the stone is placed and resolves nothing.
   s.phase = 'effect';
@@ -468,7 +470,7 @@ export function applyAction(s, action) {
       break;
     }
     case 'effect': {
-      resolveOnto(s.board, s.selected, s.placedAt, action);
+      resolveOnto(s.board, s.selected, s.placedAt, action, s.disabled);
       afterEffect(s);
       break;
     }
@@ -493,7 +495,7 @@ export function applyAction(s, action) {
         s.board[action.from] = null;
         s.spent[p] = true;
       } else if (action.use === 'rehearse') {
-        resolveOnto(s.board, s.board[action.pos].type, action.pos, action);
+        resolveOnto(s.board, s.board[action.pos].type, action.pos, action, s.disabled);
         s.spent[p] = true;
       } else if (action.use === 'veto' || action.use === 'mind-control') {
         s.forced = {

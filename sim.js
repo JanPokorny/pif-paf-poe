@@ -43,6 +43,7 @@ export function playGame(spec) {
     openerWon: s.winner === 'X' ? 1 : s.winner === null ? 0.5 : 0,
     reason: s.reason,
     turns: s.turns,
+    space: spec.rules?.disabled ?? null,
   };
 }
 

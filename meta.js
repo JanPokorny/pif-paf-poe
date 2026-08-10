@@ -5,13 +5,21 @@
 //
 //   node meta.js --pop 200 --games 8 --rounds 25 --iters 300 --out results/meta.json
 //   node meta.js --items --pop 200 --rounds 30 --out results/meta-items.json
-//   node meta.js --item anchor --pop 120 --rounds 18 --out results/meta-anchor.json
+//   node meta.js --item mirror --pop 120 --rounds 18 --out results/meta-mirror.json
+//   node meta.js --space magnet --pop 120 --rounds 12 --out results/meta-space-magnet.json
+//   node meta.js --circuit --pop 120 --rounds 18 --out results/meta-circuit.json
 //   node meta.js --resume --rounds 8 --out results/meta-items.json
 //   node meta.js --report --out results/meta-items.json
 //
 // A loadout is a hand and, with --items, a Counterattack. Both are selected
 // together, because an item is only worth what it is worth against the field
 // that forms, and the field that forms depends on what the items are doing.
+//
+// A game is fought on a space, and a space switches one stone type off for both
+// players: it still occupies its square and still counts towards a line, but it
+// has no effect. --space fixes which type that is for a whole run; --circuit
+// draws a space per game from the five plus the neutral one, which is the version
+// a hand cannot prepare for and therefore has to survive.
 //
 // --item fixes one Counterattack on everybody instead, which is the other way
 // the element could work: not a thing a player chooses but a thing the rules
@@ -35,6 +43,10 @@ import { pathToFileURL } from 'node:url';
 import { ITEMS, STONE_TYPES } from './engine.js';
 import { makeRng } from './ai.js';
 import { CODE, arg, pad, pct, playGame, randomHand, sortHand, wilson } from './sim.js';
+
+// The spaces a circuit visits: one per stone type, plus the neutral space.
+const SPACES = [null, ...STONE_TYPES];
+const spaceName = (space) => space ?? 'neutral';
 
 // Bringing nothing is on the menu, so an item has to beat the empty slot.
 const LOADOUT_ITEMS = [null, ...ITEMS];
@@ -79,9 +91,15 @@ function buildSpecs(pop, opts, rng, seed) {
     do { j = (rng() * pop.length) | 0; } while (j === i);
     return j;
   };
+  // On a circuit the space is drawn per game, so neither hand knows in advance
+  // which of its stones will be dead weight.
+  const spaceFor = () => (opts.circuit
+    ? SPACES[(rng() * SPACES.length) | 0]
+    : opts.space ?? null);
   const match = (i, j, seed) => ({
     i, j, opener: pop[i].hand, replier: pop[j].hand,
     itemX: pop[i].item, itemO: pop[j].item, iters: opts.iters, seed,
+    rules: { disabled: spaceFor() },
   });
   for (let i = 0; i < pop.length; i++) {
     for (let g = 0; g < half; g++) {
@@ -137,7 +155,9 @@ function report(state, ranks) {
   const rounds = state.history;
   const withItems = !!state.items;
   console.log(`\nmetagame${withItems ? ' with Counterattacks' : ''}` +
-    `${state.fixedItem ? `, everybody replying with ${state.fixedItem}` : ''}: ${state.pop} loadouts, ` +
+    `${state.fixedItem ? `, everybody replying with ${state.fixedItem}` : ''}` +
+    `${state.circuit ? ', on a circuit of all six spaces' : ''}` +
+    `${state.space ? `, on the ${state.space} space` : ''}: ${state.pop} loadouts, ` +
     `${state.games} games each per round, ${rounds.length} rounds, ${state.totalGames} games, ` +
     `iters=${state.iters}, dropping and copying ${(state.cull * 100).toFixed(0)}% a round\n`);
 
@@ -186,6 +206,28 @@ function report(state, ranks) {
         pad(pct(rounds[0].itemShares[r.item] ?? 0) + '%', 9) +
         pad(r.rate === null ? '-' : pct(r.rate) + '%', 10) +
         pad(ci ? '[' + pct(ci[0]) + ',' + pct(ci[1]) + ']' : '-', 16) + r.n);
+    }
+  }
+
+  if (state.circuit) {
+    const tail = rounds.slice(Math.floor(rounds.length * 0.7));
+    const pooled = {};
+    for (const r of tail) {
+      for (const [sp, v] of Object.entries(r.spaceGames ?? {})) {
+        pooled[sp] ??= { n: 0, openerWins: 0 };
+        pooled[sp].n += v.n;
+        pooled[sp].openerWins += v.openerWins;
+      }
+    }
+    console.log(`\nby space, over the last ${tail.length} rounds\n`);
+    console.log(pad('space', 12) + pad('opener', 10) + pad('95% CI', 16) + 'games');
+    console.log('-'.repeat(48));
+    for (const sp of SPACES.map(spaceName)) {
+      const v = pooled[sp];
+      if (!v) continue;
+      const [lo, hi] = wilson(v.openerWins, v.n);
+      console.log(pad(sp, 12) + pad(pct(v.openerWins / v.n) + '%', 10) +
+        pad('[' + pct(lo) + ',' + pct(hi) + ']', 16) + v.n);
     }
   }
 
@@ -260,7 +302,9 @@ async function main() {
     out: arg('out', 'results/meta.json'),
     censusFile: arg('census', 'results/scan.json'),
     items: process.argv.includes('--items'),
-    item: arg('item', null),   // one Counterattack, given to everybody
+    item: arg('item', null),     // one Counterattack, given to everybody
+    space: arg('space', null),   // one stone type switched off for the whole run
+    circuit: process.argv.includes('--circuit'),   // a space drawn per game
     resume: process.argv.includes('--resume'),
     reportOnly: process.argv.includes('--report'),
   };
@@ -277,6 +321,8 @@ async function main() {
     state ??= {
       pop: opts.pop, games: opts.games, iters: opts.iters, cull: opts.cull, seed: opts.seed,
       items: opts.items,
+      circuit: opts.circuit,
+      space: opts.space,
       fixedItem: opts.item,
       population: Array.from({ length: opts.pop }, () => ({
         hand: randomHand(rng),
@@ -292,6 +338,8 @@ async function main() {
       const games = await runSpecs(specs, opts.workers);
 
       const score = state.population.map(() => ({ n: 0, wins: 0 }));
+      // Per-space record, so a circuit says which spaces the seat turns on.
+      const spaceGames = {};
       // Every item's record from the seat it is live in.
       const itemGames = {};
       let openerWins = 0, turns = 0, lineEnds = 0;
@@ -305,6 +353,12 @@ async function main() {
         openerWins += g.openerWon;
         turns += g.turns;
         if (g.reason === 'line') lineEnds++;
+        if (state.circuit) {
+          const sp = spaceName(g.space);
+          spaceGames[sp] ??= { n: 0, openerWins: 0 };
+          spaceGames[sp].n++;
+          spaceGames[sp].openerWins += g.openerWon;
+        }
       }
 
       const counts = {};
@@ -324,6 +378,7 @@ async function main() {
         shares: shares(state.population),
         itemShares: state.items ? itemShares(state.population) : null,
         itemGames: state.items ? itemGames : null,
+        spaceGames: state.circuit ? spaceGames : null,
         censusRate: ranks
           ? state.population.reduce((s, b) => s + (ranks[handKey(b.hand)]?.rate ?? 0), 0) / state.pop
           : null,
