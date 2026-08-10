@@ -1,0 +1,51 @@
+
+metagame, everybody replying with exchange: 120 loadouts, 8 games each per round, 18 rounds, 17280 games, iters=300, dropping and copying 10% a round
+
+round  opener   distinct  shi    204    rot    mou    mag    commonest             share
+----------------------------------------------------------------------------------------------------
+1       58.3%   60         19.0%  21.8%  20.0%  20.8%  18.3% shi 204 rot mou mag     7.5%
+2       57.4%   56         19.3%  22.0%  19.2%  19.2%  20.3% shi 204 rot mou mag     8.3%
+3       60.5%   50         20.5%  20.7%  18.3%  18.5%  22.0% shi 204 rot mou mag    10.0%
+4       57.7%   46         19.7%  21.5%  16.8%  18.5%  23.5% shi 204 rot mou mag    11.7%
+5       56.7%   41         19.5%  20.2%  16.7%  18.7%  25.0% shi 204 rot mou mag    15.8%
+6       54.0%   38         19.8%  19.8%  15.3%  18.7%  26.3% shi 204 rot mou mag    16.7%
+7       54.1%   35         20.0%  19.7%  14.7%  18.2%  27.5% shi 204 rot mou mag    17.5%
+8       55.6%   31         21.7%  18.8%  13.8%  16.8%  28.8% shi 204 rot mou mag    18.3%
+9       57.9%   29         22.5%  19.2%  12.8%  17.0%  28.5% shi 204 rot mou mag    19.2%
+10      55.2%   25         24.0%  19.0%  12.3%  16.0%  28.7% shi 204 rot mou mag    20.0%
+11      56.6%   24         24.3%  19.0%  12.3%  15.8%  28.5% shi 204 rot mou mag    20.8%
+12      56.8%   22         24.7%  18.5%  12.7%  15.7%  28.5% shi 204 rot mou mag    23.3%
+13      57.4%   21         25.0%  18.8%  12.3%  15.0%  28.8% shi 204 rot mou mag    25.8%
+14      56.7%   19         25.5%  18.8%  12.2%  14.7%  28.8% shi 204 rot mou mag    30.0%
+15      56.8%   18         26.7%  18.8%  11.7%  14.7%  28.2% shi 204 rot mou mag    31.7%
+16      58.8%   18         27.2%  19.2%  11.3%  14.5%  27.8% shi 204 rot mou mag    30.8%
+17      55.2%   15         28.2%  18.7%  11.0%  13.7%  28.5% shi 204 rot mou mag    29.2%
+18      57.4%   15         28.7%  18.5%  10.7%  13.3%  28.8% shi 204 rot mou mag    27.5%
+
+what the population ended up holding
+
+hand                    counterattack   copies   share   census rank   1st      2nd
+------------------------------------------------------------------------------------------------
+shi 204 rot mou mag     exchange        31        25.8%  16 of 126      84.0%    41.6%
+shi 204 rot mag mag     exchange        20        16.7%  29 of 126      80.0%    37.6%
+shi shi 204 mag mag     exchange        16        13.3%  12 of 126      89.6%    37.6%
+shi shi 204 mou mag     exchange        13        10.8%  10 of 126      88.8%    42.4%
+shi 204 204 mou mag     exchange        11         9.2%  1 of 126       95.2%    44.0%
+shi shi shi mou mag     exchange        11         9.2%  11 of 126      92.0%    38.4%
+shi 204 mou mag mag     exchange        7          5.8%  8 of 126       88.8%    43.2%
+shi shi rot mag mag     exchange        3          2.5%  30 of 126      80.0%    36.8%
+shi rot rot mou mag     exchange        2          1.7%  7 of 126       86.4%    48.0%
+204 204 rot mag mag     exchange        1          0.8%  24 of 126      86.4%    36.0%
+shi 204 mag mag mag     exchange        1          0.8%  78 of 126      67.2%    32.8%
+shi 204 mou mou mag     exchange        1          0.8%  31 of 126      83.2%    32.8%
+
+  the surviving hands take  86.4% of their census games from the opening seat and  40.2% from the replying seat
+  the hand space as a whole takes  72.7% and  27.3%
+
+summary
+  opening seat wins     58.3% in round 1,  57.4% [ 54.2, 60.5] in round 18
+  distinct loadouts    60 -> 15 of 120
+  commonest            shi 204 rot mou mag at  27.5%
+  mean census rate      55.7% ->  63.2% of the population, weighted by copies
+  stone shares         shi  19.0-> 28.7%, 204  21.8-> 18.5%, rot  20.0-> 10.7%, mou  20.8-> 13.3%, mag  18.3-> 28.8%
+  mean game length     5.1 turns,  96.1% decided by a line
