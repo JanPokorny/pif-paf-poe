@@ -69,12 +69,21 @@ function diagnose(item, opts) {
   const rng = makeRng(opts.seed);
   const tally = { games: 0, offered: 0, spent: 0, turnSum: 0, notes: {} };
   const note = (k) => { tally.notes[k] = (tally.notes[k] ?? 0) + 1; };
+  // A once-per-game item can be spent too early. This keeps the holder's record
+  // by the turn they spent it on, with `never` for the games they did not.
+  const byTurn = new Map();
+  const record = (when, won) => {
+    const at = byTurn.get(when) ?? { n: 0, wins: 0 };
+    at.n++;
+    at.wins += won;
+    byTurn.set(when, at);
+  };
 
   for (let g = 0; g < opts.pairs; g++) {
     const s = createGame({
       handX: randomHand(rng), handO: randomHand(rng), first: 'X', itemO: item,
     });
-    let plies = 0;
+    let plies = 0, spentOn = null;
     while (!s.over && plies++ < 200) {
       const action = chooseAction(s, { iterations: opts.iters, rng });
 
@@ -91,6 +100,7 @@ function diagnose(item, opts) {
       if (spending) {
         tally.spent++;
         tally.turnSum += s.turns;
+        spentOn ??= s.turns;
         if (action.type === 'encore') {
           // Encore runs after the effect but before the win check, so a line
           // that has just appeared is still on the board and can be broken up.
@@ -124,6 +134,7 @@ function diagnose(item, opts) {
     if (item === 'obstruction' && s.reason === 'line' && hasLine(s.board, other(s.winner))) {
       note('the banned line was completed anyway, and lost');
     }
+    record(spentOn ?? 'never', s.winner === 'O' ? 1 : 0);
     tally.games++;
   }
 
@@ -135,6 +146,16 @@ function diagnose(item, opts) {
     `\nshares below are of ${tally.spent ? 'the spends' : 'the games'}\n`);
   for (const [k, v] of Object.entries(tally.notes).sort((a, b) => b[1] - a[1])) {
     console.log('  ' + pad((v / base * 100).toFixed(1) + '%', 8) + k);
+  }
+
+  const order = [...byTurn.keys()].sort((a, b) =>
+    (a === 'never' ? 99 : a) - (b === 'never' ? 99 : b));
+  if (order.length > 1) {
+    console.log('\n  ' + pad('spent on turn', 16) + pad('games', 8) + 'holder won');
+    for (const when of order) {
+      const at = byTurn.get(when);
+      console.log('  ' + pad(when, 16) + pad(at.n, 8) + pct(at.wins / at.n) + '%');
+    }
   }
 }
 
