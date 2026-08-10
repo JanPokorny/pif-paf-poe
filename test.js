@@ -330,6 +330,29 @@ const empty = ['.', '.', '.', '.', '.', '.', '.', '.', '.'];
     [s.over, s.winner, s.reason], [true, 'X', 'line']);
 }
 
+// ── Holding more than one ───────────────────────────────────────────────────
+
+{
+  // Two Counterattacks held, one spent: both are on the menu until one goes.
+  const s = createGame({
+    handX: ['shift'], handO: ['mountain'], first: 'X', itemO: ['mirror', 'relocate'],
+  });
+  s.board = board(['Xsh', '.', '.', '.', 'Omg', '.', '.', '.', '.']);
+  s.player = 'O';
+  applyAction(s, { type: 'select', stone: 'mountain' });
+  applyAction(s, { type: 'place', pos: 8 });
+  const uses = new Set(legalActions(s).map((a) => a.use));
+  check('both held items offer their choices', [...uses].sort(), ['mirror', 'pass', 'relocate']);
+  applyAction(s, { type: 'counter', use: 'relocate', from: 4, to: 2 });
+  check('and spending either one spends the game\'s only use', s.spent.O, true);
+}
+
+{
+  // A lone name still works, and still means a set of one.
+  const s = createGame({ handX: ['shift'], handO: ['shift'], first: 'X', itemO: 'mirror' });
+  check('one item reads as a set of one', s.items.O, ['mirror']);
+}
+
 {
   // Every item, played out at random, has to reach a legal finish.
   const rng = makeRng(29);
@@ -344,6 +367,13 @@ const empty = ['.', '.', '.', '.', '.', '.', '.', '.', '.'];
         handX: hand(), handO: hand(), first: rng() < 0.5 ? 'X' : 'O', itemO: item,
         disabled: spaces[(rng() * spaces.length) | 0],
       });
+      if (g === 0) {
+        // And once with the whole list held at the same time.
+        const all = createGame({ handX: hand(), handO: hand(), first: 'X', itemO: ITEMS });
+        let p = 0;
+        while (!all.over && p++ < 200) applyAction(all, randomAction(all, rng));
+        if (!all.over) stuck.push('all five held');
+      }
       let plies = 0;
       while (!s.over && plies++ < 200) applyAction(s, randomAction(s, rng));
       if (!s.over || !['X', 'O'].includes(s.winner)) stuck.push(item);

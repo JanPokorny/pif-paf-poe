@@ -21,14 +21,17 @@ import {
 import { chooseAction, makeRng } from './ai.js';
 import { arg, pad, pct, randomHand, wilson } from './sim.js';
 
+// An arm is a set of Counterattacks, named by joining them with '+', since the
+// question is what holding several at once is worth when only one may be spent.
 const ARMS = ['none', ...ITEMS];
+const heldBy = (arm) => (arm === 'none' ? null : arm.split('+'));
 
 // X opens, O replies, so the item under test is always O's.
 function playGame(spec) {
   const rng = makeRng(spec.seed);
   const s = createGame({
     handX: spec.opener, handO: spec.replier, first: 'X',
-    itemO: spec.item === 'none' ? null : spec.item,
+    itemO: heldBy(spec.item),
   });
   let plies = 0;
   while (!s.over && plies++ < 200) {
@@ -81,7 +84,7 @@ function diagnose(item, opts) {
 
   for (let g = 0; g < opts.pairs; g++) {
     const s = createGame({
-      handX: randomHand(rng), handO: randomHand(rng), first: 'X', itemO: item,
+      handX: randomHand(rng), handO: randomHand(rng), first: 'X', itemO: heldBy(item),
     });
     let plies = 0, spentOn = null;
     while (!s.over && plies++ < 200) {
@@ -101,6 +104,8 @@ function diagnose(item, opts) {
         tally.spent++;
         tally.turnSum += s.turns;
         spentOn ??= s.turns;
+        // With several held, which one was chosen is the question.
+        if ((heldBy(item) ?? []).length > 1) note(`spent the ${action.use}`);
         if (action.type === 'encore') {
           // Encore runs after the effect but before the win check, so a line
           // that has just appeared is still on the board and can be broken up.
@@ -171,7 +176,9 @@ function report(state) {
     `of these pairings with no Counterattack at all\n`);
 
   const rows = [];
-  for (const arm of ARMS) {
+  // Whatever is in the file, in ARMS order first and then the set arms.
+  const armsInFile = [...ARMS, ...Object.keys(state.arms).filter((a) => !ARMS.includes(a))];
+  for (const arm of armsInFile) {
     const a = state.arms[arm];
     if (!a || arm === 'none') continue;
     const diffs = a.wins.map((w, k) => w - base.wins[k]);
@@ -189,12 +196,13 @@ function report(state) {
   }
   rows.sort((x, y) => y.delta - x.delta);
 
-  console.log(pad('counterattack', 16) + pad('2nd wins', 10) + pad('95% CI', 17) +
+  const width = Math.max(16, ...rows.map((r) => r.arm.length + 2));
+  console.log(pad('counterattack', width) + pad('2nd wins', 10) + pad('95% CI', 17) +
     pad('swing', 9) + pad('95% CI', 16) + pad('flipped', 9) + 'used');
-  console.log('-'.repeat(86));
+  console.log('-'.repeat(width + 70));
   for (const r of rows) {
     const sign = r.delta >= 0 ? '+' : '';
-    console.log(pad(r.arm, 16) + pad(pct(r.rate) + '%', 10) +
+    console.log(pad(r.arm, width) + pad(pct(r.rate) + '%', 10) +
       pad('[' + pct(r.ci[0]) + ',' + pct(r.ci[1]) + ']', 17) +
       pad(sign + (r.delta * 100).toFixed(1) + 'pp', 9) +
       pad('[' + ((r.delta - r.half) * 100).toFixed(1) + ',' +

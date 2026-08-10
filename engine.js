@@ -41,9 +41,11 @@ const RESTRICTION_TYPES = ['magnet', 'stinky'];
 // Stones that resolve something after being placed.
 const EFFECT_TYPES = ['shift', '2048', 'rotate'];
 
-// The Counterattack the player moving second picks one of. Twenty-odd others
-// were built and measured on the way to these five; git history and results/
-// hold what each of them was worth.
+// The Counterattacks the player moving second picks from. They may hold more than
+// one but spend only one in a game, so holding two is a choice made in play with
+// the board in front of you rather than before it. Twenty-odd others were built
+// and measured on the way to these five; git history and results/ hold what each
+// of them was worth.
 export const ITEMS = [
   'overtake',           // takes the centre stone back off the board
   'relocate',           // moves a stone of yours anywhere
@@ -100,14 +102,16 @@ export function createGame({
   for (const t of [...handX, ...handO]) {
     if (!ALL_TYPES.includes(t)) throw new Error(`unknown stone type: ${t}`);
   }
-  for (const i of [itemX, itemO]) {
-    if (i !== null && !ITEMS.includes(i)) throw new Error(`unknown item: ${i}`);
+  // One Counterattack or several: a lone name is the same as a set of one.
+  const held = (i) => (i === null ? [] : [].concat(i));
+  for (const i of [...held(itemX), ...held(itemO)]) {
+    if (!ITEMS.includes(i)) throw new Error(`unknown item: ${i}`);
   }
   return {
     board: Array(9).fill(null),      // {player, type, id} | null
     hands: { X: [...handX], O: [...handO] },
-    items: { X: itemX, O: itemO },   // Counterattack, live only for the second player
-    spent: { X: false, O: false },   // a once-per-game item has been used
+    items: { X: held(itemX), O: held(itemO) },   // live only for the second player
+    spent: { X: false, O: false },   // one of them has been spent, and that is the lot
     first,                           // who opened; the other one wins a filled board
     player: first,                   // whose turn it is
     phase: 'select',                 // select | place | effect | counter | over
@@ -131,7 +135,7 @@ export function cloneState(s) {
   return {
     board: s.board.map((c) => (c ? { player: c.player, type: c.type, id: c.id } : null)),
     hands: { X: [...s.hands.X], O: [...s.hands.O] },
-    items: { ...s.items },
+    items: { X: [...s.items.X], O: [...s.items.O] },
     spent: { ...s.spent },
     first: s.first,
     player: s.player,
@@ -157,9 +161,9 @@ export function cloneState(s) {
 // it is what makes the rollout credit correct if that ever stops being true.
 export function toMove(s) { return s.player; }
 
-// A Counterattack is inert in the hands of whoever opened the game.
-export function itemOf(s, player) {
-  return player === s.first ? null : s.items[player];
+// What this player may spend, which is nothing at all for whoever opened.
+export function itemsOf(s, player) {
+  return player === s.first ? [] : s.items[player];
 }
 
 // ── Immobility ──────────────────────────────────────────────────────────────
@@ -328,7 +332,13 @@ function counterActions(s) {
   const out = [{ type: 'counter', use: 'pass' }];
   if (s.spent[p]) return out;
 
-  const item = itemOf(s, p);
+  // Every Counterattack held offers its own choices, and spending any one of them
+  // spends the turn's chance and the game's.
+  for (const item of itemsOf(s, p)) addCounterActions(s, p, item, out);
+  return out;
+}
+
+function addCounterActions(s, p, item, out) {
   if (item === 'overtake') {
     // Only the centre, which is the square worth taking and the one they had to
     // commit to first.
@@ -358,7 +368,7 @@ function counterActions(s) {
         out.push({ type: 'counter', use: 'rehearse', pos: i, ...o });
       }
     }
-  } else if (item === 'veto' || item === 'mind-control') {
+  } else if (item === 'mind-control') {
     for (const stone of new Set(s.hands[other(p)])) {
       out.push({ type: 'counter', use: item, stones: [stone] });
     }
@@ -431,11 +441,8 @@ function endTurn(s) {
 // After the effect is settled: the mover may still have an end-of-turn item.
 function afterEffect(s) {
   const p = s.player;
-  const item = itemOf(s, p);
-  if (!s.spent[p] && item && ['overtake', 'king-of-the-hill', 'mirror',
-    'relocate', 'rehearse', 'veto', 'mind-control'].includes(item)) {
+  if (!s.spent[p] && itemsOf(s, p).length) {
     s.phase = 'counter';
-    s.actor = null;
     if (counterActions(s).length > 1) return;   // something to choose
   }
   endTurn(s);
