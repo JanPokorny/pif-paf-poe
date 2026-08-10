@@ -68,6 +68,9 @@ export const ITEMS = [
   // Half a turn's worth of doing something, rather than undoing something of
   // theirs: move a stone you have, resolve one again, or add a Mountain.
   'nudge', 'relocate', 'rehearse', 'king-of-the-hill', 'exchange', 'rearrange',
+  // Exchange without the requirement that both squares be occupied, which makes
+  // it a move to the mirror square when one of them is empty.
+  'mirror',
 ];
 // Items that interrupt the opponent's resolution, and what each can answer.
 const INTERRUPTS = {
@@ -507,9 +510,13 @@ function counterActions(s) {
     for (const pos of freeSquares(s.board)) {
       out.push({ type: 'counter', use: 'king-of-the-hill', pos });
     }
-  } else if (item === 'exchange') {
+  } else if (item === 'exchange' || item === 'mirror') {
+    // Exchange needs a stone on both squares; Mirror takes either one.
     for (const [a, b] of SYMMETRIC) {
-      if (s.board[a] && s.board[b]) out.push({ type: 'counter', use: 'exchange', a, b });
+      const ready = item === 'mirror'
+        ? s.board[a] || s.board[b]
+        : s.board[a] && s.board[b];
+      if (ready) out.push({ type: 'counter', use: item, a, b });
     }
   } else if (item === 'rearrange') {
     for (const order of rearrangements(s, p)) {
@@ -604,7 +611,8 @@ function afterEffect(s) {
   const item = itemOf(s, p);
   if (!s.spent[p] && item && ['overtake', 'mind-control', 'shortlist', 'veto',
     'blind-spot', 'second-wind', 'echo', 'obstruction',
-    'nudge', 'relocate', 'rehearse', 'king-of-the-hill', 'exchange', 'rearrange'].includes(item)) {
+    'nudge', 'relocate', 'rehearse', 'king-of-the-hill', 'exchange', 'rearrange',
+    'mirror'].includes(item)) {
     s.phase = 'counter';
     s.actor = null;
     if (counterActions(s).length > 1) return;   // something to choose
@@ -734,7 +742,7 @@ export function applyAction(s, action) {
       } else if (action.use === 'king-of-the-hill') {
         s.board[action.pos] = { player: p, type: 'mountain', id: s.nextId++ };
         s.spent[p] = true;
-      } else if (action.use === 'exchange') {
+      } else if (action.use === 'exchange' || action.use === 'mirror') {
         const held = s.board[action.a];
         s.board[action.a] = s.board[action.b];
         s.board[action.b] = held;

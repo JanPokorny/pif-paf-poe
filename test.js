@@ -650,6 +650,20 @@ const empty = ['.', '.', '.', '.', '.', '.', '.', '.', '.'];
 }
 
 {
+  // Mirror takes the pairs Exchange will not, and empties the square it leaves.
+  const s = createGame({ handX: ['shift'], handO: ['mountain'], first: 'X', itemO: 'mirror' });
+  s.board = board(['Xsh', '.', 'Omg', '.', '.', '.', '.', '.', '.']);
+  s.player = 'O';
+  applyAction(s, { type: 'select', stone: 'mountain' });
+  applyAction(s, { type: 'place', pos: 4 });
+  check('Mirror offers a pair with a stone on either square',
+    legalActions(s).filter((a) => a.use === 'mirror').map((a) => [a.a, a.b]), [[0, 8], [2, 6]]);
+  applyAction(s, { type: 'counter', use: 'mirror', a: 2, b: 6 });
+  check('and one stone crosses to the empty mirror square',
+    [show(s.board)[2], show(s.board)[6]], ['.', 'Omg']);
+}
+
+{
   // Rearrange permutes the holder's own stones over their own squares.
   const s = createGame({ handX: ['shift'], handO: ['shift'], first: 'X', itemO: 'rearrange' });
   s.board = board(['Omg', '.', 'Omo', '.', '.', '.', '.', '.', '.']);

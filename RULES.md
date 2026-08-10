@@ -180,7 +180,11 @@ from wherever it now stands.
 of your hand.
 
 **Exchange** — once per game, swap two stones standing on squares that mirror each other
-through the centre: 0 and 8, 1 and 7, 2 and 6, or 3 and 5. Either player may own them.
+through the centre: 0 and 8, 1 and 7, 2 and 6, or 3 and 5. Either player may own them, and both
+squares have to be occupied, which they are in about half of all games.
+
+**Mirror** — the same without that requirement: if only one of the two squares holds a stone,
+that stone moves to the other one.
 
 **Rearrange** — once per game, rearrange your own stones among the squares they already stand
 on. You keep the same squares; what changes is which stone is where, which is how a Magnet or a
