@@ -10,10 +10,10 @@ import {
 import { makeRng, randomAction } from './ai.js';
 import {
   ADJACENT, BOARD_SPACES, CORNERS, LINES, LINES_AT, LINE_CLEARS, N_SPACES, REGULAR,
-  SPACES, SPACE_BOARDS, STAR, SUBBOARDS,
+  SPACES, SPACE_BOARDS, STAR, SUBBOARDS, claimable, setLayout,
 } from './board.js';
 import {
-  allocate, bestPicks, claimable, newCampaign, playRound, posValue,
+  allocate, bestPicks, newCampaign, playRound, posValue,
   placementValue, resolve as pairOff, scoreAndClear, setPos, tailTable, takeChance, winsNeeded,
 } from './campaign.js';
 
@@ -588,7 +588,7 @@ const empty = ['.', '.', '.', '.', '.', '.', '.', '.', '.'];
   // the invariants, whatever the numbers.
   const cfg = {
     size: 12, skill: 0.5, targets: 14, defence: 'plan', attack: 'plan',
-    duels: 'coin', restart: 0, step: 'optional', pos: [null, [0.03, 0.12], [0.03, 0.12]],
+    duels: 'coin', restart: 0, step: 'optional', layout: 'pinwheel', pos: [null, [0.03, 0.12], [0.03, 0.12]],
   };
   const tables = [null, tailTable(0.5, 13), tailTable(0.5, 13)];
   const rng = makeRng(31);

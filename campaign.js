@@ -1,6 +1,7 @@
 // The campaign: two teams, thirty-three spaces, and a duel on every pairing.
 //
 //   node campaign.js --sizes 10-30 --rounds 800 --reps 3 --steps none,forced,optional
+//   node campaign.js --layouts pinwheel,square,touching --sizes 20 --rounds 900
 //   node campaign.js --pair defence --sizes 10,20,30 --rounds 500    # what defence is worth
 //   node campaign.js --pair step --sizes 10,20,30 --rounds 500       # what the step is worth
 //   node campaign.js --sizes 20 --defence oracle --rounds 500        # the defence's ceiling
@@ -32,8 +33,8 @@ import { dirname } from 'node:path';
 import { pathToFileURL } from 'node:url';
 
 import {
-  ADJACENT, BOARD_SPACES, CORNERS, LINES, LINE_CLEARS, N_SPACES, REGULAR,
-  SPACES, SPACE_BOARDS, STAR, SUBBOARDS, render,
+  ADJACENT, BOARD_SPACES, CORNERS, LAYOUTS, LINES, LINE_CLEARS, N_SPACES, REGULAR,
+  SPACES, SPACE_BOARDS, STAR, SUBBOARDS, claimable, render, setLayout,
 } from './board.js';
 import { makeRng } from './ai.js';
 import { arg, pad, pct, playGame, randomHand } from './sim.js';
@@ -57,20 +58,44 @@ import { arg, pad, pct, playGame, randomHand } from './sim.js';
 // pair below is what came out of that search; the surface around it is flat, and
 // the conclusions were re-run at both ends of a wide range to be sure of it.
 let POS = [0, 0.03, 0.12];
-export const setPos = ([one, two]) => { POS = [0, one, two]; };
+
+// A line through the star is not like the others. Its third square is the one no
+// attack can ever be aimed at, so two of your symbols on it is a threat the other
+// team cannot answer by marking the gap -- the only reply is to flip the star to
+// their own symbol, which costs them every mark of a whole round. `STAR_W` scales
+// what a position on such a line is worth; it is a setting because whether that
+// premium is real is a question for measurement.
+let STAR_W = 1;
+export const setPos = ([one, two, star = 1]) => { POS = [0, one, two]; STAR_W = star; };
 
 // Positional value of a board to `me`, net of what the same board is worth to
 // them. Zero-sum by construction, so the defence can use the attack's numbers.
+// Which lines run through the star, cached against the board they were built from
+// so that switching layout does not leave them stale.
+let starLines = null, starLinesOf = null;
+function starLineFlags() {
+  if (starLinesOf !== LINES) {
+    starLinesOf = LINES;
+    starLines = LINES.map((line) => line.includes(STAR));
+  }
+  return starLines;
+}
+
 function posValue(b, me, them) {
+  const through = starLineFlags();
   let v = 0;
-  for (const line of LINES) {
+  for (let li = 0; li < LINES.length; li++) {
+    const line = LINES[li];
     let mine = 0, theirs = 0;
     for (const j of line) { if (b[j] === me) mine++; else if (b[j] === them) theirs++; }
-    if (!theirs) v += POS[mine];
-    if (!mine) v -= POS[theirs];
+    const w = through[li] ? STAR_W : 1;
+    if (!theirs) v += w * POS[mine];
+    if (!mine) v -= w * POS[theirs];
   }
   return v;
 }
+
+
 
 // Lines of `me` on the board, and everything a scored line takes with it.
 function scoreAndClear(b, me) {
@@ -93,7 +118,7 @@ function scoreAndClear(b, me) {
 function placementValue(marks, me, them, picks, base) {
   const b = marks.slice();
   if (picks.length) for (const i of picks) b[i] = me;
-  else b[STAR] = me;
+  else if (STAR >= 0) b[STAR] = me;
   const { points } = scoreAndClear(b, me);
   return points + posValue(b, me, them) - base;
 }
@@ -299,14 +324,6 @@ function combinations(marks, me, them, free, gain, base) {
     if (surplus > 0.01) out.push({ gaps, surplus });
   }
   return out.sort((a, b) => b.surplus - a.surplus).slice(0, 12);
-}
-
-// Can these squares be claimed for different boards? A corner belongs to two, so
-// it is a small matching; three squares at most, so it is done by trying them.
-function claimable(spaces, used = []) {
-  if (!spaces.length) return true;
-  return SPACE_BOARDS[spaces[0]].some((b) =>
-    !used.includes(b) && claimable(spaces.slice(1), [...used, b]));
 }
 
 // Expected value of an allocation: independently per space, the chance of taking
@@ -608,9 +625,14 @@ export function playRound(st, cfg, rng, tables, tally) {
 
   const { picks, value } = bestPicks(st.marks, me, them, taken, gain, base);
   if (picks.length) for (const i of picks) st.marks[i] = me;
-  else st.marks[STAR] = me;
+  else if (STAR >= 0) st.marks[STAR] = me;
 
+  // Placing nothing is a choice, not only what is left when nothing was won: the
+  // star is the one square no attack can be aimed at, so a line needing it can only
+  // ever be finished by declining a whole round's marks. Worth counting separately
+  // from a round that simply took nothing.
   const flipped = !picks.length;
+  const declined = flipped && taken.length > 0;
   const { points, cleared } = scoreAndClear(st.marks, me);
   st.points[me] += points;
   st.round++;
@@ -635,7 +657,10 @@ export function playRound(st, cfg, rng, tables, tally) {
     tally.contested += free.filter((i) => A[i] > 0).length;
     tally.taken += taken.length;
     tally.free += free.length;
-    tally.flips += picks.length ? 0 : 1;
+    tally.flips += flipped ? 1 : 0;
+    tally.declined += declined ? 1 : 0;
+    tally.flipPoints += flipped ? points : 0;
+    tally.starHeld += STAR >= 0 && st.marks[STAR] ? 1 : 0;
     tally.reinforced += cfg.step === 'none' ? 0
       : duels - free.reduce((n, i) => n + Math.min(A[i], D[i]), 0);
     tally.overestimate += overestimate;
@@ -660,14 +685,15 @@ function duel(cfg, rng, p) {
 
 const newTally = (cfg) => ({
   ...cfg, rounds: 0, marks: 0, markHist: [0, 0, 0, 0, 0], points: 0, teamPoints: [0, 0, 0], seatPoints: [0, 0], value: 0, cleared: 0,
-  duels: 0, pivotal: 0, unpaired: 0, idle: 0, contested: 0, taken: 0, free: 0, flips: 0,
-  reinforced: 0, overestimate: 0,
+  duels: 0, pivotal: 0, unpaired: 0, idle: 0, contested: 0, taken: 0, free: 0,
+  flips: 0, declined: 0, flipPoints: 0, starHeld: 0, reinforced: 0, overestimate: 0,
 });
 
 // One take-table per team, since the two only differ when one team is better.
 const tablesFor = (cfg) => [null, tailTable(skillOf(cfg, 1), cfg.size + 1), tailTable(skillOf(cfg, 2), cfg.size + 1)];
 
 export function runConfig(cfg) {
+  setLayout(cfg.layout);
   const rng = makeRng(cfg.seed);
   const tables = tablesFor(cfg);
   const tally = newTally(cfg);
@@ -688,6 +714,7 @@ export function runConfig(cfg) {
 // the better one wins it. A team only scores in the rounds it attacks, so a race
 // to a target is a race over half the rounds each.
 export function runCampaigns(cfg) {
+  setLayout(cfg.layout);
   const rng = makeRng(cfg.seed);
   const tables = tablesFor(cfg);
   const tally = { ...newTally(cfg), mode: 'campaigns', ran: 0, wonByX: 0, drawn: 0, length: 0 };
@@ -724,6 +751,7 @@ const PAIRS = {
 };
 
 function runPaired(cfg) {
+  setLayout(cfg.layout);
   const rng = makeRng(cfg.seed);
   const tables = tablesFor(cfg);
   const variants = PAIRS[cfg.pair](cfg);
@@ -784,7 +812,7 @@ const per = (x, n) => (n ? x / n : 0);
 function row(t) {
   const r = t.rounds;
   return {
-    size: t.size, step: t.step, defence: t.defence, attack: t.attack, skill: t.skill,
+    size: t.size, step: t.step, layout: t.layout, defence: t.defence, attack: t.attack, skill: t.skill,
     rounds: r,
     marks: per(t.marks, r),
     points: per(t.points, r),
@@ -805,6 +833,10 @@ function row(t) {
     takeRate: per(t.taken, t.contested),
     occupancy: 1 - per(t.free, r * REGULAR.length),
     cleared: per(t.cleared, r),
+    flipRate: per(t.flips, r),
+    declineRate: per(t.declined, r),
+    flipPoints: per(t.flipPoints, t.flips),
+    starHeld: per(t.starHeld, r),
     reinforced: per(t.reinforced, r),
     overestimate: per(t.overestimate, r),
     markHist: t.markHist.map((n) => per(n, r)),
@@ -823,7 +855,7 @@ function row(t) {
 function group(tallies) {
   const byKey = new Map();
   for (const t of tallies) {
-    const k = `${t.size}|${t.step}|${t.defence}`;
+    const k = `${t.size}|${t.step}|${t.layout}|${t.defence}`;
     if (!byKey.has(k)) { byKey.set(k, { ...t }); continue; }
     const into = byKey.get(k);
     for (const [f, v] of Object.entries(t)) {
@@ -837,16 +869,17 @@ function group(tallies) {
 
 function report(rows) {
   const campaigns = rows.some((r) => r.ran);
-  const head = ['size', 'step', 'def', 'marks', 'pts/r', 'duels', 'play%', 'pivot%', 'decis%', 'take%', 'occ%',
+  const head = ['size', 'layout', 'step', 'def', 'marks', 'pts/r', 'duels', 'play%', 'pivot%', 'decis%', 'take%', 'occ%',
     ...(campaigns ? ['X win%', 'draw%', 'length'] : ['0mk%', '1mk%', '2mk%', '3mk%', '4mk%'])];
   console.log(head.map((h) => pad(h, h.length > 5 ? 8 : 6)).join(''));
   for (const r of rows) {
     console.log([
-      pad(r.size, 6), pad(r.step.slice(0, 4), 6), pad(r.defence.slice(0, 4), 6),
+      pad(r.size, 6), pad(r.layout.slice(0, 7), 8), pad(r.step.slice(0, 4), 6), pad(r.defence.slice(0, 4), 6),
       pad(r.marks.toFixed(2), 6), pad(r.points.toFixed(3), 6),
       pad(r.duels.toFixed(1), 6), pct(r.playing) + ' ', pct(r.pivotal) + '  ',
       pct(r.decisive ?? (r.duels * r.pivotal) / r.size) + '  ',
-      pct(r.takeRate) + ' ', pct(r.occupancy) + ' ', pad(r.overestimate.toFixed(2), 6),
+      pct(r.takeRate) + ' ', pct(r.occupancy) + ' ',
+      pad(r.points.toFixed(2), 6), pad((r.points ? r.cleared / r.points : 0).toFixed(1), 6),
       ...(campaigns
         ? [pad(pct(r.wonByX), 8), pad(pct(r.drawn), 8), pad(r.length.toFixed(1), 8)]
         : r.markHist.map((x) => pct(x) + ' ')),
@@ -873,8 +906,8 @@ async function main() {
     restart: parseInt(arg('restart', '60'), 10),
     // [ , X's weights, O's weights ]; --posB pits a candidate against the default.
     pos: [null,
-      arg('posA', '0.03,0.12').split(',').map(Number),
-      (arg('posB', null) ?? arg('posA', '0.03,0.12')).split(',').map(Number)],
+      arg('posA', '0.03,0.12,1').split(',').map(Number),
+      (arg('posB', null) ?? arg('posA', '0.03,0.12,1')).split(',').map(Number)],
     skill: parseFloat(arg('skill', '0.5')),      // X's chance in a duel against O
     target: parseInt(arg('target', '0'), 10),    // points that finish a campaign
     campaigns: parseInt(arg('campaigns', '400'), 10),
@@ -889,6 +922,7 @@ async function main() {
     iters: parseInt(arg('iters', '120'), 10),
     seed: parseInt(arg('seed', '20260811'), 10),
     reps: parseInt(arg('reps', '1'), 10),   // independent runs per size, summed
+    layouts: arg('layouts', arg('layout', 'pinwheel')).split(','),
     steps: arg('steps', arg('step', 'forced')).split(','),
     workers: parseInt(arg('workers', String(Math.max(1, cpus().length - 1))), 10),
     out: arg('out', null),
@@ -903,11 +937,11 @@ async function main() {
   // Allocating a whole number of players over a whole number of squares is lumpy,
   // and one run of one size can land on a shape that is not typical of its
   // neighbours. --reps runs each size from several seeds and sums them.
-  const configs = opts.steps.flatMap((step, si) => opts.sizes.flatMap((size, k) =>
-    Array.from({ length: opts.reps }, (_, rep) => ({
-      ...opts, size, step, rep, sizes: undefined, steps: undefined,
-      seed: opts.seed + 1000 * k + 97 * rep + 7 * si,
-    }))));
+  const configs = opts.layouts.flatMap((layout, li) => opts.steps.flatMap((step, si) =>
+    opts.sizes.flatMap((size, k) => Array.from({ length: opts.reps }, (_, rep) => ({
+      ...opts, size, step, layout, rep, sizes: undefined, steps: undefined, layouts: undefined,
+      seed: opts.seed + 1000 * k + 97 * rep + 7 * si + 13 * li,
+    })))));
 
   const started = Date.now();
   const tallies = opts.workers > 1 && configs.length > 1
@@ -917,7 +951,8 @@ async function main() {
     ? group(tallies.map((p) => p[0])).map(row)
       .map((a, i) => [a, group(tallies.map((p) => p[1])).map(row)[i]])
       .sort((a, b) => a[0].size - b[0].size)
-    : group(tallies).map(row).sort((a, b) => a.step.localeCompare(b.step) || (a.size - b.size));
+    : group(tallies).map(row)
+      .sort((a, b) => a.layout.localeCompare(b.layout) || a.step.localeCompare(b.step) || (a.size - b.size));
   opts.pair ? reportPaired(rows) : report(rows);
   console.log(`\n${configs.length} configs, ${opts.rounds} rounds each, ${((Date.now() - started) / 1000).toFixed(1)}s`);
 
@@ -930,7 +965,7 @@ async function main() {
 
 export {
   tailTable, winsNeeded, takeChance, resolve, posValue, scoreAndClear, placementValue, bestPicks,
-  combinations, claimable, attackPlan, defencePlan, boardBuckets, render, LADDER,
+  combinations, attackPlan, defencePlan, boardBuckets, LADDER,
 };
 
 if (isMainThread && import.meta.url === pathToFileURL(process.argv[1] ?? '').href) await main();

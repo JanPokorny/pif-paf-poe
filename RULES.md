@@ -291,6 +291,28 @@ A dash is nothing at all, not a long shot. Read off it:
   defender counts towards holding the square just as an unpaired attacker counts towards
   taking it.
 
+### Conceding the round to take the star
+
+Phase 7 is not only what happens when an attack wins nothing. It is a play, and it is the
+only way a symbol ever reaches d4.
+
+A line through the star cannot be blocked. Its third square is the one no attack is ever aimed
+at, so once you hold both ends -- d3 and d5, or c3 and e5, or either of the other two pairs --
+the other team cannot answer by marking the gap the way they could answer any other
+two-in-a-row. Their only reply is to spend a round of their own attack flipping the star to
+their symbol, which costs them all four of their marks. And the four lines that cross at d4
+share it, so a team holding several of the inner ring can score more than one point from a
+single flip.
+
+Measured: essentially every flip that happens is deliberate -- the attack had squares it could
+have marked and declined them -- and a flip round scores 1.1 to 1.4 points against a normal
+round's 0.75.
+
+It is also rare, well under one round in a hundred, and **a team that plays for it does worse**.
+Priced at three times an ordinary threat a position on a star line costs 0.09 points a round;
+at five times it costs 0.41, because the team starts turning down marks it should have taken.
+Take the flip when the board offers it. Do not build towards it.
+
 ### Why a line costs you the ground it stood on
 
 Because otherwise the middle of the board fills up and stays filled. Clearing is what keeps
@@ -377,5 +399,50 @@ pricing the ones that are.
 So the defensive phase is about steering rather than blocking, and the numbers say it is worth
 playing carefully: at ten a side, defensive allocation is worth about as much per round as the
 whole difference between ten a side and thirty.
+
+## The arrangement of the boards
+
+The pinwheel is the arrangement in the drawing, and on everything measured here **it does not
+earn its awkwardness**. Four 3x3 boards in a plain 2x2 -- a 6x6 square, 36 squares, nothing
+shared and no hole -- plays slightly better.
+
+The thing the pinwheel looked like it was for is the line built inside a single round, which
+needs three squares claimable for three different boards. It is not: the plain square has just
+as many, on the diagonals either side of the centre, where a line crosses the vertical and the
+horizontal boundary on different steps.
+
+| arrangement | squares | shared | lines | finishable in one round | a line clears | decided something | holds |
+|---|---|---|---|---|---|---|---|
+| pinwheel, as drawn | 32 + star | 4 | 68 | 4 | 49% | 27% | 15% |
+| plain 2x2, 6x6 | 36 | 0 | 80 | 4 | 41% | 31% | 2% |
+| 2x2 overlapping a row and a column, 5x5 | 25 | 9 | 48 | **20** | 76% | 31% | **32%** |
+| pinwheel pulled in one step, 30 squares | 30 | 6 | 60 | 11 | 57% | 29% | 18% |
+
+"Decided something" and "holds" are at twenty a side: the share of a team whose duel decided
+its square, and the share of the board carrying a symbol at any moment. Differences under about
+0.07 of a point are inside the noise of these runs.
+
+What the pinwheel actually buys is the star, and the star is worth very little as the rules
+stand: it changes hands in well under one round in a hundred, and playing for it loses. The
+four shared corners are the only other thing, and they are only interesting because a corner is
+a choice of which board claims it.
+
+The best of the four is the last one nobody drew: **four boards overlapping along a whole row
+and a whole column**, a 5x5 with the central cross shared and the centre square belonging to
+all four boards. Twenty of its forty-eight lines can be finished in a single round, and it is
+the only arrangement that holds a position. It also wants a higher price on a two-in-a-row than
+the others do, which is a sign there is more position in it to hold.
+
+### The boards do not remember much
+
+Which is the larger finding, and it is about the clearing rule rather than the arrangement. A
+scored line clears every board its symbols stood on, and that is between 41% and 76% of the
+whole board depending on the arrangement. Against three or four marks going down each round,
+that leaves the board carrying between 0.7 and 8 symbols at any time.
+
+So a campaign is much closer to a run of separate rounds than to a game of position: at fifteen
+percent full, the pinwheel remembers about one round of play. If the campaign should reward
+building across rounds, the rule to change is what a scored line takes with it -- clearing the
+line, or the boards' worth of squares nearest it, rather than every board it touched.
 
 The Counterattack's part in the campaign is not settled yet.

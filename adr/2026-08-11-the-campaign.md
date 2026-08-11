@@ -125,3 +125,63 @@ the scoring rate.
 are all in the middle**, so every candidate clustered there. A defence that can step wants its
 neighbourhoods to tile the board instead, so a greedy set-cover shape was added to the candidate
 list. Without it the step was being undersold.
+
+## Later: the star, and whether the pinwheel earns itself
+
+### The flip is a play, and it is not a plan
+
+Declining every mark to flip the centre space is a real line of play and the only way a symbol
+reaches d4: a line through the star cannot be blocked, because its third square is the one no
+attack is ever aimed at, so once a team holds both ends the only reply is for the other team to
+spend a whole round's marks flipping it themselves.
+
+Instrumented, essentially every flip that occurs is deliberate — the attack held squares it
+could have marked and declined them — and a flip round scores 1.1–1.4 points against a normal
+round's 0.75.
+
+Then it was priced, because the valuation had been treating a star line like any other. Giving
+a position on one a premium made things worse at every setting tried: at 1.5x the premium costs
+0.02 points an attacking round, at 3x it costs 0.09, at 5x it costs 0.41 and the flip rate goes
+to 3.8% of rounds at 0.28 points each. A team that plays for the flip turns down marks it should
+take. **No premium.** The flip is an opportunity, not a plan, and the rules text now says so.
+
+### The pinwheel does not earn its awkwardness
+
+`board.js` was generalised to take an arrangement so this could be measured rather than argued.
+Four were compared, at twelve, twenty and thirty a side:
+
+| arrangement | squares | shared | lines | one-round lines | a line clears | decided something | holds |
+|---|---|---|---|---|---|---|---|
+| pinwheel | 32 + star | 4 | 68 | 4 | 49% | 27% | 15% |
+| plain 2x2, 6x6 | 36 | 0 | 80 | 4 | 41% | 31% | 2% |
+| overlapping a row and column, 5x5 | 25 | 9 | 48 | 20 | 76% | 31% | 32% |
+| pinwheel pulled in one step | 30 | 6 | 60 | 11 | 57% | 29% | 18% |
+
+The thing the pinwheel appeared to be for — a line built inside a single round, which needs
+three squares claimable for three different boards — it does not uniquely provide. The plain
+square has exactly as many, on the diagonals either side of the centre, where a line crosses the
+vertical and horizontal boundaries on different steps. This was checked after being reasoned
+wrongly the other way: a straight line of three does cross three quadrants, if it crosses the
+two boundaries on different steps.
+
+What the pinwheel does uniquely provide is the star, and the star is worth very little as the
+rules stand. So the awkwardness buys the four shared corners and a slightly smaller board, and
+costs three squares, twelve lines and four points of decisiveness.
+
+The best of the four is the one nobody drew: four boards overlapping along a whole row and
+column. Twenty of its forty-eight lines finish in a single round, and it is the only arrangement
+that holds a position. Its numbers are, if anything, understated here — it prefers a higher price
+on a two-in-a-row than the pinwheel does (0.05/0.18 beats 0.03/0.12 by 0.11 points on it), so it
+was measured with a slightly mistuned attack. Same-weight candidate-against-reference runs differ
+by up to 0.07 points at these sample sizes, which is the noise floor for all of the above.
+
+### The boards do not remember much, and that is the clearing rule
+
+The larger finding, turned up by the comparison rather than sought. A scored line clears every
+board its symbols stood on: 41% to 76% of the whole board. Against three or four marks a round
+that leaves between 0.7 and 8 symbols standing at any time — the plain square runs at 2% full and
+is very close to memoryless.
+
+So the campaign is nearer a run of separate rounds than a game of position. If building across
+rounds is supposed to matter, the rule to change is what a scored line takes with it, not the
+arrangement of the boards. Not changed here, because it was not what was asked.
