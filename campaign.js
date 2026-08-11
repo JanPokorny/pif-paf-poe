@@ -1,8 +1,8 @@
 // The campaign: two teams, thirty-three spaces, and a duel on every pairing.
 //
-//   node campaign.js --sizes 10-30 --rounds 800 --reps 3 --both --out results/sizes.json
+//   node campaign.js --sizes 10-30 --rounds 800 --reps 3 --steps none,forced,optional
 //   node campaign.js --pair defence --sizes 10,20,30 --rounds 500    # what defence is worth
-//   node campaign.js --pair ortho --sizes 10,20,30 --rounds 500      # what the step is worth
+//   node campaign.js --pair step --sizes 10,20,30 --rounds 500       # what the step is worth
 //   node campaign.js --sizes 20 --defence oracle --rounds 500        # the defence's ceiling
 //   node campaign.js --sizes 20 --target 10 --campaigns 500 --skill 0.55
 //   node campaign.js --sizes 12 --rounds 200 --duels real --iters 120
@@ -101,35 +101,91 @@ function placementValue(marks, me, them, picks, base) {
 // ── Pairing ────────────────────────────────────────────────────────────────
 //
 // On each space the defenders there pair off against the attackers there. Which
-// attacker a defender takes is the defender's choice, and since every duel is
-// the same coin it does not matter here; how many pair does.
+// attacker a defender takes is the defender's choice, and since every duel is the
+// same coin it does not matter here; how many pair does, and so does how many are
+// left over on each side, because leftovers now count towards the result.
 //
-// With `ortho` on, a defender left with nobody to fight steps to an orthogonally
-// adjacent space where the attackers hold the majority and pairs there instead.
-// That is not optional -- a defender may only stand idle if there is no unpaired
-// attacker within reach -- so what it works out to is the largest number of
-// extra pairings the adjacency allows, which is a max-flow from the spaces with
-// spare defenders to the spaces with spare attackers.
+// `step` says what a defender with nobody to fight may do:
+//
+//   none      -- stand there. A defender covers the square they are on.
+//   forced    -- step to an orthogonally adjacent square where the attackers
+//                outnumber the defenders, and pair with an attacker there. Not
+//                optional: a defender may stand idle only when no unpaired
+//                attacker is within reach, so it comes to the largest number of
+//                extra pairings the adjacency allows -- a max-flow from the
+//                squares with spare defenders to the squares with spare attackers.
+//   optional  -- the same step, taken only where the defence wants it. Under this
+//                scoring a step is not free: an unpaired defender counts towards
+//                holding the square they stand on, so stepping away spends that to
+//                buy a duel next door. It is also a second decision taken after
+//                the attack is visible, which is the only information the defence
+//                ever gets.
+//
+// Returns pairs and leftover defenders per square. Leftover attackers are always
+// A[i] - pairs[i].
 
-function pairing(A, D, ortho) {
+function resolve(A, D, step, value = null, tail = null) {
   const pairs = new Int32Array(N_SPACES);
-  for (const i of REGULAR) pairs[i] = Math.min(A[i], D[i]);
-  if (!ortho) return pairs;
+  const spare = new Int32Array(N_SPACES);
+  for (const i of REGULAR) {
+    pairs[i] = Math.min(A[i], D[i]);
+    spare[i] = D[i] - pairs[i];
+  }
+  if (step === 'none') return { pairs, spare };
 
   const surplus = [], need = [];
   for (const i of REGULAR) {
-    if (D[i] > A[i]) surplus.push(i);
-    else if (A[i] > D[i]) need.push(i);   // the attackers' majority
+    if (spare[i] > 0) surplus.push(i);
+    else if (A[i] > D[i]) need.push(i);        // the attackers' majority
   }
-  if (!surplus.length || !need.length) return pairs;
+  if (!surplus.length || !need.length) return { pairs, spare };
 
-  const flow = maxFlow(
-    surplus.map((i) => D[i] - A[i]),
-    need.map((i) => A[i] - D[i]),
-    surplus.map((i) => need.map((j, k) => (ADJACENT[i].includes(j) ? k : -1)).filter((k) => k >= 0)),
-  );
-  need.forEach((j, k) => { pairs[j] += flow[k]; });
-  return pairs;
+  const adjacency = surplus.map((i) => need
+    .map((j, k) => (ADJACENT[i].includes(j) ? k : -1)).filter((k) => k >= 0));
+
+  if (step === 'forced') {
+    const flow = maxFlow(surplus.map((i) => spare[i]), need.map((i) => A[i] - D[i]), adjacency);
+    need.forEach((j, k) => { pairs[j] += flow[k]; });
+    distributeOut(surplus, need, adjacency, flow, spare);
+    return { pairs, spare };
+  }
+
+  // optional: take the step that most improves the defence's expected holding, and
+  // keep taking them while one helps. Greedy, because each step is worth what it is
+  // worth on its own square and its neighbour and nowhere else.
+  const held = (i) => 1 - takeChance(A[i], pairs[i], spare[i], tail);
+  for (;;) {
+    let best = null, bestGain = 1e-9;
+    for (let k = 0; k < surplus.length; k++) {
+      const i = surplus[k];
+      if (!spare[i]) continue;
+      for (const ti of adjacency[k]) {
+        const j = need[ti];
+        if (pairs[j] >= A[j]) continue;         // nobody left there to fight
+        const before = value[i] * held(i) + value[j] * held(j);
+        spare[i]--; pairs[j]++;
+        const gain = value[i] * held(i) + value[j] * held(j) - before;
+        spare[i]++; pairs[j]--;
+        if (gain > bestGain) { bestGain = gain; best = [i, j]; }
+      }
+    }
+    if (!best) break;
+    spare[best[0]]--; pairs[best[1]]++;
+  }
+  return { pairs, spare };
+}
+
+// The flow says how many defenders arrive at each needy square; this takes the
+// matching number away from the squares they came from.
+function distributeOut(surplus, need, adjacency, flow, spare) {
+  const arriving = need.map((_, k) => flow[k]);
+  for (let k = 0; k < surplus.length; k++) {
+    for (const ti of adjacency[k]) {
+      const send = Math.min(spare[surplus[k]], arriving[ti]);
+      spare[surplus[k]] -= send;
+      arriving[ti] -= send;
+    }
+  }
 }
 
 // Edmonds-Karp on the three-layer graph the pairing rule describes. Small
@@ -160,33 +216,45 @@ function maxFlow(left, right, edges) {
 
 // ── Taking a space ─────────────────────────────────────────────────────────
 //
-// The attackers take a space when their won duels plus their unpaired players
-// come to more than half of the attackers standing there. Which is to say: when
-// fewer than half of the attackers on the space lost a duel. Piling on is
-// therefore free against an undefended space and against a thin one, and dear
-// against a thick one, because every extra attacker who has someone to fight is
-// another chance to lose.
+// Each side's power on a space is its unpaired players there plus the duels its
+// players won there, and the attack takes the space when its power is strictly
+// higher. So with A attackers, P of them paired, S defenders left spare and W
+// duels won by the attack:
+//
+//   attack  A - P + W        defence  S + P - W        take iff 2W > S + 2P - A
+//
+// which is symmetric in a way the phase order is not. Twice the defenders and one
+// more takes a square outright, whatever the duels do; twice the attackers and the
+// square cannot be taken at all, whatever the duels do. In between, the duels
+// decide it. Nothing here is free: an extra attacker on a thick square is another
+// duel to lose, and an extra defender is another body counted against the attack
+// whether they find a fight or not.
 
-const takeThreshold = (a) => Math.ceil(a / 2) - 1;   // losses may not exceed this
+// The fewest duels the attack has to win. Zero or less means the square falls
+// however they go; more than P means it cannot fall.
+const winsNeeded = (a, pairs, spare) => Math.max(0, Math.floor((spare + 2 * pairs - a) / 2) + 1);
 
-// takeP[a][k]: the chance a attackers with k of them paired hold the space.
-function takeTable(p, max) {
-  const q = 1 - p;
+// tail[k][w]: the chance of at least w wins out of k duels.
+function tailTable(p, max) {
   const table = [];
-  for (let a = 0; a <= max; a++) {
-    const row = new Float64Array(max + 1);
-    const limit = takeThreshold(a);
-    for (let k = 0; k <= max; k++) {
-      let acc = 0, term = Math.pow(p, k);          // no losses
-      for (let l = 0; l <= Math.min(k, limit); l++) {
-        acc += term;
-        term *= (q / p) * (k - l) / (l + 1);
-      }
-      row[k] = a === 0 ? 0 : Math.min(1, acc);
-    }
+  for (let k = 0; k <= max; k++) {
+    const row = new Float64Array(max + 2);
+    // P(exactly l wins), accumulated from the top down.
+    const exact = [];
+    let term = Math.pow(1 - p, k);
+    for (let l = 0; l <= k; l++) { exact.push(term); term *= (p / (1 - p)) * (k - l) / (l + 1); }
+    let acc = 0;
+    for (let w = k; w >= 0; w--) { acc += exact[w]; row[w] = Math.min(1, acc); }
     table.push(row);
   }
   return table;
+}
+
+// The chance the attack takes a square, given the shape of the fight on it.
+function takeChance(a, pairs, spare, tail) {
+  if (!a) return 0;
+  const w = winsNeeded(a, pairs, spare);
+  return w > pairs ? 0 : tail[pairs][w];
 }
 
 // ── The attack ─────────────────────────────────────────────────────────────
@@ -244,13 +312,14 @@ function claimable(spaces, used = []) {
 // Expected value of an allocation: independently per space, the chance of taking
 // it; then per board, the expected best gain among the ones taken, plus what the
 // combinations add when a whole set comes off.
-function planValue(A, pairs, buckets, gain, takeP, combos) {
+function planValue(A, shape, buckets, gain, tail, combos) {
+  const chance = (i) => takeChance(A[i], shape.pairs[i], shape.spare[i], tail);
   let v = 0;
   for (const bucket of buckets) {
     let miss = 1;
     for (const i of bucket) {
       if (!A[i]) continue;
-      const q = takeP[A[i]][pairs[i]];
+      const q = chance(i);
       v += gain[i] * q * miss;
       miss *= 1 - q;
       if (miss < 1e-4) break;
@@ -258,76 +327,74 @@ function planValue(A, pairs, buckets, gain, takeP, combos) {
   }
   for (const { gaps, surplus } of combos) {
     let all = surplus;
-    for (const j of gaps) all *= A[j] ? takeP[A[j]][pairs[j]] : 0;
+    for (const j of gaps) all *= A[j] ? chance(j) : 0;
     v += all;
   }
   return v;
 }
 
-// How many defenders the attack should expect to face on a space: the ones
-// standing there, plus -- with the stepping rule -- every spare defender next
-// door. That over-counts when two needy spaces share a neighbour, which makes it
-// the pessimistic estimate rather than the wrong one; the round itself is
-// resolved by the exact flow.
-function facing(A, D, i, ortho) {
-  if (!ortho) return D[i];
-  let d = D[i];
-  for (const j of ADJACENT[i]) if (D[j] > A[j]) d += D[j] - A[j];
-  return d;
+// What the attack should expect a square to look like when it gets there. Without
+// the step it is exact. With it the attack assumes every spare defender next door
+// arrives and every spare defender here stays, which cannot both happen, so it is
+// the pessimistic reading rather than the true one -- the attack over-commits a
+// little and the round itself is resolved by the real thing. `overestimate` in the
+// output says how much that costs.
+function estimate(A, D, free, cfg) {
+  const pairs = new Int32Array(N_SPACES);
+  const spare = new Int32Array(N_SPACES);
+  const reach = (i) => {
+    let d = D[i];
+    if (cfg.step !== 'none') for (const j of ADJACENT[i]) if (D[j] > A[j]) d += D[j] - A[j];
+    return d;
+  };
+  const at = (i) => { pairs[i] = Math.min(A[i], reach(i)); spare[i] = Math.max(0, D[i] - A[i]); };
+  for (const i of free) at(i);
+  return { pairs, spare, at, reach };
 }
 
-// An even number of attackers is never worth more than one fewer. Both need the
-// same number of losses to stay under half the force, and the even one has one
-// more duel to lose it in, so the useful force levels on a space are the odd
-// numbers -- one, three, five -- up to 2d+1, which is where the space is taken
-// no matter how the duels go. That is what makes the value of a space a staircase
-// in the force on it, with the flat treads that defeat a one-at-a-time greedy:
-// against a single defender the second attacker buys nothing and the third buys
-// certainty. So the search buys whole steps, and takes the one with the best
-// value per player each time round.
-// The odd numbers, thinning out where the difference between neighbouring steps
-// stops mattering. Ten rungs is enough to describe any force a team of thirty can
-// bring, and the search is over candidates times rungs.
-const LADDER = [1, 3, 5, 7, 9, 11, 13, 17, 21, 25, 29];
+// A square's value to the attack is a staircase in the force on it, and the treads
+// are wide: against three defenders, four attackers and five attackers are the same
+// square. So the search buys whole steps rather than one player at a time, and takes
+// the step with the best value per player each time round. Twice the defenders and
+// one more is the top of the staircase, and nothing above it buys anything.
+const LADDER = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 14, 16, 19, 22, 25, 30];
 
-function attackPlan(marks, me, them, D, free, gain, buckets, combos, cfg, takeP) {
+function attackPlan(marks, me, them, D, free, gain, buckets, combos, cfg, tail) {
   const A = new Int32Array(N_SPACES);
-  const pairs = new Int32Array(N_SPACES);
   const candidates = free.filter((i) => gain[i] > 0).sort((a, b) => gain[b] - gain[a]).slice(0, cfg.targets);
+  const shape = estimate(A, D, free, cfg);
 
-  // Under the stepping rule what a space faces depends on the force next door,
-  // so a change at i is repaired at i and at everything adjacent to it.
+  // A change at i changes what its neighbours can expect too, once stepping is on.
   const repair = (i) => {
-    pairs[i] = Math.min(A[i], facing(A, D, i, cfg.ortho));
-    if (cfg.ortho) for (const j of ADJACENT[i]) pairs[j] = Math.min(A[j], facing(A, D, j, cfg.ortho));
+    shape.at(i);
+    if (cfg.step !== 'none') for (const j of ADJACENT[i]) shape.at(j);
   };
-  for (const i of free) repair(i);
 
   let spent = 0, value = 0;
   for (;;) {
     let best = null, bestRatio = 1e-9;
     for (const i of candidates) {
-      const from = A[i], ceiling = 2 * facing(A, D, i, cfg.ortho) + 1;
+      const from = A[i], ceiling = 2 * shape.reach(i) + 1;
       for (const a of LADDER) {
         if (a <= from || a - from > cfg.size - spent) continue;
         A[i] = a; repair(i);
-        const ratio = (planValue(A, pairs, buckets, gain, takeP, combos) - value) / (a - from);
+        const ratio = (planValue(A, shape, buckets, gain, tail, combos) - value) / (a - from);
         if (ratio > bestRatio) { bestRatio = ratio; best = { i, a }; }
-        if (a >= ceiling) break;                            // nothing above this buys anything
+        if (a >= ceiling) break;
       }
       A[i] = from; repair(i);
     }
     if (!best) break;
     spent += best.a - A[best.i];
     A[best.i] = best.a; repair(best.i);
-    value = planValue(A, pairs, buckets, gain, takeP, combos);
+    value = planValue(A, shape, buckets, gain, tail, combos);
   }
 
-  // Everyone has to stand somewhere, and an extra attacker on a space that is
-  // already certain cannot spoil it -- the threshold rises as fast as the duels
-  // do. So the leftovers go there, or failing that to the thinnest space.
+  // Everyone has to stand somewhere, and an extra attacker on a square already past
+  // the top of the staircase cannot spoil it. So the leftovers go there, or failing
+  // that to the thinnest square.
   if (spent < cfg.size) {
-    const safe = free.filter((i) => A[i] > 0 && A[i] >= 2 * facing(A, D, i, cfg.ortho) + 1);
+    const safe = free.filter((i) => A[i] > 0 && A[i] > 2 * shape.reach(i));
     const dump = safe.length
       ? safe.sort((a, b) => gain[b] - gain[a])[0]
       : free.slice().sort((a, b) => (D[a] - D[b]) || (gain[b] - gain[a]))[0];
@@ -343,7 +410,7 @@ function attackPlan(marks, me, them, D, free, gain, buckets, combos, cfg, takeP)
 // The candidates are the shapes a team would actually try -- cover the n most
 // dangerous squares evenly, cover them in proportion to the danger, cover the
 // worst few in each board -- and the attack planner scores every one of them.
-function defenceCandidates(free, gain, buckets, size) {
+function defenceCandidates(free, gain, buckets, size, step) {
   const ranked = free.slice().sort((a, b) => gain[b] - gain[a]);
   const out = [];
 
@@ -372,14 +439,38 @@ function defenceCandidates(free, gain, buckets, size) {
     const spaces = buckets.flatMap((b) => b.slice(0, per));
     if (spaces.length) out.push(spread(spaces, spaces.map((i) => Math.max(0.01, gain[i]))));
   }
+
+  // And, for the stepping rule, shapes chosen to cover ground rather than to stand
+  // on it. Every other candidate here ranks by danger, and the dangerous squares are
+  // all in the middle, so they all cluster; a defence that can step wants its
+  // neighbourhoods to tile the board instead. Greedy set cover over the free squares,
+  // weighted by what each is worth to the attack.
+  if (step !== 'none') {
+    const covers = (i) => [i, ...ADJACENT[i].filter((j) => free.includes(j))];
+    for (const posts of [4, 6, 8, 10]) {
+      const chosen = [], covered = new Set();
+      while (chosen.length < posts) {
+        let best = -1, bestGain = -1;
+        for (const i of ranked) {
+          if (chosen.includes(i)) continue;
+          const fresh = covers(i).reduce((v, j) => v + (covered.has(j) ? 0 : Math.max(0.01, gain[j])), 0);
+          if (fresh > bestGain) { bestGain = fresh; best = i; }
+        }
+        if (best < 0) break;
+        chosen.push(best);
+        for (const j of covers(best)) covered.add(j);
+      }
+      if (chosen.length) out.push(spread(chosen, chosen.map(() => 1)));
+    }
+  }
   return out;
 }
 
-function defencePlan(marks, me, them, free, gain, buckets, combos, cfg, takeP) {
+function defencePlan(marks, me, them, free, gain, buckets, combos, cfg, tail) {
   let best = null, bestValue = Infinity;
-  for (const D of defenceCandidates(free, gain, buckets, cfg.size)) {
-    const A = attackPlan(marks, me, them, D, free, gain, buckets, combos, cfg, takeP);
-    const v = planValue(A, pairing(A, D, cfg.ortho), buckets, gain, takeP, combos);
+  for (const D of defenceCandidates(free, gain, buckets, cfg.size, cfg.step)) {
+    const A = attackPlan(marks, me, them, D, free, gain, buckets, combos, cfg, tail);
+    const v = planValue(A, resolve(A, D, cfg.step, gain, tail), buckets, gain, tail, combos);
     if (v < bestValue) { bestValue = v; best = D; }
   }
   return best;
@@ -392,17 +483,16 @@ function randomPlan(free, size, rng) {
 }
 
 // A defence that has already seen the attack it is answering, and that the attack
-// then does not get to re-plan against. It is not a legal way to play -- the
-// order of the phases is the other way round -- and it is here as a ceiling: a
-// space is best denied by matching its attackers one for one, so this is very
-// close to the most any allocation of this many defenders could do. If the
-// attack still gets its marks against this, no defence was ever going to stop it.
-function oraclePlan(marks, me, them, free, gain, buckets, combos, cfg, takeP) {
-  const A = attackPlan(marks, me, them, new Int32Array(N_SPACES), free, gain, buckets, combos, cfg, takeP);
+// then does not get to re-plan against. It is not a legal way to play -- the order
+// of the phases is the other way round -- and it is here as a ceiling. Twice the
+// attackers on a square denies it outright, so it buys shutouts from the most
+// dangerous square down until the players run out.
+function oraclePlan(marks, me, them, free, gain, buckets, combos, cfg, tail) {
+  const A = attackPlan(marks, me, them, new Int32Array(N_SPACES), free, gain, buckets, combos, cfg, tail);
   const D = new Int32Array(N_SPACES);
   let left = cfg.size;
   for (const i of free.filter((i) => A[i]).sort((a, b) => gain[b] - gain[a])) {
-    const take = Math.min(left, A[i]);
+    const take = Math.min(left, 2 * A[i]);
     D[i] = take; left -= take;
     if (!left) break;
   }
@@ -458,7 +548,7 @@ export const skillOf = (cfg, me) => (me === 1 ? cfg.skill : 1 - cfg.skill);
 // the round is arithmetic.
 export function allocate(st, cfg, rng, tables) {
   const me = ((st.round + st.first) % 2) + 1, them = 3 - me;
-  const takeP = tables[me];
+  const tail = tables[me];
   const free = REGULAR.filter((i) => !st.marks[i]);
   const base = posValue(st.marks, me, them);
 
@@ -469,29 +559,32 @@ export function allocate(st, cfg, rng, tables) {
 
   const DEFENCES = {
     random: () => randomPlan(free, cfg.size, rng),
-    oracle: () => oraclePlan(st.marks, me, them, free, gain, buckets, combos, cfg, takeP),
-    plan: () => defencePlan(st.marks, me, them, free, gain, buckets, combos, cfg, takeP),
+    oracle: () => oraclePlan(st.marks, me, them, free, gain, buckets, combos, cfg, tail),
+    plan: () => defencePlan(st.marks, me, them, free, gain, buckets, combos, cfg, tail),
   };
 
-  let A = new Int32Array(N_SPACES), D = new Int32Array(N_SPACES), pairs = D;
+  let A = new Int32Array(N_SPACES), D = new Int32Array(N_SPACES);
+  let shape = { pairs: new Int32Array(N_SPACES), spare: new Int32Array(N_SPACES) };
   if (free.length) {
     D = (DEFENCES[cfg.defence] ?? DEFENCES.plan)();
     A = cfg.attack === 'random' ? randomPlan(free, cfg.size, rng)
-      : attackPlan(st.marks, me, them, D, free, gain, buckets, combos, cfg, takeP);
-    pairs = pairing(A, D, cfg.ortho);
+      : attackPlan(st.marks, me, them, D, free, gain, buckets, combos, cfg, tail);
+    shape = resolve(A, D, cfg.step, gain, tail);
   }
   // The attack plans against an upper bound on the defenders it will face; this
   // is how many pairings that bound over-predicts, and so how much force the
   // attack wastes by being careful. If it were large the plans would not be worth
   // much under the stepping rule.
-  const predicted = free.reduce((n, i) => n + Math.min(A[i], facing(A, D, i, cfg.ortho)), 0);
-  const actual = free.reduce((n, i) => n + pairs[i], 0);
-  return { me, them, free, base, gain, buckets, D, A, pairs, overestimate: predicted - actual };
+  const guess = estimate(A, D, free, cfg);
+  const predicted = free.reduce((n, i) => n + guess.pairs[i], 0);
+  const actual = free.reduce((n, i) => n + shape.pairs[i], 0);
+  return { me, them, free, base, gain, buckets, D, A, shape, overestimate: predicted - actual };
 }
 
 export function playRound(st, cfg, rng, tables, tally) {
   setPos(cfg.pos[((st.round + st.first) % 2) + 1]);
-  const { me, them, free, base, gain, D, A, pairs, overestimate } = allocate(st, cfg, rng, tables);
+  const { me, them, free, base, gain, D, A, shape, overestimate } = allocate(st, cfg, rng, tables);
+  const { pairs, spare } = shape;
   const p = skillOf(cfg, me);
 
   // The duels. Every pairing is the same coin unless we are playing them out.
@@ -502,14 +595,15 @@ export function playRound(st, cfg, rng, tables, tally) {
     let lost = 0;
     for (let k = 0; k < pairs[i]; k++) if (!duel(cfg, rng, p)) lost++;
     duels += pairs[i];
-    const limit = takeThreshold(A[i]);
-    if (lost <= limit) taken.push(i);
-    // A duel decided the space if turning it round would have turned the space
-    // round: with the losses one shy of the limit every win was decisive, and with
-    // them one over it every loss was. This is the number that says whether the
-    // game a player actually sat down to play mattered.
-    if (lost === limit) pivotal += pairs[i] - lost;
-    else if (lost === limit + 1) pivotal += lost;
+    const won = pairs[i] - lost;
+    const need = winsNeeded(A[i], pairs[i], spare[i]);
+    if (won >= need) taken.push(i);
+    // A duel decided the square if turning it round would have turned the square
+    // round: on the threshold every win was decisive, one short of it every loss
+    // was. This is the number that says whether the game a player actually sat
+    // down to play mattered.
+    if (won === need) pivotal += won;
+    else if (won === need - 1) pivotal += lost;
   }
 
   const { picks, value } = bestPicks(st.marks, me, them, taken, gain, base);
@@ -542,8 +636,8 @@ export function playRound(st, cfg, rng, tables, tally) {
     tally.taken += taken.length;
     tally.free += free.length;
     tally.flips += picks.length ? 0 : 1;
-    tally.reinforced += cfg.ortho
-      ? duels - free.reduce((n, i) => n + Math.min(A[i], D[i]), 0) : 0;
+    tally.reinforced += cfg.step === 'none' ? 0
+      : duels - free.reduce((n, i) => n + Math.min(A[i], D[i]), 0);
     tally.overestimate += overestimate;
   }
   return { picks, points, duels, flipped };
@@ -571,7 +665,7 @@ const newTally = (cfg) => ({
 });
 
 // One take-table per team, since the two only differ when one team is better.
-const tablesFor = (cfg) => [null, takeTable(skillOf(cfg, 1), cfg.size + 1), takeTable(skillOf(cfg, 2), cfg.size + 1)];
+const tablesFor = (cfg) => [null, tailTable(skillOf(cfg, 1), cfg.size + 1), tailTable(skillOf(cfg, 2), cfg.size + 1)];
 
 export function runConfig(cfg) {
   const rng = makeRng(cfg.seed);
@@ -624,7 +718,9 @@ export function runCampaigns(cfg) {
 const PAIRS = {
   defence: (cfg) => [{ ...cfg, defence: 'plan' }, { ...cfg, defence: 'random' }],
   attack: (cfg) => [{ ...cfg, attack: 'plan' }, { ...cfg, attack: 'random' }],
-  ortho: (cfg) => [{ ...cfg, ortho: true }, { ...cfg, ortho: false }],
+  step: (cfg) => [{ ...cfg, step: 'forced' }, { ...cfg, step: 'none' }],
+  optional: (cfg) => [{ ...cfg, step: 'optional' }, { ...cfg, step: 'none' }],
+  forced: (cfg) => [{ ...cfg, step: 'optional' }, { ...cfg, step: 'forced' }],
 };
 
 function runPaired(cfg) {
@@ -688,7 +784,7 @@ const per = (x, n) => (n ? x / n : 0);
 function row(t) {
   const r = t.rounds;
   return {
-    size: t.size, ortho: t.ortho, defence: t.defence, attack: t.attack, p: t.p,
+    size: t.size, step: t.step, defence: t.defence, attack: t.attack, skill: t.skill,
     rounds: r,
     marks: per(t.marks, r),
     points: per(t.points, r),
@@ -727,7 +823,7 @@ function row(t) {
 function group(tallies) {
   const byKey = new Map();
   for (const t of tallies) {
-    const k = `${t.size}|${t.ortho}|${t.defence}`;
+    const k = `${t.size}|${t.step}|${t.defence}`;
     if (!byKey.has(k)) { byKey.set(k, { ...t }); continue; }
     const into = byKey.get(k);
     for (const [f, v] of Object.entries(t)) {
@@ -741,16 +837,16 @@ function group(tallies) {
 
 function report(rows) {
   const campaigns = rows.some((r) => r.ran);
-  const head = ['size', 'orth', 'def', 'marks', 'pts/r', 'duels', 'play%', 'pivot%', 'decis%', 'take%', 'occ%',
+  const head = ['size', 'step', 'def', 'marks', 'pts/r', 'duels', 'play%', 'pivot%', 'decis%', 'take%', 'occ%',
     ...(campaigns ? ['X win%', 'draw%', 'length'] : ['0mk%', '1mk%', '2mk%', '3mk%', '4mk%'])];
   console.log(head.map((h) => pad(h, h.length > 5 ? 8 : 6)).join(''));
   for (const r of rows) {
     console.log([
-      pad(r.size, 6), pad(r.ortho ? 'yes' : 'no', 6), pad(r.defence.slice(0, 4), 6),
+      pad(r.size, 6), pad(r.step.slice(0, 4), 6), pad(r.defence.slice(0, 4), 6),
       pad(r.marks.toFixed(2), 6), pad(r.points.toFixed(3), 6),
       pad(r.duels.toFixed(1), 6), pct(r.playing) + ' ', pct(r.pivotal) + '  ',
       pct(r.decisive ?? (r.duels * r.pivotal) / r.size) + '  ',
-      pct(r.takeRate) + ' ', pct(r.occupancy) + ' ',
+      pct(r.takeRate) + ' ', pct(r.occupancy) + ' ', pad(r.overestimate.toFixed(2), 6),
       ...(campaigns
         ? [pad(pct(r.wonByX), 8), pad(pct(r.drawn), 8), pad(r.length.toFixed(1), 8)]
         : r.markHist.map((x) => pct(x) + ' ')),
@@ -787,14 +883,13 @@ async function main() {
     defence: arg('defence', 'plan'),
     attack: arg('attack', 'plan'),
     duels: arg('duels', 'coin'),
-    pair: arg('pair', null),                     // defence | attack | ortho
+    pair: arg('pair', null),          // defence | attack | step | optional | forced
     samples: parseInt(arg('samples', '6'), 10),  // resolutions of each shared position
     item: arg('item', 'mirror'),
     iters: parseInt(arg('iters', '120'), 10),
     seed: parseInt(arg('seed', '20260811'), 10),
     reps: parseInt(arg('reps', '1'), 10),   // independent runs per size, summed
-    both: process.argv.includes('--both'),
-    ortho: process.argv.includes('--ortho'),
+    steps: arg('steps', arg('step', 'forced')).split(','),
     workers: parseInt(arg('workers', String(Math.max(1, cpus().length - 1))), 10),
     out: arg('out', null),
   };
@@ -808,11 +903,10 @@ async function main() {
   // Allocating a whole number of players over a whole number of squares is lumpy,
   // and one run of one size can land on a shape that is not typical of its
   // neighbours. --reps runs each size from several seeds and sums them.
-  const orthos = opts.both ? [false, true] : [opts.ortho];
-  const configs = orthos.flatMap((ortho) => opts.sizes.flatMap((size, k) =>
+  const configs = opts.steps.flatMap((step, si) => opts.sizes.flatMap((size, k) =>
     Array.from({ length: opts.reps }, (_, rep) => ({
-      ...opts, size, ortho, rep, sizes: undefined,
-      seed: opts.seed + 1000 * k + 97 * rep + (ortho ? 7 : 0),
+      ...opts, size, step, rep, sizes: undefined, steps: undefined,
+      seed: opts.seed + 1000 * k + 97 * rep + 7 * si,
     }))));
 
   const started = Date.now();
@@ -823,7 +917,7 @@ async function main() {
     ? group(tallies.map((p) => p[0])).map(row)
       .map((a, i) => [a, group(tallies.map((p) => p[1])).map(row)[i]])
       .sort((a, b) => a[0].size - b[0].size)
-    : group(tallies).map(row).sort((a, b) => (a.ortho - b.ortho) || (a.size - b.size));
+    : group(tallies).map(row).sort((a, b) => a.step.localeCompare(b.step) || (a.size - b.size));
   opts.pair ? reportPaired(rows) : report(rows);
   console.log(`\n${configs.length} configs, ${opts.rounds} rounds each, ${((Date.now() - started) / 1000).toFixed(1)}s`);
 
@@ -835,7 +929,7 @@ async function main() {
 }
 
 export {
-  takeTable, takeThreshold, pairing, posValue, scoreAndClear, placementValue, bestPicks,
+  tailTable, winsNeeded, takeChance, resolve, posValue, scoreAndClear, placementValue, bestPicks,
   combinations, claimable, attackPlan, defencePlan, boardBuckets, render, LADDER,
 };
 

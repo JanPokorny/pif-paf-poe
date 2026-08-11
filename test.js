@@ -13,8 +13,8 @@ import {
   SPACES, SPACE_BOARDS, STAR, SUBBOARDS,
 } from './board.js';
 import {
-  allocate, bestPicks, claimable, newCampaign, pairing, playRound, posValue,
-  placementValue, scoreAndClear, setPos, takeTable, takeThreshold,
+  allocate, bestPicks, claimable, newCampaign, playRound, posValue,
+  placementValue, resolve as pairOff, scoreAndClear, setPos, tailTable, takeChance, winsNeeded,
 } from './campaign.js';
 
 let failures = 0;
@@ -426,75 +426,108 @@ const empty = ['.', '.', '.', '.', '.', '.', '.', '.', '.'];
 }
 
 {
-  // Taking a space. The rule is that won duels plus unpaired attackers must come
-  // to more than half of the attackers present, which is the same thing as fewer
-  // than half of them losing -- checked here against the rule as written.
-  const asWritten = (a, paired, won) => won + (a - paired) > a / 2;
+  // Taking a space. Each side's power is its unpaired players plus its won duels,
+  // and the attack needs strictly more -- checked here against the rule as written.
+  const asWritten = (a, d, pairs, spare, won) =>
+    (a - pairs) + won > spare + (pairs - won);
   const mismatch = [];
-  for (let a = 1; a <= 12; a++) for (let paired = 0; paired <= a; paired++) {
-    for (let won = 0; won <= paired; won++) {
-      if (asWritten(a, paired, won) !== (paired - won <= takeThreshold(a))) mismatch.push([a, paired, won]);
+  for (let a = 1; a <= 10; a++) for (let d = 0; d <= 10; d++) {
+    const pairs = Math.min(a, d), spare = d - pairs;
+    for (let won = 0; won <= pairs; won++) {
+      if (asWritten(a, d, pairs, spare, won) !== (won >= winsNeeded(a, pairs, spare))) {
+        mismatch.push([a, d, won]);
+      }
     }
   }
   check('the threshold is the rule as written', mismatch, []);
 
-  const T = takeTable(0.5, 14);
-  check('one attacker is a coin flip however many defenders stand there',
-    [0, 1, 2, 3, 6, 12].map((d) => T[1][Math.min(1, d)]), [1, 0.5, 0.5, 0.5, 0.5, 0.5]);
-  check('an undefended space is taken by anyone', [1, 2, 3, 4].map((a) => T[a][0]), [1, 1, 1, 1]);
-  check('twice the defenders plus one is certain',
-    [0, 1, 2, 3, 4, 5].map((d) => T[2 * d + 1][Math.min(2 * d + 1, d)]), [1, 1, 1, 1, 1, 1]);
-  check('matching the attack exactly still concedes a coin flip',
-    [1, 3, 5, 7].map((a) => T[a][a]), [0.5, 0.5, 0.5, 0.5]);
-  // Both hold on the arithmetic rather than on the coin being fair, so they are
-  // checked at a duel the attackers win three times in five as well.
-  const notDominated = [];
+  const T = tailTable(0.5, 24);
+  const chance = (a, d) => takeChance(a, Math.min(a, d), d - Math.min(a, d), T);
+
+  check('an undefended square is taken by anyone', [1, 2, 5].map((a) => chance(a, 0)), [1, 1, 1]);
+  check('twice the defenders and one more takes it outright',
+    [0, 1, 2, 3, 5].map((d) => chance(2 * d + 1, d)), [1, 1, 1, 1, 1]);
+  check('twice the attackers denies it outright',
+    [1, 2, 3, 5].map((a) => chance(a, 2 * a)), [0, 0, 0, 0]);
+  check('and so does anything more',
+    [1, 2, 3].map((a) => chance(a, 2 * a + 3)), [0, 0, 0]);
+  check('one against one is a coin flip', chance(1, 1), 0.5);
+  // Level numbers are a coin flip when they are odd and better than that for the
+  // defence when they are even, since the attack then needs a strict majority of an
+  // even number of duels.
+  check('level numbers never favour the attack',
+    [2, 3, 4, 5, 6, 7].map((n) => chance(n, n).toFixed(4)),
+    ['0.2500', '0.5000', '0.3125', '0.5000', '0.3438', '0.5000']);
+
+  // Both of these were true under the old rule and are not under this one; they are
+  // checked so that a change back would be noticed.
+  const dominated = [];
   for (const p of [0.5, 0.6]) {
-    const table = takeTable(p, 14);
-    for (let a = 4; a <= 14; a += 2) for (let d = 0; d <= 14; d++) {
-      if (table[a][Math.min(a, d)] > table[a - 1][Math.min(a - 1, d)] + 1e-12) notDominated.push([p, a, d]);
+    const table = tailTable(p, 24);
+    const at = (a, d) => takeChance(a, Math.min(a, d), d - Math.min(a, d), table);
+    for (let a = 2; a <= 12; a++) for (let d = 0; d <= 12; d++) {
+      if (at(a, d) < at(a - 1, d) - 1e-12) dominated.push([p, a, d]);
     }
   }
-  check('an even force is never worth more than one fewer', notDominated, []);
-  check('a lone attacker takes the space as often as they win a duel',
-    [1, 4, 12].map((d) => takeTable(0.6, 14)[1][Math.min(1, d)].toFixed(4)), ['0.6000', '0.6000', '0.6000']);
+  check('another attacker never makes a square harder to take', dominated, []);
+  const helpless = [];
+  for (let d = 1; d <= 8; d++) if (chance(1, d) >= chance(1, d + 1) && chance(1, d) === chance(1, 1) && d > 1) helpless.push(d);
+  check('massing defenders against one attacker is not futile', helpless, []);
+
+  // Monotone in the defence as well, which is what makes the price list a price list.
+  const wrongWay = [];
+  for (let a = 1; a <= 12; a++) for (let d = 0; d < 12; d++) {
+    if (chance(a, d + 1) > chance(a, d) + 1e-12) wrongWay.push([a, d]);
+  }
+  check('another defender never makes a square easier to take', wrongWay, []);
 }
 
 {
-  // Pairing, with and without the step to an adjacent space.
+  // Pairing, and what a defender with nobody to fight may do.
   const alloc = (spec) => {
     const v = new Int32Array(N_SPACES);
     for (const [nm, n] of Object.entries(spec)) v[SPACES.find((s) => s.name === nm).i] = n;
     return v;
   };
-  const at = (pairs, nm) => pairs[SPACES.find((s) => s.name === nm).i];
+  const idx = (nm) => SPACES.find((s) => s.name === nm).i;
   const total = (v) => REGULAR.reduce((n, i) => n + v[i], 0);
+  const flat = new Float64Array(N_SPACES).fill(1);
+  const T = tailTable(0.5, 24);
 
   const A = alloc({ c3: 1, e3: 4, c5: 2 }), D = alloc({ c3: 5, e3: 1, b5: 3 });
-  const plain = pairing(A, D, false);
-  check('without the step, a space pairs off what stands on it',
-    [at(plain, 'c3'), at(plain, 'e3'), at(plain, 'c5'), at(plain, 'b5')], [1, 1, 0, 0]);
-  check('without the step, four defenders on c3 do nothing at all', total(plain), 2);
 
-  const stepped = pairing(A, D, true);
-  // c3's four spare defenders reach c4 and b3 (neither attacked) and e3 is not
-  // adjacent to c3, so they find nobody; b5's three spares reach c5, which has two
-  // unpaired attackers, and pair with both.
-  check('with the step, spare defenders reach the attackers next door', at(stepped, 'c5'), 2);
-  check('a defender still only fights once', total(stepped) <= total(D), true);
-  check('and only one attacker each', REGULAR.every((i) => stepped[i] <= A[i]), true);
+  const plain = pairOff(A, D, 'none');
+  check('without the step, a square pairs off what stands on it',
+    ['c3', 'e3', 'c5', 'b5'].map((nm) => plain.pairs[idx(nm)]), [1, 1, 0, 0]);
+  check('and the rest are spare where they stand',
+    ['c3', 'e3', 'c5', 'b5'].map((nm) => plain.spare[idx(nm)]), [4, 0, 0, 3]);
+
+  const stepped = pairOff(A, D, 'forced', flat, T);
+  // b5's three spares reach c5, which has two unpaired attackers, and pair with both.
+  check('with the step, spare defenders reach the attackers next door', stepped.pairs[idx('c5')], 2);
+  check('and are no longer spare where they came from', stepped.spare[idx('b5')], 1);
+  check('a defender still only fights once', total(stepped.pairs) <= total(D), true);
+  check('and only one attacker each', REGULAR.every((i) => stepped.pairs[i] <= A[i]), true);
 
   // The destination has to be one where the attackers hold the majority.
-  const even = pairing(alloc({ c5: 2 }), alloc({ c5: 2, b5: 4 }), true);
-  check('no step onto a space the attackers do not outnumber', at(even, 'c5'), 2);
+  const even = pairOff(alloc({ c5: 2 }), alloc({ c5: 2, b5: 4 }), 'forced', flat, T);
+  check('no step onto a square the attackers do not outnumber', even.pairs[idx('c5')], 2);
 
-  // A spare defender is not allowed to sit out when it could be fighting.
-  const forced = pairing(alloc({ c5: 3 }), alloc({ b5: 3 }), true);
-  check('a defender may not stand idle within reach of an unpaired attacker', at(forced, 'c5'), 3);
+  // Forced means forced, even where the defence would rather stand still.
+  const forced = pairOff(alloc({ c5: 3 }), alloc({ b5: 3 }), 'forced', flat, T);
+  check('a defender may not stand idle within reach of an unpaired attacker', forced.pairs[idx('c5')], 3);
 
-  // One neighbour cannot cover two needy spaces beyond its own numbers.
-  const shared = pairing(alloc({ b5: 2, c4: 2 }), alloc({ b4: 3 }), true);
-  check('spare defenders are not counted twice', total(shared), 3);
+  // One neighbour cannot cover two needy squares beyond its own numbers.
+  const shared = pairOff(alloc({ b5: 2, c4: 2 }), alloc({ b4: 3 }), 'forced', flat, T);
+  check('spare defenders are not counted twice', total(shared.pairs), 3);
+
+  // Optional means the defence declines a step that would lose it a square. Four
+  // spare defenders on b5 hold b5 against nothing; sending them to c5 to face three
+  // attackers is a fight they do not need, and stepping is worth nothing at b5.
+  const choice = pairOff(alloc({ c5: 3 }), alloc({ b5: 4 }), 'optional', flat, T);
+  check('an optional step is only taken where it helps', choice.pairs[idx('c5')] <= 3, true);
+  const kept = choice.spare[idx('b5')] + choice.pairs[idx('c5')];
+  check('and every defender is still accounted for', kept, 4);
 }
 
 {
@@ -554,17 +587,17 @@ const empty = ['.', '.', '.', '.', '.', '.', '.', '.', '.'];
   // The round, played out. Every position a campaign passes through has to obey
   // the invariants, whatever the numbers.
   const cfg = {
-    size: 12, ortho: true, skill: 0.5, targets: 14, defence: 'plan', attack: 'plan',
-    duels: 'coin', restart: 0, pos: [null, [0.03, 0.12], [0.03, 0.12]],
+    size: 12, skill: 0.5, targets: 14, defence: 'plan', attack: 'plan',
+    duels: 'coin', restart: 0, step: 'optional', pos: [null, [0.03, 0.12], [0.03, 0.12]],
   };
-  const tables = [null, takeTable(0.5, 13), takeTable(0.5, 13)];
+  const tables = [null, tailTable(0.5, 13), tailTable(0.5, 13)];
   const rng = makeRng(31);
   const st = newCampaign(0);
   const bad = [];
   for (let r = 0; r < 120; r++) {
     const before = st.marks.slice();
     const me = ((st.round + st.first) % 2) + 1;
-    const { A, D, pairs, free } = allocate(st, cfg, rng, tables);
+    const { A, D, shape: { pairs }, free } = allocate(st, cfg, rng, tables);
     if (free.length) {
       if (REGULAR.reduce((n, i) => n + A[i], 0) !== cfg.size) bad.push(`round ${r}: attackers not all placed`);
       if (REGULAR.reduce((n, i) => n + D[i], 0) !== cfg.size) bad.push(`round ${r}: defenders not all placed`);
