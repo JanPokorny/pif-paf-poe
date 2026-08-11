@@ -198,3 +198,170 @@ Every version of this list was measured rather than argued about. What it turned
   difference is that it also moves theirs.
 
 `adr/` records the decisions and `git log` the numbers behind them.
+
+# The campaign
+
+Duels are fought inside a campaign. Two teams, **X** and **O**, of ten to thirteen players
+each contest a board of thirty-three spaces, and every contested space is settled by a game
+of pif-paf-poe between one attacker and one defender.
+
+## The campaign board
+
+Four 3x3 boards, one for each compass direction, each sitting one step off centre in its own
+direction. Neighbouring boards share exactly one square, so four nines make thirty-two
+squares rather than thirty-six, and the four they leave in the middle make a hole:
+
+```
+      a  b  c  d  e  f  g
+   1  .  .  N  N  N  .  .
+   2  .  .  N  N  N  .  .
+   3  W  W  nw N  ne E  E
+   4  W  W  W  *  E  E  E
+   5  W  W  ws S  es E  E
+   6  .  .  S  S  S  .  .
+   7  .  .  S  S  S  .  .
+```
+
+The four lowercase squares are the **corners**, each belonging to two boards. The star at d4
+is the **centre space**: it belongs to no board, no attack is ever aimed at it and no
+defender ever stands on it, and it changes hands only by flipping. The four squares the
+boards do not reach — a1, g1, a7, g7 — are not spaces yet.
+
+Three in a row anywhere on this board scores, in any of the four directions, and it does not
+matter which boards the three squares belong to. There are sixty-eight such lines. The eight
+squares of the inner ring lie on ten lines each, the star on eight, and the ends of the four
+arms on three, so the middle of the board is worth several times what the outside is.
+
+## The round
+
+One team attacks and the other defends, and they change over every round.
+
+1. **The defence takes positions.** Each defender stands on one of the thirty-two regular
+   squares. More than one may stand on the same square.
+2. **The attack takes positions.** Each attacker stands on one of the thirty-two regular
+   squares that has no symbol on it. More than one may stand on the same square. The attack
+   places knowing where the defence has gone.
+3. **Pairing.** On each square the defenders there pair off one to one against the attackers
+   there, and a defender with a choice of attackers chooses. A defender left with nobody to
+   fight **steps to an orthogonally adjacent square where the attackers outnumber the
+   defenders** and pairs with an attacker there. A defender may stand idle only when there is
+   no unpaired attacker on their square or on any square next to it.
+4. **The duels.** Every pair plays a game of pif-paf-poe.
+5. **Taking the squares.** The attack takes a square when its won duels plus its unpaired
+   players there come to more than half of the attackers standing there.
+6. **Placing the marks.** Each of the four boards may claim one of the squares its attack
+   took, and mark it with the attacking team's symbol. A corner may be claimed for either of
+   the two boards it belongs to. So at most four marks, and a board may decline.
+7. **The flip.** If no mark at all was placed, the centre space becomes the attacking team's
+   symbol, whether it was empty or the other team's.
+8. **Scoring.** The attack scores a point for every three in a row of its symbol, counted
+   separately where they overlap: a cross is two points and four in a row is two points. Then
+   every board that a scored line stood on is cleared completely, both teams' symbols alike,
+   and the centre space with them if the line ran through it.
+
+A campaign runs to an agreed number of points. At ten points it lasts about twenty-two
+rounds, since a team scores a little under a point in each round it attacks.
+
+### Why a line costs you the ground it stood on
+
+Because otherwise the middle of the board fills up and stays filled. Clearing is what keeps
+the campaign moving, and pricing it against the scorer is what makes a point a decision:
+three of the four boards go with a line across the inner ring, which is most of what you had
+built. Roughly one round in eight scores, and the board settles at about an eighth full.
+
+### Why the attack moves second
+
+So that the defence has to be a real allocation rather than a guess. It also means the
+attack can never be bluffed, which is the thing to know about the phase order: there is
+nothing to be gained by hiding a defence, because it will be read before it is answered.
+
+## How many players
+
+Ten to thirteen a side, which is about three players per board.
+
+The board asks for four marks a round however many people you bring, so players past that
+buy the attack certainty rather than buying anybody a game. What that costs is measurable.
+The share of a team who plays a duel *that decides the square it is played on* — counting a
+player whose duel was already moot alongside a player left standing idle, because they come
+to the same thing at the table — runs:
+
+| a side | plays a duel | of those, decides it | so, decided something |
+|---|---|---|---|
+| 10 | 65% | 83% | **54%** |
+| 12 | 69% | 80% | **55%** |
+| 14 | 67% | 72% | 48% |
+| 17 | 67% | 66% | 44% |
+| 20 | 65% | 59% | 38% |
+| 24 | 62% | 52% | 33% |
+| 30 | 62% | 48% | **30%** |
+
+At twelve a side more than half the team plays a game that mattered. At thirty a side under
+a third does, and 83% of rounds hand the attack all four marks against 65% at twelve. Nothing
+improves as the teams grow: the attack's share of the marks rises, the defence's plan is
+worth less, and the duels that get played are more often decided before they start.
+
+Nor is it about the numbers being small. It is about the numbers against the board. Thirty a
+side would want about ten boards to contest rather than four; on this board it is three
+players per board that keeps the round live.
+
+## What a defender with nobody to fight may do
+
+Allow the step. It is worth about twice as much as it costs to explain.
+
+Without it, the defence covers whatever squares it is standing on and nothing else, and with
+at most thirty defenders on thirty-two squares that leaves the attack free squares to walk
+into. The step turns one defender into cover for their own square and the four next to it,
+and it is the difference between a defence and a formality:
+
+| a side | | plays a duel | decided something | rounds conceding all four marks | a plan is worth |
+|---|---|---|---|---|---|
+| 10 | no step | 47% | 33% | 76% | 0.40 |
+| 10 | step | 65% | 54% | 62% | 0.44 |
+| 20 | no step | 46% | 18% | 85% | 0.23 |
+| 20 | step | 65% | 38% | 77% | 0.31 |
+| 30 | no step | 49% | 13% | 91% | 0.09 |
+| 30 | step | 62% | 30% | 83% | 0.20 |
+
+"A plan is worth" is points per attacking round: the difference between a defence that
+allocates deliberately and one that scatters at random, measured on the same positions. At
+thirty a side, without the step, a deliberate defence saves under a tenth of a point a round
+— which is to say the phase may as well not be played. With the step it saves twice that, and
+two thirds of each team gets a game instead of half.
+
+The step is also the only thing that makes standing two deep on a square mean anything, for
+the reason in the next section.
+
+## What the defence cannot do
+
+**Stop the marks.** It concedes between three and a half and four marks out of four at every
+team size and under every rule tried here, and this is not a matter of playing better. A
+defence that has already seen the attack it is answering, and that the attack is not allowed
+to re-plan against, still concedes 3.84 of four.
+
+The reason is in the way a square is taken, and it is arithmetic rather than a measurement.
+A defender fights one attacker. So a lone attacker on a square faces exactly one duel
+whatever else is standing there, and takes the square by winning it — **one attacker takes
+any square, against any number of defenders, exactly as often as they win a duel.** Piling
+defenders onto a square past the first buys nothing at all against a single attacker, and
+even matching an attack of three or five or seven one for one still concedes the square half
+the time. The chance the attack takes a square:
+
+| attackers | 0 def | 1 | 2 | 3 | 4 | 5 |
+|---|---|---|---|---|---|---|
+| 1 | 100% | 50% | 50% | 50% | 50% | 50% |
+| 2 | 100% | 50% | 25% | 25% | 25% | 25% |
+| 3 | 100% | 100% | 75% | 50% | 50% | 50% |
+| 5 | 100% | 100% | 100% | 88% | 69% | 50% |
+| 7 | 100% | 100% | 100% | 100% | 94% | 81% |
+
+Two things fall out of it that a team will find on its own. **Twice the defenders plus one
+takes a square outright**, which is the price list the attack allocates against. And **an even
+number of attackers is never worth more than one fewer** — the same number of losses is
+allowed either way, and the even force has one more duel to lose it in — so forces come in
+odd numbers, and two attackers on a defended square is strictly worse than one.
+
+So the defence's job on this board is not denial. It is to make the attack pay for the
+squares that are worth having, and to turn free captures into duels — which is the whole of
+what the step adds, and most of why the number of players matters.
+
+The Counterattack's part in the campaign is not settled yet.
