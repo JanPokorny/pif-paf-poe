@@ -27,13 +27,8 @@ const DIRECTIONS = ['up', 'down', 'left', 'right'];
 export const STONE_TYPES = [
   'shift', '2048', 'rotate',   // movement
   'mountain',                  // static
-  'magnet',                    // restriction
+  'magnet', 'stinky',          // restriction, one pulling and one pushing
 ];
-
-// Under evaluation, and not part of the pool: a hand may hold one and the engine
-// plays it, but nothing that enumerates the hand space deals it unless asked.
-export const EXTRA_TYPES = ['stinky'];
-export const ALL_TYPES = [...STONE_TYPES, ...EXTRA_TYPES];
 
 // The two stones that constrain where the opponent may place.
 const RESTRICTION_TYPES = ['magnet', 'stinky'];
@@ -44,8 +39,8 @@ const EFFECT_TYPES = ['shift', '2048', 'rotate'];
 // The Counterattacks the player moving second picks from. They may hold more than
 // one but spend only one in a game, so holding two is a choice made in play with
 // the board in front of you rather than before it. Twenty-odd others were built
-// and measured on the way to these five; git history and results/ hold what each
-// of them was worth.
+// and measured on the way to these five; adr/ and git history hold what each of
+// them was worth.
 export const ITEMS = [
   'overtake',           // takes the centre stone back off the board
   'relocate',           // moves a stone of yours anywhere
@@ -96,11 +91,11 @@ export function createGame({
   // one back to lasting a single turn, for studies that compare the two.
   oneTurnMagnet = false, oneTurnStinky = false,
 }) {
-  if (disabled !== null && !ALL_TYPES.includes(disabled)) {
+  if (disabled !== null && !STONE_TYPES.includes(disabled)) {
     throw new Error(`unknown stone type: ${disabled}`);
   }
   for (const t of [...handX, ...handO]) {
-    if (!ALL_TYPES.includes(t)) throw new Error(`unknown stone type: ${t}`);
+    if (!STONE_TYPES.includes(t)) throw new Error(`unknown stone type: ${t}`);
   }
   // One Counterattack or several: a lone name is the same as a set of one.
   const held = (i) => (i === null ? [] : [].concat(i));

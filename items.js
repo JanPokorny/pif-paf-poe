@@ -1,7 +1,7 @@
 // How much is a Counterattack worth? Each item is measured as the swing it
 // gives the player who moves second, against the same games played without it.
 //
-//   node items.js --pairs 1000 --only none,super-shift,super-2048 --out results/items.json
+//   node items.js --pairs 1000 --only none,overtake,overtake+mirror --out results/items.json
 //   node items.js --report --out results/items.json
 //
 // Every arm replays the same list of (opening hand, replying hand, seed), so a

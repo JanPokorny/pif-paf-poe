@@ -1,14 +1,15 @@
-// Full census: every one of the 252 distinct five-stone hands plays every other
-// one, from both seats. Nothing is sampled -- this is the whole hand space.
+// Full census: every distinct five-stone hand plays every other one, from both
+// seats. Nothing is sampled -- this is the whole hand space. Six stone types
+// make 252 hands and 63252 ordered pairs.
 //
 //   node scan.js --part 0 --of 6 --iters 300 --out results/scan.json
 //   node scan.js --part 1 --of 6 --iters 300 --out results/scan.json
 //   ...
 //   node scan.js --report --out results/scan.json
 //
-// 252 hands is 63252 ordered pairs, which is more than fits in one sitting, so
-// the run is cut into parts. Each part plays every Nth pair and adds its
-// counters to the file, and the report says how much of the census is in.
+// That is more than fits in one sitting, so the run is cut into parts. Each part
+// plays every Nth pair and adds its counters to the file, and the report says how
+// much of the census is in.
 
 import { Worker, isMainThread, parentPort, workerData } from 'node:worker_threads';
 import { cpus } from 'node:os';
@@ -16,7 +17,7 @@ import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { dirname } from 'node:path';
 import { pathToFileURL } from 'node:url';
 
-import { ALL_TYPES, STONE_TYPES } from './engine.js';
+import { STONE_TYPES } from './engine.js';
 import { CODE, arg, pad, pct, playGame, wilson } from './sim.js';
 
 // Every multiset of five stones, in a fixed order so a hand's index means the
@@ -176,7 +177,7 @@ function report(state, hands, opts) {
 // checkpoints may hold stones that have since been cut, and the Leech -> Swap
 // rename, so the key covers those too.
 const RENAMED = { leech: 'swap' };
-const KEY_TYPES = [...ALL_TYPES, 'swap'];
+const KEY_TYPES = [...STONE_TYPES, 'swap'];
 function handKey(hand) {
   const types = hand.map((t) => RENAMED[t] ?? t);
   return KEY_TYPES.map((t) => types.filter((x) => x === t).length).join('');
@@ -266,13 +267,12 @@ async function main() {
     out: arg('out', 'results/scan.json'),
     reportOnly: process.argv.includes('--report'),
     compare: arg('compare', null),   // another census to read this one against
-    // A census of the game as it stands unless a variant is asked for, and of
-    // the six-stone pool unless a stone under evaluation is dealt in.
+    // A census of the game as it stands unless a variant is asked for.
     rules: {
       oneTurnMagnet: process.argv.includes('--one-turn-magnet'),
       oneTurnStinky: process.argv.includes('--one-turn-stinky'),
     },
-    pool: process.argv.includes('--stinky') ? [...STONE_TYPES, 'stinky'] : STONE_TYPES,
+    pool: STONE_TYPES,
   };
 
   const hands = allHands(opts.pool);

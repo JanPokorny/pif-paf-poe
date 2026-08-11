@@ -18,7 +18,7 @@
 // A game is fought on a space, and a space switches one stone type off for both
 // players: it still occupies its square and still counts towards a line, but it
 // has no effect. --space fixes which type that is for a whole run; --circuit
-// draws a space per game from the five plus the neutral one, which is the version
+// draws a space per game from the six plus the neutral one, which is the version
 // a hand cannot prepare for and therefore has to survive.
 //
 // --item fixes one Counterattack on everybody instead, which is the other way

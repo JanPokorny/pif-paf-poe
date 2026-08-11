@@ -14,7 +14,7 @@ import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { dirname } from 'node:path';
 import { pathToFileURL } from 'node:url';
 
-import { createGame, applyAction, ALL_TYPES, STONE_TYPES } from './engine.js';
+import { createGame, applyAction, STONE_TYPES } from './engine.js';
 import { chooseAction, makeRng } from './ai.js';
 
 export const CODE = {
@@ -71,11 +71,11 @@ function runSpecs(specs, workers) {
 // ── Setup ───────────────────────────────────────────────────────────────────
 
 export function sortHand(hand) {
-  return hand.slice().sort((a, b) => ALL_TYPES.indexOf(a) - ALL_TYPES.indexOf(b));
+  return hand.slice().sort((a, b) => STONE_TYPES.indexOf(a) - STONE_TYPES.indexOf(b));
 }
 
-// `pool` is the set of stones being dealt: the game's own by default, something
-// wider when a stone is under evaluation.
+// `pool` is the set of stones being dealt, which is the game's own unless a study
+// is asking about a different one.
 export function randomHand(rng, pool = STONE_TYPES) {
   return sortHand(Array.from({ length: 5 }, () => pool[(rng() * pool.length) | 0]));
 }

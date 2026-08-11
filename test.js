@@ -5,7 +5,7 @@
 //   node test.js
 
 import {
-  createGame, applyAction, legalActions, render, ALL_TYPES, STONE_TYPES, ITEMS, other, toMove,
+  createGame, applyAction, legalActions, render, STONE_TYPES, ITEMS, other, toMove,
 } from './engine.js';
 import { makeRng, randomAction } from './ai.js';
 
@@ -129,8 +129,8 @@ check('a Mountain in the square blocks its follower and frees the rest',
 
 // ── The pool, and a game that finishes ──────────────────────────────────────
 
-check('the pool is five stones', STONE_TYPES,
-  ['shift', '2048', 'rotate', 'mountain', 'magnet']);
+check('the pool is six stones', STONE_TYPES,
+  ['shift', '2048', 'rotate', 'mountain', 'magnet', 'stinky']);
 
 {
   const rng = makeRng(11);
@@ -360,7 +360,7 @@ const empty = ['.', '.', '.', '.', '.', '.', '.', '.', '.'];
   for (const item of ITEMS) {
     for (let g = 0; g < 40; g++) {
       const hand = () => Array.from({ length: 5 },
-        () => ALL_TYPES[(rng() * ALL_TYPES.length) | 0]);
+        () => STONE_TYPES[(rng() * STONE_TYPES.length) | 0]);
       // Every space too, since a switched-off stone changes what resolves.
       const spaces = [null, ...STONE_TYPES];
       const s = createGame({
