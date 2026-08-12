@@ -943,6 +943,11 @@ function row(t) {
     occupancy: 1 - per(t.free, r * t.spaces),
     cleared: per(t.cleared, r),
     lines: per(t.lines, r),
+    // How many rounds a mark survives. Marks arrive at `marks` a round and the board
+    // carries `occupancy * spaces` of them, so by Little's law the ratio is the mean
+    // life of one. It is the plainest measure of whether anything carries between
+    // rounds: at one, a mark is gone before its team attacks again.
+    life: per((1 - per(t.free, r * t.spaces)) * t.spaces, per(t.marks, r)),
     // Of the rounds that scored at all, the share that took more than one line --
     // which is the whole of what a squared score is trying to encourage.
     multi: per(t.lineHist.slice(2).reduce((a, b) => a + b, 0),
@@ -1001,7 +1006,7 @@ function group(tallies) {
 function report(rows) {
   const campaigns = rows.some((r) => r.ran);
   const head = ['size', 'layout', 'clear', 'score', 'marks', 'pts/r', 'duels', 'play%', 'pivot%',
-    'decis%', 'take%', 'occ%', 'lines', 'multi%', 'lumpy%', 'flip%',
+    'decis%', 'take%', 'occ%', 'life', 'multi%', 'lumpy%', 'flip%',
     ...(campaigns ? ['X win%', 'draw%', 'length'] : ['mk/max', 'allmk%', 'short%'])];
   console.log(head.map((h) => pad(h, h.length > 5 ? 8 : 6)).join(''));
   for (const r of rows) {
@@ -1012,7 +1017,7 @@ function report(rows) {
       pad(r.duels.toFixed(1), 6), pct(r.playing) + ' ', pct(r.pivotal) + '  ',
       pct(r.decisive ?? (r.duels * r.pivotal) / r.size) + '  ',
       pct(r.takeRate) + ' ', pct(r.occupancy) + ' ',
-      pad(r.lines.toFixed(2), 6), pct(r.multi) + '  ', pct(r.lumpy) + '  ', pct(r.flipRate) + ' ',
+      pad(r.life.toFixed(1), 6), pct(r.multi) + '  ', pct(r.lumpy) + '  ', pct(r.flipRate) + ' ',
       ...(campaigns
         ? [pad(pct(r.wonByX), 8), pad(pct(r.drawn), 8), pad(r.length.toFixed(1), 8)]
         : [pad(`${r.marks.toFixed(1)}/${r.boards}`, 8), pad(pct(r.allMarks), 8), pad(pct(r.shortBy2), 8)]),

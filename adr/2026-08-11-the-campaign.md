@@ -317,3 +317,67 @@ lumpiness in the clearing rule rather than the curve. So the two must be chosen 
 - **squared with line-only clearing** — a full positional game, and a very swingy one.
 
 Totals inflate 1.8x and 3.5x respectively, so the target score is rescaled with the rule.
+
+## The settled configuration: square field, squared score, one board clears
+
+### Board memory and strategic depth want opposite rules
+
+The most useful thing measured in the whole campaign layer, and it was not expected. A team that
+prices a lone mark as groundwork, played against one that prices only threats it can finish next
+round, wins by:
+
+| what clears | 2x2, twelve a side | 3x3, thirty a side | a mark survives |
+|---|---|---|---|
+| every board the line touched | +520% | +77% | 1.2–1.8 rounds |
+| one board, attack picks | +115% | +21% | 1.7–2.7 rounds |
+| the three squares only | +29% | +21% | 2.6–4.7 rounds |
+
+Sweeping the board is what makes each individual round sharp — on a swept board every mark has to
+be earned and placed exactly, on a crowded one threats turn up by accident — and it is also
+precisely what stops the campaign having any shape across rounds. "More memory" is not "more
+strategy"; the earlier note calling light clearing the fix for a memory-less campaign was right
+about the memory and silent about what it costs in per-round precision.
+
+Mark survival is by Little's law rather than by instrumenting each mark: marks arrive at `marks` a
+round and the board carries `occupancy × spaces`, so the ratio is the mean life of one. At 1.2
+rounds a mark is gone before its own team attacks again, which is the whole of why the original
+rule felt like a run of separate rounds. Two is the floor for anything to carry.
+
+Note the myopic baseline that did not work: a team with no position value at all scores exactly
+0.00 in every configuration, because with nothing to prefer it never lines anything up. That shows
+position value is necessary, not that a deep horizon pays, so the instrument became horizon *depth*
+— the groundwork term against the threat term — instead.
+
+### The recommendation
+
+Square field, 2x2 at about twelve a side and 3x3 at about thirty; squared score; one board clears
+and the attack picks which. At twelve a side on the 2x2:
+
+| | scores | mark life | points from 3+ line rounds | attack short of every board | a plan is worth |
+|---|---|---|---|---|---|
+| every board clears, plain | 0.78 | 1.3 | 27% | 39% | 59% of the scoring |
+| **one board, squared** | **2.14** | **2.2** | **35%** | **40%** | **66%** |
+| line only, squared | 5.30 | 6.2 | 87% | 61% | — |
+
+The middle row is the middle row on every measure at once. Squaring buys the arc — the best price
+for a two-in-a-row goes 0.12 → 0.35, and the attack starts refusing squares it won to keep ground,
+which nothing else here makes it do. Clearing one board keeps that from collapsing into two
+enormous rounds: squaring on light clearing gives 87% of points to the biggest rounds, and one-board
+clearing brings it to 35%. It is also the rule under which the defence has the most influence of
+anything tried, two thirds of the attack's scoring, and the one where the attack most often falls
+short of a board.
+
+Targets rescale with the squared score: about 22 points on the 2x2 and 70 on the 3x3 both give
+roughly twenty rounds.
+
+What none of it fixes is the individual duel — about 31% of a team plays a game that decided its
+square at twelve a side, 17–21% at thirty, on every setting. That is the price of the two-to-one
+exchange rate: both sides can buy certainty and rational teams do.
+
+### What choosing a square field costs
+
+The centre space and the flip. A 6x6 or 9x9 has no hole, so there is no square no attack can be
+aimed at, no unblockable line, and no round spent conceding everything to take one square. Worth
+little under a plain score — under one round in a hundred — but squaring was making it real, up to
+one in thirty. If it is wanted it has to be put back deliberately, as a nominated square belonging
+to no board.

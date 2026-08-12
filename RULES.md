@@ -201,10 +201,15 @@ Every version of this list was measured rather than argued about. What it turned
 
 # The campaign
 
-Duels are fought inside a campaign. Two teams, **X** and **O**, contest a board made of 3x3
+Duels are fought inside a campaign. Two teams, **X** and **O**, contest a square field of 3x3
 boards, and every contested space is settled by games of pif-paf-poe between attackers and
-defenders. Ten to twenty a side on four boards; **twenty and up wants nine boards in a 3x3**,
-for the reasons under *The arrangement of the boards*.
+defenders.
+
+**Pick the field by the headcount.** Four boards in a 2x2 -- a 6x6 field of 36 squares -- for
+about twelve a side. Nine boards in a 3x3 -- a 9x9 field of 81 squares -- for about thirty. The
+rules are the same either way, and the field is what makes the larger game work: one mark per
+board per round means the attack has nine marks to win rather than four, so the work grows with
+the players instead of staying where it was.
 
 ## The campaign board
 
@@ -254,15 +259,22 @@ One team attacks and the other defends, and they change over every round.
 6. **Placing the marks.** Each of the four boards may claim one of the squares its attack
    took, and mark it with the attacking team's symbol. A corner may be claimed for either of
    the two boards it belongs to. So at most four marks, and a board may decline.
-7. **The flip.** If no mark at all was placed, the centre space becomes the attacking team's
-   symbol, whether it was empty or the other team's.
-8. **Scoring.** The attack scores a point for every three in a row of its symbol, counted
-   separately where they overlap: a cross is two points and four in a row is two points. Then
-   every board that a scored line stood on is cleared completely, both teams' symbols alike,
-   and the centre space with them if the line ran through it.
+7. **Scoring.** Count the three-in-a-rows of the attacking team's symbol, counting them
+   separately where they overlap: a cross is two, four in a row is two. **n of them in one round
+   are worth n squared** -- one, four, nine, sixteen.
+8. **Clearing.** For each line scored, **one** of the boards its three symbols stood on is
+   cleared completely, both teams' symbols alike, and **the attack chooses which**.
 
-A campaign runs to an agreed number of points. At ten points it lasts about twenty-six rounds,
-since a team scores about three quarters of a point in each round it attacks.
+A campaign runs to an agreed number of points. Because the score is squared, the number has to be
+set against the field: about **22 points on the 2x2** and **70 on the 3x3** both give a campaign of
+around twenty rounds.
+
+### Why the score is squared and only one board clears
+
+These two are chosen together, and the reasoning is under *What makes a campaign strategic*. In
+short: squaring makes holding a position worth more than cashing it, which is what gives the
+campaign a shape across rounds, and clearing one board rather than all of them keeps that from
+turning into two enormous rounds and nothing else.
 
 ### The price list
 
@@ -400,6 +412,67 @@ pricing the ones that are.
 So the defensive phase is about steering rather than blocking, and the numbers say it is worth
 playing carefully: at ten a side, defensive allocation is worth about as much per round as the
 whole difference between ten a side and thirty.
+
+## What makes a campaign strategic
+
+Two things you would want from a campaign pull in opposite directions, and this is the most useful
+thing measured here.
+
+**Careful placement pays most when the board is swept clean, and least when it is crowded.** A team
+that prices a lone mark as groundwork, against one that prices only threats it can finish next
+round, wins by:
+
+| what clears | 2x2, twelve a side | 3x3, thirty a side | a mark survives |
+|---|---|---|---|
+| every board the line touched | **+520%** | +77% | 1.2-1.8 rounds |
+| one board, attack picks | +115% | +21% | 1.7-2.7 rounds |
+| the three squares only | +29% | +21% | 2.6-4.7 rounds |
+
+So board memory and strategic depth are not the same thing and do not want the same rule. On a
+swept board every mark has to be earned and placed exactly; on a crowded one threats turn up by
+accident and planning is worth much less. Sweeping the board is what makes each round sharp, and
+it is also what stops the campaign having any shape.
+
+**A mark has to live long enough to build on.** At 1.2 rounds it is gone before its own team
+attacks again, which is the whole of why the original rule left the campaign feeling like a run of
+separate rounds. Two rounds is the minimum for anything to carry.
+
+### So: squared scoring, and one board clears
+
+| | attack scores | a mark survives | points from 3+ line rounds | attack falls short of every board | a defensive plan is worth |
+|---|---|---|---|---|---|
+| every board clears, plain score | 0.78 | 1.3 rounds | 27% | 39% of rounds | 59% of the scoring |
+| **one board clears, squared** | **2.14** | **2.2 rounds** | **35%** | **40% of rounds** | **66% of the scoring** |
+| line only clears, squared | 5.30 | 6.2 rounds | 87% | 61% of rounds | — |
+
+At twelve a side on the 2x2. The middle row is the recommendation, and it is the middle row on
+every measure at once:
+
+- **Squaring buys the arc.** It makes holding a position worth more than spending it -- the best
+  price for a two-in-a-row goes from 0.12 of a point to 0.35 -- so the attack starts refusing
+  squares it won in order to keep its ground, which nothing else here makes it do. A mark lives
+  2.2 rounds instead of 1.3.
+- **Clearing one board keeps it honest.** Squaring on top of light clearing gives 87% of all points
+  to a handful of enormous rounds; clearing a whole board stops the stockpiling, and the figure
+  falls to 35%. It is also the rule under which the defence has the most influence of any tried --
+  two thirds of the attack's scoring -- and the rule that lets the attack fall short of a board
+  most often, which is the defence's work made visible.
+- **And it adds a decision to the attack** that it did not have: which board to give up when it
+  scores.
+
+Neither of these fixes the individual duel. The share of a team whose game decided the square it
+was played on runs about 31% at twelve a side and 17-21% at thirty, whatever the rules, and it
+falls with team size on every setting. That is the price of a two-to-one exchange rate: both sides
+can buy certainty, and rational teams do.
+
+### What the square field costs
+
+The centre space, and the flip with it. A 6x6 or 9x9 has no hole in the middle, so there is no
+square that no attack can be aimed at, no line that cannot be blocked, and no round spent
+conceding everything in order to take one square. That play was worth very little under a plain
+score -- under one round in a hundred -- but squaring was making it real, up to one round in
+thirty. If it is wanted on a square field it has to be put back deliberately, as a nominated
+square that belongs to no board.
 
 ## The arrangement of the boards
 
