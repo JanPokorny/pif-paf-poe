@@ -14,7 +14,8 @@ import {
 } from './board.js';
 import {
   allocate, bestPicks, newCampaign, playRound, posValue,
-  placementValue, resolve as pairOff, scoreAndClear, setPos, setRules, tailTable, takeChance, winsNeeded,
+  placementValue, resolve as pairOff, scoreAndClear, setPos, setRules, stakePerDuel,
+  tailTable, takeChance, winsNeeded,
 } from './campaign.js';
 
 let failures = 0;
@@ -440,6 +441,24 @@ const empty = ['.', '.', '.', '.', '.', '.', '.', '.', '.'];
     }
   }
   check('the threshold is the rule as written', mismatch, []);
+
+  // Two ways of asking whether a player's own game mattered, and they disagree.
+  // Afterwards: would this one result, flipped, have flipped the square? Two
+  // attackers against two defenders who both won is a square no single result would
+  // have changed -- the attack needed both duels and got neither -- so afterwards
+  // nobody decided it. Beforehand each of the four had an even chance of being the
+  // one who did, because one duel going the other way puts the square on the last.
+  check('two against two needs both duels', winsNeeded(2, 2, 0), 2);
+  check('and beforehand each of them has an even chance of deciding it',
+    stakePerDuel(2, 2, 0, 0.5), 0.5);
+  check('one against one always decides it', stakePerDuel(1, 1, 0, 0.5), 1);
+  // Level numbers keep every duel worth between a third and a half of the square.
+  check('level numbers leave every duel with a real chance of deciding it',
+    [2, 3, 4, 5, 6].map((n) => stakePerDuel(n, n, 0, 0.5).toFixed(3)),
+    ['0.500', '0.500', '0.375', '0.375', '0.313']);
+  // Nobody has a stake where the numbers already settled it.
+  check('a shut-out square puts nothing at stake', stakePerDuel(1, 1, 3, 0.5), 0);
+  check('an overwhelmed square puts nothing at stake', stakePerDuel(9, 2, 0, 0.5), 0);
 
   const T = tailTable(0.5, 24);
   const chance = (a, d) => takeChance(a, Math.min(a, d), d - Math.min(a, d), T);

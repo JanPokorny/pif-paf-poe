@@ -304,27 +304,21 @@ A dash is nothing at all, not a long shot. Read off it:
   defender counts towards holding the square just as an unpaired attacker counts towards
   taking it.
 
-### Conceding the round to take the star
+### Why there is no centre space
 
-Phase 7 is not only what happens when an attack wins nothing. It is a play, and it is the
-only way a symbol ever reaches d4.
+An earlier version of the field had a hole in the middle -- a square belonging to no board, which
+no attack could be aimed at and no defender could stand on, and which changed hands only by the
+attacking team declining every one of its marks for the round. It made for a line the other team
+could not block, and under a squared score it was becoming a real weapon: four such lines cross
+the middle, so one flip could take all four.
 
-A line through the star cannot be blocked. Its third square is the one no attack is ever aimed
-at, so once you hold both ends -- d3 and d5, or c3 and e5, or either of the other two pairs --
-the other team cannot answer by marking the gap the way they could answer any other
-two-in-a-row. Their only reply is to spend a round of their own attack flipping the star to
-their symbol, which costs them all four of their marks. And the four lines that cross at d4
-share it, so a team holding several of the inner ring can score more than one point from a
-single flip.
+It is gone, and not because the numbers killed it. **A round in which your team attacks and has to
+give up everything it won is not a round anybody wants to play.** The measurements agree it was
+marginal anyway -- under a plain score the flip happened in well under one round in a hundred, and
+a team that deliberately played for it lost -- but the reason it is out is the one at the table.
 
-Measured: essentially every flip that happens is deliberate -- the attack had squares it could
-have marked and declined them -- and a flip round scores 1.1 to 1.4 points against a normal
-round's 0.75.
-
-It is also rare, well under one round in a hundred, and **a team that plays for it does worse**.
-Priced at three times an ordinary threat a position on a star line costs 0.09 points a round;
-at five times it costs 0.41, because the team starts turning down marks it should have taken.
-Take the flip when the board offers it. Do not build towards it.
+A square field has no hole, so nothing has to be done to remove it. If an attack wins nothing it
+places nothing, and the round simply passes.
 
 ### Why a line costs you the ground it stood on
 
@@ -460,19 +454,31 @@ every measure at once:
 - **And it adds a decision to the attack** that it did not have: which board to give up when it
   scores.
 
-Neither of these fixes the individual duel. The share of a team whose game decided the square it
-was played on runs about 31% at twelve a side and 17-21% at thirty, whatever the rules, and it
-falls with team size on every setting. That is the price of a two-to-one exchange rate: both sides
-can buy certainty, and rational teams do.
+Neither of these fixes the individual duel. **The chance that a given player's own game decides
+the square it is played on** runs about 53% at twelve a side and 26-33% at thirty, whatever the
+rules, and it falls with team size on every setting. Counting the players left idle as well, that
+is about 31% of a team at twelve a side and 15-21% at thirty. It is the price of a two-to-one
+exchange rate: both sides can buy certainty, and rational teams do.
 
-### What the square field costs
+That figure is worth stating carefully, because there are two ways to ask the question and only one
+of them is the one a player cares about.
 
-The centre space, and the flip with it. A 6x6 or 9x9 has no hole in the middle, so there is no
-square that no attack can be aimed at, no line that cannot be blocked, and no round spent
-conceding everything in order to take one square. That play was worth very little under a plain
-score -- under one round in a hundred -- but squaring was making it real, up to one round in
-thirty. If it is wanted on a square field it has to be put back deliberately, as a nominated
-square that belongs to no board.
+- **Beforehand:** sitting down, what is the chance my result turns this square either way? It does
+  exactly when the other duels on the square come to one short of what the attack needs.
+- **Afterwards:** would my result, alone, flipped, have flipped the square?
+
+They disagree case by case. Two attackers against two defenders who both win is a square that no
+single result would have changed -- the attack needed both duels and got neither, so flipping one
+still leaves it one short. Afterwards, none of those four decided it. Beforehand, each of them had
+an even chance of being the one who did, because one duel going the other way would have put the
+square on the last.
+
+The one to quote is the first, and the two come to the same number in the aggregate -- measured at
+58.1% against 57.7%, 45.4% against 45.2%, 32.7% against 32.2% across the sizes. They have to: the
+chance a duel is decisive *is* the chance it turns out to have been decisive, so summing the one
+and counting the other estimate the same thing. Level numbers on a square leave every duel on it
+between a third and a half likely to decide it -- one against one is certain, two against two and
+three against three are a half each, six against six is 31%.
 
 ## The arrangement of the boards
 
@@ -577,11 +583,11 @@ What the rule buys:
 - **The board fills up.** 51% full against 27%, and 19% against 15% under the original clearing.
   This is the fix for a campaign that did not remember anything.
 - **Scoring rounds become detonations.** 96% of them take two lines or more.
-- **The star becomes a weapon.** Four lines cross d4, so one flip can take all four -- sixteen
-  points. Flips go from one round in two hundred to one in thirty, and a team that deliberately
-  prices star threats above ordinary ones now gains half a point a round where under linear
-  scoring it lost half a point. The advice under *Conceding the round to take the star* reverses:
-  under squared scoring, build towards it.
+- **It was also what nearly saved the centre space.** On a field with a hole, four lines cross it,
+  so one flip could take all four for sixteen points; flips went from one round in two hundred to
+  one in thirty, and pricing those threats highly turned from a half-point-a-round loss into a
+  half-point gain. That is the strongest case the centre space ever made, and it is still not
+  played, for the reason under *Why there is no centre space*.
 
 What it costs: **the campaign concentrates into a handful of rounds.** With light clearing, 86% of
 all points come from rounds taking three lines or more, so two or three detonations decide the

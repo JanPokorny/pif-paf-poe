@@ -348,6 +348,35 @@ function takeChance(a, pairs, spare, tail) {
   return w > pairs ? 0 : tail[pairs][w];
 }
 
+// Binomial coefficients, small enough to keep whole.
+const CHOOSE = (() => {
+  const rows = [[1]];
+  for (let n = 1; n <= 64; n++) {
+    const prev = rows[n - 1], row = [1];
+    for (let k = 1; k < n; k++) row.push(prev[k - 1] + prev[k]);
+    row.push(1);
+    rows.push(row);
+  }
+  return (n, k) => (k < 0 || k > n ? 0 : rows[n][k]);
+})();
+
+// The chance that one player's own duel decides the square, worked out before any of
+// them are played. Their result matters exactly when the other duels on the square
+// come to one short of what the attack needs: then this game turns it either way.
+//
+// This is the honest answer to "does my game matter", because it is the question as a
+// player faces it -- sitting down not knowing how the others will go. The alternative
+// is to ask afterwards whether that one result, alone, would have flipped the square,
+// and the two disagree: two attackers against two defenders who both win is a square
+// that no single result would have changed, so afterwards nobody decided it, while
+// beforehand each of the four had an even chance of being the one who did.
+function stakePerDuel(a, pairs, spare, p) {
+  if (!a || !pairs) return 0;
+  const w = winsNeeded(a, pairs, spare);
+  if (w < 1 || w > pairs) return 0;              // the duels cannot change the result
+  return CHOOSE(pairs - 1, w - 1) * Math.pow(p, w - 1) * Math.pow(1 - p, pairs - w);
+}
+
 // ── The attack ─────────────────────────────────────────────────────────────
 
 // One mark per board per round, so what an allocation is worth is, board by
@@ -702,7 +731,7 @@ export function playRound(st, cfg, rng, tables, tally) {
 
   // The duels. Every pairing is the same coin unless we are playing them out.
   const taken = [];
-  let duels = 0, pivotal = 0;
+  let duels = 0, pivotal = 0, stake = 0;
   for (const i of free) {
     if (!A[i]) continue;
     let lost = 0;
@@ -711,6 +740,7 @@ export function playRound(st, cfg, rng, tables, tally) {
     const won = pairs[i] - lost;
     const need = winsNeeded(A[i], pairs[i], spare[i]);
     if (won >= need) taken.push(i);
+    stake += pairs[i] * stakePerDuel(A[i], pairs[i], spare[i], p);
     // A duel decided the square if turning it round would have turned the square
     // round: on the threshold every win was decisive, one short of it every loss
     // was. This is the number that says whether the game a player actually sat
@@ -753,6 +783,7 @@ export function playRound(st, cfg, rng, tables, tally) {
     tally.stalled += free.length ? 0 : 1;
     tally.duels += duels;
     tally.pivotal += pivotal;
+    tally.stake += stake;
     tally.unpaired += heldA - duels;
     tally.idle += cfg.size - duels;
     tally.contested += free.filter((i) => A[i] > 0).length;
@@ -790,7 +821,7 @@ const newTally = (cfg) => ({
   // board, so anything the shares are taken over has to travel with the tally.
   spaces: REGULAR.length, boards: SUBBOARDS.length,
   rounds: 0, marks: 0, markHist: Array.from({ length: SUBBOARDS.length + 1 }, () => 0), points: 0, teamPoints: [0, 0, 0], seatPoints: [0, 0], value: 0, cleared: 0, swept: 0, stalled: 0, lines: 0, lineHist: [0, 0, 0, 0, 0, 0],
-  duels: 0, pivotal: 0, unpaired: 0, idle: 0, contested: 0, taken: 0, free: 0,
+  duels: 0, pivotal: 0, stake: 0, unpaired: 0, idle: 0, contested: 0, taken: 0, free: 0,
   flips: 0, declined: 0, flipPoints: 0, starHeld: 0, reinforced: 0, overestimate: 0,
 });
 
@@ -933,11 +964,16 @@ function row(t) {
     // idle are the same number and this one figure covers both.
     playing: per(t.duels, r * t.size),
     // Of the duels played, the share that decided the space they were played on.
+    // Of the duels played, the share that turned out to decide the square, and the
+    // share that had a chance of deciding it at the time they were sat down to. The
+    // second is the one to quote at a player.
     pivotal: per(t.pivotal, t.duels),
+    atStake: per(t.stake, t.duels),
     // And the one that puts the two together: the share of a team who played a
     // game whose result decided something. A player who is left standing idle and
     // a player whose duel was already moot come to the same thing at the table.
     decisive: per(t.pivotal, r * t.size),
+    atStakeShare: per(t.stake, r * t.size),
     contested: per(t.contested, r),
     takeRate: per(t.taken, t.contested),
     occupancy: 1 - per(t.free, r * t.spaces),
@@ -1006,7 +1042,7 @@ function group(tallies) {
 function report(rows) {
   const campaigns = rows.some((r) => r.ran);
   const head = ['size', 'layout', 'clear', 'score', 'marks', 'pts/r', 'duels', 'play%', 'pivot%',
-    'decis%', 'take%', 'occ%', 'life', 'multi%', 'lumpy%', 'flip%',
+    'stake%', 'atsta%', 'decis%', 'take%', 'occ%', 'life', 'multi%', 'lumpy%',
     ...(campaigns ? ['X win%', 'draw%', 'length'] : ['mk/max', 'allmk%', 'short%'])];
   console.log(head.map((h) => pad(h, h.length > 5 ? 8 : 6)).join(''));
   for (const r of rows) {
@@ -1015,9 +1051,10 @@ function report(rows) {
       pad(r.score.slice(0, 4), 7),
       pad(r.marks.toFixed(2), 6), pad(r.points.toFixed(3), 6),
       pad(r.duels.toFixed(1), 6), pct(r.playing) + ' ', pct(r.pivotal) + '  ',
+      pct(r.atStake) + '  ', pct(r.atStakeShare) + '  ',
       pct(r.decisive ?? (r.duels * r.pivotal) / r.size) + '  ',
       pct(r.takeRate) + ' ', pct(r.occupancy) + ' ',
-      pad(r.life.toFixed(1), 6), pct(r.multi) + '  ', pct(r.lumpy) + '  ', pct(r.flipRate) + ' ',
+      pad(r.life.toFixed(1), 6), pct(r.multi) + '  ', pct(r.lumpy) + '  ',
       ...(campaigns
         ? [pad(pct(r.wonByX), 8), pad(pct(r.drawn), 8), pad(r.length.toFixed(1), 8)]
         : [pad(`${r.marks.toFixed(1)}/${r.boards}`, 8), pad(pct(r.allMarks), 8), pad(pct(r.shortBy2), 8)]),
@@ -1107,7 +1144,8 @@ async function main() {
 }
 
 export {
-  tailTable, winsNeeded, takeChance, resolve, posValue, scoreAndClear, placementValue, bestPicks,
+  tailTable, winsNeeded, takeChance, stakePerDuel, resolve, posValue, scoreAndClear,
+  placementValue, bestPicks,
   fillBonus,
   combinations, attackPlan, defencePlan, boardBuckets, LADDER,
 };

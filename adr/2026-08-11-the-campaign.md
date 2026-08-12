@@ -381,3 +381,43 @@ aimed at, no unblockable line, and no round spent conceding everything to take o
 little under a plain score — under one round in a hundred — but squaring was making it real, up to
 one in thirty. If it is wanted it has to be put back deliberately, as a nominated square belonging
 to no board.
+
+## The centre space is out, on grounds the numbers do not reach
+
+The hole in the middle of the pinwheel — the square no attack could be aimed at, taken only by an
+attacking team declining every mark it won for the round — is dropped, and the square field has no
+hole so nothing has to be done to remove it.
+
+Not a measurement decision. **A round in which your team attacks and has to give up everything it
+won is not a round anybody wants to play.** The measurements happen to agree it was marginal — under
+a plain score the flip fired in under one round in a hundred and a team that played for it lost —
+but they were also starting to disagree: under a squared score four lines cross the centre, so one
+flip could take all four for sixteen points, flips rose to one round in thirty, and pricing those
+threats highly turned from a half-point-a-round loss into a half-point gain. That was the strongest
+case the centre space ever made and it is still not enough, because the case against it is about
+what the round is like to sit through rather than what it is worth.
+
+Worth recording as the shape of the thing: a rule can be measurably good and still be wrong.
+
+## Two ways to ask whether a player's own game mattered
+
+The "decided something" figure quoted throughout was computed *afterwards* — would this one result,
+flipped, have flipped the square? A fair challenge to it: two attackers against two defenders who
+both win is a square no single result would have changed, since the attack needed both duels and got
+neither, so afterwards none of those four decided it. Does that undercount?
+
+It does, case by case. The question a player actually faces is the one asked *beforehand*: sitting
+down, what is the chance my result turns this square either way? It does exactly when the other
+duels on the square come to one short of what the attack needs, which for two against two is an
+even chance for each of the four — not none.
+
+So the ex-ante figure was computed exactly, as `C(pairs-1, need-1) p^(need-1) q^(pairs-need)`, and
+put beside the ex-post one. **They agree to within a point everywhere** — 58.1% against 57.7%, 45.4%
+against 45.2%, 32.7% against 32.2% across the team sizes.
+
+They have to. The probability that a duel is decisive *is* the probability that it turns out to have
+been decisive, so summing the first and counting the second are two estimators of one quantity; the
+ex-ante sum is simply the lower-variance one. Nothing measured needs revising. What needed fixing was
+the phrasing: it is "the chance your game decides its square", not "the share of games that decided
+their square", and on a square with level numbers that chance runs between a third and a half — one
+against one certain, two against two and three against three a half each, six against six 31%.
