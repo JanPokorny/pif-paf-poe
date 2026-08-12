@@ -471,6 +471,58 @@ against 12-15% -- and it is the one to take if building across rounds is the poi
 or triples the scoring rate, so the target has to go up with it, and it is the variant where the
 defence has the least relative influence.
 
+## What several lines in one round are worth
+
+Counting n lines as n points is the rule as it stands. Counting them as **n squared** -- 1, 4, 9,
+16 -- changes what a good team is trying to do more than any other variant measured here, and it
+does it by changing the answer to a question the attack asks every round: cash in now, or hold?
+
+The evidence that it changes strategy rather than just inflating the score is that it moves the
+price of a position. Measured by playing candidate valuations against each other, the best price
+for a two-in-a-row is about **0.12 of a point under linear scoring and 0.30 to 0.45 under
+squared** -- three to four times higher. A team valuing position at 0.45 loses six points to one
+under linear scoring, because it declines points it should take; under squared scoring the same
+valuation wins. Above about 0.7 it collapses again, so the incentive to hoard is strong but not
+unbounded.
+
+At twenty a side, with the stepping rule and each scoring rule given its own best valuation:
+
+| scoring | what clears | marks won | points | lines | board stays | rounds taking 2+ lines | points from 3+ line rounds | claims every board | flips |
+|---|---|---|---|---|---|---|---|---|---|
+| linear | every board | 3.6 | 0.76 | 0.76 | 15% | 38% | 18% | 68% | 0.7% |
+| **squared** | **every board** | **3.6** | **1.33** | **0.66** | **19%** | **54%** | **36%** | **69%** | 0.3% |
+| linear | the line only | 3.8 | 1.59 | 1.58 | 27% | 70% | 56% | 80% | 0.5% |
+| triangular (1,3,6) | the line only | 3.5 | 3.67 | 1.54 | 43% | 91% | 87% | 63% | 2.3% |
+| squared | the line only | 3.1 | 5.50 | 1.45 | **51%** | **96%** | **86%** | **46%** | 3.0% |
+
+What the rule buys:
+
+- **The attack starts refusing marks to keep its position.** With light clearing it takes 3.1 of
+  four rather than 3.8, and claims every board in 46% of rounds rather than 80%. It is holding
+  ground instead of spending it, which is the first variant here under which the attack ever
+  turns down a square it won.
+- **The board fills up.** 51% full against 27%, and 19% against 15% under the original clearing.
+  This is the fix for a campaign that did not remember anything.
+- **Scoring rounds become detonations.** 96% of them take two lines or more.
+- **The star becomes a weapon.** Four lines cross d4, so one flip can take all four -- sixteen
+  points. Flips go from one round in two hundred to one in thirty, and a team that deliberately
+  prices star threats above ordinary ones now gains half a point a round where under linear
+  scoring it lost half a point. The advice under *Conceding the round to take the star* reverses:
+  under squared scoring, build towards it.
+
+What it costs: **the campaign concentrates into a handful of rounds.** With light clearing, 86% of
+all points come from rounds taking three lines or more, so two or three detonations decide the
+whole thing and everything else is preparation. That lumpiness is mostly the clearing rule rather
+than the curve -- triangular scoring is just as lumpy at 87% -- so the two rules have to be chosen
+together:
+
+- **Squared with the original clearing** is the balanced pair: the hoarding incentive is there, the
+  board holds half again as much, and 36% of points come from the big rounds rather than 86%.
+- **Squared with line-only clearing** is a full positional game and a very swingy one.
+
+Either way the totals inflate -- 1.8x with the original clearing, 3.5x with light clearing -- so
+the target score has to be rescaled with the rule.
+
 ### The subboard-filling bonus does not fire
 
 Sweeping the other team's symbols out of a board when your symbol fills it was measured with

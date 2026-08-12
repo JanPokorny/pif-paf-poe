@@ -271,3 +271,49 @@ Light clearing does not make the board full, it makes it a third full — three 
 down a round and a scored line takes three away, and the two balance near a third. A nine-square
 board needs all nine of them, which does not occur. A trigger that could be reached — a majority
 of a board rather than all of it — would be a different rule and was not measured.
+
+## Squaring the round's score
+
+Counting n lines in one round as n squared changes what a good team does more than any other
+variant measured, and it is the only one that ever makes the attack turn down a square it won.
+
+The evidence that it is a strategy change and not score inflation is that it moves the price of a
+position. By the same candidate-against-candidate method used to calibrate the valuation in the
+first place, the best price for a two-in-a-row is about 0.12 under linear scoring and 0.30–0.45
+under squared. That inverts the earliest finding in this file: 0.45 was the hand-set value that
+lost six points to one, *because* it declined points it should have taken. Under squared scoring
+the same valuation wins. Above 0.7 it collapses again, so hoarding is strongly but not unboundedly
+correct.
+
+All the figures below were re-measured with each scoring rule given its own calibrated valuation.
+The first pass was not, and it showed the rule doing almost nothing under the original clearing —
+a mistuned attack cannot exploit a rule that rewards patience, so an uncalibrated comparison hides
+exactly the effect being looked for. Same trap as the position price itself, third time.
+
+At twenty a side, stepping on:
+
+| scoring | clearing | marks | points | lines | board stays | 2+ line rounds | points from 3+ | claims all | flips |
+|---|---|---|---|---|---|---|---|---|---|
+| linear | boards | 3.6 | 0.76 | 0.76 | 15% | 38% | 18% | 68% | 0.7% |
+| squared | boards | 3.6 | 1.33 | 0.66 | 19% | 54% | 36% | 69% | 0.3% |
+| linear | line | 3.8 | 1.59 | 1.58 | 27% | 70% | 56% | 80% | 0.5% |
+| triangular | line | 3.5 | 3.67 | 1.54 | 43% | 91% | 87% | 63% | 2.3% |
+| squared | line | 3.1 | 5.50 | 1.45 | 51% | 96% | 86% | 46% | 3.0% |
+
+Three things it buys. The attack refuses marks to hold position — 3.1 of four rather than 3.8, and
+every board in 46% of rounds rather than 80%. The board fills to half, which is the answer to the
+campaign not remembering anything. And the star becomes central: four lines cross it, so a flip can
+take all four for sixteen points, flips go from 1 round in 200 to 1 in 30, and pricing star threats
+above ordinary ones is now worth +0.50 points a round where under linear scoring it cost 0.41. The
+"take the flip, do not build towards it" decision reverses under this rule.
+
+What it costs is concentration: with light clearing 86% of all points come from rounds taking three
+lines or more, so a campaign is two or three detonations and a lot of preparation. Triangular
+scoring (1, 3, 6, 10) was tried as the gentler curve and is just as lumpy at 87%, which locates the
+lumpiness in the clearing rule rather than the curve. So the two must be chosen as a pair:
+
+- **squared with the original clearing** — hoarding incentive present, board half again as full,
+  36% of points from the big rounds. The balanced pair.
+- **squared with line-only clearing** — a full positional game, and a very swingy one.
+
+Totals inflate 1.8x and 3.5x respectively, so the target score is rescaled with the rule.

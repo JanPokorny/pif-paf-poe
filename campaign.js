@@ -111,7 +111,22 @@ function posValue(b, me, them) {
 // scored line standing there and scoring again next round.
 let CLEAR = 'boards';
 let FILL = false;
-export const setRules = ({ clear = 'boards', fill = false }) => { CLEAR = clear; FILL = fill; };
+
+// What n lines in one round are worth. `linear` is n, which is the rule as it
+// stands. `square` is n squared -- 1, 4, 9, 16 -- which turns the round from a
+// question of whether you can score into a question of how much you can hold back
+// and fire at once. The four lines that cross the star share it, so a team holding
+// the inner ring can take all four with one flip, and that is sixteen points.
+let SCORE = (n) => n;
+export const setRules = ({ clear = 'boards', fill = false, score = 'linear' }) => {
+  CLEAR = clear;
+  FILL = fill;
+  // `triangle` -- 1, 3, 6, 10 -- is the middle ground: it rewards holding back
+  // without letting one round carry a whole campaign the way squaring does.
+  SCORE = score === 'square' ? (n) => n * n
+    : score === 'triangle' ? (n) => (n * (n + 1)) / 2
+      : (n) => n;
+};
 
 // For `one`, the board worth clearing is the one that costs the attack least and the
 // other team most, counted in symbols.
@@ -127,11 +142,11 @@ function pickBoard(b, li, me, them) {
 
 // Lines of `me` on the board, and everything they take with them.
 function scoreAndClear(b, me, them = 3 - me) {
-  let points = 0, cleared = null;
+  let lines = 0, cleared = null;
   const add = (j) => { (cleared ??= new Set()).add(j); };
   LINES.forEach((line, li) => {
     if (!line.every((j) => b[j] === me)) return;
-    points++;
+    lines++;
     if (CLEAR === 'line') { for (const j of line) add(j); return; }
     if (CLEAR === 'halo') { for (const j of LINE_HALO[li]) add(j); return; }
     if (CLEAR === 'one') {
@@ -142,7 +157,7 @@ function scoreAndClear(b, me, them = 3 - me) {
     for (const j of LINE_CLEARS[li]) add(j);
   });
   if (cleared) for (const j of cleared) b[j] = 0;
-  return { points, cleared: cleared ? cleared.size : 0 };
+  return { lines, points: SCORE(lines), cleared: cleared ? cleared.size : 0 };
 }
 
 // The other half of the light-clearing variant: the symbol that fills a board
@@ -715,7 +730,7 @@ export function playRound(st, cfg, rng, tables, tally) {
   const flipped = !picks.length;
   const declined = flipped && taken.length > 0;
   const swept = fillBonus(st.marks, me, them, picks);
-  const { points, cleared } = scoreAndClear(st.marks, me, them);
+  const { lines, points, cleared } = scoreAndClear(st.marks, me, them);
   st.points[me] += points;
   st.round++;
 
@@ -732,6 +747,8 @@ export function playRound(st, cfg, rng, tables, tally) {
     // a mark can still steer it somewhere that is not building anything.
     tally.value += value;
     tally.cleared += cleared;
+    tally.lines += lines;
+    tally.lineHist[Math.min(lines, 5)]++;
     tally.swept += swept;
     tally.stalled += free.length ? 0 : 1;
     tally.duels += duels;
@@ -772,7 +789,7 @@ const newTally = (cfg) => ({
   // The report is assembled in another thread, which may be looking at a different
   // board, so anything the shares are taken over has to travel with the tally.
   spaces: REGULAR.length, boards: SUBBOARDS.length,
-  rounds: 0, marks: 0, markHist: Array.from({ length: SUBBOARDS.length + 1 }, () => 0), points: 0, teamPoints: [0, 0, 0], seatPoints: [0, 0], value: 0, cleared: 0, swept: 0, stalled: 0,
+  rounds: 0, marks: 0, markHist: Array.from({ length: SUBBOARDS.length + 1 }, () => 0), points: 0, teamPoints: [0, 0, 0], seatPoints: [0, 0], value: 0, cleared: 0, swept: 0, stalled: 0, lines: 0, lineHist: [0, 0, 0, 0, 0, 0],
   duels: 0, pivotal: 0, unpaired: 0, idle: 0, contested: 0, taken: 0, free: 0,
   flips: 0, declined: 0, flipPoints: 0, starHeld: 0, reinforced: 0, overestimate: 0,
 });
@@ -903,7 +920,7 @@ const per = (x, n) => (n ? x / n : 0);
 function row(t) {
   const r = t.rounds;
   return {
-    size: t.size, step: t.step, layout: t.layout, clear: t.clear, fill: t.fill,
+    size: t.size, step: t.step, layout: t.layout, clear: t.clear, fill: t.fill, score: t.score,
     defence: t.defence, attack: t.attack, skill: t.skill,
     rounds: r,
     marks: per(t.marks, r),
@@ -925,6 +942,20 @@ function row(t) {
     takeRate: per(t.taken, t.contested),
     occupancy: 1 - per(t.free, r * t.spaces),
     cleared: per(t.cleared, r),
+    lines: per(t.lines, r),
+    // Of the rounds that scored at all, the share that took more than one line --
+    // which is the whole of what a squared score is trying to encourage.
+    multi: per(t.lineHist.slice(2).reduce((a, b) => a + b, 0),
+      t.lineHist.slice(1).reduce((a, b) => a + b, 0)),
+    // How lumpy the scoring is: the share of all points that came from the rounds
+    // taking three lines or more. A squared score concentrates a campaign into a few
+    // rounds, and this is the number that says how few.
+    lumpy: (() => {
+      const worth = t.lineHist.map((c, k) => c
+        * (t.score === 'square' ? k * k : t.score === 'triangle' ? (k * (k + 1)) / 2 : k));
+      const all = worth.reduce((a, b) => a + b, 0);
+      return all ? worth.slice(3).reduce((a, b) => a + b, 0) / all : 0;
+    })(),
     swept: per(t.swept, r),
     stalled: per(t.stalled, r),
     flipRate: per(t.flips, r),
@@ -954,7 +985,7 @@ function row(t) {
 function group(tallies) {
   const byKey = new Map();
   for (const t of tallies) {
-    const k = `${t.size}|${t.step}|${t.layout}|${t.clear}|${t.fill}|${t.defence}`;
+    const k = `${t.size}|${t.step}|${t.layout}|${t.clear}|${t.fill}|${t.score}|${t.defence}`;
     if (!byKey.has(k)) { byKey.set(k, { ...t }); continue; }
     const into = byKey.get(k);
     for (const [f, v] of Object.entries(t)) {
@@ -969,19 +1000,19 @@ function group(tallies) {
 
 function report(rows) {
   const campaigns = rows.some((r) => r.ran);
-  const head = ['size', 'layout', 'clear', 'marks', 'pts/r', 'duels', 'play%', 'pivot%',
-    'decis%', 'take%', 'occ%', 'sq/clr', 'swept', 'stall%',
+  const head = ['size', 'layout', 'clear', 'score', 'marks', 'pts/r', 'duels', 'play%', 'pivot%',
+    'decis%', 'take%', 'occ%', 'lines', 'multi%', 'lumpy%', 'flip%',
     ...(campaigns ? ['X win%', 'draw%', 'length'] : ['mk/max', 'allmk%', 'short%'])];
   console.log(head.map((h) => pad(h, h.length > 5 ? 8 : 6)).join(''));
   for (const r of rows) {
     console.log([
       pad(r.size, 6), pad(r.layout.slice(0, 7), 8), pad(r.clear + (r.fill ? '+f' : ''), 7),
+      pad(r.score.slice(0, 4), 7),
       pad(r.marks.toFixed(2), 6), pad(r.points.toFixed(3), 6),
       pad(r.duels.toFixed(1), 6), pct(r.playing) + ' ', pct(r.pivotal) + '  ',
       pct(r.decisive ?? (r.duels * r.pivotal) / r.size) + '  ',
       pct(r.takeRate) + ' ', pct(r.occupancy) + ' ',
-      pad((r.points ? r.cleared / r.points : 0).toFixed(1), 6),
-      pad(r.swept.toFixed(2), 6), pct(r.stalled) + ' ',
+      pad(r.lines.toFixed(2), 6), pct(r.multi) + '  ', pct(r.lumpy) + '  ', pct(r.flipRate) + ' ',
       ...(campaigns
         ? [pad(pct(r.wonByX), 8), pad(pct(r.drawn), 8), pad(r.length.toFixed(1), 8)]
         : [pad(`${r.marks.toFixed(1)}/${r.boards}`, 8), pad(pct(r.allMarks), 8), pad(pct(r.shortBy2), 8)]),
@@ -1025,6 +1056,7 @@ async function main() {
     seed: parseInt(arg('seed', '20260811'), 10),
     reps: parseInt(arg('reps', '1'), 10),   // independent runs per size, summed
     layouts: arg('layouts', arg('layout', 'pinwheel')).split(','),
+    scores: arg('scores', arg('score', 'linear')).split(','),
     clears: arg('clears', arg('clear', 'boards')).split(','),
     fill: process.argv.includes('--fill'),
     steps: arg('steps', arg('step', 'forced')).split(','),
@@ -1041,13 +1073,13 @@ async function main() {
   // Allocating a whole number of players over a whole number of squares is lumpy,
   // and one run of one size can land on a shape that is not typical of its
   // neighbours. --reps runs each size from several seeds and sums them.
-  const configs = opts.clears.flatMap((clear, ci) => opts.layouts.flatMap((layout, li) =>
-    opts.steps.flatMap((step, si) => opts.sizes.flatMap((size, k) =>
-      Array.from({ length: opts.reps }, (_, rep) => ({
-        ...opts, size, step, layout, clear, rep,
-        sizes: undefined, steps: undefined, layouts: undefined, clears: undefined,
-        seed: opts.seed + 1000 * k + 97 * rep + 7 * si + 13 * li + 31 * ci,
-      }))))));
+  const configs = opts.scores.flatMap((score, xi) => opts.clears.flatMap((clear, ci) =>
+    opts.layouts.flatMap((layout, li) => opts.steps.flatMap((step, si) =>
+      opts.sizes.flatMap((size, k) => Array.from({ length: opts.reps }, (_, rep) => ({
+        ...opts, size, step, layout, clear, score, rep,
+        sizes: undefined, steps: undefined, layouts: undefined, clears: undefined, scores: undefined,
+        seed: opts.seed + 1000 * k + 97 * rep + 7 * si + 13 * li + 31 * ci + 53 * xi,
+      })))))));
 
   const started = Date.now();
   const tallies = opts.workers > 1 && configs.length > 1
@@ -1058,7 +1090,7 @@ async function main() {
       .map((a, i) => [a, group(tallies.map((p) => p[1])).map(row)[i]])
       .sort((a, b) => a[0].size - b[0].size)
     : group(tallies).map(row).sort((a, b) => a.layout.localeCompare(b.layout)
-      || a.clear.localeCompare(b.clear) || a.step.localeCompare(b.step) || (a.size - b.size));
+      || a.clear.localeCompare(b.clear) || a.score.localeCompare(b.score) || (a.size - b.size));
   opts.pair ? reportPaired(rows) : report(rows);
   console.log(`\n${configs.length} configs, ${opts.rounds} rounds each, ${((Date.now() - started) / 1000).toFixed(1)}s`);
 
