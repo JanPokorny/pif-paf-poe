@@ -14,7 +14,7 @@ import {
 } from './board.js';
 import {
   allocate, bestPicks, newCampaign, playRound, posValue,
-  placementValue, resolve as pairOff, scoreAndClear, setPos, tailTable, takeChance, winsNeeded,
+  placementValue, resolve as pairOff, scoreAndClear, setPos, setRules, tailTable, takeChance, winsNeeded,
 } from './campaign.js';
 
 let failures = 0;
@@ -531,6 +531,7 @@ const empty = ['.', '.', '.', '.', '.', '.', '.', '.', '.'];
 }
 
 {
+  setRules({ clear: 'boards' });
   // Scoring and clearing.
   const idx = (nm) => SPACES.find((s) => s.name === nm).i;
   const board = (names, me = 1) => {
@@ -588,7 +589,7 @@ const empty = ['.', '.', '.', '.', '.', '.', '.', '.', '.'];
   // the invariants, whatever the numbers.
   const cfg = {
     size: 12, skill: 0.5, targets: 14, defence: 'plan', attack: 'plan',
-    duels: 'coin', restart: 0, step: 'optional', layout: 'pinwheel', pos: [null, [0.03, 0.12], [0.03, 0.12]],
+    duels: 'coin', restart: 0, step: 'optional', layout: 'pinwheel', clear: 'boards', fill: false, pos: [null, [0.03, 0.12], [0.03, 0.12]],
   };
   const tables = [null, tailTable(0.5, 13), tailTable(0.5, 13)];
   const rng = makeRng(31);

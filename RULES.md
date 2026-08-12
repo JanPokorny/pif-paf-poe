@@ -201,9 +201,10 @@ Every version of this list was measured rather than argued about. What it turned
 
 # The campaign
 
-Duels are fought inside a campaign. Two teams, **X** and **O**, of ten to twenty players each
-contest a board of thirty-three spaces, and every contested space is settled by games of
-pif-paf-poe between attackers and defenders.
+Duels are fought inside a campaign. Two teams, **X** and **O**, contest a board made of 3x3
+boards, and every contested space is settled by games of pif-paf-poe between attackers and
+defenders. Ten to twenty a side on four boards; **twenty and up wants nine boards in a 3x3**,
+for the reasons under *The arrangement of the boards*.
 
 ## The campaign board
 
@@ -402,47 +403,84 @@ whole difference between ten a side and thirty.
 
 ## The arrangement of the boards
 
-The pinwheel is the arrangement in the drawing, and on everything measured here **it does not
-earn its awkwardness**. Four 3x3 boards in a plain 2x2 -- a 6x6 square, 36 squares, nothing
-shared and no hole -- plays slightly better.
+Four 3x3 boards can be arranged in a plain 2x2 -- a 6x6 square, 36 squares, nothing shared and
+no hole -- and it plays a little better than the pinwheel. **Nine boards in a 3x3, an 81-square
+board, plays better than either, and it is the arrangement for twenty a side and up.**
 
 The thing the pinwheel looked like it was for is the line built inside a single round, which
-needs three squares claimable for three different boards. It is not: the plain square has just
-as many, on the diagonals either side of the centre, where a line crosses the vertical and the
+needs three squares claimable for three different boards. It is not: the plain 2x2 has just as
+many, on the diagonals either side of the centre, where a line crosses the vertical and the
 horizontal boundary on different steps.
 
-| arrangement | squares | shared | lines | finishable in one round | a line clears | decided something | holds |
+At twenty a side, with the original clearing rule:
+
+| arrangement | boards | squares | lines | one-round lines | marks won | claims every board | decided something |
 |---|---|---|---|---|---|---|---|
-| pinwheel, as drawn | 32 + star | 4 | 68 | 4 | 49% | 27% | 15% |
-| plain 2x2, 6x6 | 36 | 0 | 80 | 4 | 41% | 31% | 2% |
-| 2x2 overlapping a row and a column, 5x5 | 25 | 9 | 48 | **20** | 76% | 31% | **32%** |
-| pinwheel pulled in one step, 30 squares | 30 | 6 | 60 | 11 | 57% | 29% | 18% |
+| pinwheel, as drawn | 4 | 32 + star | 68 | 4 | 3.6 of 4 | 68% | 28% |
+| plain 2x2, 6x6 | 4 | 36 | 80 | 4 | 3.6 of 4 | 64% | **31%** |
+| overlapping a row and column, 5x5 | 4 | 25 | 48 | 20 | 3.6 of 4 | 71% | 30% |
+| pinwheel pulled in one step | 4 | 30 | 60 | 11 | 3.6 of 4 | 65% | 29% |
+| **nine boards in a 3x3, 9x9** | **9** | **81** | **224** | **16** | **4.9 of 9** | **0.0%** | 28% |
 
-"Decided something" and "holds" are at twenty a side: the share of a team whose duel decided
-its square, and the share of the board carrying a symbol at any moment. Differences under about
-0.07 of a point are inside the noise of these runs.
+### Why nine boards rather than four
 
-What the pinwheel actually buys is the star, and the star is worth very little as the rules
-stand: it changes hands in well under one round in a hundred, and playing for it loses. The
-four shared corners are the only other thing, and they are only interesting because a corner is
-a choice of which board claims it.
+On any four-board arrangement the attack takes about nine marks in ten and claims all four
+boards in about two rounds in three. The defence's work is real but invisible: it steers the
+marks onto squares that are not building anything rather than keeping the attack out.
 
-The best of the four is the last one nobody drew: **four boards overlapping along a whole row
-and a whole column**, a 5x5 with the central cross shared and the centre square belonging to
-all four boards. Twenty of its forty-eight lines can be finished in a single round, and it is
-the only arrangement that holds a position. It also wants a higher price on a two-in-a-row than
-the others do, which is a sign there is more position in it to hold.
+On nine boards the attack claims **4.9 of 9**, it has **never once** claimed all nine, and it is
+short by two boards or more in essentially every round. The defence keeps it out of four boards
+a round, and a defensive plan is worth 0.8 marks a round against 0.13 on the 2x2 -- which is the
+same defence doing the same work, made visible.
 
-### The boards do not remember much
+Two more things follow. Which boards to attack becomes a decision, where on four boards the
+answer is always "all of them". And the share the attack takes barely moves with the team size --
+52% of the boards at twelve a side, 54% at thirty -- where on four boards going from twelve to
+thirty pushes it from 65% of rounds claiming everything to 76%. Nine boards is the arrangement
+that scales.
 
-Which is the larger finding, and it is about the clearing rule rather than the arrangement. A
-scored line clears every board its symbols stood on, and that is between 41% and 76% of the
-whole board depending on the arrangement. Against three or four marks going down each round,
-that leaves the board carrying between 0.7 and 8 symbols at any time.
+What it does not fix is the individual duel. The share of a team whose game decided its square
+still falls with team size on every arrangement, from about 39% at twelve a side to about 20% at
+thirty. Nine boards makes the *team's* decisions matter more, not each player's.
 
-So a campaign is much closer to a run of separate rounds than to a game of position: at fifteen
-percent full, the pinwheel remembers about one round of play. If the campaign should reward
-building across rounds, the rule to change is what a scored line takes with it -- clearing the
-line, or the boards' worth of squares nearest it, rather than every board it touched.
+## What a scored line takes with it
+
+The original rule -- every board the line touched -- clears between a fifth and three quarters
+of the whole board, and leaves it about an eighth full at any moment. Three variants were
+measured against it, at twelve, twenty and thirty a side on both the pinwheel and the 3x3:
+
+| what clears | board stays | attack scores | a defensive plan is worth | share of the attack's scoring |
+|---|---|---|---|---|
+| every board the line touched | 12-15% full | 0.72-1.24 | 0.54-0.84 | 48-65% |
+| the line and everything touching it | 10-16% full | 0.77-1.13 | — | — |
+| one of those boards, attack picks | 16-21% full | 1.05-2.99 | **0.79-1.20** | 22-58% |
+| the three squares and nothing else | **27-35% full** | 1.53-2.48 | 0.63-1.37 | 29-42% |
+
+**One board, and the attack picks which, is the best of the three.** It doubles what a defensive
+plan is worth in points a round over the original rule, it gives the attack a real decision it
+did not have, and it leaves the board half again as full. The cost is that scoring speeds up by
+about half, so a campaign wants a higher target.
+
+**Clearing the line and what touches it is not a change.** On these arrangements a line's
+neighbourhood is 13 to 15 squares and the boards it would have cleared are 10 to 16, so the two
+rules clear almost the same ground and measure the same on everything. It only becomes a real
+change on an arrangement whose boards overlap heavily, where a board is most of the whole.
+
+**Clearing only the line is the one rule that gives the campaign a memory** -- 27-35% full
+against 12-15% -- and it is the one to take if building across rounds is the point. It doubles
+or triples the scoring rate, so the target has to go up with it, and it is the variant where the
+defence has the least relative influence.
+
+### The subboard-filling bonus does not fire
+
+Sweeping the other team's symbols out of a board when your symbol fills it was measured with
+line-clearing, on every arrangement, at every team size, and at the highest occupancy any of
+them reach. It sweeps between 0.00 and 0.08 symbols a round. It never happens.
+
+The reason is that light clearing does not make the board full, it makes it a third full: three
+or four marks go down each round and a scored line takes three away, and the two balance at
+around a third. A nine-square board needs all nine, and at a third full that is not something
+that occurs. If the bonus is wanted, it needs a trigger that can actually be reached -- a
+majority of a board rather than all of it.
 
 The Counterattack's part in the campaign is not settled yet.

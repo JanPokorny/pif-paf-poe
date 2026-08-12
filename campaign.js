@@ -33,8 +33,8 @@ import { dirname } from 'node:path';
 import { pathToFileURL } from 'node:url';
 
 import {
-  ADJACENT, BOARD_SPACES, CORNERS, LAYOUTS, LINES, LINE_CLEARS, N_SPACES, REGULAR,
-  SPACES, SPACE_BOARDS, STAR, SUBBOARDS, claimable, render, setLayout,
+  ADJACENT, BOARD_SPACES, CORNERS, LAYOUTS, LINES, LINE_BOARDS, LINE_CLEARS, LINE_HALO,
+  N_SPACES, REGULAR, SPACES, SPACE_BOARDS, STAR, SUBBOARDS, claimable, render, setLayout,
 } from './board.js';
 import { makeRng } from './ai.js';
 import { arg, pad, pct, playGame, randomHand } from './sim.js';
@@ -97,18 +97,68 @@ function posValue(b, me, them) {
 
 
 
-// Lines of `me` on the board, and everything a scored line takes with it.
-function scoreAndClear(b, me) {
+// What a scored line takes with it. The original rule clears every board the three
+// symbols stood on, which is between a fifth and three quarters of the board
+// depending on the arrangement and leaves the campaign with almost no memory. So it
+// is a setting:
+//
+//   boards  every board the line touched, whole, and the star if it was in the line
+//   one     just one of those boards, and the attack picks which
+//   halo    the three squares and everything touching them, edge or corner
+//   line    the three squares and nothing else
+//
+// Every one of them takes at least one square of the line, which is what stops a
+// scored line standing there and scoring again next round.
+let CLEAR = 'boards';
+let FILL = false;
+export const setRules = ({ clear = 'boards', fill = false }) => { CLEAR = clear; FILL = fill; };
+
+// For `one`, the board worth clearing is the one that costs the attack least and the
+// other team most, counted in symbols.
+function pickBoard(b, li, me, them) {
+  let best = null, bestGain = -Infinity;
+  for (const board of LINE_BOARDS[li]) {
+    let gain = 0;
+    for (const j of BOARD_SPACES[board]) gain += b[j] === them ? 1 : b[j] === me ? -1 : 0;
+    if (gain > bestGain) { bestGain = gain; best = board; }
+  }
+  return best;
+}
+
+// Lines of `me` on the board, and everything they take with them.
+function scoreAndClear(b, me, them = 3 - me) {
   let points = 0, cleared = null;
+  const add = (j) => { (cleared ??= new Set()).add(j); };
   LINES.forEach((line, li) => {
-    if (line.every((j) => b[j] === me)) {
-      points++;
-      cleared ??= new Set();
-      for (const j of LINE_CLEARS[li]) cleared.add(j);
+    if (!line.every((j) => b[j] === me)) return;
+    points++;
+    if (CLEAR === 'line') { for (const j of line) add(j); return; }
+    if (CLEAR === 'halo') { for (const j of LINE_HALO[li]) add(j); return; }
+    if (CLEAR === 'one') {
+      for (const j of line) if (j === STAR) add(j);
+      for (const j of BOARD_SPACES[pickBoard(b, li, me, them)]) add(j);
+      return;
     }
+    for (const j of LINE_CLEARS[li]) add(j);
   });
   if (cleared) for (const j of cleared) b[j] = 0;
   return { points, cleared: cleared ? cleared.size : 0 };
+}
+
+// The other half of the light-clearing variant: the symbol that fills a board
+// sweeps the other team's symbols out of it. With a line only taking three squares
+// the boards fill up, and this is what empties them again -- as a reward rather than
+// a reset, since it leaves your own symbols standing.
+function fillBonus(b, me, them, picks) {
+  if (!FILL || !picks.length) return 0;
+  const filled = new Set(picks.flatMap((i) => SPACE_BOARDS[i]));
+  let swept = 0;
+  for (const board of filled) {
+    const cells = BOARD_SPACES[board];
+    if (!cells.every((j) => b[j])) continue;
+    for (const j of cells) if (b[j] === them) { b[j] = 0; swept++; }
+  }
+  return swept;
 }
 
 // What placing this set of marks (or, for the empty set, flipping the star) is
@@ -119,7 +169,8 @@ function placementValue(marks, me, them, picks, base) {
   const b = marks.slice();
   if (picks.length) for (const i of picks) b[i] = me;
   else if (STAR >= 0) b[STAR] = me;
-  const { points } = scoreAndClear(b, me);
+  fillBonus(b, me, them, picks);
+  const { points } = scoreAndClear(b, me, them);
   return points + posValue(b, me, them) - base;
 }
 
@@ -525,22 +576,52 @@ function oraclePlan(marks, me, them, free, gain, buckets, combos, cfg, tail) {
 // list is scored exactly -- including the marks that only add up to a line
 // together, which the planner's estimate misses.
 function bestPicks(marks, me, them, taken, gain, base) {
+  // -1 stands for "this board claims nothing", since 0 is a real square.
   const buckets = SUBBOARDS
     .map((b) => taken.filter((i) => SPACE_BOARDS[i].includes(b)).sort((x, y) => gain[y] - gain[x]))
-    .map((b) => [0, ...b.slice(0, 4)]);
-  let best = [], bestValue = placementValue(marks, me, them, [], base);   // flip the star
+    .map((b) => [-1, ...b.slice(0, 4)]);
 
-  const walk = (k, picks) => {
-    if (k === buckets.length) {
-      if (!picks.length) return;
-      const set = [...new Set(picks)];
-      const v = placementValue(marks, me, them, set, base);
-      if (v > bestValue) { bestValue = v; best = set; }
-      return;
-    }
-    for (const i of buckets[k]) walk(k + 1, i ? [...picks, i] : picks);
+  const score = (choice) => {
+    const set = [...new Set(choice.filter((i) => i >= 0))];
+    return { set, value: placementValue(marks, me, them, set, base) };
   };
-  walk(0, []);
+  // Placing nothing is always on the menu, and on a board with a hole it is the flip.
+  let best = [], bestValue = placementValue(marks, me, them, [], base);
+  const keep = ({ set, value }) => {
+    if (set.length && value > bestValue) { bestValue = value; best = set; }
+  };
+
+  // Four boards is 625 combinations and worth enumerating; nine is two million and
+  // is not. Above four, start from each board's best claim and sweep: re-choose one
+  // board at a time against the others as they stand, until a pass changes nothing.
+  // Every candidate is still scored exactly, so what the sweep can miss is only a
+  // combination no single change reaches.
+  if (buckets.length <= 4) {
+    const walk = (k, choice) => {
+      if (k === buckets.length) return keep(score(choice));
+      for (const i of buckets[k]) walk(k + 1, [...choice, i]);
+    };
+    walk(0, []);
+    return { picks: best, value: bestValue };
+  }
+
+  const choice = buckets.map((b) => b[1] ?? -1);
+  let current = score(choice);
+  keep(current);
+  for (let pass = 0; pass < 3; pass++) {
+    let moved = false;
+    for (let k = 0; k < buckets.length; k++) {
+      const was = choice[k];
+      for (const i of buckets[k]) {
+        if (i === was) continue;
+        choice[k] = i;
+        const next = score(choice);
+        if (next.value > current.value + 1e-12) { current = next; moved = true; keep(next); }
+        else choice[k] = was;
+      }
+    }
+    if (!moved) break;
+  }
   return { picks: best, value: bestValue };
 }
 
@@ -633,7 +714,8 @@ export function playRound(st, cfg, rng, tables, tally) {
   // from a round that simply took nothing.
   const flipped = !picks.length;
   const declined = flipped && taken.length > 0;
-  const { points, cleared } = scoreAndClear(st.marks, me);
+  const swept = fillBonus(st.marks, me, them, picks);
+  const { points, cleared } = scoreAndClear(st.marks, me, them);
   st.points[me] += points;
   st.round++;
 
@@ -650,6 +732,8 @@ export function playRound(st, cfg, rng, tables, tally) {
     // a mark can still steer it somewhere that is not building anything.
     tally.value += value;
     tally.cleared += cleared;
+    tally.swept += swept;
+    tally.stalled += free.length ? 0 : 1;
     tally.duels += duels;
     tally.pivotal += pivotal;
     tally.unpaired += heldA - duels;
@@ -684,7 +768,11 @@ function duel(cfg, rng, p) {
 }
 
 const newTally = (cfg) => ({
-  ...cfg, rounds: 0, marks: 0, markHist: [0, 0, 0, 0, 0], points: 0, teamPoints: [0, 0, 0], seatPoints: [0, 0], value: 0, cleared: 0,
+  ...cfg,
+  // The report is assembled in another thread, which may be looking at a different
+  // board, so anything the shares are taken over has to travel with the tally.
+  spaces: REGULAR.length, boards: SUBBOARDS.length,
+  rounds: 0, marks: 0, markHist: Array.from({ length: SUBBOARDS.length + 1 }, () => 0), points: 0, teamPoints: [0, 0, 0], seatPoints: [0, 0], value: 0, cleared: 0, swept: 0, stalled: 0,
   duels: 0, pivotal: 0, unpaired: 0, idle: 0, contested: 0, taken: 0, free: 0,
   flips: 0, declined: 0, flipPoints: 0, starHeld: 0, reinforced: 0, overestimate: 0,
 });
@@ -694,6 +782,7 @@ const tablesFor = (cfg) => [null, tailTable(skillOf(cfg, 1), cfg.size + 1), tail
 
 export function runConfig(cfg) {
   setLayout(cfg.layout);
+  setRules(cfg);
   const rng = makeRng(cfg.seed);
   const tables = tablesFor(cfg);
   const tally = newTally(cfg);
@@ -715,6 +804,7 @@ export function runConfig(cfg) {
 // to a target is a race over half the rounds each.
 export function runCampaigns(cfg) {
   setLayout(cfg.layout);
+  setRules(cfg);
   const rng = makeRng(cfg.seed);
   const tables = tablesFor(cfg);
   const tally = { ...newTally(cfg), mode: 'campaigns', ran: 0, wonByX: 0, drawn: 0, length: 0 };
@@ -752,6 +842,7 @@ const PAIRS = {
 
 function runPaired(cfg) {
   setLayout(cfg.layout);
+  setRules(cfg);
   const rng = makeRng(cfg.seed);
   const tables = tablesFor(cfg);
   const variants = PAIRS[cfg.pair](cfg);
@@ -812,7 +903,8 @@ const per = (x, n) => (n ? x / n : 0);
 function row(t) {
   const r = t.rounds;
   return {
-    size: t.size, step: t.step, layout: t.layout, defence: t.defence, attack: t.attack, skill: t.skill,
+    size: t.size, step: t.step, layout: t.layout, clear: t.clear, fill: t.fill,
+    defence: t.defence, attack: t.attack, skill: t.skill,
     rounds: r,
     marks: per(t.marks, r),
     points: per(t.points, r),
@@ -831,15 +923,22 @@ function row(t) {
     decisive: per(t.pivotal, r * t.size),
     contested: per(t.contested, r),
     takeRate: per(t.taken, t.contested),
-    occupancy: 1 - per(t.free, r * REGULAR.length),
+    occupancy: 1 - per(t.free, r * t.spaces),
     cleared: per(t.cleared, r),
+    swept: per(t.swept, r),
+    stalled: per(t.stalled, r),
     flipRate: per(t.flips, r),
     declineRate: per(t.declined, r),
     flipPoints: per(t.flipPoints, t.flips),
     starHeld: per(t.starHeld, r),
     reinforced: per(t.reinforced, r),
     overestimate: per(t.overestimate, r),
-    markHist: t.markHist.map((n) => per(n, r)),
+    boards: t.boards,
+    // The share of rounds where every board claimed a square, and where two or more
+    // came away with nothing. With four boards and with nine, those are the two ends
+    // that say whether the defence is denying anything.
+    allMarks: per(t.markHist[t.boards], r),
+    shortBy2: per(t.markHist.slice(0, Math.max(1, t.boards - 1)).reduce((a, b) => a + b, 0), r),
     ran: t.mode === 'campaigns' ? t.ran : 0,
     wonByX: per(t.wonByX, t.ran),
     drawn: per(t.drawn, t.ran),
@@ -855,11 +954,12 @@ function row(t) {
 function group(tallies) {
   const byKey = new Map();
   for (const t of tallies) {
-    const k = `${t.size}|${t.step}|${t.layout}|${t.defence}`;
+    const k = `${t.size}|${t.step}|${t.layout}|${t.clear}|${t.fill}|${t.defence}`;
     if (!byKey.has(k)) { byKey.set(k, { ...t }); continue; }
     const into = byKey.get(k);
     for (const [f, v] of Object.entries(t)) {
-      if (typeof v === 'number' && typeof into[f] === 'number' && !['size', 'p', 'skill', 'seed', 'rep', 'rounds'].includes(f)) into[f] += v;
+      const constant = ['size', 'p', 'skill', 'seed', 'rep', 'rounds', 'spaces', 'boards'];
+      if (typeof v === 'number' && typeof into[f] === 'number' && !constant.includes(f)) into[f] += v;
       else if (Array.isArray(v) && Array.isArray(into[f])) into[f] = into[f].map((x, i) => x + v[i]);
     }
     into.rounds += t.rounds;
@@ -869,20 +969,22 @@ function group(tallies) {
 
 function report(rows) {
   const campaigns = rows.some((r) => r.ran);
-  const head = ['size', 'layout', 'step', 'def', 'marks', 'pts/r', 'duels', 'play%', 'pivot%', 'decis%', 'take%', 'occ%',
-    ...(campaigns ? ['X win%', 'draw%', 'length'] : ['0mk%', '1mk%', '2mk%', '3mk%', '4mk%'])];
+  const head = ['size', 'layout', 'clear', 'marks', 'pts/r', 'duels', 'play%', 'pivot%',
+    'decis%', 'take%', 'occ%', 'sq/clr', 'swept', 'stall%',
+    ...(campaigns ? ['X win%', 'draw%', 'length'] : ['mk/max', 'allmk%', 'short%'])];
   console.log(head.map((h) => pad(h, h.length > 5 ? 8 : 6)).join(''));
   for (const r of rows) {
     console.log([
-      pad(r.size, 6), pad(r.layout.slice(0, 7), 8), pad(r.step.slice(0, 4), 6), pad(r.defence.slice(0, 4), 6),
+      pad(r.size, 6), pad(r.layout.slice(0, 7), 8), pad(r.clear + (r.fill ? '+f' : ''), 7),
       pad(r.marks.toFixed(2), 6), pad(r.points.toFixed(3), 6),
       pad(r.duels.toFixed(1), 6), pct(r.playing) + ' ', pct(r.pivotal) + '  ',
       pct(r.decisive ?? (r.duels * r.pivotal) / r.size) + '  ',
       pct(r.takeRate) + ' ', pct(r.occupancy) + ' ',
-      pad(r.points.toFixed(2), 6), pad((r.points ? r.cleared / r.points : 0).toFixed(1), 6),
+      pad((r.points ? r.cleared / r.points : 0).toFixed(1), 6),
+      pad(r.swept.toFixed(2), 6), pct(r.stalled) + ' ',
       ...(campaigns
         ? [pad(pct(r.wonByX), 8), pad(pct(r.drawn), 8), pad(r.length.toFixed(1), 8)]
-        : r.markHist.map((x) => pct(x) + ' ')),
+        : [pad(`${r.marks.toFixed(1)}/${r.boards}`, 8), pad(pct(r.allMarks), 8), pad(pct(r.shortBy2), 8)]),
     ].join(''));
   }
 }
@@ -923,6 +1025,8 @@ async function main() {
     seed: parseInt(arg('seed', '20260811'), 10),
     reps: parseInt(arg('reps', '1'), 10),   // independent runs per size, summed
     layouts: arg('layouts', arg('layout', 'pinwheel')).split(','),
+    clears: arg('clears', arg('clear', 'boards')).split(','),
+    fill: process.argv.includes('--fill'),
     steps: arg('steps', arg('step', 'forced')).split(','),
     workers: parseInt(arg('workers', String(Math.max(1, cpus().length - 1))), 10),
     out: arg('out', null),
@@ -937,11 +1041,13 @@ async function main() {
   // Allocating a whole number of players over a whole number of squares is lumpy,
   // and one run of one size can land on a shape that is not typical of its
   // neighbours. --reps runs each size from several seeds and sums them.
-  const configs = opts.layouts.flatMap((layout, li) => opts.steps.flatMap((step, si) =>
-    opts.sizes.flatMap((size, k) => Array.from({ length: opts.reps }, (_, rep) => ({
-      ...opts, size, step, layout, rep, sizes: undefined, steps: undefined, layouts: undefined,
-      seed: opts.seed + 1000 * k + 97 * rep + 7 * si + 13 * li,
-    })))));
+  const configs = opts.clears.flatMap((clear, ci) => opts.layouts.flatMap((layout, li) =>
+    opts.steps.flatMap((step, si) => opts.sizes.flatMap((size, k) =>
+      Array.from({ length: opts.reps }, (_, rep) => ({
+        ...opts, size, step, layout, clear, rep,
+        sizes: undefined, steps: undefined, layouts: undefined, clears: undefined,
+        seed: opts.seed + 1000 * k + 97 * rep + 7 * si + 13 * li + 31 * ci,
+      }))))));
 
   const started = Date.now();
   const tallies = opts.workers > 1 && configs.length > 1
@@ -951,8 +1057,8 @@ async function main() {
     ? group(tallies.map((p) => p[0])).map(row)
       .map((a, i) => [a, group(tallies.map((p) => p[1])).map(row)[i]])
       .sort((a, b) => a[0].size - b[0].size)
-    : group(tallies).map(row)
-      .sort((a, b) => a.layout.localeCompare(b.layout) || a.step.localeCompare(b.step) || (a.size - b.size));
+    : group(tallies).map(row).sort((a, b) => a.layout.localeCompare(b.layout)
+      || a.clear.localeCompare(b.clear) || a.step.localeCompare(b.step) || (a.size - b.size));
   opts.pair ? reportPaired(rows) : report(rows);
   console.log(`\n${configs.length} configs, ${opts.rounds} rounds each, ${((Date.now() - started) / 1000).toFixed(1)}s`);
 
@@ -965,6 +1071,7 @@ async function main() {
 
 export {
   tailTable, winsNeeded, takeChance, resolve, posValue, scoreAndClear, placementValue, bestPicks,
+  fillBonus,
   combinations, attackPlan, defencePlan, boardBuckets, LADDER,
 };
 

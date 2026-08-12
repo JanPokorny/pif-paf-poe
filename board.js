@@ -35,6 +35,10 @@ export const LAYOUTS = {
   // Each entry is board name -> the coordinates of its top-left square.
   pinwheel: { N: [2, 0], W: [0, 2], E: [4, 2], S: [2, 4] },
   square: { A: [0, 0], B: [3, 0], C: [0, 3], D: [3, 3] },
+  // Nine boards in a 3x3, an 81-square board. One mark per board per round means
+  // nine marks a round rather than four, which is what makes it the arrangement for
+  // thirty a side: the work grows with the players instead of staying at four.
+  square3: Object.fromEntries('ABCDEFGHI'.split('').map((b, k) => [b, [3 * (k % 3), 3 * ((k / 3) | 0)]])),
   // Two more the comparison turned up: boards overlapping along a whole row and
   // column, and the pinwheel pulled in by one step. Both connect the boards far
   // more tightly than either of the above.
@@ -45,7 +49,8 @@ export const LAYOUTS = {
 // Live bindings, reassigned by setLayout. Everything downstream imports these by
 // name and so follows the switch without being handed a board explicitly.
 export let SUBBOARDS, SPACES, STAR, REGULAR, N_SPACES, BOARD_SPACES, SPACE_BOARDS,
-  CORNERS, LINES, LINES_AT, ADJACENT, LINE_CLEARS, WIDTH, HEIGHT;
+  CORNERS, LINES, LINES_AT, ADJACENT, NEIGHBOURS, LINE_BOARDS, LINE_HALO, LINE_CLEARS,
+  WIDTH, HEIGHT;
 
 const AXES = [[1, 0], [0, 1], [1, 1], [1, -1]];
 
@@ -120,16 +125,33 @@ export function setLayout(name = 'pinwheel') {
       .map(([dx, dy]) => spaceAt(s.x + dx, s.y + dy))
       .filter((j) => j >= 0 && j !== STAR));
 
+  // Touching squares, edge or corner, for the clearing rule that works outwards
+  // from a line rather than by boards. This one does include the star, because the
+  // star is a space that holds a symbol even though nobody ever stands on it.
+  const AROUND = [[1, 0], [-1, 0], [0, 1], [0, -1], [1, 1], [1, -1], [-1, 1], [-1, -1]];
+  NEIGHBOURS = SPACES.map((s) => AROUND
+    .map(([dx, dy]) => spaceAt(s.x + dx, s.y + dy)).filter((j) => j >= 0));
+
   // ── Clearing ──────────────────────────────────────────────────────────────
-  // A scored line clears every board the three symbols stood on, whole, and the
-  // star as well if the line ran through it. Which is why a line is worth a point
-  // and not a position: taking it costs you the ground you took it from.
-  LINE_CLEARS = LINES.map((line) => {
+  // What a scored line takes with it is a rule variant, so the board only supplies
+  // the ingredients and campaign.js picks among them.
+  //
+  //   LINE_BOARDS  which boards the three symbols stood on
+  //   LINE_HALO    the three squares and everything touching them, edge or corner
+  //   LINE_CLEARS  every one of those boards, whole, plus the star if it was in the
+  //                line -- the original rule
+  LINE_BOARDS = LINES.map((line) => [...new Set(line.flatMap((i) => SPACE_BOARDS[i]))]);
+
+  LINE_HALO = LINES.map((line) => {
+    const out = new Set(line);
+    for (const i of line) for (const j of NEIGHBOURS[i]) out.add(j);
+    return [...out].sort((a, b) => a - b);
+  });
+
+  LINE_CLEARS = LINES.map((line, li) => {
     const out = new Set();
-    for (const i of line) {
-      if (i === STAR) out.add(STAR);
-      for (const b of SPACE_BOARDS[i]) for (const j of BOARD_SPACES[b]) out.add(j);
-    }
+    for (const i of line) if (i === STAR) out.add(STAR);
+    for (const b of LINE_BOARDS[li]) for (const j of BOARD_SPACES[b]) out.add(j);
     return [...out].sort((a, b) => a - b);
   });
 }
