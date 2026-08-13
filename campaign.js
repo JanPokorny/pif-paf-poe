@@ -37,6 +37,9 @@ import {
   N_SPACES, REGULAR, SPACES, SPACE_BOARDS, STAR, SUBBOARDS, claimable, render, setLayout,
 } from './board.js';
 import { makeRng } from './ai.js';
+import {
+  TRIGGERS, assign, duelChance, loadHands, newRoster, rosterStrength, swap,
+} from './roster.js';
 import { arg, pad, pct, playGame, randomHand } from './sim.js';
 
 // ── What a position is worth ────────────────────────────────────────────────
@@ -675,8 +678,12 @@ function bestPicks(marks, me, them, taken, gain, base) {
 // first is always the team with more marks on the board when the other one scores,
 // and a scored line clears whole boards, so attacking first means having more to
 // lose to it. Campaigns are therefore run half from each seat.
-export function newCampaign(first = 0) {
-  return { marks: new Uint8Array(N_SPACES), round: 0, first, points: [0, 0, 0] };
+export function newCampaign(first = 0, cfg = null, rng = null) {
+  const st = { marks: new Uint8Array(N_SPACES), round: 0, first, points: [0, 0, 0] };
+  // Every player starts on a hand drawn at random -- nobody is handed a good one --
+  // and from there the trigger rule decides who gets to change theirs.
+  if (cfg?.pool) st.roster = [null, newRoster(cfg.size, cfg.pool, rng), newRoster(cfg.size, cfg.pool, rng)];
+  return st;
 }
 
 // `skill` is the chance a player of team X beats a player of team O in a duel,
@@ -690,7 +697,31 @@ export const skillOf = (cfg, me) => (me === 1 ? cfg.skill : 1 - cfg.skill);
 // the round is arithmetic.
 export function allocate(st, cfg, rng, tables) {
   const me = ((st.round + st.first) % 2) + 1, them = 3 - me;
-  const tail = tables[me];
+
+  // Standing out: a team may send players to a training space instead of the board,
+  // giving up what they would have done this round to come back with a better hand.
+  // Both teams do it, attacking or defending. Who goes is the players with the worst
+  // hands -- there is no reason to take your best off the board.
+  // Each team may send a different share, so that the question "how many is it worth
+  // standing out?" can be settled by the two rates playing each other.
+  let size = cfg.size;
+  if (cfg.trigger === 'standout' && st.roster) {
+    const rate = (team) => (Array.isArray(cfg.standout) ? cfg.standout[team] : cfg.standout);
+    const out = (team) => Math.min(Math.round(cfg.size * rate(team)), cfg.size - 1);
+    st.standout = [null, [], []];
+    for (const team of [me, them]) {
+      st.standout[team] = st.roster[team].map((h, k) => k)
+        .sort((a, b) => cfg.pool.strength[st.roster[team][a]] - cfg.pool.strength[st.roster[team][b]])
+        .slice(0, out(team));
+    }
+    size = cfg.size - out(me);
+  }
+
+  // Both sides plan against the duel odds they can expect, which with hands in play is
+  // their own average against the other side's rather than a flat half.
+  const tail = cfg.pool && st.roster
+    ? tailTable(expectedChance(st, cfg, me, them), size + 1)
+    : tables[me];
   const free = REGULAR.filter((i) => !st.marks[i]);
   const base = posValue(st.marks, me, them);
 
@@ -699,43 +730,58 @@ export function allocate(st, cfg, rng, tables) {
   const buckets = boardBuckets(free, gain);
   const combos = combinations(st.marks, me, them, free, gain, base);
 
+  // Standing out takes players off the board, so the planners budget `size` rather
+  // than the whole team.
+  const plan = size === cfg.size ? cfg : { ...cfg, size };
+
   const DEFENCES = {
-    random: () => randomPlan(free, cfg.size, rng),
-    oracle: () => oraclePlan(st.marks, me, them, free, gain, buckets, combos, cfg, tail),
-    plan: () => defencePlan(st.marks, me, them, free, gain, buckets, combos, cfg, tail),
+    random: () => randomPlan(free, size, rng),
+    oracle: () => oraclePlan(st.marks, me, them, free, gain, buckets, combos, plan, tail),
+    plan: () => defencePlan(st.marks, me, them, free, gain, buckets, combos, plan, tail),
   };
 
   let A = new Int32Array(N_SPACES), D = new Int32Array(N_SPACES);
   let shape = { pairs: new Int32Array(N_SPACES), spare: new Int32Array(N_SPACES) };
   if (free.length) {
     D = (DEFENCES[cfg.defence] ?? DEFENCES.plan)();
-    A = cfg.attack === 'random' ? randomPlan(free, cfg.size, rng)
-      : attackPlan(st.marks, me, them, D, free, gain, buckets, combos, cfg, tail);
-    shape = resolve(A, D, cfg.step, gain, tail);
+    A = cfg.attack === 'random' ? randomPlan(free, size, rng)
+      : attackPlan(st.marks, me, them, D, free, gain, buckets, combos, plan, tail);
+    shape = resolve(A, D, plan.step, gain, tail);
   }
   // The attack plans against an upper bound on the defenders it will face; this
   // is how many pairings that bound over-predicts, and so how much force the
   // attack wastes by being careful. If it were large the plans would not be worth
   // much under the stepping rule.
-  const guess = estimate(A, D, free, cfg);
+  const guess = estimate(A, D, free, plan);
   const predicted = free.reduce((n, i) => n + guess.pairs[i], 0);
   const actual = free.reduce((n, i) => n + shape.pairs[i], 0);
-  return { me, them, free, base, gain, buckets, D, A, shape, overestimate: predicted - actual };
+  return { me, them, free, base, gain, buckets, D, A, shape, size, overestimate: predicted - actual };
 }
 
 export function playRound(st, cfg, rng, tables, tally) {
   setPos(cfg.pos[((st.round + st.first) % 2) + 1]);
-  const { me, them, free, base, gain, D, A, shape, overestimate } = allocate(st, cfg, rng, tables);
+  const { me, them, free, base, gain, D, A, shape, size, overestimate } = allocate(st, cfg, rng, tables);
   const { pairs, spare } = shape;
   const p = skillOf(cfg, me);
 
   // The duels. Every pairing is the same coin unless we are playing them out.
+  // With hands in play, which player stands where matters: each captain sends their
+  // best to the squares worth most, so both sides deal their players out in strength
+  // order against their own ranking of the squares.
+  const order = free.slice().sort((x, y) => gain[y] - gain[x]);
+  const sides = cfg.pool && st.roster
+    ? { atk: assign(order, A, st.roster[me], cfg.pool), def: assign(order, D, st.roster[them], cfg.pool) }
+    : null;
+  // Filed by team number, so [1] is X and [2] is O whichever of them is attacking.
+  const log = { won: [null, [], []], lost: [null, [], []] };
+
   const taken = [];
   let duels = 0, pivotal = 0, stake = 0;
   for (const i of free) {
     if (!A[i]) continue;
     let lost = 0;
-    for (let k = 0; k < pairs[i]; k++) if (!duel(cfg, rng, p)) lost++;
+    if (sides) lost = fight(i, pairs[i], sides, st.roster, me, them, cfg, rng, log);
+    else for (let k = 0; k < pairs[i]; k++) if (!duel(cfg, rng, p)) lost++;
     duels += pairs[i];
     const won = pairs[i] - lost;
     const need = winsNeeded(A[i], pairs[i], spare[i]);
@@ -762,6 +808,27 @@ export function playRound(st, cfg, rng, tables, tally) {
   const swept = fillBonus(st.marks, me, them, picks);
   const { lines, points, cleared } = scoreAndClear(st.marks, me, them);
   st.points[me] += points;
+
+  // The trigger rule. Every one of these hands out the same thing -- one stone
+  // replaced -- and differs only in who gets it, which is the whole question.
+  let swaps = 0;
+  if (st.roster && cfg.trigger !== 'none') {
+    const give = (team, who) => {
+      for (const k of who) { swap(st.roster[team], k, cfg.pool, rng, cfg.swap); swaps++; }
+    };
+    if (cfg.trigger === 'win') { give(me, log.won[1]); give(them, log.won[2]); }
+    else if (cfg.trigger === 'lose') { give(me, log.lost[1]); give(them, log.lost[2]); }
+    else if (cfg.trigger === 'unpaired') {
+      // Whoever the other side did not engage: attackers with nobody to fight, and
+      // defenders left standing. Neither team chose these players; the other team's
+      // allocation did.
+      give(me, sides ? sides.atk.idle.concat(unfought(sides.atk, A, pairs)) : []);
+      give(them, sides ? sides.def.idle.concat(unfought(sides.def, D, pairs, spare)) : []);
+    } else if (cfg.trigger === 'standout') {
+      give(me, st.standout?.[me] ?? []);
+      give(them, st.standout?.[them] ?? []);
+    }
+  }
   st.round++;
 
   if (tally) {
@@ -785,7 +852,7 @@ export function playRound(st, cfg, rng, tables, tally) {
     tally.pivotal += pivotal;
     tally.stake += stake;
     tally.unpaired += heldA - duels;
-    tally.idle += cfg.size - duels;
+    tally.idle += size - duels;
     tally.contested += free.filter((i) => A[i] > 0).length;
     tally.taken += taken.length;
     tally.free += free.length;
@@ -796,8 +863,61 @@ export function playRound(st, cfg, rng, tables, tally) {
     tally.reinforced += cfg.step === 'none' ? 0
       : duels - free.reduce((n, i) => n + Math.min(A[i], D[i]), 0);
     tally.overestimate += overestimate;
+    tally.swaps += swaps;
+    if (st.roster) {
+      // Where the two teams' hands have got to, and how far apart they are inside a
+      // team -- the spread is what says whether a rule is pulling the field together
+      // or driving it apart.
+      for (const team of [1, 2]) {
+        const ss = rosterStrength(st.roster[team], cfg.pool);
+        const mean = ss.reduce((a, b) => a + b, 0) / ss.length;
+        tally.handMean[team] += mean;
+        tally.handSpread[team] += Math.sqrt(ss.reduce((a, s2) => a + (s2 - mean) ** 2, 0) / ss.length);
+        tally.atTop[team] += ss.filter((s2) => s2 >= cfg.pool.strength[cfg.pool.top] - 1e-9).length / ss.length;
+        tally.handKinds[team] += new Set(st.roster[team]).size / ss.length;
+      }
+    }
   }
   return { picks, points, duels, flipped };
+}
+
+// The duels on one square, attacker hands against defender hands. The defence chooses
+// which attacker each of its players takes, so it pairs off the way that wins it the
+// most games -- champion against champion, or its best against their weakest, whichever
+// of the two comes out higher. Returns how many the attack lost, and files each player
+// under won or lost for whichever trigger rule is in force.
+function fight(i, pairs, sides, roster, me, them, cfg, rng, log) {
+  const sa = (k) => cfg.pool.strength[roster[me][k]];
+  const sd = (k) => cfg.pool.strength[roster[them][k]];
+  const atk = (sides.atk.at.get(i) ?? []).slice(0, pairs).sort((x, y) => sa(y) - sa(x));
+  const ranked = (sides.def.at.get(i) ?? []).slice(0, pairs).sort((x, y) => sd(y) - sd(x));
+  const held = (line) => line.reduce((n, d, k) => n + (1 - duelChance(sa(atk[k]), sd(d))), 0);
+  const flipped = ranked.slice().reverse();
+  const def = held(ranked) >= held(flipped) ? ranked : flipped;
+
+  let lost = 0;
+  for (let k = 0; k < def.length; k++) {
+    if (rng() < duelChance(sa(atk[k]), sd(def[k]))) {
+      log.won[1].push(atk[k]);
+      log.lost[2].push(def[k]);
+    } else {
+      lost++;
+      log.won[2].push(def[k]);
+      log.lost[1].push(atk[k]);
+    }
+  }
+  return lost;
+}
+
+// Players standing on a square where their side brought more than could pair off. The
+// assignment deals them out in order, so the ones past the pairing are the spare.
+function unfought(side, counts, pairs, spare = null) {
+  const out = [];
+  for (const [i, players] of side.at) {
+    const fought = spare ? Math.min(counts[i], pairs[i]) : pairs[i];
+    for (let k = fought; k < players.length; k++) out.push(players[k]);
+  }
+  return out;
 }
 
 // A duel: true if the attacker won it. The coin is the default because the two
@@ -823,7 +943,17 @@ const newTally = (cfg) => ({
   rounds: 0, marks: 0, markHist: Array.from({ length: SUBBOARDS.length + 1 }, () => 0), points: 0, teamPoints: [0, 0, 0], seatPoints: [0, 0], value: 0, cleared: 0, swept: 0, stalled: 0, lines: 0, lineHist: [0, 0, 0, 0, 0, 0],
   duels: 0, pivotal: 0, stake: 0, unpaired: 0, idle: 0, contested: 0, taken: 0, free: 0,
   flips: 0, declined: 0, flipPoints: 0, starHeld: 0, reinforced: 0, overestimate: 0,
+  swaps: 0, handMean: [0, 0, 0], handSpread: [0, 0, 0], atTop: [0, 0, 0], handKinds: [0, 0, 0],
 });
+
+// What the attacking team should expect from a duel this round: its average hand
+// against theirs. A team with better hands plans more boldly, which is most of how an
+// advantage in hands turns into an advantage on the board.
+function expectedChance(st, cfg, me, them) {
+  const mean = (team) => st.roster[team]
+    .reduce((n, h) => n + cfg.pool.strength[h], 0) / st.roster[team].length;
+  return Math.min(0.95, Math.max(0.05, duelChance(mean(me), mean(them))));
+}
 
 // One take-table per team, since the two only differ when one team is better.
 const tablesFor = (cfg) => [null, tailTable(skillOf(cfg, 1), cfg.size + 1), tailTable(skillOf(cfg, 2), cfg.size + 1)];
@@ -835,13 +965,13 @@ export function runConfig(cfg) {
   const tables = tablesFor(cfg);
   const tally = newTally(cfg);
   let started = 0;
-  let st = newCampaign(0);
+  let st = newCampaign(0, cfg, rng);
   for (let r = 0; r < cfg.rounds; r++) {
     playRound(st, cfg, rng, tables, tally);
     // Long campaigns are one continuous board; --restart chops them into
     // separate ones, so that the opening rounds are not under-sampled, and
     // alternates the opening seat so that it cannot bias the totals.
-    if (cfg.restart && st.round % cfg.restart === 0) st = newCampaign(++started % 2);
+    if (cfg.restart && st.round % cfg.restart === 0) st = newCampaign(++started % 2, cfg, rng);
   }
   return tally;
 }
@@ -857,7 +987,7 @@ export function runCampaigns(cfg) {
   const tables = tablesFor(cfg);
   const tally = { ...newTally(cfg), mode: 'campaigns', ran: 0, wonByX: 0, drawn: 0, length: 0 };
   for (let c = 0; c < cfg.campaigns; c++) {
-    const st = newCampaign(c % 2);
+    const st = newCampaign(c % 2, cfg, rng);
     while (Math.max(st.points[1], st.points[2]) < cfg.target && st.round < cfg.cap) {
       playRound(st, cfg, rng, tables, tally);
     }
@@ -896,18 +1026,21 @@ function runPaired(cfg) {
   const variants = PAIRS[cfg.pair](cfg);
   const tallies = variants.map((v) => newTally(v));
   let started = 0;
-  let st = newCampaign(0);
+  let st = newCampaign(0, cfg, rng);
 
   for (let r = 0; r < cfg.rounds; r++) {
     for (let s = 0; s < cfg.samples; s++) {
       const seed = (rng() * 2 ** 31) | 0;
       variants.forEach((v, k) => playRound(
-        { marks: st.marks.slice(), round: st.round, first: st.first, points: [0, 0, 0] },
+        {
+          marks: st.marks.slice(), round: st.round, first: st.first, points: [0, 0, 0],
+          roster: st.roster?.map((r2) => r2?.slice()),
+        },
         v, makeRng(seed), tables, tallies[k],
       ));
     }
     playRound(st, variants[r % variants.length], rng, tables, null);
-    if (cfg.restart && st.round % cfg.restart === 0) st = newCampaign(++started % 2);
+    if (cfg.restart && st.round % cfg.restart === 0) st = newCampaign(++started % 2, cfg, rng);
   }
   return tallies;
 }
@@ -1003,6 +1136,13 @@ function row(t) {
     declineRate: per(t.declined, r),
     flipPoints: per(t.flipPoints, t.flips),
     starHeld: per(t.starHeld, r),
+    swaps: per(t.swaps, r),
+    handMean: per(t.handMean[1] + t.handMean[2], 2 * r),
+    handSpread: per(t.handSpread[1] + t.handSpread[2], 2 * r),
+    atTop: per(t.atTop[1] + t.atTop[2], 2 * r),
+    handKinds: per(t.handKinds[1] + t.handKinds[2], 2 * r),
+    trigger: t.trigger, swapKind: t.swap,
+    standout: Array.isArray(t.standout) ? t.standout.slice(1).join('/') : t.standout,
     reinforced: per(t.reinforced, r),
     overestimate: per(t.overestimate, r),
     boards: t.boards,
@@ -1026,7 +1166,7 @@ function row(t) {
 function group(tallies) {
   const byKey = new Map();
   for (const t of tallies) {
-    const k = `${t.size}|${t.step}|${t.layout}|${t.clear}|${t.fill}|${t.score}|${t.defence}`;
+    const k = `${t.size}|${t.step}|${t.layout}|${t.clear}|${t.score}|${t.trigger}|${t.defence}`;
     if (!byKey.has(k)) { byKey.set(k, { ...t }); continue; }
     const into = byKey.get(k);
     for (const [f, v] of Object.entries(t)) {
@@ -1041,20 +1181,22 @@ function group(tallies) {
 
 function report(rows) {
   const campaigns = rows.some((r) => r.ran);
-  const head = ['size', 'layout', 'clear', 'score', 'marks', 'pts/r', 'duels', 'play%', 'pivot%',
-    'stake%', 'atsta%', 'decis%', 'take%', 'occ%', 'life', 'multi%', 'lumpy%',
-    ...(campaigns ? ['X win%', 'draw%', 'length'] : ['mk/max', 'allmk%', 'short%'])];
+  const head = campaigns
+    ? ['size', 'trigger', 'marks', 'pts/r', 'duels', 'play%', 'stake%', 'decis%', 'occ%',
+      'life', 'swaps', 'hand', 'spread', 'attop%', 'kinds%', 'X win%', 'draw%', 'length']
+    : ['size', 'trigger', 'marks', 'pts/r', 'duels', 'play%', 'stake%', 'decis%', 'occ%',
+      'life', 'swaps', 'hand', 'spread', 'attop%', 'kinds%', 'mk/max', 'allmk%', 'short%'];
   console.log(head.map((h) => pad(h, h.length > 5 ? 8 : 6)).join(''));
   for (const r of rows) {
     console.log([
-      pad(r.size, 6), pad(r.layout.slice(0, 7), 8), pad(r.clear + (r.fill ? '+f' : ''), 7),
-      pad(r.score.slice(0, 4), 7),
+      pad(r.size, 6), pad((r.trigger ?? 'off') + (r.trigger === 'standout' ? `:${r.standout}` : ''), 9),
       pad(r.marks.toFixed(2), 6), pad(r.points.toFixed(3), 6),
-      pad(r.duels.toFixed(1), 6), pct(r.playing) + ' ', pct(r.pivotal) + '  ',
-      pct(r.atStake) + '  ', pct(r.atStakeShare) + '  ',
+      pad(r.duels.toFixed(1), 6), pct(r.playing) + ' ',
+      pct(r.atStake) + '  ',
       pct(r.decisive ?? (r.duels * r.pivotal) / r.size) + '  ',
-      pct(r.takeRate) + ' ', pct(r.occupancy) + ' ',
-      pad(r.life.toFixed(1), 6), pct(r.multi) + '  ', pct(r.lumpy) + '  ',
+      pct(r.occupancy) + ' ', pad(r.life.toFixed(1), 6),
+      pad(r.swaps.toFixed(1), 6), pad(r.handMean.toFixed(2), 6), pad(r.handSpread.toFixed(2), 6),
+      pct(r.atTop) + '  ', pct(r.handKinds) + '  ',
       ...(campaigns
         ? [pad(pct(r.wonByX), 8), pad(pct(r.drawn), 8), pad(r.length.toFixed(1), 8)]
         : [pad(`${r.marks.toFixed(1)}/${r.boards}`, 8), pad(pct(r.allMarks), 8), pad(pct(r.shortBy2), 8)]),
@@ -1099,6 +1241,10 @@ async function main() {
     reps: parseInt(arg('reps', '1'), 10),   // independent runs per size, summed
     layouts: arg('layouts', arg('layout', 'pinwheel')).split(','),
     scores: arg('scores', arg('score', 'linear')).split(','),
+    triggers: arg('triggers', arg('trigger', 'none')).split(','),
+    swap: arg('swap', 'choose'),                  // choose | random
+    standout: parseFloat(arg('standout', '0.2')), // share of a team sent to train
+    handsFile: arg('hands-file', 'results/hands.json'),
     clears: arg('clears', arg('clear', 'boards')).split(','),
     fill: process.argv.includes('--fill'),
     steps: arg('steps', arg('step', 'forced')).split(','),
@@ -1115,13 +1261,19 @@ async function main() {
   // Allocating a whole number of players over a whole number of squares is lumpy,
   // and one run of one size can land on a shape that is not typical of its
   // neighbours. --reps runs each size from several seeds and sums them.
-  const configs = opts.scores.flatMap((score, xi) => opts.clears.flatMap((clear, ci) =>
+  // The hand table is loaded once and shared; without a trigger there are no hands at
+  // all and the duel is the coin it has been all along.
+  const pool = opts.triggers.some((t) => t !== 'off') ? loadHands(opts.handsFile) : null;
+
+  const configs = opts.triggers.flatMap((trigger, ti) => opts.scores.flatMap((score, xi) => opts.clears.flatMap((clear, ci) =>
     opts.layouts.flatMap((layout, li) => opts.steps.flatMap((step, si) =>
       opts.sizes.flatMap((size, k) => Array.from({ length: opts.reps }, (_, rep) => ({
-        ...opts, size, step, layout, clear, score, rep,
-        sizes: undefined, steps: undefined, layouts: undefined, clears: undefined, scores: undefined,
-        seed: opts.seed + 1000 * k + 97 * rep + 7 * si + 13 * li + 31 * ci + 53 * xi,
-      })))))));
+        ...opts, size, step, layout, clear, score, trigger, rep,
+        pool: trigger === 'off' ? null : pool,
+        sizes: undefined, steps: undefined, layouts: undefined, clears: undefined,
+        scores: undefined, triggers: undefined,
+        seed: opts.seed + 1000 * k + 97 * rep + 7 * si + 13 * li + 31 * ci + 53 * xi + 71 * ti,
+      }))))))));
 
   const started = Date.now();
   const tallies = opts.workers > 1 && configs.length > 1
@@ -1132,7 +1284,8 @@ async function main() {
       .map((a, i) => [a, group(tallies.map((p) => p[1])).map(row)[i]])
       .sort((a, b) => a[0].size - b[0].size)
     : group(tallies).map(row).sort((a, b) => a.layout.localeCompare(b.layout)
-      || a.clear.localeCompare(b.clear) || a.score.localeCompare(b.score) || (a.size - b.size));
+      || a.clear.localeCompare(b.clear) || a.score.localeCompare(b.score)
+      || String(a.trigger).localeCompare(String(b.trigger)) || (a.size - b.size));
   opts.pair ? reportPaired(rows) : report(rows);
   console.log(`\n${configs.length} configs, ${opts.rounds} rounds each, ${((Date.now() - started) / 1000).toFixed(1)}s`);
 

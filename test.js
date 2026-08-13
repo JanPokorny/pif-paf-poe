@@ -7,7 +7,10 @@
 import {
   createGame, applyAction, legalActions, render, STONE_TYPES, ITEMS, other, toMove,
 } from './engine.js';
+import { existsSync } from 'node:fs';
+
 import { makeRng, randomAction } from './ai.js';
+import { assign, duelChance, loadHands, newRoster, swap } from './roster.js';
 import {
   ADJACENT, BOARD_SPACES, CORNERS, LINES, LINES_AT, LINE_CLEARS, N_SPACES, REGULAR,
   SPACES, SPACE_BOARDS, STAR, SUBBOARDS, claimable, setLayout,
@@ -637,6 +640,46 @@ const empty = ['.', '.', '.', '.', '.', '.', '.', '.', '.'];
       && !l.some((j) => st.marks[j] === 0))) bad.push(`round ${r}: a line was left standing`);
   }
   check('a hundred and twenty rounds hold the invariants', bad.slice(0, 4), []);
+}
+
+// ── Hands that change hands ─────────────────────────────────────────────────
+
+if (existsSync('results/hands.json')) {
+  const pool = loadHands('results/hands.json');
+  const rng = makeRng(4242);
+
+  check('every hand of five is in the table', pool.hands.length, 252);
+  check('a hand is one swap from itself and its neighbours',
+    pool.neighbours.every((ns, i) => ns.includes(i)), true);
+  check('a chosen swap never leaves a player worse off',
+    pool.bestSwap.every((j, i) => pool.strength[j] >= pool.strength[i]), true);
+  check('the best hand cannot be improved', pool.bestSwap[pool.top], pool.top);
+  check('a duel between equal hands is a coin flip', duelChance(0.4, 0.4), 0.5);
+  check('and a better hand wins more often', duelChance(1, 0) > 0.5, true);
+
+  // A roster keeps its size, and a chosen swap only ever climbs.
+  const roster = newRoster(12, pool, rng);
+  check('a roster has one hand per player', roster.length, 12);
+  const before = roster.map((h) => pool.strength[h]);
+  for (let k = 0; k < roster.length; k++) swap(roster, k, pool, rng, 'choose');
+  check('a chosen swap climbs for everyone',
+    roster.every((h, k) => pool.strength[h] >= before[k]), true);
+  check('and the roster is still the same size', roster.length, 12);
+
+  // Dealing players out to squares uses each of them once and no more.
+  const counts = new Int32Array(N_SPACES);
+  const order = REGULAR.slice(0, 4);
+  order.forEach((i, k) => { counts[i] = k + 1; });          // 1 + 2 + 3 + 4 = 10 of 12
+  const dealt = assign(order, counts, roster, pool);
+  const used = order.flatMap((i) => dealt.at.get(i) ?? []);
+  check('every player is dealt out at most once',
+    new Set([...used, ...dealt.idle]).size, roster.length);
+  check('and the counts are honoured', order.map((i) => dealt.at.get(i).length), [1, 2, 3, 4]);
+  check('with the rest standing idle', dealt.idle.length, 2);
+  // The best hands go where the most is at stake, which is the first square in `order`.
+  check('the best player goes to the first square',
+    dealt.at.get(order[0])[0],
+    roster.map((h, k) => k).sort((a, b) => pool.strength[roster[b]] - pool.strength[roster[a]])[0]);
 }
 
 console.log(failures ? `\n${failures} failing` : 'all checks pass');

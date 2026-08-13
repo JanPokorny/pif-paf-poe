@@ -614,4 +614,84 @@ around a third. A nine-square board needs all nine, and at a third full that is 
 that occurs. If the bonus is wanted, it needs a trigger that can actually be reached -- a
 majority of a board rather than all of it.
 
+## Hands that change hands
+
+Everyone arrives with five stones drawn at random, and the rules can let a player replace one.
+Four occasions were measured for handing that out, all giving the same thing so that only the
+recipient differs: **after winning a duel**, **after losing one**, **after a round spent unpaired**,
+and **by standing out** -- skipping the round at a training space instead of taking the field.
+
+How much a swap is worth had to be settled first. All 252 hands of five played a sample of each
+other on a circuit of spaces, and a strength was fitted to the results, so a duel is
+`sigmoid(mine - theirs)`. The hands span 3.50 of strength: the best beats the worst 97% of the
+time and the median 75%. **One chosen swap is worth 0.69**, which turns an even duel into a 67%
+one. It is a large reward, and a rule that hands it out often will decide more than the board does.
+
+### After winning a duel
+
+**The best of the four.** It is the only one that spreads a team out rather than levelling it --
+the spread of hands inside a team goes to 0.72 against 0.60 for hands that never change -- and the
+only one still moving at the end of a twenty-four round campaign, with the field's mean strength
+climbing 0.25, 0.59, 0.87 at rounds two, eight and twenty-four. It gives a team a hierarchy: a few
+duellists worth sending where the round will be decided, which is a thing to have and to lose.
+
+It does not run away, which was the reason to suspect it. Both teams win about half the duels
+every round, so both collect about the same number of swaps and the advantage stays *inside* a
+team rather than between them. An early lead predicts the final result slightly *less* well than
+with no hand rule at all -- r = 0.60 against 0.67.
+
+### After losing a duel
+
+Workable, and the one to take if keeping the back of the field interested matters more than
+anything else. It lifts the average hand fastest of the two duel rules (1.05 by round twenty-four
+against 0.87) because the players with most to gain are the ones gaining, and it pulls a team
+together: the spread falls 0.70 → 0.18 and the gap between the two teams' averages 0.18 → 0.07.
+
+The cost is that it erases itself. By round twenty everybody holds much the same hand, and from
+there the rule is bookkeeping.
+
+### After a round spent unpaired
+
+**Reject this one.** At twelve a side it hands out eleven swaps a round where the others hand out
+four to six, because a third of a team is unpaired in any round. The field tops out by **round
+eight** -- mean 1.10, spread 0.10, and both frozen for every round after -- so the mechanic is over
+before the campaign is half done.
+
+It is also the only one nobody chooses. Which of your players go unrewarded is settled by the other
+team's allocation, not by anything either team decided.
+
+### By standing out
+
+The most appealing of the four written down, and the worst in play.
+
+The rate does have a genuine best value -- about a fifth of the team -- and the sweep around it is
+the shape a real decision has: sending a third or two fifths instead costs 0.05 to 0.14 points a
+round. But a team that declines to use it at all is **beaten four to one**, 1.05 points a round
+against 4.33. So it is not a decision, it is a compulsory opening move with a trap attached: the
+band where the choice matters is worth a tenth of a point and the penalty for missing the idea
+altogether is worth three.
+
+It also costs the thing hardest to get back. Twenty percent of a team standing out drops the share
+of players who get a game from 59% to 48%, every round, for the whole campaign.
+
+### Two things that hold whichever occasion is chosen
+
+**The swap has to be chosen, not rolled.** Replacing a stone with a random one instead of a chosen
+one flattens all of this completely: after twenty-four rounds of rewarding every winner, the
+field's average strength is −0.15 where it started at −0.01, the spread has not moved off 0.61, and
+essentially nobody is on a top hand. A random replacement is a walk, not a ladder, and the whole
+mechanic becomes paperwork.
+
+**A chosen swap is a ratchet, and a ratchet needs a stop.** Every occasion measured drives the
+field towards one hand and then stops mattering -- round eight for unpaired, twelve to sixteen for
+standing out, twenty for losing, and somewhere past twenty-four for winning. Drawing a space per
+duel does not prevent it; the strength table above was fitted on exactly that circuit and the field
+converges anyway. If hands are to keep changing for a whole campaign, the reward wants to be
+something that cannot inflate the field -- **trading stones with a teammate** rather than drawing a
+better one, say, which is zero-sum inside a team and so has no ceiling to reach.
+
+**So: after winning a duel, with the stone chosen.** It is the slowest to converge, the only one
+that makes a team uneven in an interesting way, and it does not hand the campaign to whoever got
+lucky first.
+
 The Counterattack's part in the campaign is not settled yet.

@@ -421,3 +421,80 @@ ex-ante sum is simply the lower-variance one. Nothing measured needs revising. W
 the phrasing: it is "the chance your game decides its square", not "the share of games that decided
 their square", and on a square with level numbers that chance runs between a third and a half — one
 against one certain, two against two and three against three a half each, six against six 31%.
+
+## Hands that change hands: after winning a duel, with the stone chosen
+
+Four occasions for letting a player replace one stone, all handing out the same thing so that only
+the recipient differs.
+
+### First, what a swap is worth
+
+`hands.js` plays all 252 hands of five against a sample of each other on a circuit of spaces and
+fits a Bradley-Terry strength, so a duel becomes `sigmoid(mine - theirs)`. The hands span 3.50:
+best beats worst 97%, best beats median 75%, and **one chosen swap is worth 0.69** — an even duel
+turned into a 67% one. Large enough that the rule handing it out decides more than the board.
+
+The scalar reduction is an assumption and is checked rather than trusted: fourteen hands in a dense
+round robin, 28 games a pairing. The fit calls the winner right 82.4% of the time, is off by 9.1
+points on a pairing's win rate, and **9.1% of triples are cyclic** — A beats B beats C beats A. So
+the ladder is a good approximation with a known ninth of the space it cannot see, which is what
+Stinky-answering-Magnet would predict.
+
+### The four, measured over twenty-four rounds
+
+| occasion | swaps a round | mean hand at round 2 / 8 / 24 | spread at 2 / 24 | field tops out | early lead predicts final |
+|---|---|---|---|---|---|
+| none (hands fixed) | 0 | −0.01 / −0.01 / −0.01 | 0.60 / 0.60 | — | r = 0.67 |
+| **after winning** | 5.9 | 0.25 / 0.59 / 0.87 | **0.72 / 0.52** | past 24 | r = 0.60 |
+| after losing | 5.7 | 0.27 / 0.73 / 1.05 | 0.70 / 0.18 | round 20 | r = 0.64 |
+| after unpaired | 11.0 | 0.60 / 1.10 / 1.10 | 0.38 / 0.10 | **round 8** | r = 0.54 |
+| by standing out | 4.0 | 0.36 / 0.90 / 1.09 | 0.33 / 0.09 | round 12–16 | — |
+
+**After winning** is the pick. It is the only occasion that spreads a team out rather than levelling
+it — 0.72 against the 0.60 of hands that never change — and the only one still moving at round
+twenty-four. It gives a team a few duellists worth spending where the round will be decided.
+
+And it does not run away, which was the reason to suspect it and the prediction that was wrong.
+Both teams win about half the duels every round, so both collect about the same swaps; the
+advantage lands *inside* a team, not between them, and an early lead predicts the final result
+slightly *less* well than with no hand rule at all.
+
+**After losing** is the workable second: fastest to lift the average, and it pulls a team together
+(spread 0.70 → 0.18, the gap between team averages 0.18 → 0.07). It erases itself by round twenty.
+
+**After a round unpaired is rejected.** Eleven swaps a round against four to six, because a third of
+a team is unpaired in any round, so the field tops out at round eight and is frozen thereafter — the
+mechanic is done before the campaign is half over. It is also the only occasion nobody chooses: the
+other team's allocation decides which of your players go unrewarded.
+
+**Standing out is the most appealing on paper and the worst in play.** The rate has a real optimum
+near a fifth of the team, and the sweep around it looks like a decision — a third or two fifths
+costs 0.05–0.14 points a round. But a team that declines it entirely is beaten **four to one**, 1.05
+against 4.33. So it is a compulsory opening move with a trap attached, not a choice: the band where
+the choice matters is worth a tenth of a point and missing the idea is worth three. It also drops
+the share of players who get a game from 59% to 48%, every round.
+
+### Two findings that hold whichever occasion is chosen
+
+**Chosen, not rolled.** Replacing a stone at random rather than choosing flattens everything: after
+twenty-four rounds of rewarding every winner the field's mean is −0.15 against a −0.01 start, the
+spread has not moved off 0.61, and essentially nobody reaches a top hand. A random replacement is a
+walk, not a ladder.
+
+**A ratchet needs a stop.** Every occasion drives the field towards one hand and then stops
+mattering. Drawing a space per duel does not prevent it — the strength table was fitted on that
+circuit and the field converges anyway. If hands are to keep changing for a whole campaign the
+reward wants to be something that cannot inflate the field; trading stones with a teammate is the
+obvious shape, being zero-sum inside a team and so having no ceiling to reach. Not measured.
+
+### Method notes
+
+Hands make players non-interchangeable, which the round did not previously model. Each captain now
+deals their players out in strength order against their own ranking of the squares, and the defence
+pairs off on a square the way that wins it the most games — champion against champion or its best
+against their weakest, whichever comes out higher. Both sides plan against the duel odds they can
+expect, their average hand against the other's, which is most of how an advantage in hands turns
+into an advantage on the board.
+
+The standout control was run before the comparison was believed: both teams at the same rate scored
+2.27 against 2.24, which is the noise floor for these run lengths.
