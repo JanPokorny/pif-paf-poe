@@ -652,8 +652,8 @@ if (existsSync('results/hands.json')) {
   check('a hand is one swap from itself and its neighbours',
     pool.neighbours.every((ns, i) => ns.includes(i)), true);
   check('a chosen swap never leaves a player worse off',
-    pool.bestSwap.every((j, i) => pool.strength[j] >= pool.strength[i]), true);
-  check('the best hand cannot be improved', pool.bestSwap[pool.top], pool.top);
+    pool.bestSwap.mean.every((j, i) => pool.mean[j] >= pool.mean[i]), true);
+  check('the best hand on average cannot be improved on average', pool.bestSwap.mean[pool.top], pool.top);
   check('a duel between equal hands is a coin flip', duelChance(0.4, 0.4), 0.5);
   check('and a better hand wins more often', duelChance(1, 0) > 0.5, true);
 
@@ -661,7 +661,7 @@ if (existsSync('results/hands.json')) {
   const roster = newRoster(12, pool, rng);
   check('a roster has one hand per player', roster.length, 12);
   const before = roster.map((h) => pool.strength[h]);
-  for (let k = 0; k < roster.length; k++) swap(roster, k, pool, rng, 'choose');
+  for (let k = 0; k < roster.length; k++) swap(roster, k, pool, rng, 'choose', 'mean');
   check('a chosen swap climbs for everyone',
     roster.every((h, k) => pool.strength[h] >= before[k]), true);
   check('and the roster is still the same size', roster.length, 12);

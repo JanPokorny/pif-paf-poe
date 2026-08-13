@@ -694,4 +694,75 @@ better one, say, which is zero-sum inside a team and so has no ceiling to reach.
 that makes a team uneven in an interesting way, and it does not hand the campaign to whoever got
 lucky first.
 
+## Stone vetoes
+
+**Every square switches off one type of stone** for the duels fought on it. The stone is still
+placed, still occupies the square and still counts towards a line -- it simply does nothing. Six
+types and a neutral square make seven, laid out stepping one across and three down:
+
+```
+   -  S  2  R  M  M          - neutral   S shift   2 2048
+   R  M  M  S  -  S          R rotate    M mountain
+   S  -  S  2  R  M          M magnet    S stinky
+   2  R  M  M  S  -
+   M  S  -  S  2  R          no line of three repeats a veto,
+   S  2  R  M  M  S          and each type gets five or six squares
+```
+
+On the 9x9 the same pattern gives every type eleven or twelve squares and again no line of three
+with a veto repeated in it.
+
+### It makes who goes where the biggest decision in the round
+
+A strength was fitted for every hand against every veto, seven ladders rather than one. They are
+close to being different games:
+
+- **every veto has a different best hand.** Four 2048s and a Stinky is the best hand where Shift is
+  switched off; four Shifts and a Magnet where 2048 is; three Rotates and two 2048s where the
+  Mountain is.
+- **the ladders barely agree.** Across the twenty-one pairs of vetoes the strengths correlate 0.489
+  on average, and one pair at **-0.05** -- knowing a hand is strong on one square tells you nothing
+  at all about another.
+- **a hand swings 1.92 of strength between its best square and its worst**, where a whole stone
+  swapped is worth 0.69. **Where a player stands is worth about three stones.**
+
+Measured in play, a team that sends each player to the square whose veto suits their hand beats one
+that simply sends its best hands where the most is at stake by **+0.94 points an attacking round**
+against a scoring rate of about 2.4 -- near enough forty per cent, and the largest single effect of
+any rule in this document. At thirty a side it is worth the same again. So the veto does what it was
+added for: the round now has a real second question after "where do we go", which is "who goes
+there", and getting it wrong costs more than losing the allocation.
+
+### It does not stop hands converging
+
+This was the other hope for it and it does not happen. A player choosing a swap does not know which
+square they will be sent to, so the sensible choice is the hand with the best average across the
+vetoes -- and everybody's best average is the same hand. Twelve a side, rewarding winners:
+
+| round | 6 | 12 | 24 | 36 | 48 | 60 |
+|---|---|---|---|---|---|---|
+| distinct hands of twelve | 9.1 | 6.6 | 4.0 | 3.1 | 2.6 | 2.4 |
+| share of the team on the commonest | 27% | 48% | 72% | 79% | 84% | 86% |
+
+Which is the same course it ran without any vetoes at all. Worse, **holding a diverse team is
+punished.** A team that spends its swaps covering the board -- and it does work, holding 10.7 of
+twelve hands distinct for as long as you like -- is beaten by **0.95 points a round** by a team that
+simply makes everyone as good as possible on average.
+
+The reason is worth understanding before trying to fix it. **The attack chooses which squares are
+contested**, so neither side knows in advance which vetoes the round will turn on. A specialist is
+strong on one square in seven and weak on the rest; a good all-rounder is adequate everywhere, and
+adequate everywhere is what you want when you cannot pick the ground. Specialisation is fragile
+exactly because the board is chosen by somebody else.
+
+So take the vetoes for the coordination, which is large and real, and do not expect them to keep
+hands apart. If hands should stay varied the reward is the place to change -- something that cannot
+inflate the whole field, like trading stones with a teammate.
+
+**One variant worth trying, not yet measured.** Give the veto to the *board* rather than the square:
+nine boards, one veto each. Then attacking a board means facing a known veto, a specialist can be
+planned for, and the thing that makes specialisation fragile -- not knowing which ground you will
+fight on -- is gone. It would cost some of the coordination the square-by-square pattern buys, since
+every square in a board would ask for the same hand.
+
 The Counterattack's part in the campaign is not settled yet.

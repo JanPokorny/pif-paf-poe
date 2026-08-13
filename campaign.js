@@ -34,11 +34,12 @@ import { pathToFileURL } from 'node:url';
 
 import {
   ADJACENT, BOARD_SPACES, CORNERS, LAYOUTS, LINES, LINE_BOARDS, LINE_CLEARS, LINE_HALO,
-  N_SPACES, REGULAR, SPACES, SPACE_BOARDS, STAR, SUBBOARDS, claimable, render, setLayout,
+  N_SPACES, REGULAR, SPACES, SPACE_BOARDS, STAR, SUBBOARDS, VETO, claimable, render, setLayout,
 } from './board.js';
 import { makeRng } from './ai.js';
 import {
-  TRIGGERS, assign, duelChance, loadHands, newRoster, rosterStrength, swap,
+  TRIGGERS, assign, duelChance, loadHands, meanByVeto, newRoster, rosterStrength,
+  strengthAt, swap,
 } from './roster.js';
 import { arg, pad, pct, playGame, randomHand } from './sim.js';
 
@@ -769,8 +770,13 @@ export function playRound(st, cfg, rng, tables, tally) {
   // best to the squares worth most, so both sides deal their players out in strength
   // order against their own ranking of the squares.
   const order = free.slice().sort((x, y) => gain[y] - gain[x]);
+  const veto = cfg.vetoes ? VETO : null;
+  const coord = (team) => (Array.isArray(cfg.coordinate) ? cfg.coordinate[team] : cfg.coordinate);
   const sides = cfg.pool && st.roster
-    ? { atk: assign(order, A, st.roster[me], cfg.pool), def: assign(order, D, st.roster[them], cfg.pool) }
+    ? {
+      atk: assign(order, A, st.roster[me], cfg.pool, veto, coord(me)),
+      def: assign(order, D, st.roster[them], cfg.pool, veto, coord(them)),
+    }
     : null;
   // Filed by team number, so [1] is X and [2] is O whichever of them is attacking.
   const log = { won: [null, [], []], lost: [null, [], []] };
@@ -780,7 +786,7 @@ export function playRound(st, cfg, rng, tables, tally) {
   for (const i of free) {
     if (!A[i]) continue;
     let lost = 0;
-    if (sides) lost = fight(i, pairs[i], sides, st.roster, me, them, cfg, rng, log);
+    if (sides) lost = fight(i, pairs[i], sides, st.roster, me, them, cfg, rng, log, veto);
     else for (let k = 0; k < pairs[i]; k++) if (!duel(cfg, rng, p)) lost++;
     duels += pairs[i];
     const won = pairs[i] - lost;
@@ -813,8 +819,9 @@ export function playRound(st, cfg, rng, tables, tally) {
   // replaced -- and differs only in who gets it, which is the whole question.
   let swaps = 0;
   if (st.roster && cfg.trigger !== 'none') {
+    const aim = (team) => (Array.isArray(cfg.aim) ? cfg.aim[team] : cfg.aim);
     const give = (team, who) => {
-      for (const k of who) { swap(st.roster[team], k, cfg.pool, rng, cfg.swap); swaps++; }
+      for (const k of who) { swap(st.roster[team], k, cfg.pool, rng, cfg.swap, aim(team)); swaps++; }
     };
     if (cfg.trigger === 'win') { give(me, log.won[1]); give(them, log.won[2]); }
     else if (cfg.trigger === 'lose') { give(me, log.lost[1]); give(them, log.lost[2]); }
@@ -886,9 +893,10 @@ export function playRound(st, cfg, rng, tables, tally) {
 // most games -- champion against champion, or its best against their weakest, whichever
 // of the two comes out higher. Returns how many the attack lost, and files each player
 // under won or lost for whichever trigger rule is in force.
-function fight(i, pairs, sides, roster, me, them, cfg, rng, log) {
-  const sa = (k) => cfg.pool.strength[roster[me][k]];
-  const sd = (k) => cfg.pool.strength[roster[them][k]];
+function fight(i, pairs, sides, roster, me, them, cfg, rng, log, veto) {
+  const v = veto ? veto[i] : 'neutral';
+  const sa = (k) => strengthAt(cfg.pool, roster[me][k], v);
+  const sd = (k) => strengthAt(cfg.pool, roster[them][k], v);
   const atk = (sides.atk.at.get(i) ?? []).slice(0, pairs).sort((x, y) => sa(y) - sa(x));
   const ranked = (sides.def.at.get(i) ?? []).slice(0, pairs).sort((x, y) => sd(y) - sd(x));
   const held = (line) => line.reduce((n, d, k) => n + (1 - duelChance(sa(atk[k]), sd(d))), 0);
@@ -950,9 +958,12 @@ const newTally = (cfg) => ({
 // against theirs. A team with better hands plans more boldly, which is most of how an
 // advantage in hands turns into an advantage on the board.
 function expectedChance(st, cfg, me, them) {
-  const mean = (team) => st.roster[team]
-    .reduce((n, h) => n + cfg.pool.strength[h], 0) / st.roster[team].length;
-  return Math.min(0.95, Math.max(0.05, duelChance(mean(me), mean(them))));
+  const mine = meanByVeto(st.roster[me], cfg.pool);
+  const theirs = meanByVeto(st.roster[them], cfg.pool);
+  // Averaged over the vetoes, since a round's squares are spread across the board.
+  const vs = cfg.pool.vetoes;
+  const p = vs.reduce((a, v) => a + duelChance(mine[v], theirs[v]), 0) / vs.length;
+  return Math.min(0.95, Math.max(0.05, p));
 }
 
 // One take-table per team, since the two only differ when one team is better.
@@ -1141,7 +1152,7 @@ function row(t) {
     handSpread: per(t.handSpread[1] + t.handSpread[2], 2 * r),
     atTop: per(t.atTop[1] + t.atTop[2], 2 * r),
     handKinds: per(t.handKinds[1] + t.handKinds[2], 2 * r),
-    trigger: t.trigger, swapKind: t.swap,
+    trigger: t.trigger, swapKind: t.swap, coordinate: t.coordinate, vetoes: t.vetoes,
     standout: Array.isArray(t.standout) ? t.standout.slice(1).join('/') : t.standout,
     reinforced: per(t.reinforced, r),
     overestimate: per(t.overestimate, r),
@@ -1166,7 +1177,7 @@ function row(t) {
 function group(tallies) {
   const byKey = new Map();
   for (const t of tallies) {
-    const k = `${t.size}|${t.step}|${t.layout}|${t.clear}|${t.score}|${t.trigger}|${t.defence}`;
+    const k = `${t.size}|${t.step}|${t.layout}|${t.clear}|${t.score}|${t.trigger}|${t.coordinate}|${t.vetoes}|${t.defence}`;
     if (!byKey.has(k)) { byKey.set(k, { ...t }); continue; }
     const into = byKey.get(k);
     for (const [f, v] of Object.entries(t)) {
@@ -1245,6 +1256,9 @@ async function main() {
     swap: arg('swap', 'choose'),                  // choose | random
     standout: parseFloat(arg('standout', '0.2')), // share of a team sent to train
     handsFile: arg('hands-file', 'results/hands.json'),
+    vetoes: !process.argv.includes('--no-vetoes'),
+    coordinate: arg('coordinate', 'on'),          // on | off
+    aim: arg('aim', 'mean'),                      // mean | spec -- what a swap aims at
     clears: arg('clears', arg('clear', 'boards')).split(','),
     fill: process.argv.includes('--fill'),
     steps: arg('steps', arg('step', 'forced')).split(','),

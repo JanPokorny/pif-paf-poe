@@ -498,3 +498,67 @@ into an advantage on the board.
 
 The standout control was run before the comparison was believed: both teams at the same rate scored
 2.27 against 2.24, which is the noise floor for these run lengths.
+
+## Stone vetoes: adopted for the coordination, and they do not do the other thing
+
+Every square switches off one stone type for the duels on it. `hands.js --vetoes` fits a strength
+table per veto — seven ladders instead of one — and `board.js` lays the seven out stepping one across
+and three down, which on both the 6x6 and the 9x9 spreads them evenly and puts no repeated veto on
+any line of three.
+
+### The ladders are nearly different games
+
+- Every veto has a different best hand: four 2048s and a Stinky under the Shift veto, four Shifts
+  and a Magnet under 2048's, three Rotates and two 2048s under the Mountain's.
+- Across the twenty-one pairs of vetoes the strength columns correlate **0.489** on average and one
+  pair at **−0.05**. A hand being strong on one square says almost nothing about another.
+- A hand swings **1.92** of strength between its best and worst veto, against **0.69** for a whole
+  stone swapped. Where a player stands is worth about three stones.
+
+### Coordination is worth +0.94 points a round
+
+A team that sends each player to the square whose veto suits their hand, against one that sends its
+best hands where the most is at stake and ignores the vetoes: **+0.94 ± 0.05** points an attacking
+round on a scoring rate of about 2.4, holding at thirty a side. The largest single effect measured
+anywhere in this file.
+
+The noise floor was established first, because an earlier 1200-round run put the symmetric control
+at 0.49 and that looked like a bug. It was not: at 1200 rounds the per-seed spread is about ±0.22
+and 0.49 is an unlucky two sigma. At 3000 rounds the control comes in at 0.038 with a per-seed
+standard deviation of 0.137, and the treatment above is four seeds at 2400 rounds each.
+
+### Hands still converge, and diversity is punished
+
+The hope was that position-dependent strength would stop the field walking onto one hand. It does
+not. A player choosing a swap does not know where they will be sent, so the rational choice is the
+best average across the vetoes — and everyone's best average is the same hand:
+
+| round | 6 | 12 | 24 | 36 | 48 | 60 |
+|---|---|---|---|---|---|---|
+| distinct hands of twelve | 9.1 | 6.6 | 4.0 | 3.1 | 2.6 | 2.4 |
+| share on the commonest | 27% | 48% | 72% | 79% | 84% | 86% |
+
+Which is the course it ran with no vetoes at all. And a swap policy aimed at covering the board —
+which does hold 10.7 of twelve hands distinct indefinitely — **loses by 0.95 ± 0.10 points a round**
+to one aimed at individual average.
+
+The mechanism, which is the useful part: **the attack chooses which squares are contested**, so
+neither side knows which vetoes the round will turn on. A specialist is strong on one square in
+seven; an all-rounder is adequate on all seven, and adequate everywhere is what pays when somebody
+else picks the ground. Specialisation is fragile precisely because the board is chosen by the
+opponent.
+
+### The variant that would follow from that, untested
+
+Give the veto to the **board** rather than the square — nine boards, one veto each. Then attacking a
+board means facing a known veto, specialists become plannable, and the thing that makes them fragile
+goes away. The cost would be some of the coordination the square-by-square pattern buys, since every
+square in a board would then ask for the same hand. Not measured.
+
+### Method note
+
+Vetoes made the assignment a decision, so `assign` gained a `coordinate` setting — deal by average
+strength and ignore the vetoes, or fill the squares that matter most with whoever is strongest on
+that square's veto — and `swap` gained an `aim`: the best average, the best single veto, or the
+largest gain to the team's coverage across the board. Having both as settings per team is what let
+the two claims be separated, and they turned out to point opposite ways.

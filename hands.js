@@ -41,6 +41,7 @@ export const handLabel = (hand) => hand.map((t) => CODE[t]).join(' ');
 
 // The spaces a circuit visits: one per stone type, plus the neutral space.
 const SPACES = [null, ...STONE_TYPES];
+const spaceName = (v) => v ?? 'neutral';
 
 // ── Playing the sample ──────────────────────────────────────────────────────
 
@@ -125,6 +126,82 @@ function report(data) {
   }
 }
 
+// ── One table per veto ─────────────────────────────────────────────────────
+
+// The same sampled round robin, run once per veto with that stone switched off for
+// both players throughout. The output is strength[veto][hand], and a duel on a square
+// is settled by the column belonging to that square's veto.
+async function vetoes(opts) {
+  const hands = allHands();
+  const n = hands.length;
+  const rng = makeRng(opts.seed);
+  const pick = (m) => (rng() * m) | 0;
+  const started = Date.now();
+  const table = {}, rates = {};
+
+  for (const veto of SPACES) {
+    const specs = [];
+    for (let i = 0; i < n; i++) {
+      for (let k = 0; k < opts.opponents; k++) {
+        const j = pick(n);
+        if (j === i) continue;
+        specs.push({ i, j, seed: (rng() * 2 ** 31) | 0, space: veto });
+        specs.push({ i: j, j: i, seed: (rng() * 2 ** 31) | 0, space: veto });
+      }
+    }
+    const results = await run(specs, hands, opts.iters, opts.workers);
+    const wins = new Float64Array(n), games = Array.from({ length: n }, () => new Float64Array(n));
+    for (const [i, j, openerWon] of results) {
+      wins[i] += openerWon;
+      games[i][j] += 1;
+      games[j][i] += 1;
+    }
+    const key = spaceName(veto);
+    table[key] = fitStrengths(n, wins, games);
+    const played = new Float64Array(n);
+    for (let i = 0; i < n; i++) for (let j = 0; j < n; j++) played[i] += games[i][j];
+    rates[key] = Array.from(wins, (w, i) => (played[i] ? w / played[i] : 0));
+    const sorted = [...table[key]].sort((a, b) => b - a);
+    console.log(`${pad(key, 10)} spans ${(sorted[0] - sorted[n - 1]).toFixed(2)}`
+      + `  best ${handLabel(hands[table[key].indexOf(sorted[0])])}`
+      + `  (${((Date.now() - started) / 1000).toFixed(0)}s)`);
+  }
+
+  // How much a veto reorders the ladder: the correlation between each pair of columns.
+  // Low correlations are the point -- they mean where a player stands matters.
+  const keys = Object.keys(table);
+  const corr = (a, b) => {
+    const [x, y] = [table[a], table[b]];
+    const mx = x.reduce((p, q) => p + q, 0) / n, my = y.reduce((p, q) => p + q, 0) / n;
+    let cxy = 0, cx = 0, cy = 0;
+    for (let i = 0; i < n; i++) { cxy += (x[i] - mx) * (y[i] - my); cx += (x[i] - mx) ** 2; cy += (y[i] - my) ** 2; }
+    return cxy / Math.sqrt(cx * cy);
+  };
+  console.log('\nhow far a veto reorders the ladder (1.00 would mean it does not):');
+  let worst = 1, sum = 0, pairs = 0;
+  for (let a = 0; a < keys.length; a++) for (let b = a + 1; b < keys.length; b++) {
+    const c = corr(keys[a], keys[b]);
+    sum += c; pairs++;
+    if (c < worst) worst = c;
+  }
+  console.log(`  mean ${(sum / pairs).toFixed(3)}, lowest ${worst.toFixed(3)} across ${pairs} pairs of vetoes`);
+
+  // And the spread of one hand across the vetoes -- how much a hand's quality swings
+  // with where it is standing, which is what the coordination is about.
+  const swing = hands.map((h, i) => {
+    const vs = keys.map((k) => table[k][i]);
+    return Math.max(...vs) - Math.min(...vs);
+  });
+  const meanSwing = swing.reduce((a, b) => a + b, 0) / n;
+  console.log(`a hand's strength swings ${meanSwing.toFixed(2)} between its best and worst veto`
+    + ` (widest ${Math.max(...swing).toFixed(2)}: ${handLabel(hands[swing.indexOf(Math.max(...swing))])})`);
+
+  const data = { opts, hands, vetoes: keys, table, rates, meanSwing, iters: opts.iters };
+  mkdirSync(dirname(opts.out), { recursive: true });
+  writeFileSync(opts.out, JSON.stringify(data));
+  console.log(`\n${((Date.now() - started) / 1000).toFixed(0)}s, wrote ${opts.out}`);
+}
+
 // ── CLI ────────────────────────────────────────────────────────────────────
 
 async function main() {
@@ -139,6 +216,7 @@ async function main() {
   };
 
   if (process.argv.includes('--report')) return report(JSON.parse(readFileSync(opts.out, 'utf8')));
+  if (process.argv.includes('--vetoes')) return vetoes(opts);
 
   const hands = allHands();
   const n = hands.length;

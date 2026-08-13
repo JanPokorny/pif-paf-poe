@@ -50,7 +50,18 @@ export const LAYOUTS = {
 // name and so follows the switch without being handed a board explicitly.
 export let SUBBOARDS, SPACES, STAR, REGULAR, N_SPACES, BOARD_SPACES, SPACE_BOARDS,
   CORNERS, LINES, LINES_AT, ADJACENT, NEIGHBOURS, LINE_BOARDS, LINE_HALO, LINE_CLEARS,
-  WIDTH, HEIGHT;
+  VETO, WIDTH, HEIGHT;
+
+// Each square switches off one type of stone for the duels fought on it: the stone is
+// still placed and still counts towards a line, but nothing it does happens. Six types
+// and a neutral square make seven, laid out so that no two squares sharing a line have
+// the same veto where that can be arranged -- the pattern below steps by one across and
+// by three down, which on a 6x6 or 9x9 puts every veto within reach of every board and
+// never repeats one along a row, a column or a diagonal of three.
+//
+// It is a property of the printed board rather than something drawn per round, so a
+// team can plan around it and an attack knows what its people are walking into.
+export const VETO_TYPES = ['neutral', 'shift', '2048', 'rotate', 'mountain', 'magnet', 'stinky'];
 
 const AXES = [[1, 0], [0, 1], [1, 1], [1, -1]];
 
@@ -147,6 +158,9 @@ export function setLayout(name = 'pinwheel') {
     for (const i of line) for (const j of NEIGHBOURS[i]) out.add(j);
     return [...out].sort((a, b) => a - b);
   });
+
+  // The veto pattern. Seven is coprime with the step, so the diagonals do not repeat.
+  VETO = SPACES.map((s) => VETO_TYPES[(s.x + 3 * s.y) % VETO_TYPES.length]);
 
   LINE_CLEARS = LINES.map((line, li) => {
     const out = new Set();
