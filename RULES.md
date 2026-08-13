@@ -733,36 +733,56 @@ any rule in this document. At thirty a side it is worth the same again. So the v
 added for: the round now has a real second question after "where do we go", which is "who goes
 there", and getting it wrong costs more than losing the allocation.
 
-### It does not stop hands converging
+### It does not stop hands converging, and the reason is the stone pool
 
-This was the other hope for it and it does not happen. A player choosing a swap does not know which
-square they will be sent to, so the sensible choice is the hand with the best average across the
-vetoes -- and everybody's best average is the same hand. Twelve a side, rewarding winners:
+This was the other hope for the vetoes and it does not happen. The field still walks onto one hand.
+Twelve a side, rewarding winners:
 
 | round | 6 | 12 | 24 | 36 | 48 | 60 |
 |---|---|---|---|---|---|---|
 | distinct hands of twelve | 9.1 | 6.6 | 4.0 | 3.1 | 2.6 | 2.4 |
 | share of the team on the commonest | 27% | 48% | 72% | 79% | 84% | 86% |
 
-Which is the same course it ran without any vetoes at all. Worse, **holding a diverse team is
-punished.** A team that spends its swaps covering the board -- and it does work, holding 10.7 of
-twelve hands distinct for as long as you like -- is beaten by **0.95 points a round** by a team that
-simply makes everyone as good as possible on average.
+Which is the same course it ran with no vetoes at all.
 
-The reason is worth understanding before trying to fix it. **The attack chooses which squares are
-contested**, so neither side knows in advance which vetoes the round will turn on. A specialist is
-strong on one square in seven and weak on the rest; a good all-rounder is adequate everywhere, and
-adequate everywhere is what you want when you cannot pick the ground. Specialisation is fragile
-exactly because the board is chosen by somebody else.
+It is not for want of coordination. A team can decide in advance who goes where, and that was
+measured properly: every player given a veto to specialise in, the quotas set by which vetoes the
+duels are actually being fought on, the swaps they earn spent on their own veto, and the assignment
+sending a role-holder to their square ahead of a stronger player without the role. **A team playing
+that way is beaten by about 37% of the scoring rate** by one that simply makes everybody as good as
+possible on average -- 0.89 points a round at twelve a side, 2.6 at thirty.
 
-So take the vetoes for the coordination, which is large and real, and do not expect them to keep
-hands apart. If hands should stay varied the reward is the place to change -- something that cannot
-inflate the whole field, like trading stones with a teammate.
+The reason is the pool of stones, not the board. Here is the best all-rounder, `shi shi 204 204 sti`,
+against the best hand for each veto:
 
-**One variant worth trying, not yet measured.** Give the veto to the *board* rather than the square:
-nine boards, one veto each. Then attacking a board means facing a known veto, a specialist can be
-planned for, and the thing that makes specialisation fragile -- not knowing which ground you will
-fight on -- is gone. It would cost some of the coordination the square-by-square pattern buys, since
-every square in a board would ask for the same hand.
+| veto | best hand there | its strength | the all-rounder | gap | all-rounder's rank |
+|---|---|---|---|---|---|
+| shift | 204 204 204 204 sti | 2.34 | 1.58 | 0.76 | 21 of 252 |
+| 2048 | shi shi shi shi mag | 1.93 | 1.23 | 0.70 | 22 of 252 |
+| rotate | shi shi 204 mou mag | 1.94 | 1.55 | 0.39 | 8 of 252 |
+| mountain | 204 204 rot rot rot | 1.75 | 0.90 | 0.86 | 33 of 252 |
+| magnet | shi shi 204 204 sti | 1.44 | 1.44 | 0.00 | **1 of 252** |
+| stinky | shi 204 204 rot mag | 1.73 | 1.31 | 0.43 | 14 of 252 |
+| neutral | shi shi 204 204 mag | 1.42 | 1.06 | 0.36 | 12 of 252 |
+
+**There is a hand that is good everywhere.** It is never worse than thirty-third of 252 on any
+square, and on one square it is the best hand there is. Specialising therefore buys at most 0.50 of
+strength on your own square and costs 0.64 on every other -- so a specialist has to be standing on
+their own veto more than about 56% of the time merely to break even, and that is before counting the
+rounds spent part-way to a specialist hand, paying the cost without yet collecting the gain.
+
+Coordination cannot deliver that. Under the pattern above a role-holder is on their own veto **45%**
+of the duels they fight at twelve a side and 52% at thirty, because the attack chooses which squares
+are contested and it chooses them for the lines they make, not for their vetoes.
+
+**Giving each board a single veto helps and is not enough.** Then attacking a board means committing
+to one kind of hand, and a role-holder is on their own veto 57% of the time rather than 52% -- the
+gap against generalists narrows from 2.6 to 1.9 points a round at thirty a side, but does not close.
+
+So: **take the vetoes for the coordination, which is the largest effect in this document, and do not
+expect them to keep hands apart.** If varied hands are wanted, the thing to change is the stone pool
+-- no hand should be able to sit in the top fifteen under every veto -- or the reward, so that it
+cannot inflate the whole field: trading stones with a teammate is zero-sum inside a team and has no
+best hand to converge on.
 
 The Counterattack's part in the campaign is not settled yet.

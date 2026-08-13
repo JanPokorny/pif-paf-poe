@@ -98,6 +98,49 @@ export function coverage(roster, pool, depth) {
   return total;
 }
 
+// ── Roles ──────────────────────────────────────────────────────────────────
+//
+// A team that coordinates does not have each player guess where they will be sent: it
+// tells them. Every player is given a veto to specialise in, the swaps they earn go
+// towards it, and the assignment sends them to squares carrying it. That closes the
+// loop `cover` left open -- a hand only worth having on one kind of square is worth
+// having if somebody guarantees you will be standing on one.
+//
+// How many specialists each veto deserves is not a seventh each. It is the share of the
+// duels that actually get fought on that veto, which the two teams learn by playing:
+// `demand` is a decaying count of duels by veto, so the roster follows the board the
+// round is really being decided on.
+export function newDemand(pool) {
+  return Object.fromEntries(pool.vetoes.map((v) => [v, 1]));
+}
+
+export function noteDemand(demand, veto, n, decay = 0.9) {
+  for (const v of Object.keys(demand)) demand[v] *= decay;
+  demand[veto] = (demand[veto] ?? 0) + n;
+}
+
+// Hand each player a veto. Quotas come from demand; who fills them is decided by who is
+// already closest to being that specialist, strongest veto first, so roles stay stable
+// while hands improve towards them.
+export function assignRoles(roster, pool, demand) {
+  const total = pool.vetoes.reduce((a, v) => a + (demand[v] ?? 0), 0) || 1;
+  const want = pool.vetoes
+    .map((v) => ({ v, share: (demand[v] ?? 0) / total }))
+    .sort((a, b) => b.share - a.share);
+
+  const quota = want.map(({ v, share }) => ({ v, n: Math.floor(share * roster.length) }));
+  let left = roster.length - quota.reduce((a, q) => a + q.n, 0);
+  for (let k = 0; left > 0; k = (k + 1) % quota.length) { quota[k].n++; left--; }
+
+  const roles = new Array(roster.length).fill(pool.vetoes[0]);
+  const free = new Set(roster.map((h, k) => k));
+  for (const { v, n } of quota) {
+    const ranked = [...free].sort((a, b) => strengthAt(pool, roster[b], v) - strengthAt(pool, roster[a], v));
+    for (const k of ranked.slice(0, n)) { roles[k] = v; free.delete(k); }
+  }
+  return roles;
+}
+
 // A swap taken deliberately climbs; a swap forced on a player replaces one stone at
 // random and can leave them worse off. What "climbs" means is the open question the
 // vetoes raise:
@@ -109,10 +152,18 @@ export function coverage(roster, pool, depth) {
 //   cover  the hand that most improves what the team is worth across the board, which
 //          is the only one of the three that ever declines an upgrade because somebody
 //          else already covers that ground
-export function swap(roster, k, pool, rng, kind, aim = 'mean') {
+//   role   the hand that is best on the veto this player has been given to specialise
+//          in -- the team having decided in advance where they will be standing
+export function swap(roster, k, pool, rng, kind, aim = 'mean', role = null) {
   if (kind === 'random') {
     const ns = pool.neighbours[roster[k]];
     roster[k] = ns[(rng() * ns.length) | 0];
+    return;
+  }
+  if (aim === 'role' && role) {
+    const col = pool.at[role] ?? pool.at.neutral;
+    roster[k] = pool.neighbours[roster[k]]
+      .reduce((b, j) => (col[j] > col[b] ? j : b), roster[k]);
     return;
   }
   if (aim !== 'cover') { roster[k] = pool.bestSwap[aim === 'spec' ? 'spec' : 'mean'][roster[k]]; return; }
@@ -142,7 +193,9 @@ export function swap(roster, k, pool, rng, kind, aim = 'mean') {
 //   on    fill the squares that matter most first, and send to each of them whoever
 //         is strongest *on that square's veto* -- so a player who is only good where
 //         Magnets are switched off gets sent there
-export function assign(order, counts, roster, pool, veto = null, coordinate = 'off') {
+//   role  the same, but a player whose given veto matches the square goes ahead of a
+//         stronger player whose does not, which is what makes a role worth training for
+export function assign(order, counts, roster, pool, veto = null, coordinate = 'off', roles = null) {
   const at = new Map();
   const free = new Set(roster.map((h, k) => k));
   const byMean = (a, b) => pool.mean[roster[b]] - pool.mean[roster[a]];
@@ -150,11 +203,15 @@ export function assign(order, counts, roster, pool, veto = null, coordinate = 'o
   for (const i of order) {
     const n = counts[i];
     if (!n) continue;
-    const pool2 = [...free];
-    const rank = coordinate === 'on' && veto
-      ? (a, b) => strengthAt(pool, roster[b], veto[i]) - strengthAt(pool, roster[a], veto[i])
-      : byMean;
-    const taken = pool2.sort(rank).slice(0, n);
+    const v = veto ? veto[i] : null;
+    let rank = byMean;
+    if (v && coordinate === 'on') {
+      rank = (a, b) => strengthAt(pool, roster[b], v) - strengthAt(pool, roster[a], v);
+    } else if (v && coordinate === 'role' && roles) {
+      rank = (a, b) => ((roles[b] === v) - (roles[a] === v))
+        || (strengthAt(pool, roster[b], v) - strengthAt(pool, roster[a], v));
+    }
+    const taken = [...free].sort(rank).slice(0, n);
     for (const k of taken) free.delete(k);
     at.set(i, taken);
   }

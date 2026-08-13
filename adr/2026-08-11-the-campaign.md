@@ -562,3 +562,46 @@ strength and ignore the vetoes, or fill the squares that matter most with whoeve
 that square's veto — and `swap` gained an `aim`: the best average, the best single veto, or the
 largest gain to the team's coverage across the board. Having both as settings per team is what let
 the two claims be separated, and they turned out to point opposite ways.
+
+## Correction: coordination was modelled badly, and the conclusion survived being fixed
+
+The section above concluded that vetoes do not stop hand convergence, and gave the reason as "a
+player choosing a swap does not know which square they will be sent to". **That reason was wrong** —
+a team can decide in advance who goes where — and the `cover` swap policy it rested on was a poor
+model of coordination: it maximised a static coverage score over all seven vetoes equally, with no
+stable roles and no connection to how the assignment actually worked.
+
+Rebuilt properly. Every player is given a veto to specialise in; the quotas come from `demand`, a
+decaying count of which vetoes the duels are actually being fought on, so the roster follows the
+board the round is really decided on; the swaps a player earns are spent on their own veto; and the
+assignment sends a role-holder to their square ahead of a stronger player without the role.
+
+**The conclusion held.** Specialists lose by 0.89 ± 0.05 points a round at twelve a side on the 2x2
+and 2.6 at thirty a side on the 3x3 — about 37% of the scoring rate either way. Control (roles
+against roles) came in at +0.03 ± 0.08.
+
+### The real reason, which is the stone pool and not the board
+
+The best all-rounder, `shi shi 204 204 sti`, ranks between 8th and 33rd of 252 under every veto, and
+under the Magnet veto it is *the best hand there is*. So specialising buys at most 0.50 of strength
+on your own square and costs 0.64 on every other one, and a specialist needs to stand on their own
+veto more than 0.64/1.14 ≈ **56%** of the time just to break even — before counting the rounds spent
+part-way to a specialist hand, paying the cost without yet collecting the gain.
+
+Coordination cannot deliver 56%. A role-holder is on their own veto 45% of their duels at twelve a
+side and 52% at thirty, because the attack picks the contested squares for the lines they make, not
+for their vetoes.
+
+Veto-by-board was then tested, since it was the variant the mechanism predicted would help: it does,
+lifting the hit rate to 57% and narrowing the gap from 2.6 to 1.9 at thirty a side, and it does not
+close it.
+
+So the blocker is that **the pool contains a hand that is good everywhere**. If varied hands are
+wanted, that is what has to change — no hand able to sit in the top fifteen under every veto — or the
+reward has to stop inflating the field, for which trading stones with a teammate remains the obvious
+shape. Neither measured.
+
+Worth recording as a pattern: the objection was right, the model deserved rebuilding, and the answer
+did not move. Both halves of that are worth reporting — a conclusion that survives a better test is
+worth more than one that was never tested, and a wrong stated reason is worth correcting even when
+the conclusion stands.

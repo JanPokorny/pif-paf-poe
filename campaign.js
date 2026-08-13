@@ -34,12 +34,13 @@ import { pathToFileURL } from 'node:url';
 
 import {
   ADJACENT, BOARD_SPACES, CORNERS, LAYOUTS, LINES, LINE_BOARDS, LINE_CLEARS, LINE_HALO,
-  N_SPACES, REGULAR, SPACES, SPACE_BOARDS, STAR, SUBBOARDS, VETO, claimable, render, setLayout,
+  N_SPACES, REGULAR, SPACES, SPACE_BOARDS, STAR, SUBBOARDS, VETO, VETO_BY_BOARD,
+  claimable, render, setLayout,
 } from './board.js';
 import { makeRng } from './ai.js';
 import {
-  TRIGGERS, assign, duelChance, loadHands, meanByVeto, newRoster, rosterStrength,
-  strengthAt, swap,
+  TRIGGERS, assign, assignRoles, duelChance, loadHands, meanByVeto, newDemand,
+  newRoster, noteDemand, rosterStrength, strengthAt, swap,
 } from './roster.js';
 import { arg, pad, pct, playGame, randomHand } from './sim.js';
 
@@ -683,7 +684,13 @@ export function newCampaign(first = 0, cfg = null, rng = null) {
   const st = { marks: new Uint8Array(N_SPACES), round: 0, first, points: [0, 0, 0] };
   // Every player starts on a hand drawn at random -- nobody is handed a good one --
   // and from there the trigger rule decides who gets to change theirs.
-  if (cfg?.pool) st.roster = [null, newRoster(cfg.size, cfg.pool, rng), newRoster(cfg.size, cfg.pool, rng)];
+  if (cfg?.pool) {
+    st.roster = [null, newRoster(cfg.size, cfg.pool, rng), newRoster(cfg.size, cfg.pool, rng)];
+    // What each team has learned about which vetoes the round is fought on, and the
+    // roles it hands out on the strength of that.
+    st.demand = [null, newDemand(cfg.pool), newDemand(cfg.pool)];
+    st.roles = [null, null, null];
+  }
   return st;
 }
 
@@ -770,23 +777,35 @@ export function playRound(st, cfg, rng, tables, tally) {
   // best to the squares worth most, so both sides deal their players out in strength
   // order against their own ranking of the squares.
   const order = free.slice().sort((x, y) => gain[y] - gain[x]);
-  const veto = cfg.vetoes ? VETO : null;
+  const veto = cfg.vetoes ? (cfg.vetoBy === 'board' ? VETO_BY_BOARD : VETO) : null;
   const coord = (team) => (Array.isArray(cfg.coordinate) ? cfg.coordinate[team] : cfg.coordinate);
+  if (st.roster && veto) {
+    for (const team of [me, them]) {
+      if (coord(team) === 'role') st.roles[team] = assignRoles(st.roster[team], cfg.pool, st.demand[team]);
+    }
+  }
   const sides = cfg.pool && st.roster
     ? {
-      atk: assign(order, A, st.roster[me], cfg.pool, veto, coord(me)),
-      def: assign(order, D, st.roster[them], cfg.pool, veto, coord(them)),
+      atk: assign(order, A, st.roster[me], cfg.pool, veto, coord(me), st.roles?.[me]),
+      def: assign(order, D, st.roster[them], cfg.pool, veto, coord(them), st.roles?.[them]),
     }
     : null;
   // Filed by team number, so [1] is X and [2] is O whichever of them is attacking.
   const log = { won: [null, [], []], lost: [null, [], []] };
 
+  const roleHit = st.roles ? { roles: st.roles, total: 0, matched: 0 } : null;
   const taken = [];
   let duels = 0, pivotal = 0, stake = 0;
   for (const i of free) {
     if (!A[i]) continue;
     let lost = 0;
-    if (sides) lost = fight(i, pairs[i], sides, st.roster, me, them, cfg, rng, log, veto);
+    if (sides) lost = fight(i, pairs[i], sides, st.roster, me, them, cfg, rng, log, veto, roleHit);
+    // Both teams see which squares the round was actually fought on, which is what
+    // their role quotas follow.
+    if (st.demand && veto && pairs[i]) {
+      noteDemand(st.demand[me], veto[i], pairs[i]);
+      noteDemand(st.demand[them], veto[i], pairs[i]);
+    }
     else for (let k = 0; k < pairs[i]; k++) if (!duel(cfg, rng, p)) lost++;
     duels += pairs[i];
     const won = pairs[i] - lost;
@@ -821,7 +840,10 @@ export function playRound(st, cfg, rng, tables, tally) {
   if (st.roster && cfg.trigger !== 'none') {
     const aim = (team) => (Array.isArray(cfg.aim) ? cfg.aim[team] : cfg.aim);
     const give = (team, who) => {
-      for (const k of who) { swap(st.roster[team], k, cfg.pool, rng, cfg.swap, aim(team)); swaps++; }
+      for (const k of who) {
+        swap(st.roster[team], k, cfg.pool, rng, cfg.swap, aim(team), st.roles?.[team]?.[k]);
+        swaps++;
+      }
     };
     if (cfg.trigger === 'win') { give(me, log.won[1]); give(them, log.won[2]); }
     else if (cfg.trigger === 'lose') { give(me, log.lost[1]); give(them, log.lost[2]); }
@@ -871,6 +893,7 @@ export function playRound(st, cfg, rng, tables, tally) {
       : duels - free.reduce((n, i) => n + Math.min(A[i], D[i]), 0);
     tally.overestimate += overestimate;
     tally.swaps += swaps;
+    if (roleHit) { tally.roleTotal += roleHit.total; tally.roleMatched += roleHit.matched; }
     if (st.roster) {
       // Where the two teams' hands have got to, and how far apart they are inside a
       // team -- the spread is what says whether a rule is pulling the field together
@@ -893,7 +916,7 @@ export function playRound(st, cfg, rng, tables, tally) {
 // most games -- champion against champion, or its best against their weakest, whichever
 // of the two comes out higher. Returns how many the attack lost, and files each player
 // under won or lost for whichever trigger rule is in force.
-function fight(i, pairs, sides, roster, me, them, cfg, rng, log, veto) {
+function fight(i, pairs, sides, roster, me, them, cfg, rng, log, veto, hit = null) {
   const v = veto ? veto[i] : 'neutral';
   const sa = (k) => strengthAt(cfg.pool, roster[me][k], v);
   const sd = (k) => strengthAt(cfg.pool, roster[them][k], v);
@@ -904,6 +927,14 @@ function fight(i, pairs, sides, roster, me, them, cfg, rng, log, veto) {
   const def = held(ranked) >= held(flipped) ? ranked : flipped;
 
   let lost = 0;
+  if (hit) {
+    // How often a player given a veto to specialise in is actually standing on one.
+    for (const [team, side] of [[me, atk], [them, def]]) {
+      const roles = hit.roles?.[team];
+      if (!roles) continue;
+      for (const k of side) { hit.total++; if (roles[k] === v) hit.matched++; }
+    }
+  }
   for (let k = 0; k < def.length; k++) {
     if (rng() < duelChance(sa(atk[k]), sd(def[k]))) {
       log.won[1].push(atk[k]);
@@ -951,7 +982,7 @@ const newTally = (cfg) => ({
   rounds: 0, marks: 0, markHist: Array.from({ length: SUBBOARDS.length + 1 }, () => 0), points: 0, teamPoints: [0, 0, 0], seatPoints: [0, 0], value: 0, cleared: 0, swept: 0, stalled: 0, lines: 0, lineHist: [0, 0, 0, 0, 0, 0],
   duels: 0, pivotal: 0, stake: 0, unpaired: 0, idle: 0, contested: 0, taken: 0, free: 0,
   flips: 0, declined: 0, flipPoints: 0, starHeld: 0, reinforced: 0, overestimate: 0,
-  swaps: 0, handMean: [0, 0, 0], handSpread: [0, 0, 0], atTop: [0, 0, 0], handKinds: [0, 0, 0],
+  swaps: 0, roleTotal: 0, roleMatched: 0, handMean: [0, 0, 0], handSpread: [0, 0, 0], atTop: [0, 0, 0], handKinds: [0, 0, 0],
 });
 
 // What the attacking team should expect from a duel this round: its average hand
@@ -1046,6 +1077,8 @@ function runPaired(cfg) {
         {
           marks: st.marks.slice(), round: st.round, first: st.first, points: [0, 0, 0],
           roster: st.roster?.map((r2) => r2?.slice()),
+          demand: st.demand?.map((d) => (d ? { ...d } : d)),
+          roles: st.roles?.map((r2) => r2?.slice()),
         },
         v, makeRng(seed), tables, tallies[k],
       ));
@@ -1148,6 +1181,7 @@ function row(t) {
     flipPoints: per(t.flipPoints, t.flips),
     starHeld: per(t.starHeld, r),
     swaps: per(t.swaps, r),
+    onOwnVeto: per(t.roleMatched, t.roleTotal),
     handMean: per(t.handMean[1] + t.handMean[2], 2 * r),
     handSpread: per(t.handSpread[1] + t.handSpread[2], 2 * r),
     atTop: per(t.atTop[1] + t.atTop[2], 2 * r),
@@ -1257,6 +1291,7 @@ async function main() {
     standout: parseFloat(arg('standout', '0.2')), // share of a team sent to train
     handsFile: arg('hands-file', 'results/hands.json'),
     vetoes: !process.argv.includes('--no-vetoes'),
+    vetoBy: arg('veto-by', 'square'),             // square | board
     coordinate: arg('coordinate', 'on'),          // on | off
     aim: arg('aim', 'mean'),                      // mean | spec -- what a swap aims at
     clears: arg('clears', arg('clear', 'boards')).split(','),
