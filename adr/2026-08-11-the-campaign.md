@@ -777,3 +777,48 @@ So the Counterattack stays, with its purpose rewritten: not to make the duel fai
 roles do by themselves, but to keep the attacker's edge from running away with the defensive phase. The
 figure to tune it against is how many contested squares the defence still holds, not whether the duel is
 even.
+
+## Upgrade points: a square is worth one, and both purchases cost two
+
+Winning a square pays each of your players standing on it one point. A stone swap costs two, a random
+single-use Counterattack costs two.
+
+Three measured quantities set that, and the interesting part is that the ordering falls out without
+tuning.
+
+**The earning rate.** About half a point per player per round, so twelve over a twenty-four round
+campaign, during which a player fights about fifteen duels.
+
+**The swap ladder**, climbing towards the best hand for a player's assigned veto: 1.02, 0.36, 0.16,
+0.05, 0.01. Three swaps take a player 96% of the way, which is why "happy with their hand" arrives so
+early. Note this is much steeper than the 0.69 average quoted earlier in this file — that figure
+averaged over all hands including ones already good, where this is the marginal step from where a
+player actually stands.
+
+**The Counterattack values**, from the duel studies, as the strength each is worth to the seat holding
+it: Overtake 1.23, Relocate 0.80, Mirror 0.67, Mind Control 0.34, Rehearse 0.03. A random draw is worth
+the average, 0.62. Holding two and using the better is 0.90 and three is 1.05, so the second card adds
+0.29 and the third 0.15; a fourth adds nothing to any single duel, since only three may be presented,
+and is only stock for the next one.
+
+**Durability is what separates them.** A swap applies to every duel a player has left — fifteen at the
+start, seven by halfway — and a Counterattack to one. At halfway a third swap is worth 0.16 × 7 = 1.1
+against a first card's 0.62, and a fourth is worth 0.35 against it. So at equal prices the order is
+swap, swap, swap, card, and no price tuning is needed to get the behaviour the mechanic was designed
+for. Two points each then makes twelve buy exactly three swaps and three cards, which is exactly the
+presentation limit.
+
+Two constraints on moving the prices. **A Counterattack only works for the defender**, since one held by
+the player who moves first does nothing and the campaign's attacker opens the duel — so a card is a
+defensive purchase held until your team defends. And **the draw must stay random**: Overtake is worth
+forty times Rehearse, so a player who could choose would always take Overtake at 1.23 and the honest
+price would be nearer four.
+
+One emergent property worth recording: cards bought late are spent late, so the second half of a
+campaign has a Counterattack in most defending duels and the attacker's edge drifts back towards even.
+The economy is its own brake on the pace, which fits the previous entry's finding that the Counterattack
+is now a pacing dial rather than a fairness fix.
+
+**Not simulated.** The three inputs are measured; the ordering and the prices are derived from them.
+The spending itself was not played out, so two-and-two is a well-grounded starting point rather than a
+settled figure. The thing to watch at a table is whether players do stop swapping after three.

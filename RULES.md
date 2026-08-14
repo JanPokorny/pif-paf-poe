@@ -729,6 +729,81 @@ is not enough.
 **No three in a row.** A seeded line would hand its owner a point before anybody had played. Draw the
 pairs one at a time and reject any that completes a line for either side.
 
+## Upgrade points
+
+Winning a square pays. **Each of your players standing on a square your side won takes one upgrade
+point** -- the same players the stone swap already goes to. Points buy two things:
+
+| | cost |
+|---|---|
+| replace one stone in your hand | **2 points** |
+| a random Counterattack, single use | **2 points** |
+
+A player holds as many Counterattacks as they like, presents up to three at the start of a duel, and
+may use one of them during it. An unused card is kept; only a used one is discarded.
+
+### Where those numbers come from
+
+A player earns **about half a point a round**, which is twelve over a campaign of twenty-four rounds,
+and fights about fifteen duels in that time. So twelve points is the budget, and the question is what
+it should buy.
+
+Both purchases can be priced in the same unit, the strength that decides a duel. **A swap is permanent
+and a Counterattack is spent**, which is the whole of why they price differently.
+
+Successive swaps, climbing towards the best hand for the square you have been told to hold:
+
+| swap | 1st | 2nd | 3rd | 4th | 5th |
+|---|---|---|---|---|---|
+| worth | **1.02** | 0.36 | 0.16 | 0.05 | 0.01 |
+
+Three swaps take a player 96% of the way there, which is why "happy with your hand" arrives so quickly.
+
+Counterattacks, drawn at random from the five, valued by where they leave the seat that holds them:
+
+| | Overtake | Relocate | Mirror | Mind Control | Rehearse |
+|---|---|---|---|---|---|
+| worth | 1.23 | 0.80 | 0.67 | 0.34 | 0.03 |
+
+Holding one is worth **0.62** -- the average, since it is a random draw. Holding two and using the
+better is 0.90, holding three is 1.05. So the second card adds 0.29 and the third 0.15, and a fourth
+adds nothing to a duel because it cannot be presented: it is stock for the next one.
+
+Now the durability. A swap applies to every duel a player has left -- about fifteen at the start and
+seven by the halfway point -- while a Counterattack applies to one. At the halfway point a third swap is
+worth 0.16 x 7 = 1.1 against a first Counterattack's 0.62, and a fourth swap is worth 0.05 x 7 = 0.35
+against it. **So at equal prices the order comes out by itself: swap, swap, swap, then cards.** No
+tuning is needed to make a player finish their hand before they start buying Counterattacks; the shape
+of the two curves does it.
+
+Two points a purchase then puts twelve exactly where it should: **three swaps and three cards**, which
+is precisely the number a player is allowed to present. A player who has been through a campaign holds
+a full hand and a choice of three.
+
+### Two things to know before setting the prices differently
+
+**A Counterattack only works for the defender.** A Counterattack held by the player who moves first
+does nothing, and the campaign's attacker is the duel's first player -- so a card is a defensive
+purchase, held until the round your team defends. That is not a problem, since a card is kept until
+used, but it means a player buying one is buying it for half their duels.
+
+**Draw them at random, or reprice.** Overtake is worth forty times Rehearse. A player who could choose
+would always take Overtake at 1.23, which would need a price nearer four to be honest. The random draw
+is what makes one flat price defensible.
+
+And one thing that falls out on its own: cards bought late get spent late, so the second half of a
+campaign has a Counterattack in most defending duels and the attacker's edge drifts back towards even.
+The economy is its own brake on the pace -- the campaign starts fast and tightens as the players arm
+themselves.
+
+### What is measured here and what is not
+
+The swap ladder is measured, from the fitted hand table. The Counterattack values are measured, from the
+duel studies that priced each of the five. The earning rate is measured, from the campaign. **The
+ordering and the prices are derived from those three rather than played out** -- the spending itself is
+not simulated, so treat two-and-two as a well-grounded starting point rather than a settled figure, and
+watch whether players in practice stop swapping after three.
+
 ## Stone vetoes
 
 **Every square switches off one type of stone** for the duels fought on it. The stone is still
