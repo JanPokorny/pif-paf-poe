@@ -34,8 +34,8 @@ import { pathToFileURL } from 'node:url';
 
 import {
   ADJACENT, BOARD_SPACES, CORNERS, LAYOUTS, LINES, LINE_BOARDS, LINE_CLEARS, LINE_HALO,
-  N_SPACES, REGULAR, SPACES, SPACE_BOARDS, STAR, SUBBOARDS, VETO, VETO_BY_BOARD,
-  claimable, render, setLayout,
+  HEIGHT, N_SPACES, REGULAR, SPACES, SPACE_BOARDS, STAR, SUBBOARDS, VETO, VETO_BY_BOARD,
+  WIDTH, claimable, render, setLayout,
 } from './board.js';
 import { makeRng } from './ai.js';
 import {
@@ -62,7 +62,11 @@ import { arg, pad, pct, playGame, randomHand } from './sim.js';
 // because at 0.45 it declines a point in order to keep two marks standing. The
 // pair below is what came out of that search; the surface around it is flat, and
 // the conclusions were re-run at both ends of a wide range to be sure of it.
-let POS = [0, 0.03, 0.12];
+// The fourth entry is a line already complete, which normal play never shows this
+// function -- a line is scored and cleared the moment it is made. A pre-seeded opening
+// position can contain one, though, and without the entry the lookup is undefined and
+// every value downstream becomes NaN. It is priced at a point, which is what it is worth.
+let POS = [0, 0.03, 0.12, 1];
 
 // A line through the star is not like the others. Its third square is the one no
 // attack can ever be aimed at, so two of your symbols on it is a threat the other
@@ -71,7 +75,7 @@ let POS = [0, 0.03, 0.12];
 // what a position on such a line is worth; it is a setting because whether that
 // premium is real is a question for measurement.
 let STAR_W = 1;
-export const setPos = ([one, two, star = 1]) => { POS = [0, one, two]; STAR_W = star; };
+export const setPos = ([one, two, star = 1]) => { POS = [0, one, two, 1]; STAR_W = star; };
 
 // Positional value of a board to `me`, net of what the same board is worth to
 // them. Zero-sum by construction, so the defence can use the attack's numbers.
@@ -682,6 +686,44 @@ function bestPicks(marks, me, them, taken, gain, base) {
 // lose to it. Campaigns are therefore run half from each seat.
 export function newCampaign(first = 0, cfg = null, rng = null) {
   const st = { marks: new Uint8Array(N_SPACES), round: 0, first, points: [0, 0, 0] };
+
+  // An empty board makes a dull first round: every square is worth the same, so there is
+  // nothing to choose between them and nothing to defend. Starting with marks already
+  // down fixes that, and they are laid out in rotational pairs -- each of X's squares
+  // turned half a turn about the centre of the board gives O one -- so that whatever the
+  // opening position is worth, both teams have exactly the same of it.
+  if (cfg?.seed_marks && rng) {
+    const cx = (WIDTH - 1) / 2, cy = (HEIGHT - 1) / 2;
+    const opposite = new Map();
+    for (const s of SPACES) {
+      const t = SPACES.find((o) => o.x === 2 * cx - s.x && o.y === 2 * cy - s.y);
+      if (t && t.i !== s.i) opposite.set(s.i, t.i);
+    }
+    const free = REGULAR.filter((i) => opposite.has(i));
+    // No pair may complete a line. An opening position holding a three in a row would
+    // hand its owner a point before anybody had played, and the rest of the campaign
+    // assumes no line is ever left standing at the start of a round.
+    const makesLine = (i, j) => {
+      st.marks[i] = 1;
+      st.marks[j] = 2;
+      const bad = LINES.some((line) => {
+        const first = st.marks[line[0]];
+        return first && line.every((s) => st.marks[s] === first);
+      });
+      st.marks[i] = 0;
+      st.marks[j] = 0;
+      return bad;
+    };
+    for (let n = 0; n < cfg.seed_marks; n++) {
+      const options = free.filter((i) => !makesLine(i, opposite.get(i)));
+      if (!options.length) break;
+      const i = options[(rng() * options.length) | 0], j = opposite.get(i);
+      st.marks[i] = 1;
+      st.marks[j] = 2;
+      const gone = new Set([i, j]);
+      free.splice(0, free.length, ...free.filter((x) => !gone.has(x)));
+    }
+  }
   // Every player starts on a hand drawn at random -- nobody is handed a good one --
   // and from there the trigger rule decides who gets to change theirs.
   if (cfg?.pool) {
@@ -846,6 +888,21 @@ export function playRound(st, cfg, rng, tables, tally) {
       }
     };
     if (cfg.trigger === 'win') { give(me, log.won[1]); give(them, log.won[2]); }
+    else if (cfg.trigger === 'sidewon') {
+      // The attack took the square, or the defence held it. Everybody standing there
+      // shares in it, paired or not -- an unpaired attacker's presence is already part
+      // of how a square is taken, so standing there is already a contribution.
+      const took = new Set(taken);
+      const winners = [[], [], []];
+      for (const i of free) {
+        if (!A[i]) continue;
+        const side = took.has(i) ? me : them;
+        const players = took.has(i) ? sides?.atk.at.get(i) : sides?.def.at.get(i);
+        winners[side].push(...(players ?? []));
+      }
+      give(me, winners[me]);
+      give(them, winners[them]);
+    }
     else if (cfg.trigger === 'fought') {
       // Anyone who played a duel, whichever way it went. Nothing to gain by throwing,
       // and nobody spends the evening on the hand they walked in with.
@@ -1301,6 +1358,7 @@ async function main() {
     handsFile: arg('hands-file', 'results/hands.json'),
     vetoes: !process.argv.includes('--no-vetoes'),
     vetoBy: arg('veto-by', 'square'),             // square | board
+    seed_marks: parseInt(arg('seed-marks', '0'), 10),  // symmetric pairs already on the board
     coordinate: arg('coordinate', 'on'),          // on | off
     aim: arg('aim', 'mean'),                      // mean | spec -- what a swap aims at
     clears: arg('clears', arg('clear', 'boards')).split(','),

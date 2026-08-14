@@ -573,6 +573,15 @@ const empty = ['.', '.', '.', '.', '.', '.', '.', '.', '.'];
   check('four in a row is two points', scoreAndClear(board(['b4', 'c4', 'd4', 'e4']), 1).points, 2);
   check('a cross is two points', scoreAndClear(board(['c3', 'd3', 'e3', 'd2', 'd4']), 1).points, 2);
   check('two of a line is nothing', scoreAndClear(board(['c3', 'd3']), 1).points, 0);
+
+  // A line already standing is something normal play never shows posValue, because a
+  // line is scored and cleared the moment it is made -- but a pre-seeded opening can
+  // contain one, and the lookup used to run off the end of the weights and poison every
+  // value downstream with NaN.
+  check('a standing line does not poison the valuation',
+    Number.isFinite(posValue(board(['c3', 'd3', 'e3']), 1, 2)), true);
+  check('and it is worth about a point',
+    posValue(board(['c3', 'd3', 'e3']), 1, 2) > posValue(board(['c3', 'd3']), 1, 2), true);
 }
 
 {

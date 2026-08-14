@@ -656,3 +656,68 @@ hands for a whole campaign**, because there are seven attractor hands rather tha
 do keep hands apart, on the condition that the team says who goes where — which in a live game is the
 likely behaviour anyway, since finding the single best all-rounder is exactly the kind of optimisation
 a room full of people will not do.
+
+## Revised again: the swap goes to a square you won, and the board starts seeded
+
+### On a square you won, not after a duel you played
+
+Rewarding everyone who fought was wrong for a reason the measurements could not see. Whether a player
+fights is the *other* team's decision — it depends on where they allocated — and the rules already
+count standing on a square without fighting as a contribution: an unpaired attacker's presence is part
+of how the square is taken. So *after playing a duel* gives nothing to the player who walked alone onto
+an empty square and handed their team a free mark, which is the most efficient thing anybody did that
+round.
+
+Tying the reward to the square's result instead fixes it and costs nothing measurable:
+
+| occasion | offers a round | change a hand | useful a round | spread | distinct hands | early-luck r | worst at 24 |
+|---|---|---|---|---|---|---|---|
+| after winning a duel | 5.8 | 65% | 3.8 | 0.58 | 85% | 0.24 | −0.19 |
+| after losing one | 5.7 | 67% | 3.8 | 0.39 | 84% | 0.03 | 0.51 |
+| after playing one | 11.3 | 54% | 6.2 | 0.35 | 75% | −0.05 | 0.78 |
+| **on a square you won** | 11.8 | 53% | 6.3 | 0.31 | 73% | −0.01 | 0.74 |
+
+It also keeps the two properties that decided the previous revision: nothing is worth throwing, because
+the reward follows the square rather than the duel; and nobody is stranded, where rewarding duel
+winners leaves the unluckiest player a side finishing below where an average random hand starts.
+
+And it is the only occasion whose reward follows a team result, which is the right thing to reward in a
+game whose whole difficulty is coordination.
+
+### The board starts with about a fifth of it marked
+
+An empty board makes a dull opening: every square is worth the same, so there is nothing to choose
+between and nothing worth defending. Measured as how far the best free square stands above the median
+one — the size of the choice in front of a captain — on the 6x6:
+
+| seeded each side | round 1 | 2 | 3 | 4 | first point at round |
+|---|---|---|---|---|---|
+| none | 0.30 | 0.60 | 1.14 | 1.92 | 3.6 |
+| 2 | 0.71 | 0.93 | 1.26 | 2.18 | 3.1 |
+| **4** | 0.96 | 1.31 | 1.33 | 1.97 | 2.7 |
+| 6 | 1.15 | 1.77 | 1.28 | 1.71 | 2.0 |
+| 8 | 1.45 | 1.83 | 1.23 | 1.63 | 1.6 |
+
+Four pairs put the first round where the third round of an empty board sits and bring the first point
+forward by a round, while leaving the position still building through the opening. Six or eight make the
+first round hotter than the fourth round of an empty board and then the curve sags — the board is full
+enough that lines clear before anything accumulates. The 9x9 wants the same fifth: nine pairs take its
+opening from 0.15 to 1.27, and fourteen or eighteen front-load it and flatten what follows.
+
+Placement is in rotational pairs — for every square X starts on, O starts on the one half a turn about
+the board's centre away — so the two sides hold exactly the same opening by construction and no
+argument about a fair setup is possible. On the 9x9 the centre square is its own opposite and stays
+empty. Pairs that would complete a line for either side are rejected as they are drawn.
+
+### A latent bug the seeding found
+
+`posValue` looked up `POS[mine]` with three weights, so a line already complete read `POS[3]` —
+undefined — and every value downstream became NaN. The defence planner compares candidate allocations
+with `v < bestValue` starting from `Infinity`, and `NaN < Infinity` is false, so it silently returned
+`null` and the next line crashed on it.
+
+Unreachable in normal play, because a line is scored and cleared the moment it is made, so the
+invariant held everywhere until an opening position could contain a standing line. Fixed by pricing a
+standing line at a point and by rejecting seeded lines, with a test for each. Worth recording as the
+kind of bug an invariant hides: it was not that the code was wrong about the game, it was that a new
+rule made a state reachable that the old code had been entitled to assume away.

@@ -3,7 +3,12 @@
 //
 //   after winning a duel    the strong get stronger
 //   after losing one        the weak catch up, and anyone can farm by throwing
-//   after playing one       win or lose, so nothing is worth throwing and nobody is left behind
+//   after playing one       win or lose, so nothing is worth throwing -- but it rewards
+//                           being engaged, which is not the player's choice, and gives
+//                           nothing to the lone attacker who took an empty square
+//   on a square you won     everyone standing on a square their side took or held,
+//                           paired or not, which is the contribution the rules already
+//                           count
 //   after a round unpaired  whoever the other team did not engage
 //   by standing out         a player skips the round at a training space to swap
 //
@@ -18,7 +23,7 @@ import { readFileSync } from 'node:fs';
 import { STONE_TYPES } from './engine.js';
 import { allHands, duelChance, handKey } from './hands.js';
 
-export const TRIGGERS = ['none', 'win', 'lose', 'fought', 'unpaired', 'standout'];
+export const TRIGGERS = ['none', 'win', 'lose', 'fought', 'sidewon', 'unpaired', 'standout'];
 
 // ── The swap table ─────────────────────────────────────────────────────────
 

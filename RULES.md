@@ -617,7 +617,8 @@ majority of a board rather than all of it.
 ## Hands that change hands
 
 Everyone arrives with five stones drawn at random, and the rules let a player replace one. The
-occasion for that is **after playing a duel, win or lose.**
+occasion for that is **standing on a square your side won** -- every attacker on a square the attack
+took, and every defender on a square the defence held, whether they fought a duel or not.
 
 How much a swap is worth was settled first. All 252 hands of five played a sample of each other and a
 strength was fitted, so a duel is `sigmoid(mine - theirs)`. The hands span 3.50: the best beats the
@@ -628,43 +629,48 @@ Five occasions were measured, on the settled board and with both teams playing r
 
 | occasion | swap offers a round | of those, change a hand | useful swaps a round | spread within a team | distinct hands | early luck decides the campaign | the worst player, by round 24 |
 |---|---|---|---|---|---|---|---|
-| after winning | 5.8 | 65% | 3.8 | **0.58** | 85% | r = 0.24 | **-0.19** |
-| after losing | 5.7 | **67%** | 3.8 | 0.39 | 84% | r = 0.03 | 0.51 |
-| **after playing one** | 11.3 | 54% | **6.2** | 0.35 | 75% | **r = -0.05** | **0.78** |
+| after winning a duel | 5.8 | 65% | 3.8 | **0.58** | 85% | r = 0.24 | **-0.19** |
+| after losing one | 5.7 | **67%** | 3.8 | 0.39 | 84% | r = 0.03 | 0.51 |
+| after playing one | 11.3 | 54% | 6.2 | 0.35 | 75% | r = -0.05 | 0.78 |
+| **on a square you won** | 11.8 | 53% | **6.3** | 0.31 | 73% | **r = -0.01** | **0.74** |
 | after a round unpaired | 11.2 | 52% | 5.8 | 0.32 | 74% | r = 0.02 | 0.77 |
 | by standing out | 4.0 | 50% | 2.0 | 0.23 | 90% | — | — |
 
 Twelve a side; a swap is worth 0.69, so a player at 0.78 has gained about one stone over a player who
 started at zero and never improved.
 
-### Why after playing one
+### Why on a square you won
 
-- **There is nothing to decide, so there is nothing to adjudicate.** The swap is handed over when the
-  pairing is made, before anybody knows the result. Every other occasion needs the result first.
-- **Nothing is worth throwing.** Rewarding the loser is the obvious way to keep the back of the field
-  moving, and in a live game it pays a player to lose on purpose: a stone is worth 0.69 and the square
-  they threw is worth rather less to them personally than to their team. Rewarding both sides of the
-  duel removes the incentive without removing the consolation.
-- **Nobody spends the evening on the hand they walked in with.** Under *after winning* the unluckiest
-  player on each team finishes at **-0.19**, below where an average random hand starts: they lost
-  early, never earned a swap, and watched their team improve around them. Under *after playing one*
-  the worst-off player finishes at **+0.78**, and how a player's first six rounds went tells you
-  nothing about where they end up (r = -0.05 against 0.24).
-- **It rewards turning up and playing**, which is the behaviour a live game wants, and it produces the
-  most swaps that actually change a hand -- 6.2 a round against 3.8.
+- **It rewards the contribution the rules already count.** An unpaired attacker's presence is part of
+  how a square is taken -- that is what the power rule says -- so the player who walked alone onto an
+  empty square and handed their team a free mark has done the most efficient thing on the board.
+  Rewarding only the players who fought a duel gives that player nothing, and whether anybody fought
+  was the *other* team's decision, not theirs.
+- **Nothing is worth throwing.** Rewarding the loser of a duel is the obvious way to keep the back of
+  the field moving, and in a live game it pays a player to lose on purpose: a stone is worth 0.69 and
+  the square they threw costs their team rather than them. Tying the reward to the square's result
+  instead of the duel's removes the incentive.
+- **Nobody spends the evening on the hand they walked in with.** Under *after winning a duel* the
+  unluckiest player on each team finishes at **-0.19**, below where an average random hand starts:
+  they lost early, never earned a swap, and watched their team improve around them. Here the worst-off
+  finishes at **+0.74**, and how a player's first six rounds went tells you nothing about where they
+  end up (r = -0.01 against 0.24).
+- **It is a team result, so it rewards coordinating.** Winning a square is what the round is about,
+  and this is the only occasion whose reward follows it.
 
-What it costs: a flatter team. The spread of hands within a team settles at 0.35 rather than the 0.58
-that rewarding winners gives, so no star duellists emerge, and the field holds 75% distinct hands
-rather than 85%. **Take *after winning* instead if a hierarchy of champions is wanted** -- it is the
-only occasion that produces one -- and accept that one player a side will finish the campaign no
+What it costs: a flatter team. The spread of hands within a team settles at 0.31 rather than the 0.58
+that rewarding duel winners gives, so no star duellists emerge, and the field holds 73% distinct hands
+rather than 85%. **Take *after winning a duel* instead if a hierarchy of champions is wanted** -- it is
+the only occasion that produces one -- and accept that one player a side will finish the campaign no
 better than they began.
 
-The two rejected outright. **After a round unpaired** gives almost the same numbers as after playing
-one but hands out its swaps to whoever the other team happened not to engage, which nobody chose and
-nobody can plan; it is the same administration for an arbitrary recipient. **Standing out** -- skipping
-the round at a training space -- produces the fewest useful swaps of any occasion, costs eleven points
-of participation every round, and a team that declines to use it at all is beaten four to one, which
-makes it a compulsory opening move with a trap attached rather than a decision.
+The three rejected. **After playing a duel** measures almost identically but rewards being engaged,
+which is the other team's choice rather than the player's, and gives nothing to the lone attacker who
+took an empty square. **After a round unpaired** has the same problem in mirror image: its swaps go to
+whoever the other team happened not to engage. **Standing out** -- skipping the round at a training
+space -- produces the fewest useful swaps of any occasion, costs eleven points of participation every
+round, and a team that declines to use it is beaten four to one, which makes it a compulsory opening
+move with a trap attached rather than a decision.
 
 ### Two things that hold whichever occasion is chosen
 
@@ -678,6 +684,43 @@ to specialise in keeps 75-85% of a team's hands distinct for a whole campaign; a
 good on average walks the whole field onto one hand -- 86% of a team holding the same five stones by
 round sixty. The vetoes are what make the first possible, and the team saying who goes where is what
 makes it worth doing.
+
+## The opening position
+
+**Start with about a fifth of the squares already marked, half of them each: four X and four O on the
+6x6, nine and nine on the 9x9.**
+
+An empty board makes a dull first round. Every square is worth the same, so there is nothing to choose
+between them and nothing worth defending -- the two sides shuffle into position and the round decides
+nothing. Measured as how far the most valuable free square stands above the median one, which is the
+size of the choice in front of a captain:
+
+| squares seeded, each side | round 1 | round 2 | round 3 | round 4 | first point falls at round |
+|---|---|---|---|---|---|
+| none | 0.30 | 0.60 | 1.14 | 1.92 | 3.6 |
+| 2 | 0.71 | 0.93 | 1.26 | 2.18 | 3.1 |
+| **4** | **0.96** | 1.31 | 1.33 | 1.97 | **2.7** |
+| 6 | 1.15 | 1.77 | 1.28 | 1.71 | 2.0 |
+| 8 | 1.45 | 1.83 | 1.23 | 1.63 | 1.6 |
+
+On the 6x6. Four pairs put the first round where the *third* round of an empty board sits, and bring
+the first point forward by a round, while leaving the position still building through the opening. Six
+or eight pairs make the first round hotter than the fourth round of an empty board and then the curve
+sags -- the board is full enough that lines clear before anything accumulates.
+
+The 9x9 wants the same fifth: nine pairs take its first round from 0.15 to 1.27, again about where its
+third round would otherwise be, and fourteen or eighteen front-load the opening and flatten what
+follows.
+
+Two requirements on where they go.
+
+**In rotational pairs.** For every square X starts on, O starts on the one half a turn about the centre
+of the board away from it. Then whatever the opening is worth, both sides have exactly the same of it,
+and no argument about a fair setup is possible. On the 9x9 the centre square is its own opposite, so it
+stays empty.
+
+**No three in a row.** A seeded line would hand its owner a point before anybody had played. Draw the
+pairs one at a time and reject any that completes a line for either side.
 
 ## Stone vetoes
 
