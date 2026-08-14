@@ -836,16 +836,22 @@ export function playRound(st, cfg, rng, tables, tally) {
 
   // The trigger rule. Every one of these hands out the same thing -- one stone
   // replaced -- and differs only in who gets it, which is the whole question.
-  let swaps = 0;
+  let swaps = 0, used = 0;
   if (st.roster && cfg.trigger !== 'none') {
     const aim = (team) => (Array.isArray(cfg.aim) ? cfg.aim[team] : cfg.aim);
     const give = (team, who) => {
       for (const k of who) {
-        swap(st.roster[team], k, cfg.pool, rng, cfg.swap, aim(team), st.roles?.[team]?.[k]);
+        if (swap(st.roster[team], k, cfg.pool, rng, cfg.swap, aim(team), st.roles?.[team]?.[k])) used++;
         swaps++;
       }
     };
     if (cfg.trigger === 'win') { give(me, log.won[1]); give(them, log.won[2]); }
+    else if (cfg.trigger === 'fought') {
+      // Anyone who played a duel, whichever way it went. Nothing to gain by throwing,
+      // and nobody spends the evening on the hand they walked in with.
+      give(me, [...log.won[1], ...log.lost[1]]);
+      give(them, [...log.won[2], ...log.lost[2]]);
+    }
     else if (cfg.trigger === 'lose') { give(me, log.lost[1]); give(them, log.lost[2]); }
     else if (cfg.trigger === 'unpaired') {
       // Whoever the other side did not engage: attackers with nobody to fight, and
@@ -893,6 +899,7 @@ export function playRound(st, cfg, rng, tables, tally) {
       : duels - free.reduce((n, i) => n + Math.min(A[i], D[i]), 0);
     tally.overestimate += overestimate;
     tally.swaps += swaps;
+    tally.swapsUsed += used;
     if (roleHit) { tally.roleTotal += roleHit.total; tally.roleMatched += roleHit.matched; }
     if (st.roster) {
       // Where the two teams' hands have got to, and how far apart they are inside a
@@ -982,7 +989,7 @@ const newTally = (cfg) => ({
   rounds: 0, marks: 0, markHist: Array.from({ length: SUBBOARDS.length + 1 }, () => 0), points: 0, teamPoints: [0, 0, 0], seatPoints: [0, 0], value: 0, cleared: 0, swept: 0, stalled: 0, lines: 0, lineHist: [0, 0, 0, 0, 0, 0],
   duels: 0, pivotal: 0, stake: 0, unpaired: 0, idle: 0, contested: 0, taken: 0, free: 0,
   flips: 0, declined: 0, flipPoints: 0, starHeld: 0, reinforced: 0, overestimate: 0,
-  swaps: 0, roleTotal: 0, roleMatched: 0, handMean: [0, 0, 0], handSpread: [0, 0, 0], atTop: [0, 0, 0], handKinds: [0, 0, 0],
+  swaps: 0, swapsUsed: 0, roleTotal: 0, roleMatched: 0, handMean: [0, 0, 0], handSpread: [0, 0, 0], atTop: [0, 0, 0], handKinds: [0, 0, 0],
 });
 
 // What the attacking team should expect from a duel this round: its average hand
@@ -1181,6 +1188,8 @@ function row(t) {
     flipPoints: per(t.flipPoints, t.flips),
     starHeld: per(t.starHeld, r),
     swaps: per(t.swaps, r),
+    // Of the swaps handed out, the share that changed anything.
+    swapsLanded: per(t.swapsUsed, t.swaps),
     onOwnVeto: per(t.roleMatched, t.roleTotal),
     handMean: per(t.handMean[1] + t.handMean[2], 2 * r),
     handSpread: per(t.handSpread[1] + t.handSpread[2], 2 * r),

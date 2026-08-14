@@ -2,7 +2,8 @@
 // occasions on which the rules might let one of them swap a stone.
 //
 //   after winning a duel    the strong get stronger
-//   after losing one        the weak catch up
+//   after losing one        the weak catch up, and anyone can farm by throwing
+//   after playing one       win or lose, so nothing is worth throwing and nobody is left behind
 //   after a round unpaired  whoever the other team did not engage
 //   by standing out         a player skips the round at a training space to swap
 //
@@ -17,7 +18,7 @@ import { readFileSync } from 'node:fs';
 import { STONE_TYPES } from './engine.js';
 import { allHands, duelChance, handKey } from './hands.js';
 
-export const TRIGGERS = ['none', 'win', 'lose', 'unpaired', 'standout'];
+export const TRIGGERS = ['none', 'win', 'lose', 'fought', 'unpaired', 'standout'];
 
 // ── The swap table ─────────────────────────────────────────────────────────
 
@@ -154,22 +155,27 @@ export function assignRoles(roster, pool, demand) {
 //          else already covers that ground
 //   role   the hand that is best on the veto this player has been given to specialise
 //          in -- the team having decided in advance where they will be standing
+// Returns true if the hand actually changed. A swap handed to a player already holding
+// the best hand for their role does nothing, and how often that happens is one of the
+// things that separates the occasions.
 export function swap(roster, k, pool, rng, kind, aim = 'mean', role = null) {
+  const was = roster[k];
   if (kind === 'random') {
-    const ns = pool.neighbours[roster[k]];
+    const ns = pool.neighbours[was];
     roster[k] = ns[(rng() * ns.length) | 0];
-    return;
+    return roster[k] !== was;
   }
   if (aim === 'role' && role) {
     const col = pool.at[role] ?? pool.at.neutral;
-    roster[k] = pool.neighbours[roster[k]]
-      .reduce((b, j) => (col[j] > col[b] ? j : b), roster[k]);
-    return;
+    roster[k] = pool.neighbours[was].reduce((b, j) => (col[j] > col[b] ? j : b), was);
+    return roster[k] !== was;
   }
-  if (aim !== 'cover') { roster[k] = pool.bestSwap[aim === 'spec' ? 'spec' : 'mean'][roster[k]]; return; }
+  if (aim !== 'cover') {
+    roster[k] = pool.bestSwap[aim === 'spec' ? 'spec' : 'mean'][was];
+    return roster[k] !== was;
+  }
 
   const depth = Math.max(1, Math.round(roster.length / pool.vetoes.length));
-  const was = roster[k];
   let bestHand = was, bestScore = coverage(roster, pool, depth);
   for (const j of pool.neighbours[was]) {
     roster[k] = j;
@@ -177,6 +183,7 @@ export function swap(roster, k, pool, rng, kind, aim = 'mean', role = null) {
     if (score > bestScore) { bestScore = score; bestHand = j; }
   }
   roster[k] = bestHand;
+  return bestHand !== was;
 }
 
 // ── Who fights whom ────────────────────────────────────────────────────────

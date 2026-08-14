@@ -605,3 +605,54 @@ Worth recording as a pattern: the objection was right, the model deserved rebuil
 did not move. Both halves of that are worth reporting — a conclusion that survives a better test is
 worth more than one that was never tested, and a wrong stated reason is worth correcting even when
 the conclusion stands.
+
+## Revised: the swap comes after playing a duel, win or lose
+
+The earlier decision was *after winning*, taken on structural grounds — slowest convergence, widest
+spread — before the board had vetoes, before teams played roles, and before two things had been
+measured that matter more for a live game.
+
+Re-measured on the settled board with roles in play, twelve a side:
+
+| occasion | offers a round | change a hand | useful a round | spread | distinct hands | early-luck r | worst player at 24 |
+|---|---|---|---|---|---|---|---|
+| after winning | 5.8 | 65% | 3.8 | 0.58 | 85% | 0.24 | −0.19 |
+| after losing | 5.7 | 67% | 3.8 | 0.39 | 84% | 0.03 | 0.51 |
+| **after playing one** | 11.3 | 54% | 6.2 | 0.35 | 75% | −0.05 | 0.78 |
+| after a round unpaired | 11.2 | 52% | 5.8 | 0.32 | 74% | 0.02 | 0.77 |
+| by standing out | 4.0 | 50% | 2.0 | 0.23 | — | — | — |
+
+Three things decided it, two of them new.
+
+**A swap can be wasted, and how often depends on the occasion.** With roles in play a player already
+holding the best hand for their veto gains nothing, so between a third and a half of all swap offers
+change nothing at all — 65% land after winning, 54% after playing one, 50% for standing out. The
+useful figure is offers times landings, and it is what should be compared rather than the raw count.
+
+**Rewarding the loser can be farmed.** It is the obvious way to keep the back of the field moving and
+it pays a player to lose on purpose: a stone is worth 0.69 of strength and the square they threw costs
+their team, not them. Nothing in the simulation defects, so this is reasoning rather than measurement
+— but it is decisive between *after losing* and *after playing one*, which are otherwise close.
+
+**Under *after winning* one player a side finishes worse than they started.** The unluckiest player on
+each team ends at −0.19, below where an average random hand begins, having lost early, never earned a
+swap and watched the team improve around them; and how a player's first six rounds went predicts where
+they finish (r = 0.24). Under *after playing one* the worst-off finishes at +0.78 and early luck
+predicts nothing (r = −0.05). For twelve to thirty real people spending an evening on this, a
+mechanic that quietly strands its unluckiest participant is worse than one that flattens the team.
+
+*After playing one* also has the property no other occasion has: **the swap is handed over when the
+pairing is made, before the result is known**, so there is nothing to adjudicate.
+
+What it costs is the hierarchy. Spread settles at 0.35 rather than 0.58, so no star duellists emerge.
+*After winning* stays the pick if that is wanted, at the price above.
+
+### And a correction to the section before this one
+
+The convergence figures there were measured with swaps aimed at being good on average, and under that
+aim the field does collapse onto one hand — 86% of a team on the same five stones by round sixty. With
+swaps aimed at the veto a player has been *told* to specialise in, the field holds **75–85% distinct
+hands for a whole campaign**, because there are seven attractor hands rather than one. So the vetoes
+do keep hands apart, on the condition that the team says who goes where — which in a live game is the
+likely behaviour anyway, since finding the single best all-rounder is exactly the kind of optimisation
+a room full of people will not do.
