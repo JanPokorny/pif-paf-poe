@@ -714,14 +714,24 @@ export function newCampaign(first = 0, cfg = null, rng = null) {
       st.marks[j] = 0;
       return bad;
     };
+    const placed = [];
     for (let n = 0; n < cfg.seed_marks; n++) {
       const options = free.filter((i) => !makesLine(i, opposite.get(i)));
       if (!options.length) break;
       const i = options[(rng() * options.length) | 0], j = opposite.get(i);
       st.marks[i] = 1;
       st.marks[j] = 2;
+      placed.push([i, j]);
       const gone = new Set([i, j]);
       free.splice(0, free.length, ...free.filter((x) => !gone.has(x)));
+    }
+    // The team attacking first has the tempo, so it can be handed fewer marks to start
+    // with. `seed_handicap` takes that many off it, breaking the rotational pairing by
+    // exactly that much and no more.
+    const firstTeam = first + 1;
+    for (let n = 0; n < (cfg.seed_handicap ?? 0) && n < placed.length; n++) {
+      const [i, j] = placed[placed.length - 1 - n];
+      st.marks[firstTeam === 1 ? i : j] = 0;
     }
   }
   // Every player starts on a hand drawn at random -- nobody is handed a good one --
@@ -735,6 +745,14 @@ export function newCampaign(first = 0, cfg = null, rng = null) {
   }
   return st;
 }
+
+// The attacker's edge, as a shift in strength rather than a probability, because that is
+// how it composes with hands. If the campaign's attacker is also the duel's first player
+// then the duel's own first-mover advantage becomes a standing attacker advantage: the
+// base game gives the opening seat 72% with no Counterattack against it and about 57%
+// with Mirror, so `edge` is where that lands. At 0.5 the seat is level, which is what a
+// Counterattack was invented to buy.
+export const edgeShift = (edge) => Math.log(edge / (1 - edge));
 
 // `skill` is the chance a player of team X beats a player of team O in a duel,
 // whichever of them is attacking. At a half the two teams are the same and the
@@ -812,7 +830,7 @@ export function playRound(st, cfg, rng, tables, tally) {
   setPos(cfg.pos[((st.round + st.first) % 2) + 1]);
   const { me, them, free, base, gain, D, A, shape, size, overestimate } = allocate(st, cfg, rng, tables);
   const { pairs, spare } = shape;
-  const p = skillOf(cfg, me);
+  const p = coinChance(cfg, me);
 
   // The duels. Every pairing is the same coin unless we are playing them out.
   // With hands in play, which player stands where matters: each captain sends their
@@ -984,9 +1002,10 @@ function fight(i, pairs, sides, roster, me, them, cfg, rng, log, veto, hit = nul
   const v = veto ? veto[i] : 'neutral';
   const sa = (k) => strengthAt(cfg.pool, roster[me][k], v);
   const sd = (k) => strengthAt(cfg.pool, roster[them][k], v);
+  const bonus = edgeShift(cfg.edge ?? 0.5);
   const atk = (sides.atk.at.get(i) ?? []).slice(0, pairs).sort((x, y) => sa(y) - sa(x));
   const ranked = (sides.def.at.get(i) ?? []).slice(0, pairs).sort((x, y) => sd(y) - sd(x));
-  const held = (line) => line.reduce((n, d, k) => n + (1 - duelChance(sa(atk[k]), sd(d))), 0);
+  const held = (line) => line.reduce((n, d, k) => n + (1 - duelChance(sa(atk[k]) + bonus, sd(d))), 0);
   const flipped = ranked.slice().reverse();
   const def = held(ranked) >= held(flipped) ? ranked : flipped;
 
@@ -1000,7 +1019,7 @@ function fight(i, pairs, sides, roster, me, them, cfg, rng, log, veto, hit = nul
     }
   }
   for (let k = 0; k < def.length; k++) {
-    if (rng() < duelChance(sa(atk[k]), sd(def[k]))) {
+    if (rng() < duelChance(sa(atk[k]) + bonus, sd(def[k]))) {
       log.won[1].push(atk[k]);
       log.lost[2].push(def[k]);
     } else {
@@ -1055,14 +1074,20 @@ const newTally = (cfg) => ({
 function expectedChance(st, cfg, me, them) {
   const mine = meanByVeto(st.roster[me], cfg.pool);
   const theirs = meanByVeto(st.roster[them], cfg.pool);
-  // Averaged over the vetoes, since a round's squares are spread across the board.
+  // Averaged over the vetoes, since a round's squares are spread across the board, and
+  // shifted by the attacker's edge, which both sides know about and plan around.
+  const bonus = edgeShift(cfg.edge ?? 0.5);
   const vs = cfg.pool.vetoes;
-  const p = vs.reduce((a, v) => a + duelChance(mine[v], theirs[v]), 0) / vs.length;
+  const p = vs.reduce((a, v) => a + duelChance(mine[v] + bonus, theirs[v]), 0) / vs.length;
   return Math.min(0.95, Math.max(0.05, p));
 }
 
 // One take-table per team, since the two only differ when one team is better.
-const tablesFor = (cfg) => [null, tailTable(skillOf(cfg, 1), cfg.size + 1), tailTable(skillOf(cfg, 2), cfg.size + 1)];
+const coinChance = (cfg, me) =>
+  1 / (1 + Math.exp(-(edgeShift(skillOf(cfg, me)) + edgeShift(cfg.edge ?? 0.5))));
+
+const tablesFor = (cfg) => [null,
+  tailTable(coinChance(cfg, 1), cfg.size + 1), tailTable(coinChance(cfg, 2), cfg.size + 1)];
 
 export function runConfig(cfg) {
   setLayout(cfg.layout);
@@ -1359,6 +1384,8 @@ async function main() {
     vetoes: !process.argv.includes('--no-vetoes'),
     vetoBy: arg('veto-by', 'square'),             // square | board
     seed_marks: parseInt(arg('seed-marks', '0'), 10),  // symmetric pairs already on the board
+    seed_handicap: parseInt(arg('seed-handicap', '0'), 10),  // fewer for whoever attacks first
+    edge: parseFloat(arg('edge', '0.5')),         // the attacker's chance at equal hands
     coordinate: arg('coordinate', 'on'),          // on | off
     aim: arg('aim', 'mean'),                      // mean | spec -- what a swap aims at
     clears: arg('clears', arg('clear', 'boards')).split(','),

@@ -714,10 +714,17 @@ follows.
 
 Two requirements on where they go.
 
-**In rotational pairs.** For every square X starts on, O starts on the one half a turn about the centre
-of the board away from it. Then whatever the opening is worth, both sides have exactly the same of it,
-and no argument about a fair setup is possible. On the 9x9 the centre square is its own opposite, so it
-stays empty.
+**In rotational pairs, minus two for whoever attacks first.** For every square X starts on, O starts on
+the one half a turn about the centre of the board away from it -- and then the team attacking in round
+one gives two of theirs back. So the first attacker opens on **two** marks against the other side's
+four.
+
+That is not a nicety. The team that attacks first has the tempo, and measured as points per attacking
+round it is worth **+0.64** to them on a level opening -- about a quarter of the scoring rate. Seeding
+makes it worse rather than better, because there is now a position to exploit and the first attacker
+gets first use of it: the same gap on an empty board is +0.45. Handing back two marks brings it to
+**+0.10, plus or minus 0.14** -- level within the noise of these runs. One mark back leaves +0.41, which
+is not enough.
 
 **No three in a row.** A seeded line would hand its owner a point before anybody had played. Draw the
 pairs one at a time and reject any that completes a line for either side.
@@ -813,4 +820,40 @@ expect them to keep hands apart.** If varied hands are wanted, the thing to chan
 cannot inflate the whole field: trading stones with a teammate is zero-sum inside a team and has no
 best hand to converge on.
 
-The Counterattack's part in the campaign is not settled yet.
+## The Counterattack in a campaign
+
+The Counterattack was invented to level the duel: the opening seat takes 72% of games with nothing
+against it, and holding a Mirror or a Relocate brings that to about 57%. In a campaign it does something
+else entirely, and the reason is that **the campaign's attacker is the duel's first player.**
+
+That makes the duel's first-mover advantage into a standing attacker advantage -- and a standing
+attacker advantage is not unfair, because the two teams attack in alternate rounds and get exactly as
+much of it as each other. What it is instead is a **pacing dial**. Setting the attacker's chance in an
+even-handed duel to `edge`:
+
+| the attacker's chance | Counterattack | the attack takes | your game decides its square | points a round | a mark survives |
+|---|---|---|---|---|---|
+| 50% | one that levels the seat | 84% of contested squares | 51% | 2.46 | 2.0 rounds |
+| **57%** | **Mirror or Relocate** | **87%** | **50%** | **2.76** | 1.9 rounds |
+| 65% | a weak one | 89% | 48% | 2.92 | 1.8 rounds |
+| 72% | none at all | **92%** | **45%** | 2.94 | 1.8 rounds |
+
+**So it is right that the advantage helps the campaign along** -- dropping the Counterattack entirely
+runs the campaign 20% faster and puts more marks down. But it is bought from the defence, and the
+defence is the phase that took the most work to make matter. At 72% the defence holds one contested
+square in twelve; at 50% it holds one in six.
+
+**Keep the Counterattack, and keep it weak.** Mirror or Relocate, at about 57%, takes 12% of the pace
+increase and gives up almost nothing: the defence still holds 87% -- one square in eight -- and the
+chance a player's own game decides its square is 50% against 51%. Going the rest of the way to 72% buys
+another 6% of pace for eight points of the defence's grip and six of the duel's decisiveness, which is
+a poor trade.
+
+What has changed is what the Counterattack is *for*. It is no longer there to make the duel fair, since
+alternating roles do that by themselves. It is there to stop the attacker's edge running away with the
+defensive phase, and the number to tune it against is not "is the duel even" but "does the defence still
+hold enough squares to be worth playing".
+
+One consequence for the opening: a larger attacker edge needs a slightly larger handicap. At 72% the
+first attacker giving back two marks leaves +0.15 and giving back three leaves +0.09, though the
+difference between them is inside the noise, so two is enough at any setting on this list.

@@ -721,3 +721,59 @@ invariant held everywhere until an opening position could contain a standing lin
 standing line at a point and by rejecting seeded lines, with a test for each. Worth recording as the
 kind of bug an invariant hides: it was not that the code was wrong about the game, it was that a new
 rule made a state reachable that the old code had been entitled to assume away.
+
+## The first attacker gives back two marks, and the Counterattack becomes a pacing dial
+
+### There is a first-attacker advantage, and it is worth a quarter of the scoring rate
+
+Measured as points per attacking round, the team that attacks in round one against the team that attacks
+in round two:
+
+| setting | gap |
+|---|---|
+| no seeding, level duel | +0.45 |
+| seeded four pairs, no handicap | **+0.64** |
+| seeded four, first attacker gives back one | +0.41 |
+| seeded four, first attacker gives back **two** | **+0.10 ± 0.14** |
+| seeded four, no handicap, attacker at 72% | +0.57 |
+| seeded four, gives back two, attacker at 72% | +0.15 |
+| seeded four, gives back three, attacker at 72% | +0.09 |
+
+So the advantage is real at about a quarter of the scoring rate, seeding **amplifies** it rather than
+causing it — there is now a position to exploit and the first attacker gets first use — and handing back
+two of the four marks levels it within noise. Two is enough at every attacker edge tried; three is
+indistinguishable from two.
+
+Worth noting against the earlier entry in this file that found the seats level to within 0.02 points.
+That was true of the rules as they then stood: an empty board, a plain score and every board clearing.
+Squared scoring rewards holding a position, and holding a position is exactly what the tempo buys, so
+the advantage appeared when the scoring changed and grew when the board was seeded.
+
+### The Counterattack is now a pacing dial, and should be kept weak
+
+Once the campaign's attacker is the duel's first player, the duel's first-mover advantage becomes a
+standing attacker advantage. That is **not** a fairness problem — the two teams attack in alternate
+rounds and get equal use of it — so the thing the Counterattack was invented for has gone away.
+
+What it does instead:
+
+| attacker's chance | Counterattack | attack takes | your game decides its square | points a round | mark life |
+|---|---|---|---|---|---|
+| 50% | one that levels the seat | 84% | 51% | 2.46 | 2.0 |
+| 57% | Mirror or Relocate | 87% | 50% | 2.76 | 1.9 |
+| 65% | a weak one | 89% | 48% | 2.92 | 1.8 |
+| 72% | none | 92% | 45% | 2.94 | 1.8 |
+
+The hypothesis that the advantage helps the campaign along is right: no Counterattack at all runs it 20%
+faster and puts more marks down. But the pace is bought from the defence, which is the phase that took
+the most work to make matter — the power rule was changed specifically to raise the defence's leverage
+fivefold. At 72% the defence holds one contested square in twelve where at 50% it holds one in six.
+
+**Keep it, weak.** Mirror or Relocate at about 57% takes 12% of the pace for almost nothing: the defence
+still holds 87%, and the chance a player's own game decides its square is 50% against 51%. The last 6%
+of pace costs eight points of the defence's grip and six of the duel's decisiveness.
+
+So the Counterattack stays, with its purpose rewritten: not to make the duel fair, which alternating
+roles do by themselves, but to keep the attacker's edge from running away with the defensive phase. The
+figure to tune it against is how many contested squares the defence still holds, not whether the duel is
+even.
