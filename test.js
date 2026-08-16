@@ -10,13 +10,13 @@ import {
 import { existsSync } from 'node:fs';
 
 import { makeRng, randomAction } from './ai.js';
-import { assign, duelChance, loadHands, newRoster, swap } from './roster.js';
+import { assign, duelChance, loadHands, newRoster, swap, swapTarget } from './roster.js';
 import {
   ADJACENT, BOARD_SPACES, CORNERS, LINES, LINES_AT, LINE_CLEARS, N_SPACES, REGULAR,
   SPACES, SPACE_BOARDS, STAR, SUBBOARDS, claimable, setLayout,
 } from './board.js';
 import {
-  allocate, bestPicks, newCampaign, playRound, posValue,
+  CARD_WORTH, allocate, bestPicks, newCampaign, playRound, posValue,
   placementValue, resolve as pairOff, scoreAndClear, setPos, setRules, stakePerDuel,
   tailTable, takeChance, winsNeeded,
 } from './campaign.js';
@@ -689,6 +689,56 @@ if (existsSync('results/hands.json')) {
   check('the best player goes to the first square',
     dealt.at.get(order[0])[0],
     roster.map((h, k) => k).sort((a, b) => pool.strength[roster[b]] - pool.strength[roster[a]])[0]);
+}
+
+// ── Upgrade points ─────────────────────────────────────────────────────────
+
+if (existsSync('results/hands.json')) {
+  const pool = loadHands('results/hands.json');
+  const rng = makeRng(99);
+
+  // A swap is priced before it is paid for, and the price is what the swap delivers.
+  const hand = 40;
+  const { to, gain } = swapTarget(pool, hand, 'mean');
+  check('a swap never prices itself negative', gain >= 0, true);
+  const r2 = [hand];
+  swap(r2, 0, pool, rng, 'choose', 'mean');
+  check('and the target is where the swap goes', r2[0], to);
+
+  const cfg = {
+    size: 8, rounds: 0, restart: 24, horizon: 24, playRate: 0.6, shopper: 'save',
+    economy: true, grant: 1, swapCost: 2, cardCost: 2, trigger: 'sidewon', swap: 'choose',
+    aim: 'mean', coordinate: 'on', vetoes: true, vetoBy: 'square', pool, edge: 0.72,
+    pos: [null, [0.03, 0.12, 1], [0.03, 0.12, 1]], step: 'forced', skill: 0.5,
+    defence: 'plan', attack: 'plan', duels: 'coin', seed_marks: 4, seed_handicap: 2,
+    clear: 'one', score: 'square', fill: false, layout: 'square',
+  };
+  setLayout('square');
+  setRules(cfg);
+  const st = newCampaign(0, cfg, makeRng(7));
+  const tables = [null, tailTable(0.72, 9), tailTable(0.72, 9)];
+  const tally = { rounds: 0, markHist: new Array(9).fill(0), lineHist: new Array(6).fill(0),
+    teamPoints: [0, 0, 0], seatPoints: [0, 0], handMean: [0, 0, 0], handSpread: [0, 0, 0],
+    atTop: [0, 0, 0], handKinds: [0, 0, 0], halfContested: [0, 0], halfTaken: [0, 0],
+    halfUsed: [0, 0], halfDuels: [0, 0] };
+  for (const k of ['marks', 'points', 'value', 'cleared', 'lines', 'swept', 'stalled', 'duels',
+    'pivotal', 'stake', 'unpaired', 'idle', 'contested', 'taken', 'free', 'flips', 'declined',
+    'flipPoints', 'starHeld', 'reinforced', 'overestimate', 'swaps', 'swapsUsed', 'roleTotal',
+    'roleMatched', 'econEarn', 'econSwaps', 'econCards', 'econUsed', 'econDefDuels', 'econBank',
+    'econStock', 'econBought', 'econDone', 'econNone', 'firstCard', 'firstRound', 'firstSwaps',
+    'usedWas', 'defWas']) tally[k] = 0;
+  for (let r = 0; r < 24; r++) playRound(st, cfg, makeRng(1000 + r), tables, tally);
+
+  const purses = st.pts.slice(1).flatMap((p) => [...p]);
+  const swaps = st.bought.slice(1).flat().reduce((a, b) => a + b, 0);
+  check('a purse never goes negative', purses.every((n) => n >= 0), true);
+  check('every point is earned, spent or banked',
+    2 * (tally.econSwaps + tally.econCards) + purses.reduce((a, b) => a + b, 0),
+    tally.econEarn);
+  check('the ladder is climbed', swaps > 0 && swaps === tally.econSwaps, true);
+  check('cards are held as worths', st.cards.slice(1).flat(2).every((w) => CARD_WORTH.includes(w)), true);
+  check('a card is spent once', tally.econUsed <= tally.econCards, true);
+  check('and only ever by a defender', tally.econUsed <= tally.econDefDuels, true);
 }
 
 console.log(failures ? `\n${failures} failing` : 'all checks pass');

@@ -104,6 +104,25 @@ their census games from the opening seat. On a circuit the collapse does not hap
 commonest hand is one of each, and the opener takes 72%. **Fourteen points of seat balance,
 bought by changing which hands are good rather than by handing the reply a lever.**
 
+### The full board goes to the second player
+
+Moving first is the advantage — you reach three stones first — so the second player takes the
+tie. It also gives the first player a deadline: the board fills on *their* fifth stone. And it
+is why the second player only ever places four of their five, so the one left behind is a choice
+they make by playing the others.
+
+Do not expect it to even the game up. The first player takes 72.7% over the whole hand space and
+only 9.3% of games reach a full board, so the tiebreak decides about one game in eleven. It leans
+the right way without being a fix; what evens the game is the Counterattack, and what keeps hands
+honest is the space.
+
+### What the spaces cost a narrow hand
+
+A hand that cannot play on a vetoed space loses a game in six outright, and a hand tuned to one
+stone loses more. The spaces do not fall evenly either: switching off the Magnet leaves the
+opening seat at 78%, since it removes the main brake on an opening run, and switching off 2048
+leaves it at 65%.
+
 ## Two measurement lessons, recorded because they cost real time
 
 **A converged field is not the same field twice.** Two replicates of the same item settled on

@@ -163,6 +163,15 @@ export function assignRoles(roster, pool, demand) {
 // Returns true if the hand actually changed. A swap handed to a player already holding
 // the best hand for their role does nothing, and how often that happens is one of the
 // things that separates the occasions.
+// Where one chosen swap would take this hand, and what it would gain. Split out from
+// `swap` because a player buying a swap has to price it before paying for it.
+export function swapTarget(pool, hand, aim = 'mean', role = null) {
+  const col = aim === 'role' && role ? (pool.at[role] ?? pool.at.neutral)
+    : aim === 'spec' ? pool.best : pool.mean;
+  const to = pool.neighbours[hand].reduce((b, j) => (col[j] > col[b] ? j : b), hand);
+  return { to, gain: col[to] - col[hand] };
+}
+
 export function swap(roster, k, pool, rng, kind, aim = 'mean', role = null) {
   const was = roster[k];
   if (kind === 'random') {
