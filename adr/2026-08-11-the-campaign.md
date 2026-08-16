@@ -509,7 +509,7 @@ exactly 0.000, the runs being deterministic), six seeds of 480 rounds:
 
 | a two-in-a-row priced at | 6x6, twelve a side | 9x9, thirty a side |
 |---|---|---|
-| 0.06 | −0.207 ± 0.057 | — |
+| 0.06 | −0.207 ± 0.057 | −1.519 ± 0.409 |
 | **0.12** | **0.000** | **0.000** |
 | 0.20 | −0.187 ± 0.100 | **+1.166 ± 0.436** |
 | 0.28 | +0.058 ± 0.087 | +0.682 ± 0.348 |
@@ -517,8 +517,9 @@ exactly 0.000, the runs being deterministic), six seeds of 480 rounds:
 
 **The two fields want opposite things, which was not expected.** On the 6x6 a patient team
 (0.05/0.35) loses 0.13 ± 0.05 to a greedy one and a hoarding team (0.08/0.60) loses 0.21 ± 0.09;
-the price band is 0.12–0.28, flat inside it and falling off either side. On the 9x9, 0.20 is
-worth **+1.17** — about 9% of that field's scoring rate — and even 0.35 is level or better.
+the price band is 0.12–0.28, flat inside it and falling off either side. On the 9x9 the curve is
+single-peaked around 0.20 and steep: **+1.17 there, −1.52 at 0.06**, so on nine boards playing
+for position is worth about 9% of the scoring rate and refusing to is worth −11%.
 
 On the small field **this reverses the earlier entry**, which found 0.30–0.45 optimal under a
 squared score. That was measured on an empty board with a level duel; the rules added since put
