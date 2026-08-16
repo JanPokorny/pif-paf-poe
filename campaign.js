@@ -621,6 +621,81 @@ function oraclePlan(marks, me, them, free, gain, buckets, combos, cfg, tail) {
   return D;
 }
 
+// ── The other order: the attack commits first ──────────────────────────────
+//
+// The phase order is a design choice, not a fact, and the case for reversing it is
+// that the defence currently commits blind against an attack that answers knowing
+// everything. Reversed, the attack is a leader that must expect to be answered, and
+// the defence is a pure best response -- which is why this is not simply the mirror
+// image: the attack only needs one square per board, the defence has to cover
+// whatever it is given, and those two are not symmetric.
+
+// Which defensive strengths are worth trying against `a` attackers. The value is a
+// staircase again -- matching is the point where the attack needs a strict majority,
+// twice the attackers is a shutout, and nothing above that buys anything.
+function defenceLevels(a, from) {
+  const out = new Set([a, a + 1, 2 * a, 2 * a - 1, Math.ceil(a / 2), a - 1, from + 1]);
+  return [...out].filter((d) => d > from && d > 0 && d <= 2 * a).sort((x, y) => x - y);
+}
+
+// The defence with the attack in front of it: buy the biggest drop in what the attack
+// expects, per defender spent, until the players run out.
+function defenceAnswer(A, free, gain, buckets, combos, cfg, tail) {
+  const D = new Int32Array(N_SPACES);
+  const targets = free.filter((i) => A[i] > 0).sort((a, b) => gain[b] - gain[a]);
+  const value = () => planValue(A, resolve(A, D, cfg.step, gain, tail), buckets, gain, tail, combos);
+
+  let spent = 0, v = value();
+  for (;;) {
+    let best = null, bestDrop = 1e-9;
+    for (const i of targets) {
+      const from = D[i];
+      if (from >= 2 * A[i]) continue;
+      for (const d of defenceLevels(A[i], from)) {
+        if (d - from > cfg.size - spent) continue;
+        D[i] = d;
+        const drop = (v - value()) / (d - from);
+        if (drop > bestDrop) { bestDrop = drop; best = { i, d }; }
+      }
+      D[i] = from;
+    }
+    if (!best) break;
+    spent += best.d - D[best.i];
+    D[best.i] = best.d;
+    v = value();
+  }
+  // Anyone left over has nothing to answer -- the attack is already committed -- so
+  // they stand on the square that would have been worst to lose. That they are wasted
+  // is the point: it is what moving second costs the side with too many players.
+  if (spent < cfg.size && free.length) {
+    D[free.slice().sort((a, b) => gain[b] - gain[a])[0]] += cfg.size - spent;
+  }
+  return D;
+}
+
+// The attack choosing knowing it will be answered. Candidate shapes come from its own
+// best-response planner run against several hypothetical defences -- including none at
+// all, which is the widest spread it would ever want -- and each candidate is then
+// scored against the answer it would actually draw.
+function attackFirst(marks, me, them, free, gain, buckets, combos, cfg, tail) {
+  // `naiveLeader` is the control: an attack that plans as though nobody will answer it,
+  // which is what tells us whether anticipating the answer is worth anything.
+  if (cfg.naiveLeader) {
+    const A = attackPlan(marks, me, them, new Int32Array(N_SPACES), free, gain, buckets, combos, cfg, tail);
+    return { A, D: defenceAnswer(A, free, gain, buckets, combos, cfg, tail) };
+  }
+  const guesses = [new Int32Array(N_SPACES),
+    ...defenceCandidates(free, gain, buckets, cfg.size, cfg.step).slice(0, 8)];
+  let best = null, bestValue = -Infinity;
+  for (const G of guesses) {
+    const A = attackPlan(marks, me, them, G, free, gain, buckets, combos, cfg, tail);
+    const D = defenceAnswer(A, free, gain, buckets, combos, cfg, tail);
+    const v = planValue(A, resolve(A, D, cfg.step, gain, tail), buckets, gain, tail, combos);
+    if (v > bestValue) { bestValue = v; best = { A, D }; }
+  }
+  return best ?? { A: new Int32Array(N_SPACES), D: new Int32Array(N_SPACES) };
+}
+
 // ── Placing the marks ──────────────────────────────────────────────────────
 
 // Each board may claim one of the spaces its attack took, or none, and if no
@@ -889,7 +964,14 @@ export function allocate(st, cfg, rng, tables) {
 
   let A = new Int32Array(N_SPACES), D = new Int32Array(N_SPACES);
   let shape = { pairs: new Int32Array(N_SPACES), spare: new Int32Array(N_SPACES) };
-  if (free.length) {
+  if (free.length && cfg.order === 'attack') {
+    // The attack commits first and the defence answers it.
+    A = cfg.attack === 'random' ? randomPlan(free, size, rng)
+      : attackFirst(st.marks, me, them, free, gain, buckets, combos, plan, tail).A;
+    D = cfg.defence === 'random' ? randomPlan(free, size, rng)
+      : defenceAnswer(A, free, gain, buckets, combos, plan, tail);
+    shape = resolve(A, D, plan.step, gain, tail);
+  } else if (free.length) {
     D = (DEFENCES[cfg.defence] ?? DEFENCES.plan)();
     A = cfg.attack === 'random' ? randomPlan(free, size, rng)
       : attackPlan(st.marks, me, them, D, free, gain, buckets, combos, plan, tail);
@@ -1072,6 +1154,16 @@ export function playRound(st, cfg, rng, tables, tally) {
     tally.levelTaken += level.filter((i) => taken.includes(i)).length;
     // The force the attack brings where it commits, against the defence it meets there.
     for (const i of fought) { tally.forceA += A[i]; tally.forceD += pairs[i] + spare[i]; }
+    // How the defence met each square the attack went to. This is the shape of the
+    // standoff, and it is the thing the phase order changes.
+    for (const i of free) {
+      if (!A[i]) continue;
+      const d = pairs[i] + spare[i];
+      tally.metHist[d === 0 ? 0 : d < A[i] ? 1 : d === A[i] ? 2 : d < 2 * A[i] ? 3 : 4]++;
+      tally.attacked++;
+    }
+    // Defenders standing where nobody came, which is what being read costs.
+    tally.wasted += free.reduce((n, i) => n + (A[i] ? 0 : D[i]), 0);
     // The same two, split at the middle of the campaign. If buying Counterattacks is a
     // brake on the attacker's edge, it shows up as a fall between the halves.
     const half = st.round <= (cfg.horizon ?? cfg.restart ?? 24) / 2 ? 0 : 1;
@@ -1213,6 +1305,7 @@ const newTally = (cfg) => ({
   econEarn: 0, econSwaps: 0, econCards: 0, econUsed: 0, econDefDuels: 0,
   econBank: 0, econStock: 0, econBought: 0, econDone: 0, econNone: 0,
   defended: 0, defendedTaken: 0, level: 0, levelTaken: 0, forceA: 0, forceD: 0,
+  metHist: [0, 0, 0, 0, 0], attacked: 0, wasted: 0,
   ends: 0, endSwaps: 0, endCards: 0, endBank: 0, endDone: 0, endNone: 0, endHand: 0,
   firstCard: 0, firstRound: 0, firstSwaps: 0,
   halfContested: [0, 0], halfTaken: [0, 0], halfUsed: [0, 0], halfDuels: [0, 0],
@@ -1424,6 +1517,11 @@ function row(t) {
     holdRate: per(t.defendedTaken, t.defended),
     levelRate: per(t.levelTaken, t.level),
     levelShare: per(t.level, t.defended),
+    // Of the squares the attack went to: undefended, under-matched, matched, over but
+    // short of a shutout, shut out. Plus the share of defenders who met nobody.
+    met: t.metHist.map((n) => per(n, t.attacked)),
+    wasted: per(t.wasted, r * t.size),
+    order: t.order,
     odds: per(t.forceA, t.forceD),
     occupancy: 1 - per(t.free, r * t.spaces),
     cleared: per(t.cleared, r),
@@ -1506,7 +1604,7 @@ function row(t) {
 function group(tallies) {
   const byKey = new Map();
   for (const t of tallies) {
-    const k = `${t.size}|${t.step}|${t.layout}|${t.clear}|${t.score}|${t.trigger}|${t.coordinate}|${t.vetoes}|${t.defence}|${t.grant}/${t.swapCost}/${t.cardCost}`;
+    const k = `${t.size}|${t.step}|${t.layout}|${t.clear}|${t.score}|${t.trigger}|${t.coordinate}|${t.vetoes}|${t.defence}|${t.grant}/${t.swapCost}/${t.cardCost}|${t.order}`;
     if (!byKey.has(k)) { byKey.set(k, { ...t }); continue; }
     const into = byKey.get(k);
     for (const [f, v] of Object.entries(t)) {
@@ -1613,6 +1711,7 @@ async function main() {
     seed_handicap: parseInt(arg('seed-handicap', '0'), 10),  // fewer for whoever attacks first
     edge: parseFloat(arg('edge', '0.5')),         // the attacker's chance at equal hands
     coordinate: arg('coordinate', 'on'),          // on | off
+    order: arg('order', 'defence'),               // which side commits first
     // The economy. Points are earned by standing on a square your side won and spent on
     // stones and Counterattacks; --grants/--swaps/--cards sweep the three prices.
     economy: process.argv.includes('--economy'),

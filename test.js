@@ -691,6 +691,35 @@ if (existsSync('results/hands.json')) {
     roster.map((h, k) => k).sort((a, b) => pool.strength[roster[b]] - pool.strength[roster[a]])[0]);
 }
 
+// ── Both phase orders put every player somewhere ───────────────────────────
+
+if (existsSync('results/hands.json')) {
+  const pool = loadHands('results/hands.json');
+  setLayout('square');
+  const cfg0 = {
+    size: 12, rounds: 0, restart: 24, horizon: 24, playRate: 0.6, shopper: 'save',
+    economy: true, grant: 1, swapCost: 2, cardCost: 2, trigger: 'sidewon', swap: 'choose',
+    aim: 'mean', coordinate: 'on', vetoes: true, vetoBy: 'square', pool, edge: 0.72,
+    step: 'forced', skill: 0.5, defence: 'plan', attack: 'plan', duels: 'coin', targets: 14,
+    seed_marks: 4, seed_handicap: 2, clear: 'one', score: 'square', fill: false,
+    layout: 'square', pos: [null, [0.03, 0.12, 1], [0.03, 0.12, 1]],
+  };
+  setRules(cfg0);
+  for (const order of ['defence', 'attack']) {
+    const cfg = { ...cfg0, order };
+    const st = newCampaign(0, cfg, makeRng(5));
+    setPos(cfg.pos[1]);
+    const { A, D, shape } = allocate(st, cfg, makeRng(6), [null, tailTable(0.72, 13), tailTable(0.72, 13)]);
+    const sum = (X) => X.reduce((a, b) => a + b, 0);
+    check(`${order} first: every attacker stands somewhere`, sum(A), 12);
+    check(`${order} first: every defender stands somewhere`, sum(D), 12);
+    check(`${order} first: nobody pairs off twice`,
+      REGULAR.every((i) => shape.pairs[i] <= Math.min(A[i], D[i] + 12)), true);
+    check(`${order} first: no square holds a negative force`,
+      REGULAR.every((i) => A[i] >= 0 && D[i] >= 0 && shape.spare[i] >= 0), true);
+  }
+}
+
 // ── Upgrade points ─────────────────────────────────────────────────────────
 
 if (existsSync('results/hands.json')) {
@@ -720,13 +749,14 @@ if (existsSync('results/hands.json')) {
   const tally = { rounds: 0, markHist: new Array(9).fill(0), lineHist: new Array(6).fill(0),
     teamPoints: [0, 0, 0], seatPoints: [0, 0], handMean: [0, 0, 0], handSpread: [0, 0, 0],
     atTop: [0, 0, 0], handKinds: [0, 0, 0], halfContested: [0, 0], halfTaken: [0, 0],
-    halfUsed: [0, 0], halfDuels: [0, 0] };
+    halfUsed: [0, 0], halfDuels: [0, 0], metHist: [0, 0, 0, 0, 0] };
   for (const k of ['marks', 'points', 'value', 'cleared', 'lines', 'swept', 'stalled', 'duels',
     'pivotal', 'stake', 'unpaired', 'idle', 'contested', 'taken', 'free', 'flips', 'declined',
     'flipPoints', 'starHeld', 'reinforced', 'overestimate', 'swaps', 'swapsUsed', 'roleTotal',
     'roleMatched', 'econEarn', 'econSwaps', 'econCards', 'econUsed', 'econDefDuels', 'econBank',
     'econStock', 'econBought', 'econDone', 'econNone', 'firstCard', 'firstRound', 'firstSwaps',
-    'usedWas', 'defWas']) tally[k] = 0;
+    'usedWas', 'defWas', 'defended', 'defendedTaken', 'level', 'levelTaken', 'forceA',
+    'forceD', 'attacked', 'wasted']) tally[k] = 0;
   for (let r = 0; r < 24; r++) playRound(st, cfg, makeRng(1000 + r), tables, tally);
 
   const purses = st.pts.slice(1).flatMap((p) => [...p]);

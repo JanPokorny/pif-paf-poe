@@ -553,6 +553,89 @@ The 9x9 is much lumpier than the 6x6 and worth knowing before choosing it: 95% o
 rounds take two lines or more and 73% of all its points come from rounds taking four or five,
 because nine boards place nine marks a round.
 
+## Which side commits first: the defence, still
+
+The complaint the question came from: the attack knows it needs one square per board, so
+it concentrates on wins it can count, while the defence commits blind and spreads. Both halves
+were measured, and then the order was reversed and measured too. `--order attack` puts the
+attack in first as a leader that must expect to be answered, and the defence in second as a
+pure best response.
+
+### How blind the defence actually is
+
+Of the squares the attack goes to, and where the defenders end up, twelve a side:
+
+| | undefended | fewer than the attack | matched | more, short of a shutout | shut out | defenders meeting nobody |
+|---|---|---|---|---|---|---|
+| defence first (as written) | 37% | 16% | **46%** | 1% | 0% | 46% |
+| attack first | 26% | 4% | 32% | 7% | **31%** | 1% |
+
+So the complaint is about half right. The defence never once buys a shutout and 46% of its
+players stand where nobody comes — but it **matches on 46% of the squares the attack picks**,
+which is not luck: it clusters on the dangerous middle, and the attack has to come there. It
+cannot pick the squares, but it can price the neighbourhood.
+
+The rule that rescues it is the step, and this is the clearest measurement of why it is in the
+rules. Defence first, with the step against without: players getting a duel 68% against 51%,
+and a team's share whose duel decided its square 30% against 17%. Half the defence standing
+where nobody came is not waste — stepping converts it into pairings.
+
+### Reversing the order
+
+| | points a round | marks of 4 | attack takes | of defended | plays a duel | duel decided its square |
+|---|---|---|---|---|---|---|
+| **defence first** | **2.92** | **3.69** | 90% | 83% | 68% | **30%** |
+| attack first | 2.08 | 2.27 | 55% | 39% | 70% | 26% |
+| attack first, may step | 1.39 | 1.86 | 45% | — | 57% | **6%** |
+| attack first, no step | 1.16 | 1.75 | 43% | — | 58% | 6% |
+
+And what a defensive plan is worth, paired against a random defence on shared positions:
+
+| | marks denied | points denied |
+|---|---|---|
+| defence first | 0.20 | 2.43 |
+| attack first | **1.30** | **4.44** |
+
+**No, the defence would not simply match.** With the attack in front of it, it matches a third,
+**shuts out a third** and abandons a quarter. Matching is the least attractive of the three: at
+the settled 72% opener a matched square is worse than a coin flip for the defender, while twice
+the attackers denies it outright, so an informed defence buys denials where it can afford them
+and writes off the rest. That is a better decision than matching, and it is the strongest thing
+to be said for the reversal — the defence stops steering and starts blocking, and its plan is
+worth 4.44 points a round against 2.43.
+
+### Why it is still not worth doing
+
+**It is a pace lever, not a fairness one.** The teams attack in alternate rounds, so neither
+gains; what changes is that the campaign runs 29% slower and 1.4 marks a round lighter.
+
+**It moves the decision out of the duels.** A shutout is settled before anybody plays. With
+mandatory stepping the damage is contained — 26% against 30% — and only because the forced step
+drags the defence's spare players off their shutouts. Let the defence decline the step, which is
+exactly what an informed defence wants, and the share of a team whose duel decided anything
+falls to **6%**. The reversal quietly guts the thing the rest of this document spent its effort
+protecting.
+
+**It inverts what the step is for.** Under the present order the mandatory step helps the
+defence; under the reversed one it hurts it, and the defence would want it optional. Two rules
+that currently agree would have to be rewritten together.
+
+**It puts the hard problem on the wrong side.** Moving first means planning against your own
+answer. An attack that ignores what the defence will do scores **1.04** against the 2.08 of one
+that anticipates it — so half the attack's scoring would ride on the attacking captain solving a
+two-ply problem under time pressure, with twelve to thirty people waiting. Under the present
+order the attack's job is a best response, which is the easy side of the problem, and the
+defence's harder job is one it can prepare between rounds.
+
+So: keep the defence first. The concentration asymmetry is real and it is the point — the attack
+buys certainty at 2:1 and the defence answers by making the certain squares worthless, which the
+paired study says is worth 2.43 points a round.
+
+Untested, and the obvious things to try if the defence should be able to deny rather than steer:
+giving ties to the attack, which would make matching useless and force the defence to double or
+abandon; and simultaneous deployment behind a screen, which removes the asymmetry entirely but
+needs mixed strategies to be interesting and is awkward to run at a table.
+
 ## Model bugs and retractions
 
 Recorded rather than quietly fixed. The third bit three times.
