@@ -450,6 +450,108 @@ What is still not modelled: a player holding a card back for a duel that matters
 whenever they hold one, and unspent cards at the end are wasted), teams pooling or directing
 purchases, and any purchase other than these two.
 
+## Re-measured on the finished rules: what the attack takes, and whether hoarding pays
+
+Everything above was measured as each rule was decided. With all of them in place — seeded
+board, attacker opening the duel at 72%, vetoes, roles, the economy — three of the numbers move,
+and one conclusion reverses.
+
+### "The attack takes 88% of contested squares" counts the walkovers
+
+`contested` is every square the attack sent anyone to, and the attack places second knowing
+everything, so most of those squares have nobody on them: twelve defenders cannot cover
+thirty-six squares. Split at twelve a side, settled rules:
+
+| | squares a round | attack takes |
+|---|---|---|
+| every square the attack goes to | 8.8 | 88.5% |
+| of those, ones somebody defended | 3.9 | **82.1%** |
+| of those, ones with level numbers | 2.9 | 79.0% |
+
+At an even duel (edge 0.5) the same three are 82.1%, 69.2% and 62.1%. So the headline figure is
+mostly the attack choosing where to fight — it brings 1.18 attackers per defender where it
+commits, and simply does not go where it would lose. Quote the middle row when the question is
+"can the defence hold a square"; the top row only answers "does the attack pick well".
+
+### The defence's job is shaping, and it is worth about half the scoring
+
+Paired study, deliberate defence against a random one on the same positions, settled rules,
+twelve a side:
+
+| | marks conceded | points conceded | value conceded | its own players in a duel |
+|---|---|---|---|---|
+| deliberate | 3.71 | **2.40** | 3.68 | 68% |
+| random | 3.89 | 4.52 | 5.95 | 43% |
+
+**It denies 0.19 of a mark and 2.13 points a round** — 47% of the attack's scoring. That is the
+same finding as the early entry, at the higher scoring rate the finished rules run at, and it is
+the answer to the take rate above: the defence is not trying to hold squares, it is choosing
+which squares the attack is allowed to want. It also gets 68% of its own players into a duel
+against 43%, because clustering plus the step is what creates pairings at all.
+
+### Multi-line rounds are the norm, and hoarding for them is not a plan
+
+Rounds by lines scored, twelve a side on the 6x6:
+
+| lines in a round | 0 | 1 | 2 | 3 | 4 | 5 |
+|---|---|---|---|---|---|---|
+| share of rounds, squared | 20% | 31% | 36% | 11% | 1.7% | 0.3% |
+| share of all points | — | 10% | 47% | 32% | 9% | 2% |
+| share of rounds, linear | 19% | 41% | 28% | 9% | 1.9% | 0.5% |
+
+**90% of all points arrive in rounds taking two lines or more**, and 61% of scoring rounds are
+multiples against 49% under a linear score — so squaring does change behaviour by about twelve
+points, and the big rounds are where a campaign is decided.
+
+But **deliberately holding back to build them now loses.** Candidate valuations against the
+0.03/0.12 reference, seats swapped on identical seeds so the board cancels (the control is
+exactly 0.000, the runs being deterministic), six seeds of 480 rounds:
+
+| a two-in-a-row priced at | 6x6, twelve a side | 9x9, thirty a side |
+|---|---|---|
+| 0.06 | −0.207 ± 0.057 | — |
+| **0.12** | **0.000** | **0.000** |
+| 0.20 | −0.187 ± 0.100 | **+1.166 ± 0.436** |
+| 0.28 | +0.058 ± 0.087 | +0.682 ± 0.348 |
+| 0.35 | −0.221 ± 0.064 | +0.292 ± 0.370 |
+
+**The two fields want opposite things, which was not expected.** On the 6x6 a patient team
+(0.05/0.35) loses 0.13 ± 0.05 to a greedy one and a hoarding team (0.08/0.60) loses 0.21 ± 0.09;
+the price band is 0.12–0.28, flat inside it and falling off either side. On the 9x9, 0.20 is
+worth **+1.17** — about 9% of that field's scoring rate — and even 0.35 is level or better.
+
+On the small field **this reverses the earlier entry**, which found 0.30–0.45 optimal under a
+squared score. That was measured on an empty board with a level duel; the rules added since put
+structure on the board from round one and land 3.8 marks a round into it, so on 36 squares the
+doubles arrive without being planned for and paying for them twice is what loses. Nine boards
+have 81 squares and nine marks a round to spend, so there is room to build something the next
+round can still use, and holding pays there.
+
+So on the small field squaring is doing its work as a **scoring** rule and not as an
+**incentive** one: it decides which rounds matter, but the hold-versus-cash arc it bought on an
+empty board is gone. Whether that is worth restoring on the 6x6 — by seeding less, or by
+clearing more — is untested.
+
+### The targets were stale
+
+Rounds to reach a target, 120 campaigns each, settled rules:
+
+| field | 22 | 30 | 40 | 50 |
+|---|---|---|---|---|
+| 6x6, twelve a side | 11.8 | 16.0 | **22.3** | 27.6 |
+
+| field | 70 | 100 | 140 | 180 |
+|---|---|---|---|---|
+| 9x9, thirty a side | 7.8 | 12.4 | 18.0 | **23.9** |
+
+The old 22 and 70 were set before seeding, the attacker's edge and the hands, and now give
+twelve-round and eight-round campaigns. **40 and 170** are the figures for about twenty-two
+rounds, which is what the economy is priced against.
+
+The 9x9 is much lumpier than the 6x6 and worth knowing before choosing it: 95% of its scoring
+rounds take two lines or more and 73% of all its points come from rounds taking four or five,
+because nine boards place nine marks a round.
+
 ## Model bugs and retractions
 
 Recorded rather than quietly fixed. The third bit three times.

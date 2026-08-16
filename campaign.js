@@ -1060,6 +1060,18 @@ export function playRound(st, cfg, rng, tables, tally) {
     tally.idle += size - duels;
     tally.contested += free.filter((i) => A[i] > 0).length;
     tally.taken += taken.length;
+    // The same, but only over squares somebody actually defended. `contested` counts
+    // every square the attack walked onto, and most of those are empty ones the defence
+    // could not reach, so it flatters the attack badly. This is the fight.
+    const fought = free.filter((i) => A[i] > 0 && pairs[i] > 0);
+    tally.defended += fought.length;
+    tally.defendedTaken += fought.filter((i) => taken.includes(i)).length;
+    // And the narrower one still: squares where the two sides brought equal numbers.
+    const level = fought.filter((i) => A[i] === pairs[i] + spare[i]);
+    tally.level += level.length;
+    tally.levelTaken += level.filter((i) => taken.includes(i)).length;
+    // The force the attack brings where it commits, against the defence it meets there.
+    for (const i of fought) { tally.forceA += A[i]; tally.forceD += pairs[i] + spare[i]; }
     // The same two, split at the middle of the campaign. If buying Counterattacks is a
     // brake on the attacker's edge, it shows up as a fall between the halves.
     const half = st.round <= (cfg.horizon ?? cfg.restart ?? 24) / 2 ? 0 : 1;
@@ -1200,6 +1212,7 @@ const newTally = (cfg) => ({
   swaps: 0, swapsUsed: 0, roleTotal: 0, roleMatched: 0,
   econEarn: 0, econSwaps: 0, econCards: 0, econUsed: 0, econDefDuels: 0,
   econBank: 0, econStock: 0, econBought: 0, econDone: 0, econNone: 0,
+  defended: 0, defendedTaken: 0, level: 0, levelTaken: 0, forceA: 0, forceD: 0,
   ends: 0, endSwaps: 0, endCards: 0, endBank: 0, endDone: 0, endNone: 0, endHand: 0,
   firstCard: 0, firstRound: 0, firstSwaps: 0,
   halfContested: [0, 0], halfTaken: [0, 0], halfUsed: [0, 0], halfDuels: [0, 0],
@@ -1405,6 +1418,13 @@ function row(t) {
     atStakeShare: per(t.stake, r * t.size),
     contested: per(t.contested, r),
     takeRate: per(t.taken, t.contested),
+    // Of the squares that were actually defended, the share the attack took -- and of
+    // those, the share of squares where the two sides brought the same number.
+    defended: per(t.defended, r),
+    holdRate: per(t.defendedTaken, t.defended),
+    levelRate: per(t.levelTaken, t.level),
+    levelShare: per(t.level, t.defended),
+    odds: per(t.forceA, t.forceD),
     occupancy: 1 - per(t.free, r * t.spaces),
     cleared: per(t.cleared, r),
     lines: per(t.lines, r),
@@ -1504,7 +1524,7 @@ function group(tallies) {
 // holding. Everything is per player.
 function reportEconomy(rows) {
   const head = ['size', 'pay', 'swap$', 'card$', 'earn/r', 'swaps', 'done3%', 'never%',
-    'hand', 'bank', 'buys', 'card@r', 'after', 'card%1st', 'card%2nd', 'take%1st', 'take%2nd', 'pts/r'];
+    'hand', 'bank', 'buys', 'card@r', 'after', 'card%1st', 'card%2nd', 'take%', 'def/r', 'deftake%', 'level%', 'lvltake%', 'odds', 'pts/r'];
   console.log(head.map((h) => pad(h, h.length > 5 ? 10 : 7)).join(''));
   for (const r of rows) {
     console.log([
@@ -1514,7 +1534,9 @@ function reportEconomy(rows) {
       pad(r.bank.toFixed(2), 7),
       pad(r.cardsBought.toFixed(2), 7), pad(r.firstAt.toFixed(1), 10),
       pad(r.firstAfter.toFixed(2), 7), pad(pct(r.cardsEarly), 10), pad(pct(r.cardsLate), 10),
-      pad(pct(r.takeEarly), 10), pad(pct(r.takeLate), 10), pad(r.points.toFixed(2), 7),
+      pad(pct(r.takeRate), 7), pad(r.defended.toFixed(1), 7),
+      pad(pct(r.holdRate), 10), pad(pct(r.levelShare), 10), pad(pct(r.levelRate), 10),
+      pad(r.odds.toFixed(2), 7), pad(r.points.toFixed(2), 7),
     ].join(''));
   }
 }

@@ -152,8 +152,8 @@ The 9x9 continues the same pattern.
   a row**: draw the pairs one at a time and reject any that completes a line.
 - **The first attacker gives back two.** The team attacking in round one removes two of its own
   seeded marks, so it opens on two against four (or seven against nine).
-- **The target.** Agree a score to run to: **22 points on the 6x6, 70 on the 9x9**, both about
-  twenty rounds.
+- **The target.** Agree a score to run to: **40 points on the 6x6, 170 on the 9x9**, both about
+  twenty-two rounds.
 
 ## The round
 
