@@ -5,16 +5,16 @@
 //   after losing one        the weak catch up, and anyone can farm by throwing
 //   after playing one       win or lose, so nothing is worth throwing -- but it rewards
 //                           being engaged, which is not the player's choice, and gives
-//                           nothing to the lone attacker who took an empty square
-//   on a square you won     everyone standing on a square their side took or held,
+//                           nothing to the lone attacker who took an empty space
+//   on a space you won     everyone standing on a space their side took or held,
 //                           paired or not, which is the contribution the rules already
 //                           count
 //   after a round unpaired  whoever the other team did not engage
 //   by standing out         a player skips the round at a training space to swap
 //
 // A hand is a row of numbers here -- one Bradley-Terry strength per veto, fitted by
-// `hands.js --vetoes` -- and a duel on a square is settled by the column belonging to
-// that square's veto. That is the whole of what the arena's stone vetoes change, and it
+// `hands.js --vetoes` -- and a duel on a space is settled by the column belonging to
+// that space's veto. That is the whole of what the arena's stone vetoes change, and it
 // changes two things: a hand can no longer be simply good, and where a player stands
 // starts to matter as much as who they are.
 
@@ -55,7 +55,7 @@ export function loadHands(path = 'results/hands.json', aim = 'mean') {
   const bestSwap = { mean: bestBy(mean), spec: bestBy(best) };
   const top = mean.reduce((b, s, i) => (s > mean[b] ? i : b), 0);
 
-  // How far a hand swings between its best and worst square: the size of the question
+  // How far a hand swings between its best and worst space: the size of the question
   // "who goes where".
   const swing = hands.map((h, i) => {
     const vs = vetoes.map((v) => at[v][i]);
@@ -67,7 +67,7 @@ export function loadHands(path = 'results/hands.json', aim = 'mean') {
   };
 }
 
-// A hand's strength on a square with this veto.
+// A hand's strength on a space with this veto.
 export const strengthAt = (pool, hand, veto) => (pool.at[veto] ?? pool.at.neutral)[hand];
 
 // ── The roster ─────────────────────────────────────────────────────────────
@@ -80,7 +80,7 @@ export function newRoster(size, pool, rng) {
 
 export const rosterStrength = (roster, pool) => roster.map((h) => pool.mean[h]);
 
-// The team's average strength on each kind of square, which is what the other side has
+// The team's average strength on each kind of space, which is what the other side has
 // to expect from it wherever they meet.
 export function meanByVeto(roster, pool) {
   const out = {};
@@ -91,7 +91,7 @@ export function meanByVeto(roster, pool) {
 }
 
 // What a team is worth across the whole arena: for each veto, the strength of the few
-// players it would actually send to squares carrying that veto. Summed over the vetoes,
+// players it would actually send to spaces carrying that veto. Summed over the vetoes,
 // this is the thing a coordinating team is trying to raise, and it is not the same as
 // raising everybody's average -- a seventh copy of the best all-rounder adds nothing to
 // a veto where somebody better is already going.
@@ -108,8 +108,8 @@ export function coverage(roster, pool, depth) {
 //
 // A team that coordinates does not have each player guess where they will be sent: it
 // tells them. Every player is given a veto to specialise in, the swaps they earn go
-// towards it, and the assignment sends them to squares carrying it. That closes the
-// loop `cover` left open -- a hand only worth having on one kind of square is worth
+// towards it, and the assignment sends them to spaces carrying it. That closes the
+// loop `cover` left open -- a hand only worth having on one kind of space is worth
 // having if somebody guarantees you will be standing on one.
 //
 // How many specialists each veto deserves is not a seventh each. It is the share of the
@@ -202,19 +202,19 @@ export function swap(roster, k, pool, rng, kind, aim = 'mean', role = null) {
 
 // ── Who fights whom ────────────────────────────────────────────────────────
 
-// The allocation says how many players stand on each square; this says which ones. A
-// captain sends their best to the squares that matter most, so both sides sort their
-// players by hand and their squares by what is at stake, and deal the two together.
+// The allocation says how many players stand on each space; this says which ones. A
+// captain sends their best to the spaces that matter most, so both sides sort their
+// players by hand and their spaces by what is at stake, and deal the two together.
 // Neither side sees the other's assignment, so this is not a counter-move -- it is
 // each team spending its best players where it thinks the round will be decided.
 // `coordinate` decides how hard the captain thinks about it:
 //
-//   off   deal the best hands to the squares that matter most and ignore the vetoes,
+//   off   deal the best hands to the spaces that matter most and ignore the vetoes,
 //         which is what a team does before it notices the vetoes exist
-//   on    fill the squares that matter most first, and send to each of them whoever
-//         is strongest *on that square's veto* -- so a player who is only good where
+//   on    fill the spaces that matter most first, and send to each of them whoever
+//         is strongest *on that space's veto* -- so a player who is only good where
 //         Magnets are switched off gets sent there
-//   role  the same, but a player whose given veto matches the square goes ahead of a
+//   role  the same, but a player whose given veto matches the space goes ahead of a
 //         stronger player whose does not, which is what makes a role worth training for
 export function assign(order, counts, roster, pool, veto = null, coordinate = 'off', roles = null) {
   const at = new Map();

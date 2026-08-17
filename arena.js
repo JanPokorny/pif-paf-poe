@@ -3,7 +3,7 @@
 //
 // The arrangement is a setting, because the one in the drawing is peculiar and the
 // peculiarity has to earn itself. `pinwheel` is that one -- each zone one step off
-// centre in its own compass direction, so the whole thing is a 7x7 square with the
+// centre in its own compass direction, so the whole thing is a 7x7 space with the
 // four 2x2 corners missing:
 //
 //        a  b  c  d  e  f  g
@@ -15,27 +15,27 @@
 //     6  .  .  S  S  S  .  .
 //     7  .  .  S  S  S  .  .
 //
-// Two things fall out of it. Neighbouring zones share exactly one square -- the
-// four lowercase ones -- so four nines make 32 squares rather than 36, and those
+// Two things fall out of it. Neighbouring zones share exactly one space -- the
+// four lowercase ones -- so four nines make 32 spaces rather than 36, and those
 // four can be claimed for either of the two zones they belong to. And nothing owns
 // d4: it is the hole the four zones leave, the extra space the star marks. It takes
-// a symbol and counts towards a line like any other square, but no attack is ever
+// a symbol and counts towards a line like any other space, but no attack is ever
 // aimed at it and no defender ever stands on it, so it changes hands only by
 // flipping -- which makes a line through it one the other team cannot block.
 //
 // `square` is the obvious alternative: the same four zones in a plain 2x2, a 6x6
-// with 36 squares, nothing shared and no hole. A line of three still crosses three
+// with 36 spaces, nothing shared and no hole. A line of three still crosses three
 // zones there, on the diagonals either side of the centre, so a line can still be
 // built in a single round.
 //
-// The four squares the drawing marks B, at a1, g1, a7 and g7, are the corners the
+// The four spaces the drawing marks B, at a1, g1, a7 and g7, are the corners the
 // pinwheel does not reach. They are not spaces yet.
 
 export const LAYOUTS = {
-  // Each entry is zone name -> the coordinates of its top-left square.
+  // Each entry is zone name -> the coordinates of its top-left space.
   pinwheel: { N: [2, 0], W: [0, 2], E: [4, 2], S: [2, 4] },
   square: { A: [0, 0], B: [3, 0], C: [0, 3], D: [3, 3] },
-  // Nine zones in a 3x3, an 81-square arena. One mark per zone per round means
+  // Nine zones in a 3x3, an 81-space arena. One mark per zone per round means
   // nine marks a round rather than four, which is what makes it the arrangement for
   // thirty a side: the work grows with the players instead of staying at four.
   square3: Object.fromEntries('ABCDEFGHI'.split('').map((b, k) => [b, [3 * (k % 3), 3 * ((k / 3) | 0)]])),
@@ -52,9 +52,9 @@ export let ZONES, SPACES, STAR, REGULAR, N_SPACES, ZONE_SPACES, SPACE_ZONES,
   CORNERS, LINES, LINES_AT, ADJACENT, NEIGHBOURS, LINE_ZONES, LINE_HALO, LINE_CLEARS,
   VETO, VETO_BY_ZONE, ZONE_VETO, WIDTH, HEIGHT;
 
-// Each square switches off one type of stone for the duels fought on it: the stone is
+// Each space switches off one type of stone for the duels fought on it: the stone is
 // still placed and still counts towards a line, but nothing it does happens. Six types
-// and a neutral square make seven, laid out so that no two squares sharing a line have
+// and a neutral space make seven, laid out so that no two spaces sharing a line have
 // the same veto where that can be arranged -- the pattern below steps by one across and
 // by three down, which on a 6x6 or 9x9 puts every veto within reach of every zone and
 // never repeats one along a row, a column or a diagonal of three.
@@ -70,7 +70,7 @@ export function setLayout(name = 'pinwheel') {
   if (!origin) throw new Error(`no such layout: ${name}`);
   ZONES = Object.keys(origin);
 
-  // ── The squares ───────────────────────────────────────────────────────────
+  // ── The spaces ───────────────────────────────────────────────────────────
   const found = new Map();
   for (const b of ZONES) {
     const [x0, y0] = origin[b];
@@ -85,7 +85,7 @@ export function setLayout(name = 'pinwheel') {
   WIDTH = Math.max(...xs) + 1;
   HEIGHT = Math.max(...ys) + 1;
 
-  // A hole is a square no zone covers but that the zones enclose on all four
+  // A hole is a space no zone covers but that the zones enclose on all four
   // sides. The pinwheel leaves exactly one, in the middle; the others leave none.
   const holes = [];
   for (let y = 0; y < HEIGHT; y++) for (let x = 0; x < WIDTH; x++) {
@@ -115,8 +115,8 @@ export function setLayout(name = 'pinwheel') {
 
   // ── Lines ─────────────────────────────────────────────────────────────────
   // Three in a row anywhere, in any of the four axes, regardless of which zones
-  // the three squares belong to. All three have to exist, so a line cannot run
-  // through a square the zones never reach.
+  // the three spaces belong to. All three have to exist, so a line cannot run
+  // through a space the zones never reach.
   LINES = [];
   for (const s of SPACES) {
     for (const [dx, dy] of AXES) {
@@ -136,7 +136,7 @@ export function setLayout(name = 'pinwheel') {
       .map(([dx, dy]) => spaceAt(s.x + dx, s.y + dy))
       .filter((j) => j >= 0 && j !== STAR));
 
-  // Touching squares, edge or corner, for the clearing rule that works outwards
+  // Touching spaces, edge or corner, for the clearing rule that works outwards
   // from a line rather than by zones. This one does include the star, because the
   // star is a space that holds a symbol even though nobody ever stands on it.
   const AROUND = [[1, 0], [-1, 0], [0, 1], [0, -1], [1, 1], [1, -1], [-1, 1], [-1, -1]];
@@ -148,7 +148,7 @@ export function setLayout(name = 'pinwheel') {
   // the ingredients and campaign.js picks among them.
   //
   //   LINE_ZONES  which zones the three symbols stood on
-  //   LINE_HALO    the three squares and everything touching them, edge or corner
+  //   LINE_HALO    the three spaces and everything touching them, edge or corner
   //   LINE_CLEARS  every one of those zones, whole, plus the star if it was in the
   //                line -- the original rule
   LINE_ZONES = LINES.map((line) => [...new Set(line.flatMap((i) => SPACE_ZONES[i]))]);
@@ -160,7 +160,7 @@ export function setLayout(name = 'pinwheel') {
   });
 
   // The veto pattern. Seven is coprime with the step, so the diagonals do not repeat.
-  // `byZone` gives every square of a zone the same veto instead, which is a different
+  // `byZone` gives every space of a zone the same veto instead, which is a different
   // game: attacking a zone then means committing to one kind of hand.
   VETO = SPACES.map((s) => VETO_TYPES[(s.x + 3 * s.y) % VETO_TYPES.length]);
   ZONE_VETO = Object.fromEntries(ZONES.map((b, k) => [b, VETO_TYPES[k % VETO_TYPES.length]]));
@@ -176,8 +176,8 @@ export function setLayout(name = 'pinwheel') {
 
 setLayout('pinwheel');
 
-// Can these squares be claimed for different zones? A shared square belongs to
-// two zones, so it is a small matching; three squares at most, so it is done by trying
+// Can these spaces be claimed for different zones? A shared space belongs to
+// two zones, so it is a small matching; three spaces at most, so it is done by trying
 // them. A hole belongs to no zone and can never be claimed.
 export function claimable(spaces, used = []) {
   if (!spaces.length) return true;

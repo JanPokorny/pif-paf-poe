@@ -397,17 +397,17 @@ const empty = ['.', '.', '.', '.', '.', '.', '.', '.', '.'];
 // ── The arena and the round ────────────────────────────────────────────
 
 {
-  // Geometry. Four zones of nine squares sharing one square with each neighbour, and a
+  // Geometry. Four zones of nine spaces sharing one space with each neighbour, and a
   // hole in the middle that belongs to nobody.
   check('regular spaces', REGULAR.length, 32);
   check('spaces in total', N_SPACES, 33);
   check('the star belongs to no zone', SPACE_ZONES[STAR], []);
-  check('nine squares to a zone', ZONES.map((b) => ZONE_SPACES[b].length), [9, 9, 9, 9]);
-  check('four shared squares', CORNERS.length, 4);
-  check('a shared square belongs to two zones', CORNERS.map((i) => SPACE_ZONES[i].length), [2, 2, 2, 2]);
-  check('every other square to one zone',
+  check('nine spaces to a zone', ZONES.map((b) => ZONE_SPACES[b].length), [9, 9, 9, 9]);
+  check('four shared spaces', CORNERS.length, 4);
+  check('a shared space belongs to two zones', CORNERS.map((i) => SPACE_ZONES[i].length), [2, 2, 2, 2]);
+  check('every other space to one zone',
     REGULAR.filter((i) => SPACE_ZONES[i].length !== 1).sort((a, b) => a - b), CORNERS);
-  check('every square is on some line', SPACES.filter((s) => !LINES_AT[s.i].length), []);
+  check('every space is on some line', SPACES.filter((s) => !LINES_AT[s.i].length), []);
   check('lines of three', LINES.length, 68);
   check('lines through the star', LINES_AT[STAR].length, 8);
 
@@ -424,7 +424,7 @@ const empty = ['.', '.', '.', '.', '.', '.', '.', '.', '.'];
   // if it was one of the three.
   const cross = LINES.findIndex((l) => l.includes(STAR));
   check('a line through the star clears the star', LINE_CLEARS[cross].includes(STAR), true);
-  check('a line inside one zone clears nine squares and no more',
+  check('a line inside one zone clears nine spaces and no more',
     LINE_CLEARS[LINES.findIndex((l) => l.every((j) => j !== STAR
       && SPACE_ZONES[j].length === 1 && SPACE_ZONES[j][0] === SPACE_ZONES[l[0]][0]))].length, 9);
 }
@@ -446,27 +446,27 @@ const empty = ['.', '.', '.', '.', '.', '.', '.', '.', '.'];
   check('the threshold is the rule as written', mismatch, []);
 
   // Two ways of asking whether a player's own game mattered, and they disagree.
-  // Afterwards: would this one result, flipped, have flipped the square? Two
-  // attackers against two defenders who both won is a square no single result would
+  // Afterwards: would this one result, flipped, have flipped the space? Two
+  // attackers against two defenders who both won is a space no single result would
   // have changed -- the attack needed both duels and got neither -- so afterwards
   // nobody decided it. Beforehand each of the four had an even chance of being the
-  // one who did, because one duel going the other way puts the square on the last.
+  // one who did, because one duel going the other way puts the space on the last.
   check('two against two needs both duels', winsNeeded(2, 2, 0), 2);
   check('and beforehand each of them has an even chance of deciding it',
     stakePerDuel(2, 2, 0, 0.5), 0.5);
   check('one against one always decides it', stakePerDuel(1, 1, 0, 0.5), 1);
-  // Level numbers keep every duel worth between a third and a half of the square.
+  // Level numbers keep every duel worth between a third and a half of the space.
   check('level numbers leave every duel with a real chance of deciding it',
     [2, 3, 4, 5, 6].map((n) => stakePerDuel(n, n, 0, 0.5).toFixed(3)),
     ['0.500', '0.500', '0.375', '0.375', '0.313']);
   // Nobody has a stake where the numbers already settled it.
-  check('a shut-out square puts nothing at stake', stakePerDuel(1, 1, 3, 0.5), 0);
-  check('an overwhelmed square puts nothing at stake', stakePerDuel(9, 2, 0, 0.5), 0);
+  check('a shut-out space puts nothing at stake', stakePerDuel(1, 1, 3, 0.5), 0);
+  check('an overwhelmed space puts nothing at stake', stakePerDuel(9, 2, 0, 0.5), 0);
 
   const T = tailTable(0.5, 24);
   const chance = (a, d) => takeChance(a, Math.min(a, d), d - Math.min(a, d), T);
 
-  check('an undefended square is taken by anyone', [1, 2, 5].map((a) => chance(a, 0)), [1, 1, 1]);
+  check('an undefended space is taken by anyone', [1, 2, 5].map((a) => chance(a, 0)), [1, 1, 1]);
   check('twice the defenders and one more takes it outright',
     [0, 1, 2, 3, 5].map((d) => chance(2 * d + 1, d)), [1, 1, 1, 1, 1]);
   check('twice the attackers denies it outright',
@@ -491,7 +491,7 @@ const empty = ['.', '.', '.', '.', '.', '.', '.', '.', '.'];
       if (at(a, d) < at(a - 1, d) - 1e-12) dominated.push([p, a, d]);
     }
   }
-  check('another attacker never makes a square harder to take', dominated, []);
+  check('another attacker never makes a space harder to take', dominated, []);
   const helpless = [];
   for (let d = 1; d <= 8; d++) if (chance(1, d) >= chance(1, d + 1) && chance(1, d) === chance(1, 1) && d > 1) helpless.push(d);
   check('massing defenders against one attacker is not futile', helpless, []);
@@ -501,7 +501,7 @@ const empty = ['.', '.', '.', '.', '.', '.', '.', '.', '.'];
   for (let a = 1; a <= 12; a++) for (let d = 0; d < 12; d++) {
     if (chance(a, d + 1) > chance(a, d) + 1e-12) wrongWay.push([a, d]);
   }
-  check('another defender never makes a square easier to take', wrongWay, []);
+  check('another defender never makes a space easier to take', wrongWay, []);
 }
 
 {
@@ -519,7 +519,7 @@ const empty = ['.', '.', '.', '.', '.', '.', '.', '.', '.'];
   const A = alloc({ c3: 1, e3: 4, c5: 2 }), D = alloc({ c3: 5, e3: 1, b5: 3 });
 
   const plain = pairOff(A, D, 'none');
-  check('without the step, a square pairs off what stands on it',
+  check('without the step, a space pairs off what stands on it',
     ['c3', 'e3', 'c5', 'b5'].map((nm) => plain.pairs[idx(nm)]), [1, 1, 0, 0]);
   check('and the rest are spare where they stand',
     ['c3', 'e3', 'c5', 'b5'].map((nm) => plain.spare[idx(nm)]), [4, 0, 0, 3]);
@@ -533,17 +533,17 @@ const empty = ['.', '.', '.', '.', '.', '.', '.', '.', '.'];
 
   // The destination has to be one where the attackers hold the majority.
   const even = pairOff(alloc({ c5: 2 }), alloc({ c5: 2, b5: 4 }), 'forced', flat, T);
-  check('no step onto a square the attackers do not outnumber', even.pairs[idx('c5')], 2);
+  check('no step onto a space the attackers do not outnumber', even.pairs[idx('c5')], 2);
 
   // Forced means forced, even where the defence would rather stand still.
   const forced = pairOff(alloc({ c5: 3 }), alloc({ b5: 3 }), 'forced', flat, T);
   check('a defender may not stand idle within reach of an unpaired attacker', forced.pairs[idx('c5')], 3);
 
-  // One neighbour cannot cover two needy squares beyond its own numbers.
+  // One neighbour cannot cover two needy spaces beyond its own numbers.
   const shared = pairOff(alloc({ b5: 2, c4: 2 }), alloc({ b4: 3 }), 'forced', flat, T);
   check('spare defenders are not counted twice', total(shared.pairs), 3);
 
-  // Optional means the defence declines a step that would lose it a square. Four
+  // Optional means the defence declines a step that would lose it a space. Four
   // spare defenders on b5 hold b5 against nothing; sending them to c5 to face three
   // attackers is a fight they do not need, and stepping is worth nothing at b5.
   const choice = pairOff(alloc({ c5: 3 }), alloc({ b5: 4 }), 'optional', flat, T);
@@ -561,7 +561,7 @@ const empty = ['.', '.', '.', '.', '.', '.', '.', '.', '.'];
     for (const nm of names) b[idx(nm)] = me;
     return b;
   };
-  // c3-d3-e3 runs across the top of the middle: two shared corners and one square
+  // c3-d3-e3 runs across the top of the middle: two shared corners and one space
   // of the north zone, so it is three zones' worth of clearing.
   const line = arena(['c3', 'd3', 'e3']);
   line[idx('a4')] = 2;
@@ -585,13 +585,13 @@ const empty = ['.', '.', '.', '.', '.', '.', '.', '.', '.'];
 }
 
 {
-  // Placing the marks: one square per zone, and a shared corner may be claimed
+  // Placing the marks: one space per zone, and a shared corner may be claimed
   // for either of the two zones it belongs to -- which is what lets a line be
   // built out of a single round.
   const idx = (nm) => SPACES.find((s) => s.name === nm).i;
   const legal = (picks) => picks.length <= 4 && claimable(picks);
   check('a line across three zones can be claimed at once', claimable(['c3', 'd3', 'e3'].map(idx)), true);
-  check('three squares of one zone cannot', claimable(['c1', 'd1', 'e1'].map(idx)), false);
+  check('three spaces of one zone cannot', claimable(['c1', 'd1', 'e1'].map(idx)), false);
   check('two shared corners of the same zone can, one each', claimable(['c3', 'e3'].map(idx)), true);
 
   setPos([0.03, 0.12]);
@@ -602,7 +602,7 @@ const empty = ['.', '.', '.', '.', '.', '.', '.', '.', '.'];
   const taken = ['c3', 'd3', 'e3', 'c5', 'd5', 'e5', 'b4', 'f4'].map(idx);
   check('the placement is legal', legal(bestPicks(marks, 1, 2, taken, gain, base).picks), true);
 
-  // A line and nothing else on offer is taken, one square claimed for each of the
+  // A line and nothing else on offer is taken, one space claimed for each of the
   // three zones involved.
   const only = bestPicks(marks, 1, 2, ['c3', 'd3', 'e3'].map(idx), gain, base);
   check('a line on offer is claimed whole', only.picks.slice().sort((a, b) => a - b),
@@ -675,7 +675,7 @@ if (existsSync('results/hands.json')) {
     roster.every((h, k) => pool.strength[h] >= before[k]), true);
   check('and the roster is still the same size', roster.length, 12);
 
-  // Dealing players out to squares uses each of them once and no more.
+  // Dealing players out to spaces uses each of them once and no more.
   const counts = new Int32Array(N_SPACES);
   const order = REGULAR.slice(0, 4);
   order.forEach((i, k) => { counts[i] = k + 1; });          // 1 + 2 + 3 + 4 = 10 of 12
@@ -685,8 +685,8 @@ if (existsSync('results/hands.json')) {
     new Set([...used, ...dealt.idle]).size, roster.length);
   check('and the counts are honoured', order.map((i) => dealt.at.get(i).length), [1, 2, 3, 4]);
   check('with the rest standing idle', dealt.idle.length, 2);
-  // The best hands go where the most is at stake, which is the first square in `order`.
-  check('the best player goes to the first square',
+  // The best hands go where the most is at stake, which is the first space in `order`.
+  check('the best player goes to the first space',
     dealt.at.get(order[0])[0],
     roster.map((h, k) => k).sort((a, b) => pool.strength[roster[b]] - pool.strength[roster[a]])[0]);
 }
@@ -715,7 +715,7 @@ if (existsSync('results/hands.json')) {
     check(`${order} first: every defender stands somewhere`, sum(D), 12);
     check(`${order} first: nobody pairs off twice`,
       REGULAR.every((i) => shape.pairs[i] <= Math.min(A[i], D[i] + 12)), true);
-    check(`${order} first: no square holds a negative force`,
+    check(`${order} first: no space holds a negative force`,
       REGULAR.every((i) => A[i] >= 0 && D[i] >= 0 && shape.spare[i] >= 0), true);
   }
 }

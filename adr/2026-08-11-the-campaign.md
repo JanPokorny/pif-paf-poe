@@ -1,8 +1,10 @@
 # 2026-08-11 — the campaign
 
 **A note on words.** This record was written before the vocabulary settled. What it calls a
-*board* is now a **zone**; the whole playing area, four or nine of them, is the **arena**; and
-*board* now means the nine squares a single duel is fought on. Nothing but the names changed.
+*board* is now a **zone**; the whole playing area, four or nine of them, is the **arena**; the
+arena's cells are **spaces**, each with one stone type switched off, and where this file says
+*square* of the arena it means a space; and **board** now means the nine squares of a single
+duel. Nothing but the names changed.
 
 Everything here was measured rather than argued. `campaign.js` plays the round, `arena.js`
 holds the geometry, `hands.js` and `roster.js` the hands and who fights where, `test.js` the

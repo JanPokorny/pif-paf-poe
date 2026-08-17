@@ -118,22 +118,22 @@ stone the space has switched off cannot be rehearsed.
 # The campaign
 
 Two teams, **X** and **O**, of ten to thirty players each. They take turns attacking one
-**arena**, divided into **zones** of nine squares each. Squares you win take your symbol; three
+**arena**, divided into **zones** of nine spaces each. Spaces you win take your symbol; three
 in a row anywhere on the arena scores; first to the agreed score wins the evening.
 
-Every square of the arena is a space with a stone type printed on it, and that is the space its
-duels are fought on. So where you are sent decides which of your stones work.
+Every space of the arena has a stone type printed on it, switched off for every duel fought
+there. So where you are sent decides which of your stones work.
 
 ## The arena
 
-**Pick the size by the headcount.** Four zones in a 2x2 — a 6x6 arena, 36 squares — suits about
-twelve a side. Nine zones in a 3x3 — a 9x9 arena, 81 squares — suits about thirty. The rules do
+**Pick the size by the headcount.** Four zones in a 2x2 — a 6x6 arena, 36 spaces — suits about
+twelve a side. Nine zones in a 3x3 — a 9x9 arena, 81 spaces — suits about thirty. The rules do
 not otherwise change.
 
 Three in a row **anywhere on the arena** scores, in any direction, across zone boundaries as
 freely as within one.
 
-Each square's printed veto follows a fixed pattern, stepping one across and three down, so that
+Each space's printed veto follows a fixed pattern, stepping one across and three down, so that
 no line of three repeats a veto:
 
 ```
@@ -151,8 +151,8 @@ The 9x9 continues the same pattern.
 
 - **Hands.** Everyone draws five stones at random.
 - **The opening position.** Mark about a fifth of the arena before play, half to each side —
-  **four squares each on the 6x6, nine each on the 9x9** — so that the first round already has
-  ground worth fighting over. Place them in rotational pairs: for every square X starts on, O
+  **four spaces each on the 6x6, nine each on the 9x9** — so that the first round already has
+  ground worth fighting over. Place them in rotational pairs: for every space X starts on, O
   starts on the one half a turn about the centre away from it. Draw the pairs one at a time and
   reject any pair that would complete a three in a row.
 - **The first attacker gives back two.** Attacking first is worth something, so the team that
@@ -165,45 +165,45 @@ The 9x9 continues the same pattern.
 One team attacks, the other defends, and they swap every round. The defence commits without
 knowing where the attack will go; the attack then places knowing exactly where the defenders
 are. That asymmetry is the game: the defence cannot cover everything, so it has to decide what
-is worth covering, and the attack has to buy the squares it wants at the price the defence set.
+is worth covering, and the attack has to buy the spaces it wants at the price the defence set.
 
-1. **The defence takes positions.** Every defender stands on a square, any square, as many to a
-   square as you like.
-2. **The attack takes positions.** Every attacker stands on a square with no symbol on it,
-   having seen the whole defence. Again, as many to a square as you like.
-3. **Pairing.** On each square, defenders pair off one to one with attackers, and a defender
+1. **The defence takes positions.** Every defender stands on a space, any space, as many to a
+   space as you like.
+2. **The attack takes positions.** Every attacker stands on a space with no symbol on it,
+   having seen the whole defence. Again, as many to a space as you like.
+3. **Pairing.** On each space, defenders pair off one to one with attackers, and a defender
    with a choice picks their opponent. **A defender with nobody to fight must step** to an
-   adjacent square where attackers outnumber defenders, and pair up there. Only a defender with
-   no unpaired attacker on their square or beside it stands idle.
-4. **The duels.** Every pair plays a duel on their square's space, **attacker moving first**.
-5. **Taking the squares.** Each side's **power** on a square is the duels it won there plus its
-   players left unpaired there. **The attack takes the square if its power is strictly higher**;
+   adjacent space where attackers outnumber defenders, and pair up there. Only a defender with
+   no unpaired attacker on their space or beside it stands idle.
+4. **The duels.** Every pair plays a duel on that space, **attacker moving first**.
+5. **Taking the spaces.** Each side's **power** on a space is the duels it won there plus its
+   players left unpaired there. **The attack takes the space if its power is strictly higher**;
    level power holds it for the defence.
-6. **Placing the marks.** Each zone may mark **one** of the squares its attack took, with the
+6. **Placing the marks.** Each zone may mark **one** of the spaces its attack took, with the
    attacking team's symbol — or none, if none is worth having.
 7. **Scoring.** Count the attacking team's three-in-a-rows, overlapping ones separately: a cross
    is two, four in a row is two. **n lines in one round score n²** — 1, 4, 9, 16.
 8. **Clearing.** Every scored line costs ground. For each one, **one** zone that the line
    passed through is wiped clean of both teams' symbols, and **the attack picks which zone**.
-9. **Paying.** Everyone standing on a square their side won — attackers on a square taken,
-   defenders on a square held, whether they fought or not — takes **one upgrade point**.
+9. **Paying.** Everyone standing on a space their side won — attackers on a space taken,
+   defenders on a space held, whether they fought or not — takes **one upgrade point**.
 
-### Reading a square
+### Reading a space
 
 Power is the whole of the tactics, and it comes to two rules of thumb.
 
 Say three attackers meet two defenders. Two pairs fight, one attacker is left over. If the
-attack wins both duels its power is 2 + 1 = 3 against 0, and it takes the square; one duel each
+attack wins both duels its power is 2 + 1 = 3 against 0, and it takes the space; one duel each
 makes it 1 + 1 = 2 against 1, still enough; lose both and it is 0 + 1 = 1 against 2, and the
 defence holds.
 
-- **Twice the defenders and one more takes a square whatever the duels do.** Five attackers
+- **Twice the defenders and one more takes a space whatever the duels do.** Five attackers
   against two: three are left over, so losing both duels still wins it 3 to 2.
 - **Twice the attackers denies it whatever the duels do.** Two defenders against one attacker:
   one fights, one is spare, so even losing the duel leaves the defence level — and level holds.
 
 Between those two, every extra player on either side helps their own side, and nobody standing
-on a square is wasted: an unpaired defender holds just as an unpaired attacker takes.
+on a space is wasted: an unpaired defender holds just as an unpaired attacker takes.
 
 ## Upgrade points
 

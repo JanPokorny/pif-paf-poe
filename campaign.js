@@ -1,7 +1,7 @@
 // The campaign: two teams, thirty-three spaces, and a duel on every pairing.
 //
 //   node campaign.js --sizes 10-30 --rounds 800 --reps 3 --steps none,forced,optional
-//   node campaign.js --layouts pinwheel,square,touching --sizes 20 --rounds 900
+//   node campaign.js --layouts pinwheel,space,touching --sizes 20 --rounds 900
 //   node campaign.js --pair defence --sizes 10,20,30 --rounds 500    # what defence is worth
 //   node campaign.js --pair step --sizes 10,20,30 --rounds 500       # what the step is worth
 //   node campaign.js --sizes 20 --defence oracle --rounds 500        # the defence's ceiling
@@ -48,7 +48,7 @@ import { arg, pad, pct, playGame, randomHand } from './sim.js';
 
 // A line with two of my symbols and none of theirs is worth a lot, because the
 // defence has no way to block it: defenders never place a symbol, so the only
-// answer to a threat is to keep winning the fight for the square it needs. A
+// answer to a threat is to keep winning the fight for the space it needs. A
 // line with one is worth a little. A completed line is worth a point, which is
 // the unit everything else is priced in.
 //
@@ -68,7 +68,7 @@ import { arg, pad, pct, playGame, randomHand } from './sim.js';
 // every value downstream becomes NaN. It is priced at a point, which is what it is worth.
 let POS = [0, 0.03, 0.12, 1];
 
-// A line through the star is not like the others. Its third square is the one no
+// A line through the star is not like the others. Its third space is the one no
 // attack can ever be aimed at, so two of your symbols on it is a threat the other
 // team cannot answer by marking the gap -- the only reply is to flip the star to
 // their own symbol, which costs them every mark of a whole round. `STAR_W` scales
@@ -113,10 +113,10 @@ function posValue(b, me, them) {
 //
 //   zones   every zone the line touched, whole, and the star if it was in the line
 //   one     just one of those zones, and the attack picks which
-//   halo    the three squares and everything touching them, edge or corner
-//   line    the three squares and nothing else
+//   halo    the three spaces and everything touching them, edge or corner
+//   line    the three spaces and nothing else
 //
-// Every one of them takes at least one square of the line, which is what stops a
+// Every one of them takes at least one space of the line, which is what stops a
 // scored line standing there and scoring again next round.
 let CLEAR = 'zones';
 let FILL = false;
@@ -170,7 +170,7 @@ function scoreAndClear(b, me, them = 3 - me) {
 }
 
 // The other half of the light-clearing variant: the symbol that fills a zone
-// sweeps the other team's symbols out of it. With a line only taking three squares
+// sweeps the other team's symbols out of it. With a line only taking three spaces
 // the zones fill up, and this is what empties them again -- as a reward rather than
 // a reset, since it leaves your own symbols standing.
 function fillBonus(b, me, them, picks) {
@@ -207,21 +207,21 @@ function placementValue(marks, me, them, picks, base) {
 //
 // `step` says what a defender with nobody to fight may do:
 //
-//   none      -- stand there. A defender covers the square they are on.
-//   forced    -- step to an orthogonally adjacent square where the attackers
+//   none      -- stand there. A defender covers the space they are on.
+//   forced    -- step to an orthogonally adjacent space where the attackers
 //                outnumber the defenders, and pair with an attacker there. Not
 //                optional: a defender may stand idle only when no unpaired
 //                attacker is within reach, so it comes to the largest number of
 //                extra pairings the adjacency allows -- a max-flow from the
-//                squares with spare defenders to the squares with spare attackers.
+//                spaces with spare defenders to the spaces with spare attackers.
 //   optional  -- the same step, taken only where the defence wants it. Under this
 //                scoring a step is not free: an unpaired defender counts towards
-//                holding the square they stand on, so stepping away spends that to
+//                holding the space they stand on, so stepping away spends that to
 //                buy a duel next door. It is also a second decision taken after
 //                the attack is visible, which is the only information the defence
 //                ever gets.
 //
-// Returns pairs and leftover defenders per square. Leftover attackers are always
+// Returns pairs and leftover defenders per space. Leftover attackers are always
 // A[i] - pairs[i].
 
 function resolve(A, D, step, value = null, tail = null) {
@@ -252,7 +252,7 @@ function resolve(A, D, step, value = null, tail = null) {
 
   // optional: take the step that most improves the defence's expected holding, and
   // keep taking them while one helps. Greedy, because each step is worth what it is
-  // worth on its own square and its neighbour and nowhere else.
+  // worth on its own space and its neighbour and nowhere else.
   const held = (i) => 1 - takeChance(A[i], pairs[i], spare[i], tail);
   for (;;) {
     let best = null, bestGain = 1e-9;
@@ -275,8 +275,8 @@ function resolve(A, D, step, value = null, tail = null) {
   return { pairs, spare };
 }
 
-// The flow says how many defenders arrive at each needy square; this takes the
-// matching number away from the squares they came from.
+// The flow says how many defenders arrive at each needy space; this takes the
+// matching number away from the spaces they came from.
 function distributeOut(surplus, need, adjacency, flow, spare) {
   const arriving = need.map((_, k) => flow[k]);
   for (let k = 0; k < surplus.length; k++) {
@@ -324,13 +324,13 @@ function maxFlow(left, right, edges) {
 //   attack  A - P + W        defence  S + P - W        take iff 2W > S + 2P - A
 //
 // which is symmetric in a way the phase order is not. Twice the defenders and one
-// more takes a square outright, whatever the duels do; twice the attackers and the
-// square cannot be taken at all, whatever the duels do. In between, the duels
-// decide it. Nothing here is free: an extra attacker on a thick square is another
+// more takes a space outright, whatever the duels do; twice the attackers and the
+// space cannot be taken at all, whatever the duels do. In between, the duels
+// decide it. Nothing here is free: an extra attacker on a thick space is another
 // duel to lose, and an extra defender is another body counted against the attack
 // whether they find a fight or not.
 
-// The fewest duels the attack has to win. Zero or less means the square falls
+// The fewest duels the attack has to win. Zero or less means the space falls
 // however they go; more than P means it cannot fall.
 const winsNeeded = (a, pairs, spare) => Math.max(0, Math.floor((spare + 2 * pairs - a) / 2) + 1);
 
@@ -350,7 +350,7 @@ function tailTable(p, max) {
   return table;
 }
 
-// The chance the attack takes a square, given the shape of the fight on it.
+// The chance the attack takes a space, given the shape of the fight on it.
 function takeChance(a, pairs, spare, tail) {
   if (!a) return 0;
   const w = winsNeeded(a, pairs, spare);
@@ -369,14 +369,14 @@ const CHOOSE = (() => {
   return (n, k) => (k < 0 || k > n ? 0 : rows[n][k]);
 })();
 
-// The chance that one player's own duel decides the square, worked out before any of
-// them are played. Their result matters exactly when the other duels on the square
+// The chance that one player's own duel decides the space, worked out before any of
+// them are played. Their result matters exactly when the other duels on the space
 // come to one short of what the attack needs: then this game turns it either way.
 //
 // This is the honest answer to "does my game matter", because it is the question as a
 // player faces it -- sitting down not knowing how the others will go. The alternative
-// is to ask afterwards whether that one result, alone, would have flipped the square,
-// and the two disagree: two attackers against two defenders who both win is a square
+// is to ask afterwards whether that one result, alone, would have flipped the space,
+// and the two disagree: two attackers against two defenders who both win is a space
 // that no single result would have changed, so afterwards nobody decided it, while
 // beforehand each of the four had an even chance of being the one who did.
 function stakePerDuel(a, pairs, spare, p) {
@@ -409,13 +409,13 @@ function zoneBuckets(free, gain) {
 }
 
 // One mark per zone is a real constraint but it is not four marks per round in
-// four separate places: a line across the inner ring uses one square of three
+// four separate places: a line across the inner ring uses one space of three
 // different zones, so it can be built whole in a single round. Those are the
-// combinations worth going for, and a value that adds up single squares cannot
+// combinations worth going for, and a value that adds up single spaces cannot
 // see them. So they are enumerated once per round -- a line with none of the
-// opponent's symbols on it, whose empty squares are all free and can be claimed
+// opponent's symbols on it, whose empty spaces are all free and can be claimed
 // for different zones -- and priced at what the whole set is worth over and
-// above its best single square.
+// above its best single space.
 function combinations(marks, me, them, free, gain, base) {
   const isFree = new Uint8Array(N_SPACES);
   for (const i of free) isFree[i] = 1;
@@ -454,7 +454,7 @@ function planValue(A, shape, buckets, gain, tail, combos) {
   return v;
 }
 
-// What the attack should expect a square to look like when it gets there. Without
+// What the attack should expect a space to look like when it gets there. Without
 // the step it is exact. With it the attack assumes every spare defender next door
 // arrives and every spare defender here stays, which cannot both happen, so it is
 // the pessimistic reading rather than the true one -- the attack over-commits a
@@ -473,9 +473,9 @@ function estimate(A, D, free, cfg) {
   return { pairs, spare, at, reach };
 }
 
-// A square's value to the attack is a staircase in the force on it, and the treads
+// A space's value to the attack is a staircase in the force on it, and the treads
 // are wide: against three defenders, four attackers and five attackers are the same
-// square. So the search buys whole steps rather than one player at a time, and takes
+// space. So the search buys whole steps rather than one player at a time, and takes
 // the step with the best value per player each time round. Twice the defenders and
 // one more is the top of the staircase, and nothing above it buys anything.
 const LADDER = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 14, 16, 19, 22, 25, 30];
@@ -511,9 +511,9 @@ function attackPlan(marks, me, them, D, free, gain, buckets, combos, cfg, tail) 
     value = planValue(A, shape, buckets, gain, tail, combos);
   }
 
-  // Everyone has to stand somewhere, and an extra attacker on a square already past
+  // Everyone has to stand somewhere, and an extra attacker on a space already past
   // the top of the staircase cannot spoil it. So the leftovers go there, or failing
-  // that to the thinnest square.
+  // that to the thinnest space.
   if (spent < cfg.size) {
     const safe = free.filter((i) => A[i] > 0 && A[i] > 2 * shape.reach(i));
     const dump = safe.length
@@ -529,7 +529,7 @@ function attackPlan(marks, me, them, D, free, gain, buckets, combos, cfg, tail) 
 // The defence commits first and is then read, so there is nothing to gain from
 // mixing: the best it can do is pick the allocation whose best answer is worst.
 // The candidates are the shapes a team would actually try -- cover the n most
-// dangerous squares evenly, cover them in proportion to the danger, cover the
+// dangerous spaces evenly, cover them in proportion to the danger, cover the
 // worst few in each zone -- and the attack planner scores every one of them.
 function defenceCandidates(free, gain, buckets, size, step) {
   const ranked = free.slice().sort((a, b) => gain[b] - gain[a]);
@@ -554,7 +554,7 @@ function defenceCandidates(free, gain, buckets, size, step) {
     out.push(spread(spaces, spaces.map(() => 1)));
     if (m === 6 || m === 10) out.push(spread(spaces, spaces.map((i) => Math.max(0.01, gain[i]))));
   }
-  // A few deep on the best squares of every zone: the shape that answers a line
+  // A few deep on the best spaces of every zone: the shape that answers a line
   // built out of one mark per zone in a single round.
   for (const per of [1, 2, 3]) {
     const spaces = buckets.flatMap((b) => b.slice(0, per));
@@ -562,9 +562,9 @@ function defenceCandidates(free, gain, buckets, size, step) {
   }
 
   // And, for the stepping rule, shapes chosen to cover ground rather than to stand
-  // on it. Every other candidate here ranks by danger, and the dangerous squares are
+  // on it. Every other candidate here ranks by danger, and the dangerous spaces are
   // all in the middle, so they all cluster; a defence that can step wants its
-  // neighbourhoods to tile the arena instead. Greedy set cover over the free squares,
+  // neighbourhoods to tile the arena instead. Greedy set cover over the free spaces,
   // weighted by what each is worth to the attack.
   if (step !== 'none') {
     const covers = (i) => [i, ...ADJACENT[i].filter((j) => free.includes(j))];
@@ -606,8 +606,8 @@ function randomPlan(free, size, rng) {
 // A defence that has already seen the attack it is answering, and that the attack
 // then does not get to re-plan against. It is not a legal way to play -- the order
 // of the phases is the other way round -- and it is here as a ceiling. Twice the
-// attackers on a square denies it outright, so it buys shutouts from the most
-// dangerous square down until the players run out.
+// attackers on a space denies it outright, so it buys shutouts from the most
+// dangerous space down until the players run out.
 function oraclePlan(marks, me, them, free, gain, buckets, combos, cfg, tail) {
   const A = attackPlan(marks, me, them, new Int32Array(N_SPACES), free, gain, buckets, combos, cfg, tail);
   const D = new Int32Array(N_SPACES);
@@ -627,7 +627,7 @@ function oraclePlan(marks, me, them, free, gain, buckets, combos, cfg, tail) {
 // that the defence currently commits blind against an attack that answers knowing
 // everything. Reversed, the attack is a leader that must expect to be answered, and
 // the defence is a pure best response -- which is why this is not simply the mirror
-// image: the attack only needs one square per zone, the defence has to cover
+// image: the attack only needs one space per zone, the defence has to cover
 // whatever it is given, and those two are not symmetric.
 
 // Which defensive strengths are worth trying against `a` attackers. The value is a
@@ -665,7 +665,7 @@ function defenceAnswer(A, free, gain, buckets, combos, cfg, tail) {
     v = value();
   }
   // Anyone left over has nothing to answer -- the attack is already committed -- so
-  // they stand on the square that would have been worst to lose. That they are wasted
+  // they stand on the space that would have been worst to lose. That they are wasted
   // is the point: it is what moving second costs the side with too many players.
   if (spent < cfg.size && free.length) {
     D[free.slice().sort((a, b) => gain[b] - gain[a])[0]] += cfg.size - spent;
@@ -704,7 +704,7 @@ function attackFirst(marks, me, them, free, gain, buckets, combos, cfg, tail) {
 // list is scored exactly -- including the marks that only add up to a line
 // together, which the planner's estimate misses.
 function bestPicks(marks, me, them, taken, gain, base) {
-  // -1 stands for "this zone claims nothing", since 0 is a real square.
+  // -1 stands for "this zone claims nothing", since 0 is a real space.
   const buckets = ZONES
     .map((b) => taken.filter((i) => SPACE_ZONES[i].includes(b)).sort((x, y) => gain[y] - gain[x]))
     .map((b) => [-1, ...b.slice(0, 4)]);
@@ -762,9 +762,9 @@ function bestPicks(marks, me, them, taken, gain, base) {
 export function newCampaign(first = 0, cfg = null, rng = null) {
   const st = { marks: new Uint8Array(N_SPACES), round: 0, first, points: [0, 0, 0] };
 
-  // An empty arena makes a dull first round: every square is worth the same, so there is
+  // An empty arena makes a dull first round: every space is worth the same, so there is
   // nothing to choose between them and nothing to defend. Starting with marks already
-  // down fixes that, and they are laid out in rotational pairs -- each of X's squares
+  // down fixes that, and they are laid out in rotational pairs -- each of X's spaces
   // turned half a turn about the centre of the arena gives O one -- so that whatever the
   // opening position is worth, both teams have exactly the same of it.
   if (cfg?.seed_marks && rng) {
@@ -840,7 +840,7 @@ export const edgeShift = (edge) => Math.log(edge / (1 - edge));
 
 // ── Upgrade points ─────────────────────────────────────────────────────────
 //
-// Winning a square pays its winners upgrade points, and points buy two things: a stone
+// Winning a space pays its winners upgrade points, and points buy two things: a stone
 // replaced, which is permanent, or a Counterattack drawn at random, which is spent. The
 // five cards are worth what the duel studies say they are, as shifts in the attacker's
 // edge -- the opening seat takes 72% bare and 57% against a Mirror, and log(.72/.28) -
@@ -914,7 +914,7 @@ function spend(st, cfg, team, k, rng, tally) {
 // how reliably being better turns into winning.
 export const skillOf = (cfg, me) => (me === 1 ? cfg.skill : 1 - cfg.skill);
 
-// Whose round it is, what every free square is worth, and where both teams go.
+// Whose round it is, what every free space is worth, and where both teams go.
 // Separated out because it is the whole of the decision-making and the rest of
 // the round is arithmetic.
 export function allocate(st, cfg, rng, tables) {
@@ -995,8 +995,8 @@ export function playRound(st, cfg, rng, tables, tally) {
 
   // The duels. Every pairing is the same coin unless we are playing them out.
   // With hands in play, which player stands where matters: each captain sends their
-  // best to the squares worth most, so both sides deal their players out in strength
-  // order against their own ranking of the squares.
+  // best to the spaces worth most, so both sides deal their players out in strength
+  // order against their own ranking of the spaces.
   const order = free.slice().sort((x, y) => gain[y] - gain[x]);
   const veto = cfg.vetoes ? (cfg.vetoBy === 'zone' ? VETO_BY_ZONE : VETO) : null;
   const coord = (team) => (Array.isArray(cfg.coordinate) ? cfg.coordinate[team] : cfg.coordinate);
@@ -1021,7 +1021,7 @@ export function playRound(st, cfg, rng, tables, tally) {
     if (!A[i]) continue;
     let lost = 0;
     if (sides) lost = fight(i, pairs[i], sides, st, me, them, cfg, rng, log, veto, roleHit, tally);
-    // Both teams see which squares the round was actually fought on, which is what
+    // Both teams see which spaces the round was actually fought on, which is what
     // their role quotas follow.
     if (st.demand && veto && pairs[i]) {
       noteDemand(st.demand[me], veto[i], pairs[i]);
@@ -1033,7 +1033,7 @@ export function playRound(st, cfg, rng, tables, tally) {
     const need = winsNeeded(A[i], pairs[i], spare[i]);
     if (won >= need) taken.push(i);
     stake += pairs[i] * stakePerDuel(A[i], pairs[i], spare[i], p);
-    // A duel decided the square if turning it round would have turned the square
+    // A duel decided the space if turning it round would have turned the space
     // round: on the threshold every win was decisive, one short of it every loss
     // was. This is the number that says whether the game a player actually sat
     // down to play mattered.
@@ -1046,7 +1046,7 @@ export function playRound(st, cfg, rng, tables, tally) {
   else if (STAR >= 0) st.marks[STAR] = me;
 
   // Placing nothing is a choice, not only what is left when nothing was won: the
-  // star is the one square no attack can be aimed at, so a line needing it can only
+  // star is the one space no attack can be aimed at, so a line needing it can only
   // ever be finished by declining a whole round's marks. Worth counting separately
   // from a round that simply took nothing.
   const flipped = !picks.length;
@@ -1057,9 +1057,9 @@ export function playRound(st, cfg, rng, tables, tally) {
 
   // The trigger rule. Every one of these hands out the same thing -- one stone
   // replaced -- and differs only in who gets it, which is the whole question.
-  // Everybody standing on a square their side won -- the attackers on a square the
+  // Everybody standing on a space their side won -- the attackers on a space the
   // attack took, the defenders on one it held -- paired or not. An unpaired attacker's
-  // presence is already part of how a square is taken, so standing there is already a
+  // presence is already part of how a space is taken, so standing there is already a
   // contribution. Both the stone swap and the upgrade points follow this list.
   const winnersOn = () => {
     const took = new Set(taken);
@@ -1074,7 +1074,7 @@ export function playRound(st, cfg, rng, tables, tally) {
 
   let swaps = 0, used = 0;
   if (st.roster && cfg.economy) {
-    // A square won pays its winners, and they spend what they have on whatever is worth
+    // A space won pays its winners, and they spend what they have on whatever is worth
     // most per point. Nothing is handed out free.
     const winners = winnersOn();
     for (const team of [me, them]) {
@@ -1142,19 +1142,19 @@ export function playRound(st, cfg, rng, tables, tally) {
     tally.idle += size - duels;
     tally.contested += free.filter((i) => A[i] > 0).length;
     tally.taken += taken.length;
-    // The same, but only over squares somebody actually defended. `contested` counts
-    // every square the attack walked onto, and most of those are empty ones the defence
+    // The same, but only over spaces somebody actually defended. `contested` counts
+    // every space the attack walked onto, and most of those are empty ones the defence
     // could not reach, so it flatters the attack badly. This is the fight.
     const fought = free.filter((i) => A[i] > 0 && pairs[i] > 0);
     tally.defended += fought.length;
     tally.defendedTaken += fought.filter((i) => taken.includes(i)).length;
-    // And the narrower one still: squares where the two sides brought equal numbers.
+    // And the narrower one still: spaces where the two sides brought equal numbers.
     const level = fought.filter((i) => A[i] === pairs[i] + spare[i]);
     tally.level += level.length;
     tally.levelTaken += level.filter((i) => taken.includes(i)).length;
     // The force the attack brings where it commits, against the defence it meets there.
     for (const i of fought) { tally.forceA += A[i]; tally.forceD += pairs[i] + spare[i]; }
-    // How the defence met each square the attack went to. This is the shape of the
+    // How the defence met each space the attack went to. This is the shape of the
     // standoff, and it is the thing the phase order changes.
     for (const i of free) {
       if (!A[i]) continue;
@@ -1212,7 +1212,7 @@ export function playRound(st, cfg, rng, tables, tally) {
   return { picks, points, duels, flipped };
 }
 
-// The duels on one square, attacker hands against defender hands. The defence chooses
+// The duels on one space, attacker hands against defender hands. The defence chooses
 // which attacker each of its players takes, so it pairs off the way that wins it the
 // most games -- champion against champion, or its best against their weakest, whichever
 // of the two comes out higher. Returns how many the attack lost, and files each player
@@ -1267,7 +1267,7 @@ function fight(i, pairs, sides, st, me, them, cfg, rng, log, veto, hit = null, t
   return lost;
 }
 
-// Players standing on a square where their side brought more than could pair off. The
+// Players standing on a space where their side brought more than could pair off. The
 // assignment deals them out in order, so the ones past the pairing are the spare.
 function unfought(side, counts, pairs, spare = null) {
   const out = [];
@@ -1318,7 +1318,7 @@ const newTally = (cfg) => ({
 function expectedChance(st, cfg, me, them) {
   const mine = meanByVeto(st.roster[me], cfg.pool);
   const theirs = meanByVeto(st.roster[them], cfg.pool);
-  // Averaged over the vetoes, since a round's squares are spread across the arena, and
+  // Averaged over the vetoes, since a round's spaces are spread across the arena, and
   // shifted by the attacker's edge, which both sides know about and plan around.
   const bonus = edgeShift(cfg.edge ?? 0.5);
   const vs = cfg.pool.vetoes;
@@ -1499,7 +1499,7 @@ function row(t) {
     // idle are the same number and this one figure covers both.
     playing: per(t.duels, r * t.size),
     // Of the duels played, the share that decided the space they were played on.
-    // Of the duels played, the share that turned out to decide the square, and the
+    // Of the duels played, the share that turned out to decide the space, and the
     // share that had a chance of deciding it at the time they were sat down to. The
     // second is the one to quote at a player.
     pivotal: per(t.pivotal, t.duels),
@@ -1511,13 +1511,13 @@ function row(t) {
     atStakeShare: per(t.stake, r * t.size),
     contested: per(t.contested, r),
     takeRate: per(t.taken, t.contested),
-    // Of the squares that were actually defended, the share the attack took -- and of
-    // those, the share of squares where the two sides brought the same number.
+    // Of the spaces that were actually defended, the share the attack took -- and of
+    // those, the share of spaces where the two sides brought the same number.
     defended: per(t.defended, r),
     holdRate: per(t.defendedTaken, t.defended),
     levelRate: per(t.levelTaken, t.level),
     levelShare: per(t.level, t.defended),
-    // Of the squares the attack went to: undefended, under-matched, matched, over but
+    // Of the spaces the attack went to: undefended, under-matched, matched, over but
     // short of a shutout, shut out. Plus the share of defenders who met nobody.
     met: t.metHist.map((n) => per(n, t.attacked)),
     wasted: per(t.wasted, r * t.size),
@@ -1584,7 +1584,7 @@ function row(t) {
     reinforced: per(t.reinforced, r),
     overestimate: per(t.overestimate, r),
     zones: t.zones,
-    // The share of rounds where every zone claimed a square, and where two or more
+    // The share of rounds where every zone claimed a space, and where two or more
     // came away with nothing. With four zones and with nine, those are the two ends
     // that say whether the defence is denying anything.
     allMarks: per(t.markHist[t.zones], r),
@@ -1706,13 +1706,13 @@ async function main() {
     standout: parseFloat(arg('standout', '0.2')), // share of a team sent to train
     handsFile: arg('hands-file', 'results/hands.json'),
     vetoes: !process.argv.includes('--no-vetoes'),
-    vetoBy: arg('veto-by', 'square'),             // square | zone
+    vetoBy: arg('veto-by', 'space'),              // space | zone
     seed_marks: parseInt(arg('seed-marks', '0'), 10),  // symmetric pairs already on the arena
     seed_handicap: parseInt(arg('seed-handicap', '0'), 10),  // fewer for whoever attacks first
     edge: parseFloat(arg('edge', '0.5')),         // the attacker's chance at equal hands
     coordinate: arg('coordinate', 'on'),          // on | off
     order: arg('order', 'defence'),               // which side commits first
-    // The economy. Points are earned by standing on a square your side won and spent on
+    // The economy. Points are earned by standing on a space your side won and spent on
     // stones and Counterattacks; --grants/--swaps/--cards sweep the three prices.
     economy: process.argv.includes('--economy'),
     grants: arg('grants', arg('grant', '1')).split(',').map(Number),
@@ -1737,7 +1737,7 @@ async function main() {
     return;
   }
 
-  // Allocating a whole number of players over a whole number of squares is lumpy,
+  // Allocating a whole number of players over a whole number of spaces is lumpy,
   // and one run of one size can land on a shape that is not typical of its
   // neighbours. --reps runs each size from several seeds and sums them.
   // The hand table is loaded once and shared; without a trigger there are no hands at

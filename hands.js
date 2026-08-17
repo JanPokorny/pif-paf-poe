@@ -129,8 +129,8 @@ function report(data) {
 // ── One table per veto ─────────────────────────────────────────────────────
 
 // The same sampled round robin, run once per veto with that stone switched off for
-// both players throughout. The output is strength[veto][hand], and a duel on a square
-// is settled by the column belonging to that square's veto.
+// both players throughout. The output is strength[veto][hand], and a duel on a space
+// is settled by the column belonging to that space's veto.
 async function vetoes(opts) {
   const hands = allHands();
   const n = hands.length;
