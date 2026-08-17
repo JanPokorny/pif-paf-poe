@@ -220,3 +220,14 @@ expect to finish your hand first and buy Counterattacks with what is left.
 Counterattacks bought here are held under the duel's rule — as many as you like, present up to
 three, spend at most one, unspent ones kept. Since the campaign's attacker moves first, **a
 Counterattack is only ever spent in a round your team defends.**
+
+# Making a set
+
+Three A4 sheets print the pieces, at `print/`:
+
+- `stones-x.svg` and `stones-o.svg` — 48 stones a sheet, eight of each of the six types, the
+  type's icon over the symbol. Eight hands, so print one of each per eight players.
+- `counterattacks.svg` — ten cards, two of each of the five, the rule on the card.
+
+Print at 100% with no fit-to-page, on card if you have it, and cut the stones along the grid.
+`node print.js` writes all three again.
