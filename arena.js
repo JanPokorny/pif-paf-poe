@@ -1,5 +1,5 @@
-// The campaign board: one board divided into four or nine 3x3 zones, and whatever
-// their arrangement leaves behind.
+// The arena: one playing area divided into four or nine 3x3 zones, and whatever their
+// arrangement leaves behind.
 //
 // The arrangement is a setting, because the one in the drawing is peculiar and the
 // peculiarity has to earn itself. `pinwheel` is that one -- each zone one step off
@@ -35,7 +35,7 @@ export const LAYOUTS = {
   // Each entry is zone name -> the coordinates of its top-left square.
   pinwheel: { N: [2, 0], W: [0, 2], E: [4, 2], S: [2, 4] },
   square: { A: [0, 0], B: [3, 0], C: [0, 3], D: [3, 3] },
-  // Nine zones in a 3x3, an 81-square board. One mark per zone per round means
+  // Nine zones in a 3x3, an 81-square arena. One mark per zone per round means
   // nine marks a round rather than four, which is what makes it the arrangement for
   // thirty a side: the work grows with the players instead of staying at four.
   square3: Object.fromEntries('ABCDEFGHI'.split('').map((b, k) => [b, [3 * (k % 3), 3 * ((k / 3) | 0)]])),
@@ -47,7 +47,7 @@ export const LAYOUTS = {
 };
 
 // Live bindings, reassigned by setLayout. Everything downstream imports these by
-// name and so follows the switch without being handed a board explicitly.
+// name and so follows the switch without being handed an arena explicitly.
 export let ZONES, SPACES, STAR, REGULAR, N_SPACES, ZONE_SPACES, SPACE_ZONES,
   CORNERS, LINES, LINES_AT, ADJACENT, NEIGHBOURS, LINE_ZONES, LINE_HALO, LINE_CLEARS,
   VETO, VETO_BY_ZONE, ZONE_VETO, WIDTH, HEIGHT;
@@ -59,7 +59,7 @@ export let ZONES, SPACES, STAR, REGULAR, N_SPACES, ZONE_SPACES, SPACE_ZONES,
 // by three down, which on a 6x6 or 9x9 puts every veto within reach of every zone and
 // never repeats one along a row, a column or a diagonal of three.
 //
-// It is a property of the printed board rather than something drawn per round, so a
+// It is a property of the printed arena rather than something drawn per round, so a
 // team can plan around it and an attack knows what its people are walking into.
 export const VETO_TYPES = ['neutral', 'shift', '2048', 'rotate', 'mountain', 'magnet', 'stinky'];
 
@@ -144,7 +144,7 @@ export function setLayout(name = 'pinwheel') {
     .map(([dx, dy]) => spaceAt(s.x + dx, s.y + dy)).filter((j) => j >= 0));
 
   // ── Clearing ──────────────────────────────────────────────────────────────
-  // What a scored line takes with it is a rule variant, so the board only supplies
+  // What a scored line takes with it is a rule variant, so the arena only supplies
   // the ingredients and campaign.js picks among them.
   //
   //   LINE_ZONES  which zones the three symbols stood on

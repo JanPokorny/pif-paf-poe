@@ -36,7 +36,7 @@ import {
   ADJACENT, ZONE_SPACES, CORNERS, LAYOUTS, LINES, LINE_ZONES, LINE_CLEARS, LINE_HALO,
   HEIGHT, N_SPACES, REGULAR, SPACES, SPACE_ZONES, STAR, ZONES, VETO, VETO_BY_ZONE,
   WIDTH, claimable, render, setLayout,
-} from './board.js';
+} from './arena.js';
 import { makeRng } from './ai.js';
 import {
   TRIGGERS, assign, assignRoles, duelChance, loadHands, meanByVeto, newDemand,
@@ -77,9 +77,9 @@ let POS = [0, 0.03, 0.12, 1];
 let STAR_W = 1;
 export const setPos = ([one, two, star = 1]) => { POS = [0, one, two, 1]; STAR_W = star; };
 
-// Positional value of a board to `me`, net of what the same board is worth to
+// Positional value of an arena to `me`, net of what the same arena is worth to
 // them. Zero-sum by construction, so the defence can use the attack's numbers.
-// Which lines run through the star, cached against the board they were built from
+// Which lines run through the star, cached against the arena they were built from
 // so that switching layout does not leave them stale.
 let starLines = null, starLinesOf = null;
 function starLineFlags() {
@@ -107,7 +107,7 @@ function posValue(b, me, them) {
 
 
 // What a scored line takes with it. The original rule clears every zone the three
-// symbols stood on, which is between a fifth and three quarters of the board
+// symbols stood on, which is between a fifth and three quarters of the arena
 // depending on the arrangement and leaves the campaign with almost no memory. So it
 // is a setting:
 //
@@ -137,19 +137,19 @@ export const setRules = ({ clear = 'zones', fill = false, score = 'linear' }) =>
       : (n) => n;
 };
 
-// For `one`, the board worth clearing is the one that costs the attack least and the
+// For `one`, the zone worth clearing is the one that costs the attack least and the
 // other team most, counted in symbols.
-function pickBoard(b, li, me, them) {
+function pickZone(b, li, me, them) {
   let best = null, bestGain = -Infinity;
-  for (const board of LINE_ZONES[li]) {
+  for (const zone of LINE_ZONES[li]) {
     let gain = 0;
-    for (const j of ZONE_SPACES[board]) gain += b[j] === them ? 1 : b[j] === me ? -1 : 0;
-    if (gain > bestGain) { bestGain = gain; best = board; }
+    for (const j of ZONE_SPACES[zone]) gain += b[j] === them ? 1 : b[j] === me ? -1 : 0;
+    if (gain > bestGain) { bestGain = gain; best = zone; }
   }
   return best;
 }
 
-// Lines of `me` on the board, and everything they take with them.
+// Lines of `me` on the arena, and everything they take with them.
 function scoreAndClear(b, me, them = 3 - me) {
   let lines = 0, cleared = null;
   const add = (j) => { (cleared ??= new Set()).add(j); };
@@ -160,7 +160,7 @@ function scoreAndClear(b, me, them = 3 - me) {
     if (CLEAR === 'halo') { for (const j of LINE_HALO[li]) add(j); return; }
     if (CLEAR === 'one') {
       for (const j of line) if (j === STAR) add(j);
-      for (const j of ZONE_SPACES[pickBoard(b, li, me, them)]) add(j);
+      for (const j of ZONE_SPACES[pickZone(b, li, me, them)]) add(j);
       return;
     }
     for (const j of LINE_CLEARS[li]) add(j);
@@ -169,7 +169,7 @@ function scoreAndClear(b, me, them = 3 - me) {
   return { lines, points: SCORE(lines), cleared: cleared ? cleared.size : 0 };
 }
 
-// The other half of the light-clearing variant: the symbol that fills a board
+// The other half of the light-clearing variant: the symbol that fills a zone
 // sweeps the other team's symbols out of it. With a line only taking three squares
 // the zones fill up, and this is what empties them again -- as a reward rather than
 // a reset, since it leaves your own symbols standing.
@@ -177,8 +177,8 @@ function fillBonus(b, me, them, picks) {
   if (!FILL || !picks.length) return 0;
   const filled = new Set(picks.flatMap((i) => SPACE_ZONES[i]));
   let swept = 0;
-  for (const board of filled) {
-    const cells = ZONE_SPACES[board];
+  for (const zone of filled) {
+    const cells = ZONE_SPACES[zone];
     if (!cells.every((j) => b[j])) continue;
     for (const j of cells) if (b[j] === them) { b[j] = 0; swept++; }
   }
@@ -530,7 +530,7 @@ function attackPlan(marks, me, them, D, free, gain, buckets, combos, cfg, tail) 
 // mixing: the best it can do is pick the allocation whose best answer is worst.
 // The candidates are the shapes a team would actually try -- cover the n most
 // dangerous squares evenly, cover them in proportion to the danger, cover the
-// worst few in each board -- and the attack planner scores every one of them.
+// worst few in each zone -- and the attack planner scores every one of them.
 function defenceCandidates(free, gain, buckets, size, step) {
   const ranked = free.slice().sort((a, b) => gain[b] - gain[a]);
   const out = [];
@@ -564,7 +564,7 @@ function defenceCandidates(free, gain, buckets, size, step) {
   // And, for the stepping rule, shapes chosen to cover ground rather than to stand
   // on it. Every other candidate here ranks by danger, and the dangerous squares are
   // all in the middle, so they all cluster; a defence that can step wants its
-  // neighbourhoods to tile the board instead. Greedy set cover over the free squares,
+  // neighbourhoods to tile the arena instead. Greedy set cover over the free squares,
   // weighted by what each is worth to the attack.
   if (step !== 'none') {
     const covers = (i) => [i, ...ADJACENT[i].filter((j) => free.includes(j))];
@@ -699,12 +699,12 @@ function attackFirst(marks, me, them, free, gain, buckets, combos, cfg, tail) {
 // ── Placing the marks ──────────────────────────────────────────────────────
 
 // Each zone may claim one of the spaces its attack took, or none, and if no
-// board claims anything the star flips instead. Three of the best per board is
+// zone claims anything the star flips instead. Three of the best per zone is
 // deep enough that the combination worth having is in the list, and the whole
 // list is scored exactly -- including the marks that only add up to a line
 // together, which the planner's estimate misses.
 function bestPicks(marks, me, them, taken, gain, base) {
-  // -1 stands for "this board claims nothing", since 0 is a real square.
+  // -1 stands for "this zone claims nothing", since 0 is a real square.
   const buckets = ZONES
     .map((b) => taken.filter((i) => SPACE_ZONES[i].includes(b)).sort((x, y) => gain[y] - gain[x]))
     .map((b) => [-1, ...b.slice(0, 4)]);
@@ -713,15 +713,15 @@ function bestPicks(marks, me, them, taken, gain, base) {
     const set = [...new Set(choice.filter((i) => i >= 0))];
     return { set, value: placementValue(marks, me, them, set, base) };
   };
-  // Placing nothing is always on the menu, and on a board with a hole it is the flip.
+  // Placing nothing is always on the menu, and on an arena with a hole it is the flip.
   let best = [], bestValue = placementValue(marks, me, them, [], base);
   const keep = ({ set, value }) => {
     if (set.length && value > bestValue) { bestValue = value; best = set; }
   };
 
   // Four zones is 625 combinations and worth enumerating; nine is two million and
-  // is not. Above four, start from each board's best claim and sweep: re-choose one
-  // board at a time against the others as they stand, until a pass changes nothing.
+  // is not. Above four, start from each zone's best claim and sweep: re-choose one
+  // zone at a time against the others as they stand, until a pass changes nothing.
   // Every candidate is still scored exactly, so what the sweep can miss is only a
   // combination no single change reaches.
   if (buckets.length <= 4) {
@@ -756,16 +756,16 @@ function bestPicks(marks, me, them, taken, gain, base) {
 // ── A round ────────────────────────────────────────────────────────────────
 
 // `first` is which team attacks in round 0. It matters: the team that attacks
-// first is always the team with more marks on the board when the other one scores,
+// first is always the team with more marks on the arena when the other one scores,
 // and a scored line clears whole zones, so attacking first means having more to
 // lose to it. Campaigns are therefore run half from each seat.
 export function newCampaign(first = 0, cfg = null, rng = null) {
   const st = { marks: new Uint8Array(N_SPACES), round: 0, first, points: [0, 0, 0] };
 
-  // An empty board makes a dull first round: every square is worth the same, so there is
+  // An empty arena makes a dull first round: every square is worth the same, so there is
   // nothing to choose between them and nothing to defend. Starting with marks already
   // down fixes that, and they are laid out in rotational pairs -- each of X's squares
-  // turned half a turn about the centre of the board gives O one -- so that whatever the
+  // turned half a turn about the centre of the arena gives O one -- so that whatever the
   // opening position is worth, both teams have exactly the same of it.
   if (cfg?.seed_marks && rng) {
     const cx = (WIDTH - 1) / 2, cy = (HEIGHT - 1) / 2;
@@ -920,10 +920,10 @@ export const skillOf = (cfg, me) => (me === 1 ? cfg.skill : 1 - cfg.skill);
 export function allocate(st, cfg, rng, tables) {
   const me = ((st.round + st.first) % 2) + 1, them = 3 - me;
 
-  // Standing out: a team may send players to a training space instead of the board,
+  // Standing out: a team may send players to a training space instead of the arena,
   // giving up what they would have done this round to come back with a better hand.
   // Both teams do it, attacking or defending. Who goes is the players with the worst
-  // hands -- there is no reason to take your best off the board.
+  // hands -- there is no reason to take your best off the arena.
   // Each team may send a different share, so that the question "how many is it worth
   // standing out?" can be settled by the two rates playing each other.
   let size = cfg.size;
@@ -952,7 +952,7 @@ export function allocate(st, cfg, rng, tables) {
   const buckets = zoneBuckets(free, gain);
   const combos = combinations(st.marks, me, them, free, gain, base);
 
-  // Standing out takes players off the board, so the planners budget `size` rather
+  // Standing out takes players off the arena, so the planners budget `size` rather
   // than the whole team.
   const plan = size === cfg.size ? cfg : { ...cfg, size };
 
@@ -1296,7 +1296,7 @@ function duel(cfg, rng, p) {
 const newTally = (cfg) => ({
   ...cfg,
   // The report is assembled in another thread, which may be looking at a different
-  // board, so anything the shares are taken over has to travel with the tally.
+  // arena, so anything the shares are taken over has to travel with the tally.
   spaces: REGULAR.length, zones: ZONES.length,
   rounds: 0, marks: 0, markHist: Array.from({ length: ZONES.length + 1 }, () => 0), points: 0, teamPoints: [0, 0, 0], seatPoints: [0, 0], value: 0, cleared: 0, swept: 0, stalled: 0, lines: 0, lineHist: [0, 0, 0, 0, 0, 0],
   duels: 0, pivotal: 0, stake: 0, unpaired: 0, idle: 0, contested: 0, taken: 0, free: 0,
@@ -1314,11 +1314,11 @@ const newTally = (cfg) => ({
 
 // What the attacking team should expect from a duel this round: its average hand
 // against theirs. A team with better hands plans more boldly, which is most of how an
-// advantage in hands turns into an advantage on the board.
+// advantage in hands turns into an advantage on the arena.
 function expectedChance(st, cfg, me, them) {
   const mine = meanByVeto(st.roster[me], cfg.pool);
   const theirs = meanByVeto(st.roster[them], cfg.pool);
-  // Averaged over the vetoes, since a round's squares are spread across the board, and
+  // Averaged over the vetoes, since a round's squares are spread across the arena, and
   // shifted by the attacker's edge, which both sides know about and plan around.
   const bonus = edgeShift(cfg.edge ?? 0.5);
   const vs = cfg.pool.vetoes;
@@ -1360,7 +1360,7 @@ export function runConfig(cfg) {
   let st = newCampaign(0, cfg, rng);
   for (let r = 0; r < cfg.rounds; r++) {
     playRound(st, cfg, rng, tables, tally);
-    // Long campaigns are one continuous board; --restart chops them into
+    // Long campaigns are one continuous arena; --restart chops them into
     // separate ones, so that the opening rounds are not under-sampled, and
     // alternates the opening seat so that it cannot bias the totals.
     if (cfg.restart && st.round % cfg.restart === 0) {
@@ -1398,8 +1398,8 @@ export function runCampaigns(cfg) {
 // ── Paired study ───────────────────────────────────────────────────────────
 //
 // Two variants measured across independent campaigns are hard to compare, because
-// a change that concedes fewer marks also leaves a sparser board, and a sparser
-// board scores at a different rate for reasons that have nothing to do with the
+// a change that concedes fewer marks also leaves a sparser arena, and a sparser
+// arena scores at a different rate for reasons that have nothing to do with the
 // change. So the variants are run against the same positions instead: every round
 // of a reference campaign is handed to both, several times each, and what gets
 // reported is the difference on the shared position. The reference campaign is
@@ -1526,7 +1526,7 @@ function row(t) {
     occupancy: 1 - per(t.free, r * t.spaces),
     cleared: per(t.cleared, r),
     lines: per(t.lines, r),
-    // How many rounds a mark survives. Marks arrive at `marks` a round and the board
+    // How many rounds a mark survives. Marks arrive at `marks` a round and the arena
     // carries `occupancy * spaces` of them, so by Little's law the ratio is the mean
     // life of one. It is the plainest measure of whether anything carries between
     // rounds: at one, a mark is gone before its team attacks again.
@@ -1707,7 +1707,7 @@ async function main() {
     handsFile: arg('hands-file', 'results/hands.json'),
     vetoes: !process.argv.includes('--no-vetoes'),
     vetoBy: arg('veto-by', 'square'),             // square | zone
-    seed_marks: parseInt(arg('seed-marks', '0'), 10),  // symmetric pairs already on the board
+    seed_marks: parseInt(arg('seed-marks', '0'), 10),  // symmetric pairs already on the arena
     seed_handicap: parseInt(arg('seed-handicap', '0'), 10),  // fewer for whoever attacks first
     edge: parseFloat(arg('edge', '0.5')),         // the attacker's chance at equal hands
     coordinate: arg('coordinate', 'on'),          // on | off

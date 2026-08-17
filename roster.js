@@ -14,7 +14,7 @@
 //
 // A hand is a row of numbers here -- one Bradley-Terry strength per veto, fitted by
 // `hands.js --vetoes` -- and a duel on a square is settled by the column belonging to
-// that square's veto. That is the whole of what the board's stone vetoes change, and it
+// that square's veto. That is the whole of what the arena's stone vetoes change, and it
 // changes two things: a hand can no longer be simply good, and where a player stands
 // starts to matter as much as who they are.
 
@@ -90,7 +90,7 @@ export function meanByVeto(roster, pool) {
   return out;
 }
 
-// What a team is worth across the whole board: for each veto, the strength of the few
+// What a team is worth across the whole arena: for each veto, the strength of the few
 // players it would actually send to squares carrying that veto. Summed over the vetoes,
 // this is the thing a coordinating team is trying to raise, and it is not the same as
 // raising everybody's average -- a seventh copy of the best all-rounder adds nothing to
@@ -114,7 +114,7 @@ export function coverage(roster, pool, depth) {
 //
 // How many specialists each veto deserves is not a seventh each. It is the share of the
 // duels that actually get fought on that veto, which the two teams learn by playing:
-// `demand` is a decaying count of duels by veto, so the roster follows the board the
+// `demand` is a decaying count of duels by veto, so the roster follows the arena the
 // round is really being decided on.
 export function newDemand(pool) {
   return Object.fromEntries(pool.vetoes.map((v) => [v, 1]));
@@ -155,7 +155,7 @@ export function assignRoles(roster, pool, demand) {
 //          not know where they will be sent, and the choice that walks the whole field
 //          onto one hand
 //   spec   the hand that is best somewhere, whatever it is worth elsewhere
-//   cover  the hand that most improves what the team is worth across the board, which
+//   cover  the hand that most improves what the team is worth across the arena, which
 //          is the only one of the three that ever declines an upgrade because somebody
 //          else already covers that ground
 //   role   the hand that is best on the veto this player has been given to specialise

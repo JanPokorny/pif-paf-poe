@@ -1,10 +1,10 @@
 # 2026-08-11 — the campaign
 
-**A note on words.** This record was written before the vocabulary settled: what it calls a
-*board* is now a **zone**, and the whole playing area — four or nine of them — is the **board**.
-Nothing else changed.
+**A note on words.** This record was written before the vocabulary settled. What it calls a
+*board* is now a **zone**; the whole playing area, four or nine of them, is the **arena**; and
+*board* now means the nine squares a single duel is fought on. Nothing but the names changed.
 
-Everything here was measured rather than argued. `campaign.js` plays the round, `board.js`
+Everything here was measured rather than argued. `campaign.js` plays the round, `arena.js`
 holds the geometry, `hands.js` and `roster.js` the hands and who fights where, `test.js` the
 invariants. Decisions are in order; the retractions are at the end.
 
@@ -85,7 +85,7 @@ The phase is steering, not blocking.
 
 ## The arrangement: the pinwheel does not earn its awkwardness
 
-`board.js` was generalised to take an arrangement so this could be measured. At twelve, twenty
+`arena.js` (then `board.js`) was generalised to take an arrangement so this could be measured. At twelve, twenty
 and thirty a side:
 
 | arrangement | squares | shared | lines | one-round lines | a line clears | decided something |
@@ -266,7 +266,7 @@ control ran at 2.27 against 2.24, the noise floor for those lengths.
 ## Stone vetoes: adopted for the coordination
 
 Every square switches off one stone type. `hands.js --vetoes` fits a strength table per veto —
-seven ladders — and `board.js` steps the pattern one across and three down, which spreads them
+seven ladders — and `arena.js` steps the pattern one across and three down, which spreads them
 evenly on both fields with no veto repeated in a line of three.
 
 **The ladders are nearly different games.** Every veto has a different best hand (four 2048s and

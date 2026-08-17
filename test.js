@@ -14,7 +14,7 @@ import { assign, duelChance, loadHands, newRoster, swap, swapTarget } from './ro
 import {
   ADJACENT, ZONE_SPACES, CORNERS, LINES, LINES_AT, LINE_CLEARS, N_SPACES, REGULAR,
   SPACES, SPACE_ZONES, STAR, ZONES, claimable, setLayout,
-} from './board.js';
+} from './arena.js';
 import {
   CARD_WORTH, allocate, bestPicks, newCampaign, playRound, posValue,
   placementValue, resolve as pairOff, scoreAndClear, setPos, setRules, stakePerDuel,
@@ -394,18 +394,18 @@ const empty = ['.', '.', '.', '.', '.', '.', '.', '.', '.'];
   check('every Counterattack plays out to a winner', [...new Set(stuck)], []);
 }
 
-// ── The campaign board and round ────────────────────────────────────────────
+// ── The arena and the round ────────────────────────────────────────────
 
 {
   // Geometry. Four zones of nine squares sharing one square with each neighbour, and a
   // hole in the middle that belongs to nobody.
   check('regular spaces', REGULAR.length, 32);
   check('spaces in total', N_SPACES, 33);
-  check('the star belongs to no board', SPACE_ZONES[STAR], []);
-  check('nine squares to a board', ZONES.map((b) => ZONE_SPACES[b].length), [9, 9, 9, 9]);
+  check('the star belongs to no zone', SPACE_ZONES[STAR], []);
+  check('nine squares to a zone', ZONES.map((b) => ZONE_SPACES[b].length), [9, 9, 9, 9]);
   check('four shared squares', CORNERS.length, 4);
   check('a shared square belongs to two zones', CORNERS.map((i) => SPACE_ZONES[i].length), [2, 2, 2, 2]);
-  check('every other square to one board',
+  check('every other square to one zone',
     REGULAR.filter((i) => SPACE_ZONES[i].length !== 1).sort((a, b) => a - b), CORNERS);
   check('every square is on some line', SPACES.filter((s) => !LINES_AT[s.i].length), []);
   check('lines of three', LINES.length, 68);
@@ -424,7 +424,7 @@ const empty = ['.', '.', '.', '.', '.', '.', '.', '.', '.'];
   // if it was one of the three.
   const cross = LINES.findIndex((l) => l.includes(STAR));
   check('a line through the star clears the star', LINE_CLEARS[cross].includes(STAR), true);
-  check('a line inside one board clears nine squares and no more',
+  check('a line inside one zone clears nine squares and no more',
     LINE_CLEARS[LINES.findIndex((l) => l.every((j) => j !== STAR
       && SPACE_ZONES[j].length === 1 && SPACE_ZONES[j][0] === SPACE_ZONES[l[0]][0]))].length, 9);
 }
@@ -556,43 +556,43 @@ const empty = ['.', '.', '.', '.', '.', '.', '.', '.', '.'];
   setRules({ clear: 'zones' });
   // Scoring and clearing.
   const idx = (nm) => SPACES.find((s) => s.name === nm).i;
-  const board = (names, me = 1) => {
+  const arena = (names, me = 1) => {
     const b = new Uint8Array(N_SPACES);
     for (const nm of names) b[idx(nm)] = me;
     return b;
   };
   // c3-d3-e3 runs across the top of the middle: two shared corners and one square
   // of the north zone, so it is three zones' worth of clearing.
-  const line = board(['c3', 'd3', 'e3']);
+  const line = arena(['c3', 'd3', 'e3']);
   line[idx('a4')] = 2;
   const scored = scoreAndClear(line, 1);
   check('a line scores a point', scored.points, 1);
   check('and clears the zones it stood on', ['c3', 'd3', 'e3'].map((nm) => line[idx(nm)]), [0, 0, 0]);
   check('including the other side\'s symbols in them', line[idx('a4')], 0);
 
-  check('four in a row is two points', scoreAndClear(board(['b4', 'c4', 'd4', 'e4']), 1).points, 2);
-  check('a cross is two points', scoreAndClear(board(['c3', 'd3', 'e3', 'd2', 'd4']), 1).points, 2);
-  check('two of a line is nothing', scoreAndClear(board(['c3', 'd3']), 1).points, 0);
+  check('four in a row is two points', scoreAndClear(arena(['b4', 'c4', 'd4', 'e4']), 1).points, 2);
+  check('a cross is two points', scoreAndClear(arena(['c3', 'd3', 'e3', 'd2', 'd4']), 1).points, 2);
+  check('two of a line is nothing', scoreAndClear(arena(['c3', 'd3']), 1).points, 0);
 
   // A line already standing is something normal play never shows posValue, because a
   // line is scored and cleared the moment it is made -- but a pre-seeded opening can
   // contain one, and the lookup used to run off the end of the weights and poison every
   // value downstream with NaN.
   check('a standing line does not poison the valuation',
-    Number.isFinite(posValue(board(['c3', 'd3', 'e3']), 1, 2)), true);
+    Number.isFinite(posValue(arena(['c3', 'd3', 'e3']), 1, 2)), true);
   check('and it is worth about a point',
-    posValue(board(['c3', 'd3', 'e3']), 1, 2) > posValue(board(['c3', 'd3']), 1, 2), true);
+    posValue(arena(['c3', 'd3', 'e3']), 1, 2) > posValue(arena(['c3', 'd3']), 1, 2), true);
 }
 
 {
-  // Placing the marks: one square per board, and a shared corner may be claimed
+  // Placing the marks: one square per zone, and a shared corner may be claimed
   // for either of the two zones it belongs to -- which is what lets a line be
   // built out of a single round.
   const idx = (nm) => SPACES.find((s) => s.name === nm).i;
   const legal = (picks) => picks.length <= 4 && claimable(picks);
   check('a line across three zones can be claimed at once', claimable(['c3', 'd3', 'e3'].map(idx)), true);
-  check('three squares of one board cannot', claimable(['c1', 'd1', 'e1'].map(idx)), false);
-  check('two shared corners of the same board can, one each', claimable(['c3', 'e3'].map(idx)), true);
+  check('three squares of one zone cannot', claimable(['c1', 'd1', 'e1'].map(idx)), false);
+  check('two shared corners of the same zone can, one each', claimable(['c3', 'e3'].map(idx)), true);
 
   setPos([0.03, 0.12]);
   const marks = new Uint8Array(N_SPACES);
