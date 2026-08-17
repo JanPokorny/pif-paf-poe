@@ -33,8 +33,8 @@ import { dirname } from 'node:path';
 import { pathToFileURL } from 'node:url';
 
 import {
-  ADJACENT, BOARD_SPACES, CORNERS, LAYOUTS, LINES, LINE_BOARDS, LINE_CLEARS, LINE_HALO,
-  HEIGHT, N_SPACES, REGULAR, SPACES, SPACE_BOARDS, STAR, SUBBOARDS, VETO, VETO_BY_BOARD,
+  ADJACENT, ZONE_SPACES, CORNERS, LAYOUTS, LINES, LINE_ZONES, LINE_CLEARS, LINE_HALO,
+  HEIGHT, N_SPACES, REGULAR, SPACES, SPACE_ZONES, STAR, ZONES, VETO, VETO_BY_ZONE,
   WIDTH, claimable, render, setLayout,
 } from './board.js';
 import { makeRng } from './ai.js';
@@ -106,19 +106,19 @@ function posValue(b, me, them) {
 
 
 
-// What a scored line takes with it. The original rule clears every board the three
+// What a scored line takes with it. The original rule clears every zone the three
 // symbols stood on, which is between a fifth and three quarters of the board
 // depending on the arrangement and leaves the campaign with almost no memory. So it
 // is a setting:
 //
-//   boards  every board the line touched, whole, and the star if it was in the line
-//   one     just one of those boards, and the attack picks which
+//   zones   every zone the line touched, whole, and the star if it was in the line
+//   one     just one of those zones, and the attack picks which
 //   halo    the three squares and everything touching them, edge or corner
 //   line    the three squares and nothing else
 //
 // Every one of them takes at least one square of the line, which is what stops a
 // scored line standing there and scoring again next round.
-let CLEAR = 'boards';
+let CLEAR = 'zones';
 let FILL = false;
 
 // What n lines in one round are worth. `linear` is n, which is the rule as it
@@ -127,7 +127,7 @@ let FILL = false;
 // and fire at once. The four lines that cross the star share it, so a team holding
 // the inner ring can take all four with one flip, and that is sixteen points.
 let SCORE = (n) => n;
-export const setRules = ({ clear = 'boards', fill = false, score = 'linear' }) => {
+export const setRules = ({ clear = 'zones', fill = false, score = 'linear' }) => {
   CLEAR = clear;
   FILL = fill;
   // `triangle` -- 1, 3, 6, 10 -- is the middle ground: it rewards holding back
@@ -141,9 +141,9 @@ export const setRules = ({ clear = 'boards', fill = false, score = 'linear' }) =
 // other team most, counted in symbols.
 function pickBoard(b, li, me, them) {
   let best = null, bestGain = -Infinity;
-  for (const board of LINE_BOARDS[li]) {
+  for (const board of LINE_ZONES[li]) {
     let gain = 0;
-    for (const j of BOARD_SPACES[board]) gain += b[j] === them ? 1 : b[j] === me ? -1 : 0;
+    for (const j of ZONE_SPACES[board]) gain += b[j] === them ? 1 : b[j] === me ? -1 : 0;
     if (gain > bestGain) { bestGain = gain; best = board; }
   }
   return best;
@@ -160,7 +160,7 @@ function scoreAndClear(b, me, them = 3 - me) {
     if (CLEAR === 'halo') { for (const j of LINE_HALO[li]) add(j); return; }
     if (CLEAR === 'one') {
       for (const j of line) if (j === STAR) add(j);
-      for (const j of BOARD_SPACES[pickBoard(b, li, me, them)]) add(j);
+      for (const j of ZONE_SPACES[pickBoard(b, li, me, them)]) add(j);
       return;
     }
     for (const j of LINE_CLEARS[li]) add(j);
@@ -171,14 +171,14 @@ function scoreAndClear(b, me, them = 3 - me) {
 
 // The other half of the light-clearing variant: the symbol that fills a board
 // sweeps the other team's symbols out of it. With a line only taking three squares
-// the boards fill up, and this is what empties them again -- as a reward rather than
+// the zones fill up, and this is what empties them again -- as a reward rather than
 // a reset, since it leaves your own symbols standing.
 function fillBonus(b, me, them, picks) {
   if (!FILL || !picks.length) return 0;
-  const filled = new Set(picks.flatMap((i) => SPACE_BOARDS[i]));
+  const filled = new Set(picks.flatMap((i) => SPACE_ZONES[i]));
   let swept = 0;
   for (const board of filled) {
-    const cells = BOARD_SPACES[board];
+    const cells = ZONE_SPACES[board];
     if (!cells.every((j) => b[j])) continue;
     for (const j of cells) if (b[j] === them) { b[j] = 0; swept++; }
   }
@@ -388,33 +388,33 @@ function stakePerDuel(a, pairs, spare, p) {
 
 // ── The attack ─────────────────────────────────────────────────────────────
 
-// One mark per board per round, so what an allocation is worth is, board by
-// board, the best of the spaces it takes there. Corners belong to two boards and
-// can be claimed for either, but only once, so each is booked to the board that
+// One mark per zone per round, so what an allocation is worth is, zone by
+// zone, the best of the spaces it takes there. Corners belong to two zones and
+// can be claimed for either, but only once, so each is booked to the zone that
 // has least else to offer.
-function boardBuckets(free, gain) {
-  const of = Object.fromEntries(SUBBOARDS.map((b) => [b, []]));
+function zoneBuckets(free, gain) {
+  const of = Object.fromEntries(ZONES.map((b) => [b, []]));
   const corner = new Map();
   for (const i of free) {
-    if (SPACE_BOARDS[i].length > 1) corner.set(i, SPACE_BOARDS[i]);
-    else of[SPACE_BOARDS[i][0]].push(i);
+    if (SPACE_ZONES[i].length > 1) corner.set(i, SPACE_ZONES[i]);
+    else of[SPACE_ZONES[i][0]].push(i);
   }
-  for (const [i, boards] of corner) {
+  for (const [i, zones] of corner) {
     const best = (b) => Math.max(0, ...of[b].map((j) => gain[j]));
-    of[boards[0]].length && of[boards[1]].length
-      ? of[best(boards[0]) <= best(boards[1]) ? boards[0] : boards[1]].push(i)
-      : of[of[boards[0]].length ? boards[1] : boards[0]].push(i);
+    of[zones[0]].length && of[zones[1]].length
+      ? of[best(zones[0]) <= best(zones[1]) ? zones[0] : zones[1]].push(i)
+      : of[of[zones[0]].length ? zones[1] : zones[0]].push(i);
   }
-  return SUBBOARDS.map((b) => of[b].sort((x, y) => gain[y] - gain[x])).filter((l) => l.length);
+  return ZONES.map((b) => of[b].sort((x, y) => gain[y] - gain[x])).filter((l) => l.length);
 }
 
-// One mark per board is a real constraint but it is not four marks per round in
+// One mark per zone is a real constraint but it is not four marks per round in
 // four separate places: a line across the inner ring uses one square of three
-// different boards, so it can be built whole in a single round. Those are the
+// different zones, so it can be built whole in a single round. Those are the
 // combinations worth going for, and a value that adds up single squares cannot
 // see them. So they are enumerated once per round -- a line with none of the
 // opponent's symbols on it, whose empty squares are all free and can be claimed
-// for different boards -- and priced at what the whole set is worth over and
+// for different zones -- and priced at what the whole set is worth over and
 // above its best single square.
 function combinations(marks, me, them, free, gain, base) {
   const isFree = new Uint8Array(N_SPACES);
@@ -431,7 +431,7 @@ function combinations(marks, me, them, free, gain, base) {
 }
 
 // Expected value of an allocation: independently per space, the chance of taking
-// it; then per board, the expected best gain among the ones taken, plus what the
+// it; then per zone, the expected best gain among the ones taken, plus what the
 // combinations add when a whole set comes off.
 function planValue(A, shape, buckets, gain, tail, combos) {
   const chance = (i) => takeChance(A[i], shape.pairs[i], shape.spare[i], tail);
@@ -554,8 +554,8 @@ function defenceCandidates(free, gain, buckets, size, step) {
     out.push(spread(spaces, spaces.map(() => 1)));
     if (m === 6 || m === 10) out.push(spread(spaces, spaces.map((i) => Math.max(0.01, gain[i]))));
   }
-  // A few deep on the best squares of every board: the shape that answers a line
-  // built out of one mark per board in a single round.
+  // A few deep on the best squares of every zone: the shape that answers a line
+  // built out of one mark per zone in a single round.
   for (const per of [1, 2, 3]) {
     const spaces = buckets.flatMap((b) => b.slice(0, per));
     if (spaces.length) out.push(spread(spaces, spaces.map((i) => Math.max(0.01, gain[i]))));
@@ -627,7 +627,7 @@ function oraclePlan(marks, me, them, free, gain, buckets, combos, cfg, tail) {
 // that the defence currently commits blind against an attack that answers knowing
 // everything. Reversed, the attack is a leader that must expect to be answered, and
 // the defence is a pure best response -- which is why this is not simply the mirror
-// image: the attack only needs one square per board, the defence has to cover
+// image: the attack only needs one square per zone, the defence has to cover
 // whatever it is given, and those two are not symmetric.
 
 // Which defensive strengths are worth trying against `a` attackers. The value is a
@@ -698,15 +698,15 @@ function attackFirst(marks, me, them, free, gain, buckets, combos, cfg, tail) {
 
 // ── Placing the marks ──────────────────────────────────────────────────────
 
-// Each board may claim one of the spaces its attack took, or none, and if no
+// Each zone may claim one of the spaces its attack took, or none, and if no
 // board claims anything the star flips instead. Three of the best per board is
 // deep enough that the combination worth having is in the list, and the whole
 // list is scored exactly -- including the marks that only add up to a line
 // together, which the planner's estimate misses.
 function bestPicks(marks, me, them, taken, gain, base) {
   // -1 stands for "this board claims nothing", since 0 is a real square.
-  const buckets = SUBBOARDS
-    .map((b) => taken.filter((i) => SPACE_BOARDS[i].includes(b)).sort((x, y) => gain[y] - gain[x]))
+  const buckets = ZONES
+    .map((b) => taken.filter((i) => SPACE_ZONES[i].includes(b)).sort((x, y) => gain[y] - gain[x]))
     .map((b) => [-1, ...b.slice(0, 4)]);
 
   const score = (choice) => {
@@ -719,7 +719,7 @@ function bestPicks(marks, me, them, taken, gain, base) {
     if (set.length && value > bestValue) { bestValue = value; best = set; }
   };
 
-  // Four boards is 625 combinations and worth enumerating; nine is two million and
+  // Four zones is 625 combinations and worth enumerating; nine is two million and
   // is not. Above four, start from each board's best claim and sweep: re-choose one
   // board at a time against the others as they stand, until a pass changes nothing.
   // Every candidate is still scored exactly, so what the sweep can miss is only a
@@ -757,7 +757,7 @@ function bestPicks(marks, me, them, taken, gain, base) {
 
 // `first` is which team attacks in round 0. It matters: the team that attacks
 // first is always the team with more marks on the board when the other one scores,
-// and a scored line clears whole boards, so attacking first means having more to
+// and a scored line clears whole zones, so attacking first means having more to
 // lose to it. Campaigns are therefore run half from each seat.
 export function newCampaign(first = 0, cfg = null, rng = null) {
   const st = { marks: new Uint8Array(N_SPACES), round: 0, first, points: [0, 0, 0] };
@@ -949,7 +949,7 @@ export function allocate(st, cfg, rng, tables) {
 
   const gain = new Float64Array(N_SPACES);
   for (const i of free) gain[i] = placementValue(st.marks, me, them, [i], base);
-  const buckets = boardBuckets(free, gain);
+  const buckets = zoneBuckets(free, gain);
   const combos = combinations(st.marks, me, them, free, gain, base);
 
   // Standing out takes players off the board, so the planners budget `size` rather
@@ -998,7 +998,7 @@ export function playRound(st, cfg, rng, tables, tally) {
   // best to the squares worth most, so both sides deal their players out in strength
   // order against their own ranking of the squares.
   const order = free.slice().sort((x, y) => gain[y] - gain[x]);
-  const veto = cfg.vetoes ? (cfg.vetoBy === 'board' ? VETO_BY_BOARD : VETO) : null;
+  const veto = cfg.vetoes ? (cfg.vetoBy === 'zone' ? VETO_BY_ZONE : VETO) : null;
   const coord = (team) => (Array.isArray(cfg.coordinate) ? cfg.coordinate[team] : cfg.coordinate);
   if (st.roster && veto) {
     for (const team of [me, them]) {
@@ -1297,8 +1297,8 @@ const newTally = (cfg) => ({
   ...cfg,
   // The report is assembled in another thread, which may be looking at a different
   // board, so anything the shares are taken over has to travel with the tally.
-  spaces: REGULAR.length, boards: SUBBOARDS.length,
-  rounds: 0, marks: 0, markHist: Array.from({ length: SUBBOARDS.length + 1 }, () => 0), points: 0, teamPoints: [0, 0, 0], seatPoints: [0, 0], value: 0, cleared: 0, swept: 0, stalled: 0, lines: 0, lineHist: [0, 0, 0, 0, 0, 0],
+  spaces: REGULAR.length, zones: ZONES.length,
+  rounds: 0, marks: 0, markHist: Array.from({ length: ZONES.length + 1 }, () => 0), points: 0, teamPoints: [0, 0, 0], seatPoints: [0, 0], value: 0, cleared: 0, swept: 0, stalled: 0, lines: 0, lineHist: [0, 0, 0, 0, 0, 0],
   duels: 0, pivotal: 0, stake: 0, unpaired: 0, idle: 0, contested: 0, taken: 0, free: 0,
   flips: 0, declined: 0, flipPoints: 0, starHeld: 0, reinforced: 0, overestimate: 0,
   swaps: 0, swapsUsed: 0, roleTotal: 0, roleMatched: 0,
@@ -1583,12 +1583,12 @@ function row(t) {
     standout: Array.isArray(t.standout) ? t.standout.slice(1).join('/') : t.standout,
     reinforced: per(t.reinforced, r),
     overestimate: per(t.overestimate, r),
-    boards: t.boards,
-    // The share of rounds where every board claimed a square, and where two or more
-    // came away with nothing. With four boards and with nine, those are the two ends
+    zones: t.zones,
+    // The share of rounds where every zone claimed a square, and where two or more
+    // came away with nothing. With four zones and with nine, those are the two ends
     // that say whether the defence is denying anything.
-    allMarks: per(t.markHist[t.boards], r),
-    shortBy2: per(t.markHist.slice(0, Math.max(1, t.boards - 1)).reduce((a, b) => a + b, 0), r),
+    allMarks: per(t.markHist[t.zones], r),
+    shortBy2: per(t.markHist.slice(0, Math.max(1, t.zones - 1)).reduce((a, b) => a + b, 0), r),
     ran: t.mode === 'campaigns' ? t.ran : 0,
     wonByX: per(t.wonByX, t.ran),
     drawn: per(t.drawn, t.ran),
@@ -1608,7 +1608,7 @@ function group(tallies) {
     if (!byKey.has(k)) { byKey.set(k, { ...t }); continue; }
     const into = byKey.get(k);
     for (const [f, v] of Object.entries(t)) {
-      const constant = ['size', 'p', 'skill', 'seed', 'rep', 'rounds', 'spaces', 'boards',
+      const constant = ['size', 'p', 'skill', 'seed', 'rep', 'rounds', 'spaces', 'zones',
         'grant', 'swapCost', 'cardCost', 'horizon', 'playRate', 'edge'];
       if (typeof v === 'number' && typeof into[f] === 'number' && !constant.includes(f)) into[f] += v;
       else if (Array.isArray(v) && Array.isArray(into[f])) into[f] = into[f].map((x, i) => x + v[i]);
@@ -1659,7 +1659,7 @@ function report(rows) {
       pct(r.atTop) + '  ', pct(r.handKinds) + '  ',
       ...(campaigns
         ? [pad(pct(r.wonByX), 8), pad(pct(r.drawn), 8), pad(r.length.toFixed(1), 8)]
-        : [pad(`${r.marks.toFixed(1)}/${r.boards}`, 8), pad(pct(r.allMarks), 8), pad(pct(r.shortBy2), 8)]),
+        : [pad(`${r.marks.toFixed(1)}/${r.zones}`, 8), pad(pct(r.allMarks), 8), pad(pct(r.shortBy2), 8)]),
     ].join(''));
   }
 }
@@ -1706,7 +1706,7 @@ async function main() {
     standout: parseFloat(arg('standout', '0.2')), // share of a team sent to train
     handsFile: arg('hands-file', 'results/hands.json'),
     vetoes: !process.argv.includes('--no-vetoes'),
-    vetoBy: arg('veto-by', 'square'),             // square | board
+    vetoBy: arg('veto-by', 'square'),             // square | zone
     seed_marks: parseInt(arg('seed-marks', '0'), 10),  // symmetric pairs already on the board
     seed_handicap: parseInt(arg('seed-handicap', '0'), 10),  // fewer for whoever attacks first
     edge: parseFloat(arg('edge', '0.5')),         // the attacker's chance at equal hands
@@ -1722,7 +1722,7 @@ async function main() {
     playRate: parseFloat(arg('play-rate', '0.6')),
     shopper: arg('shopper', 'save'),              // save | impulse
     aim: arg('aim', 'mean'),                      // mean | spec -- what a swap aims at
-    clears: arg('clears', arg('clear', 'boards')).split(','),
+    clears: arg('clears', arg('clear', 'zones')).split(','),
     fill: process.argv.includes('--fill'),
     steps: arg('steps', arg('step', 'forced')).split(','),
     workers: parseInt(arg('workers', String(Math.max(1, cpus().length - 1))), 10),
@@ -1788,7 +1788,7 @@ export {
   tailTable, winsNeeded, takeChance, stakePerDuel, resolve, posValue, scoreAndClear,
   placementValue, bestPicks,
   fillBonus,
-  combinations, attackPlan, defencePlan, boardBuckets, LADDER,
+  combinations, attackPlan, defencePlan, zoneBuckets, LADDER,
 };
 
 if (isMainThread && import.meta.url === pathToFileURL(process.argv[1] ?? '').href) await main();

@@ -1,5 +1,9 @@
 # 2026-08-11 — the campaign
 
+**A note on words.** This record was written before the vocabulary settled: what it calls a
+*board* is now a **zone**, and the whole playing area — four or nine of them — is the **board**.
+Nothing else changed.
+
 Everything here was measured rather than argued. `campaign.js` plays the round, `board.js`
 holds the geometry, `hands.js` and `roster.js` the hands and who fights where, `test.js` the
 invariants. Decisions are in order; the retractions are at the end.

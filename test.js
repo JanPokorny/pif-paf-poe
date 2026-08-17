@@ -12,8 +12,8 @@ import { existsSync } from 'node:fs';
 import { makeRng, randomAction } from './ai.js';
 import { assign, duelChance, loadHands, newRoster, swap, swapTarget } from './roster.js';
 import {
-  ADJACENT, BOARD_SPACES, CORNERS, LINES, LINES_AT, LINE_CLEARS, N_SPACES, REGULAR,
-  SPACES, SPACE_BOARDS, STAR, SUBBOARDS, claimable, setLayout,
+  ADJACENT, ZONE_SPACES, CORNERS, LINES, LINES_AT, LINE_CLEARS, N_SPACES, REGULAR,
+  SPACES, SPACE_ZONES, STAR, ZONES, claimable, setLayout,
 } from './board.js';
 import {
   CARD_WORTH, allocate, bestPicks, newCampaign, playRound, posValue,
@@ -397,16 +397,16 @@ const empty = ['.', '.', '.', '.', '.', '.', '.', '.', '.'];
 // ── The campaign board and round ────────────────────────────────────────────
 
 {
-  // Geometry. Four boards of nine sharing one square with each neighbour, and a
+  // Geometry. Four zones of nine squares sharing one square with each neighbour, and a
   // hole in the middle that belongs to nobody.
   check('regular spaces', REGULAR.length, 32);
   check('spaces in total', N_SPACES, 33);
-  check('the star belongs to no board', SPACE_BOARDS[STAR], []);
-  check('nine squares to a board', SUBBOARDS.map((b) => BOARD_SPACES[b].length), [9, 9, 9, 9]);
+  check('the star belongs to no board', SPACE_ZONES[STAR], []);
+  check('nine squares to a board', ZONES.map((b) => ZONE_SPACES[b].length), [9, 9, 9, 9]);
   check('four shared squares', CORNERS.length, 4);
-  check('a shared square belongs to two boards', CORNERS.map((i) => SPACE_BOARDS[i].length), [2, 2, 2, 2]);
+  check('a shared square belongs to two zones', CORNERS.map((i) => SPACE_ZONES[i].length), [2, 2, 2, 2]);
   check('every other square to one board',
-    REGULAR.filter((i) => SPACE_BOARDS[i].length !== 1).sort((a, b) => a - b), CORNERS);
+    REGULAR.filter((i) => SPACE_ZONES[i].length !== 1).sort((a, b) => a - b), CORNERS);
   check('every square is on some line', SPACES.filter((s) => !LINES_AT[s.i].length), []);
   check('lines of three', LINES.length, 68);
   check('lines through the star', LINES_AT[STAR].length, 8);
@@ -420,13 +420,13 @@ const empty = ['.', '.', '.', '.', '.', '.', '.', '.', '.'];
     Math.abs(SPACES[i].x - SPACES[j].x) + Math.abs(SPACES[i].y - SPACES[j].y) !== 1));
   check('adjacency is not diagonal', diagonal, []);
 
-  // A scored line clears the boards its symbols stood on, and the star with them
+  // A scored line clears the zones its symbols stood on, and the star with them
   // if it was one of the three.
   const cross = LINES.findIndex((l) => l.includes(STAR));
   check('a line through the star clears the star', LINE_CLEARS[cross].includes(STAR), true);
   check('a line inside one board clears nine squares and no more',
     LINE_CLEARS[LINES.findIndex((l) => l.every((j) => j !== STAR
-      && SPACE_BOARDS[j].length === 1 && SPACE_BOARDS[j][0] === SPACE_BOARDS[l[0]][0]))].length, 9);
+      && SPACE_ZONES[j].length === 1 && SPACE_ZONES[j][0] === SPACE_ZONES[l[0]][0]))].length, 9);
 }
 
 {
@@ -553,7 +553,7 @@ const empty = ['.', '.', '.', '.', '.', '.', '.', '.', '.'];
 }
 
 {
-  setRules({ clear: 'boards' });
+  setRules({ clear: 'zones' });
   // Scoring and clearing.
   const idx = (nm) => SPACES.find((s) => s.name === nm).i;
   const board = (names, me = 1) => {
@@ -562,12 +562,12 @@ const empty = ['.', '.', '.', '.', '.', '.', '.', '.', '.'];
     return b;
   };
   // c3-d3-e3 runs across the top of the middle: two shared corners and one square
-  // of the north board, so it is three boards' worth of clearing.
+  // of the north zone, so it is three zones' worth of clearing.
   const line = board(['c3', 'd3', 'e3']);
   line[idx('a4')] = 2;
   const scored = scoreAndClear(line, 1);
   check('a line scores a point', scored.points, 1);
-  check('and clears the boards it stood on', ['c3', 'd3', 'e3'].map((nm) => line[idx(nm)]), [0, 0, 0]);
+  check('and clears the zones it stood on', ['c3', 'd3', 'e3'].map((nm) => line[idx(nm)]), [0, 0, 0]);
   check('including the other side\'s symbols in them', line[idx('a4')], 0);
 
   check('four in a row is two points', scoreAndClear(board(['b4', 'c4', 'd4', 'e4']), 1).points, 2);
@@ -586,11 +586,11 @@ const empty = ['.', '.', '.', '.', '.', '.', '.', '.', '.'];
 
 {
   // Placing the marks: one square per board, and a shared corner may be claimed
-  // for either of the two boards it belongs to -- which is what lets a line be
+  // for either of the two zones it belongs to -- which is what lets a line be
   // built out of a single round.
   const idx = (nm) => SPACES.find((s) => s.name === nm).i;
   const legal = (picks) => picks.length <= 4 && claimable(picks);
-  check('a line across three boards can be claimed at once', claimable(['c3', 'd3', 'e3'].map(idx)), true);
+  check('a line across three zones can be claimed at once', claimable(['c3', 'd3', 'e3'].map(idx)), true);
   check('three squares of one board cannot', claimable(['c1', 'd1', 'e1'].map(idx)), false);
   check('two shared corners of the same board can, one each', claimable(['c3', 'e3'].map(idx)), true);
 
@@ -603,7 +603,7 @@ const empty = ['.', '.', '.', '.', '.', '.', '.', '.', '.'];
   check('the placement is legal', legal(bestPicks(marks, 1, 2, taken, gain, base).picks), true);
 
   // A line and nothing else on offer is taken, one square claimed for each of the
-  // three boards involved.
+  // three zones involved.
   const only = bestPicks(marks, 1, 2, ['c3', 'd3', 'e3'].map(idx), gain, base);
   check('a line on offer is claimed whole', only.picks.slice().sort((a, b) => a - b),
     ['c3', 'd3', 'e3'].map(idx).sort((a, b) => a - b));
@@ -620,7 +620,7 @@ const empty = ['.', '.', '.', '.', '.', '.', '.', '.', '.'];
   // the invariants, whatever the numbers.
   const cfg = {
     size: 12, skill: 0.5, targets: 14, defence: 'plan', attack: 'plan',
-    duels: 'coin', restart: 0, step: 'optional', layout: 'pinwheel', clear: 'boards', fill: false, pos: [null, [0.03, 0.12], [0.03, 0.12]],
+    duels: 'coin', restart: 0, step: 'optional', layout: 'pinwheel', clear: 'zones', fill: false, pos: [null, [0.03, 0.12], [0.03, 0.12]],
   };
   const tables = [null, tailTable(0.5, 13), tailTable(0.5, 13)];
   const rng = makeRng(31);

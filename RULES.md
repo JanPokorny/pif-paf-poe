@@ -1,7 +1,7 @@
 # Pif-paf-poe
 
 Tic-tac-toe where the pieces move. Two players duel on a 3x3 grid; twenty to sixty players fight
-those duels for a field of grids in a campaign that runs an evening.
+those duels for one big board of four or nine zones, in a campaign that runs an evening.
 
 Read the duel first — the campaign is built on it.
 
@@ -11,7 +11,7 @@ You each hold **five stones** and place one a turn on a 3x3 grid. Three in a row
 diagonal, wins.
 
 The difference from tic-tac-toe is that most stones **do something when placed**, and what they
-do is move stones already on the board — yours and your opponent's. So a line can be made by
+do is move stones already on the grid — yours and your opponent's. So a line can be made by
 moving a stone into it rather than by placing one there, and a line you were about to complete
 can be taken apart by the stone your opponent plays next. You are never only choosing a square;
 you are choosing a square and an effect.
@@ -54,7 +54,7 @@ opponent may play.
 **Shift** — name a direction. The row or column this stone sits in slides one step that way, and
 whatever falls off the end wraps around to the other end.
 
-**2048** — name a direction. Every stone on the board slides that way as far as it can go, just
+**2048** — name a direction. Every stone on the grid slides that way as far as it can go, just
 as in the tile game.
 
 **Rotate** — pick one of the 2x2 blocks this stone belongs to. Those four squares turn one step
@@ -96,13 +96,13 @@ A Counterattack is not a stone and is never placed. **Only the player who moves 
 one.**
 
 Hold as many as you like, **present up to three** at the start of the game so your opponent knows
-what they face, and **spend at most one**, chosen with the board in front of you. An unspent
+what they face, and **spend at most one**, chosen with the grid in front of you. An unspent
 Counterattack is kept for another game; only a spent one is discarded.
 
 All of them are spent at the end of your turn — after your stone has resolved, before the check
 for three in a row — so any of them can finish a line.
 
-**Overtake** — if your opponent holds the centre square, take that stone off the board and back
+**Overtake** — if your opponent holds the centre square, take that stone off the grid and back
 into their hand. It is not a movement effect, so a Mountain is not safe from it.
 
 **Relocate** — move one of your own stones to any free square. It resolves nothing on arrival.
@@ -112,25 +112,25 @@ into their hand. It is not a movement effect, so a Mountain is not safe from it.
 
 **Mind Control** — name a stone in your opponent's hand. That is what they must play next turn.
 
-**Rehearse** — resolve one of your stones on the board again, from wherever it now stands. A
+**Rehearse** — resolve one of your stones on the grid again, from wherever it now stands. A
 stone the space has switched off cannot be rehearsed.
 
 # The campaign
 
-Two teams, **X** and **O**, of ten to thirty players each. The teams take turns attacking a
-**field** made of 3x3 **boards**, marking squares they win, and scoring three in a row on the
-field. First to the agreed score wins the evening.
+Two teams, **X** and **O**, of ten to thirty players each. They take turns attacking one
+**board**, divided into **zones** of nine squares each. Squares you win take your symbol; three
+in a row anywhere on the board scores; first to the agreed score wins the evening.
 
-Every square of the field is a space with a stone type printed on it, and that is the space its
+Every square of the board is a space with a stone type printed on it, and that is the space its
 duels are fought on. So where you are sent decides which of your stones work.
 
-## The field
+## The board
 
-**Pick the size by the headcount.** Four boards in a 2x2 — a 6x6 field, 36 squares — suits about
-twelve a side. Nine boards in a 3x3 — a 9x9 field, 81 squares — suits about thirty. The rules do
+**Pick the size by the headcount.** Four zones in a 2x2 — a 6x6 board, 36 squares — suits about
+twelve a side. Nine zones in a 3x3 — a 9x9 board, 81 squares — suits about thirty. The rules do
 not otherwise change.
 
-Three in a row **anywhere on the field** scores, in any direction, across board boundaries as
+Three in a row **anywhere on the board** scores, in any direction, across zone boundaries as
 freely as within one.
 
 Each square's printed veto follows a fixed pattern, stepping one across and three down, so that
@@ -150,7 +150,7 @@ The 9x9 continues the same pattern.
 ## Setting up
 
 - **Hands.** Everyone draws five stones at random.
-- **The opening position.** Mark about a fifth of the field before play, half to each side —
+- **The opening position.** Mark about a fifth of the board before play, half to each side —
   **four squares each on the 6x6, nine each on the 9x9** — so that the first round already has
   ground worth fighting over. Place them in rotational pairs: for every square X starts on, O
   starts on the one half a turn about the centre away from it. Draw the pairs one at a time and
@@ -179,12 +179,12 @@ is worth covering, and the attack has to buy the squares it wants at the price t
 5. **Taking the squares.** Each side's **power** on a square is the duels it won there plus its
    players left unpaired there. **The attack takes the square if its power is strictly higher**;
    level power holds it for the defence.
-6. **Placing the marks.** Each board may mark **one** of the squares its attack took, with the
+6. **Placing the marks.** Each zone may mark **one** of the squares its attack took, with the
    attacking team's symbol — or none, if none is worth having.
 7. **Scoring.** Count the attacking team's three-in-a-rows, overlapping ones separately: a cross
    is two, four in a row is two. **n lines in one round score n²** — 1, 4, 9, 16.
-8. **Clearing.** Every scored line costs ground. For each one, **one** board that the line
-   passed through is wiped clean of both teams' symbols, and **the attack picks which board**.
+8. **Clearing.** Every scored line costs ground. For each one, **one** zone that the line
+   passed through is wiped clean of both teams' symbols, and **the attack picks which zone**.
 9. **Paying.** Everyone standing on a square their side won — attackers on a square taken,
    defenders on a square held, whether they fought or not — takes **one upgrade point**.
 
