@@ -158,7 +158,7 @@ The 9x9 continues the same pattern.
 - **The first attacker gives back two.** Attacking first is worth something, so the team that
   goes first removes two of its own opening marks.
 - **The target.** Agree what to play to: **40 points on the 6x6, 170 on the 9x9**. Either is
-  about twenty-two rounds.
+  about twenty-three rounds.
 
 ## The round
 

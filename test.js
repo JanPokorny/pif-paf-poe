@@ -12,12 +12,12 @@ import { existsSync } from 'node:fs';
 import { makeRng, randomAction } from './ai.js';
 import { assign, duelChance, loadHands, newRoster, swap, swapTarget } from './roster.js';
 import {
-  ADJACENT, ZONE_SPACES, CORNERS, LINES, LINES_AT, LINE_CLEARS, N_SPACES, REGULAR,
-  SPACES, SPACE_ZONES, STAR, ZONES, claimable, setLayout,
+  ADJACENT, LINES, LINES_AT, LINE_ZONES, N_SPACES, SPACES, SPACE_IDS, SPACE_ZONE,
+  ZONES, ZONE_SPACES, claimable, setArena,
 } from './arena.js';
 import {
   CARD_WORTH, allocate, bestPicks, newCampaign, playRound, posValue,
-  placementValue, resolve as pairOff, scoreAndClear, setPos, setRules, stakePerDuel,
+  placementValue, resolve as pairOff, scoreAndClear, setPos, stakePerDuel,
   tailTable, takeChance, winsNeeded,
 } from './campaign.js';
 
@@ -394,44 +394,43 @@ const empty = ['.', '.', '.', '.', '.', '.', '.', '.', '.'];
   check('every Counterattack plays out to a winner', [...new Set(stuck)], []);
 }
 
-// ── The arena and the round ────────────────────────────────────────────
+// ── The arena and the round ─────────────────────────────────────────────────
 
 {
-  // Geometry. Four zones of nine spaces sharing one space with each neighbour, and a
-  // hole in the middle that belongs to nobody.
-  check('regular spaces', REGULAR.length, 32);
-  check('spaces in total', N_SPACES, 33);
-  check('the star belongs to no zone', SPACE_ZONES[STAR], []);
-  check('nine spaces to a zone', ZONES.map((b) => ZONE_SPACES[b].length), [9, 9, 9, 9]);
-  check('four shared spaces', CORNERS.length, 4);
-  check('a shared space belongs to two zones', CORNERS.map((i) => SPACE_ZONES[i].length), [2, 2, 2, 2]);
-  check('every other space to one zone',
-    REGULAR.filter((i) => SPACE_ZONES[i].length !== 1).sort((a, b) => a - b), CORNERS);
+  // Geometry. Zones tile the arena, so every space belongs to exactly one, and both
+  // sizes are built by the same rule.
+  setArena('small');
+  check('spaces on the small arena', N_SPACES, 36);
+  check('four zones of nine', ZONES.map((z) => ZONE_SPACES[z].length), [9, 9, 9, 9]);
+  check('lines of three', LINES.length, 80);
   check('every space is on some line', SPACES.filter((s) => !LINES_AT[s.i].length), []);
-  check('lines of three', LINES.length, 68);
-  check('lines through the star', LINES_AT[STAR].length, 8);
+  check('every space belongs to one zone',
+    SPACES.filter((s) => !ZONE_SPACES[SPACE_ZONE[s.i]].includes(s.i)), []);
 
-  // Adjacency is orthogonal, mutual, and never touches the star.
-  const asymmetric = REGULAR.filter((i) => ADJACENT[i].some((j) => !ADJACENT[j].includes(i)));
-  check('adjacency is mutual', asymmetric, []);
-  check('nothing is adjacent to the star', REGULAR.filter((i) => ADJACENT[i].includes(STAR)), []);
-  check('the star is adjacent to nothing', ADJACENT[STAR], []);
-  const diagonal = REGULAR.filter((i) => ADJACENT[i].some((j) =>
-    Math.abs(SPACES[i].x - SPACES[j].x) + Math.abs(SPACES[i].y - SPACES[j].y) !== 1));
-  check('adjacency is not diagonal', diagonal, []);
+  // Adjacency is orthogonal and mutual.
+  check('adjacency is mutual',
+    SPACE_IDS.filter((i) => ADJACENT[i].some((j) => !ADJACENT[j].includes(i))), []);
+  check('adjacency is not diagonal', SPACE_IDS.filter((i) => ADJACENT[i].some((j) =>
+    Math.abs(SPACES[i].x - SPACES[j].x) + Math.abs(SPACES[i].y - SPACES[j].y) !== 1)), []);
 
-  // A scored line clears the zones its symbols stood on, and the star with them
-  // if it was one of the three.
-  const cross = LINES.findIndex((l) => l.includes(STAR));
-  check('a line through the star clears the star', LINE_CLEARS[cross].includes(STAR), true);
-  check('a line inside one zone clears nine spaces and no more',
-    LINE_CLEARS[LINES.findIndex((l) => l.every((j) => j !== STAR
-      && SPACE_ZONES[j].length === 1 && SPACE_ZONES[j][0] === SPACE_ZONES[l[0]][0]))].length, 9);
+  // A line of three can cross three zones, which is what lets one be built inside a
+  // single round: it has to cross both boundaries, on different steps.
+  check('some line crosses three zones', LINE_ZONES.filter((z) => z.length === 3).length > 0, true);
+  const idx = (nm) => SPACES.find((s) => s.name === nm).i;
+  const anti = ['c5', 'd4', 'e3'].map(idx).sort((a, b) => a - b).join();
+  check('c5-d4-e3 is one of them', LINE_ZONES[LINES.findIndex((l) =>
+    l.slice().sort((a, b) => a - b).join() === anti)].length, 3);
+
+  setArena('big');
+  check('spaces on the big arena', N_SPACES, 81);
+  check('nine zones of nine', ZONES.length, 9);
+  check('lines of three', LINES.length, 224);
+  setArena('small');
 }
 
 {
-  // Taking a space. Each side's power is its unpaired players plus its won duels,
-  // and the attack needs strictly more -- checked here against the rule as written.
+  // Taking a space. Each side's power is its unpaired players plus its won duels, and
+  // the attack needs strictly more -- checked here against the rule as written.
   const asWritten = (a, d, pairs, spare, won) =>
     (a - pairs) + won > spare + (pairs - won);
   const mismatch = [];
@@ -445,21 +444,17 @@ const empty = ['.', '.', '.', '.', '.', '.', '.', '.', '.'];
   }
   check('the threshold is the rule as written', mismatch, []);
 
-  // Two ways of asking whether a player's own game mattered, and they disagree.
-  // Afterwards: would this one result, flipped, have flipped the space? Two
-  // attackers against two defenders who both won is a space no single result would
-  // have changed -- the attack needed both duels and got neither -- so afterwards
-  // nobody decided it. Beforehand each of the four had an even chance of being the
-  // one who did, because one duel going the other way puts the space on the last.
+  // Two ways of asking whether a player's own game mattered, and they disagree case by
+  // case. Afterwards: would this one result, flipped, have flipped the space? Two
+  // attackers against two defenders who both won is a space no single result would have
+  // changed. Beforehand each of the four had an even chance of being the one who did.
   check('two against two needs both duels', winsNeeded(2, 2, 0), 2);
   check('and beforehand each of them has an even chance of deciding it',
     stakePerDuel(2, 2, 0, 0.5), 0.5);
   check('one against one always decides it', stakePerDuel(1, 1, 0, 0.5), 1);
-  // Level numbers keep every duel worth between a third and a half of the space.
   check('level numbers leave every duel with a real chance of deciding it',
     [2, 3, 4, 5, 6].map((n) => stakePerDuel(n, n, 0, 0.5).toFixed(3)),
     ['0.500', '0.500', '0.375', '0.375', '0.313']);
-  // Nobody has a stake where the numbers already settled it.
   check('a shut-out space puts nothing at stake', stakePerDuel(1, 1, 3, 0.5), 0);
   check('an overwhelmed space puts nothing at stake', stakePerDuel(9, 2, 0, 0.5), 0);
 
@@ -474,15 +469,12 @@ const empty = ['.', '.', '.', '.', '.', '.', '.', '.', '.'];
   check('and so does anything more',
     [1, 2, 3].map((a) => chance(a, 2 * a + 3)), [0, 0, 0]);
   check('one against one is a coin flip', chance(1, 1), 0.5);
-  // Level numbers are a coin flip when they are odd and better than that for the
-  // defence when they are even, since the attack then needs a strict majority of an
-  // even number of duels.
+  // Level numbers are a coin flip when odd and better than that for the defence when
+  // even, since the attack then needs a strict majority of an even number of duels.
   check('level numbers never favour the attack',
     [2, 3, 4, 5, 6, 7].map((n) => chance(n, n).toFixed(4)),
     ['0.2500', '0.5000', '0.3125', '0.5000', '0.3438', '0.5000']);
 
-  // Both of these were true under the old rule and are not under this one; they are
-  // checked so that a change back would be noticed.
   const dominated = [];
   for (const p of [0.5, 0.6]) {
     const table = tailTable(p, 24);
@@ -492,11 +484,6 @@ const empty = ['.', '.', '.', '.', '.', '.', '.', '.', '.'];
     }
   }
   check('another attacker never makes a space harder to take', dominated, []);
-  const helpless = [];
-  for (let d = 1; d <= 8; d++) if (chance(1, d) >= chance(1, d + 1) && chance(1, d) === chance(1, 1) && d > 1) helpless.push(d);
-  check('massing defenders against one attacker is not futile', helpless, []);
-
-  // Monotone in the defence as well, which is what makes the price list a price list.
   const wrongWay = [];
   for (let a = 1; a <= 12; a++) for (let d = 0; d < 12; d++) {
     if (chance(a, d + 1) > chance(a, d) + 1e-12) wrongWay.push([a, d]);
@@ -505,179 +492,175 @@ const empty = ['.', '.', '.', '.', '.', '.', '.', '.', '.'];
 }
 
 {
-  // Pairing, and what a defender with nobody to fight may do.
+  // Pairing, and the step a defender with nobody to fight has to take.
+  const idx = (nm) => SPACES.find((s) => s.name === nm).i;
   const alloc = (spec) => {
     const v = new Int32Array(N_SPACES);
-    for (const [nm, n] of Object.entries(spec)) v[SPACES.find((s) => s.name === nm).i] = n;
+    for (const [nm, n] of Object.entries(spec)) v[idx(nm)] = n;
     return v;
   };
-  const idx = (nm) => SPACES.find((s) => s.name === nm).i;
-  const total = (v) => REGULAR.reduce((n, i) => n + v[i], 0);
-  const flat = new Float64Array(N_SPACES).fill(1);
-  const T = tailTable(0.5, 24);
+  const total = (v) => SPACE_IDS.reduce((n, i) => n + v[i], 0);
 
-  const A = alloc({ c3: 1, e3: 4, c5: 2 }), D = alloc({ c3: 5, e3: 1, b5: 3 });
-
-  const plain = pairOff(A, D, 'none');
-  check('without the step, a space pairs off what stands on it',
-    ['c3', 'e3', 'c5', 'b5'].map((nm) => plain.pairs[idx(nm)]), [1, 1, 0, 0]);
-  check('and the rest are spare where they stand',
-    ['c3', 'e3', 'c5', 'b5'].map((nm) => plain.spare[idx(nm)]), [4, 0, 0, 3]);
-
-  const stepped = pairOff(A, D, 'forced', flat, T);
+  const stepped = pairOff(alloc({ c3: 1, e3: 4, c5: 2 }), alloc({ c3: 5, e3: 1, b5: 3 }));
+  check('a space pairs off what stands on it',
+    ['c3', 'e3'].map((nm) => stepped.pairs[idx(nm)]), [1, 1]);
   // b5's three spares reach c5, which has two unpaired attackers, and pair with both.
-  check('with the step, spare defenders reach the attackers next door', stepped.pairs[idx('c5')], 2);
+  check('spare defenders reach the attackers next door', stepped.pairs[idx('c5')], 2);
   check('and are no longer spare where they came from', stepped.spare[idx('b5')], 1);
-  check('a defender still only fights once', total(stepped.pairs) <= total(D), true);
-  check('and only one attacker each', REGULAR.every((i) => stepped.pairs[i] <= A[i]), true);
+  check('a defender still only fights once', total(stepped.pairs) <= 9, true);
+  check('and only one attacker each',
+    SPACE_IDS.every((i) => stepped.pairs[i] <= alloc({ c3: 1, e3: 4, c5: 2 })[i]), true);
 
   // The destination has to be one where the attackers hold the majority.
-  const even = pairOff(alloc({ c5: 2 }), alloc({ c5: 2, b5: 4 }), 'forced', flat, T);
+  const even = pairOff(alloc({ c5: 2 }), alloc({ c5: 2, b5: 4 }));
   check('no step onto a space the attackers do not outnumber', even.pairs[idx('c5')], 2);
 
-  // Forced means forced, even where the defence would rather stand still.
-  const forced = pairOff(alloc({ c5: 3 }), alloc({ b5: 3 }), 'forced', flat, T);
-  check('a defender may not stand idle within reach of an unpaired attacker', forced.pairs[idx('c5')], 3);
+  // Must means must, even where the defence would rather stand still.
+  const forced = pairOff(alloc({ c5: 3 }), alloc({ b5: 3 }));
+  check('a defender may not stand idle within reach of an unpaired attacker',
+    forced.pairs[idx('c5')], 3);
 
   // One neighbour cannot cover two needy spaces beyond its own numbers.
-  const shared = pairOff(alloc({ b5: 2, c4: 2 }), alloc({ b4: 3 }), 'forced', flat, T);
+  const shared = pairOff(alloc({ b5: 2, c4: 2 }), alloc({ b4: 3 }));
   check('spare defenders are not counted twice', total(shared.pairs), 3);
-
-  // Optional means the defence declines a step that would lose it a space. Four
-  // spare defenders on b5 hold b5 against nothing; sending them to c5 to face three
-  // attackers is a fight they do not need, and stepping is worth nothing at b5.
-  const choice = pairOff(alloc({ c5: 3 }), alloc({ b5: 4 }), 'optional', flat, T);
-  check('an optional step is only taken where it helps', choice.pairs[idx('c5')] <= 3, true);
-  const kept = choice.spare[idx('b5')] + choice.pairs[idx('c5')];
-  check('and every defender is still accounted for', kept, 4);
 }
 
 {
-  setRules({ clear: 'zones' });
-  // Scoring and clearing.
+  // Scoring and clearing: n lines are worth n squared, and each one takes a zone with it.
   const idx = (nm) => SPACES.find((s) => s.name === nm).i;
   const arena = (names, me = 1) => {
     const b = new Uint8Array(N_SPACES);
     for (const nm of names) b[idx(nm)] = me;
     return b;
   };
-  // c3-d3-e3 runs across the top of the middle: two shared corners and one space
-  // of the north zone, so it is three zones' worth of clearing.
-  const line = arena(['c3', 'd3', 'e3']);
-  line[idx('a4')] = 2;
-  const scored = scoreAndClear(line, 1);
-  check('a line scores a point', scored.points, 1);
-  check('and clears the zones it stood on', ['c3', 'd3', 'e3'].map((nm) => line[idx(nm)]), [0, 0, 0]);
-  check('including the other side\'s symbols in them', line[idx('a4')], 0);
 
-  check('four in a row is two points', scoreAndClear(arena(['b4', 'c4', 'd4', 'e4']), 1).points, 2);
-  check('a cross is two points', scoreAndClear(arena(['c3', 'd3', 'e3', 'd2', 'd4']), 1).points, 2);
+  // a1-b1-c1 sits inside one zone, so that zone is what it costs.
+  const inside = arena(['a1', 'b1', 'c1']);
+  inside[idx('b2')] = 2;
+  const scored = scoreAndClear(inside, 1);
+  check('a line scores a point', scored.points, 1);
+  check('and clears one whole zone', scored.cleared, 9);
+  check('taking its own symbols with it',
+    ['a1', 'b1', 'c1'].map((nm) => inside[idx(nm)]), [0, 0, 0]);
+  check('and the other side\'s in that zone', inside[idx('b2')], 0);
+
+  // c1-d1-e1 crosses two zones, and the attack clears whichever costs it least and the
+  // other team most: two enemy symbols in the right-hand zone settle it.
+  const across = arena(['c1', 'd1', 'e1']);
+  across[idx('e2')] = 2;
+  across[idx('f2')] = 2;
+  scoreAndClear(across, 1);
+  check('a line across two zones clears only one of them',
+    [across[idx('c1')], across[idx('d1')], across[idx('e2')]], [1, 0, 0]);
+
+  check('two lines in a round are worth four',
+    scoreAndClear(arena(['a1', 'b1', 'c1', 'a2', 'b2', 'c2', 'a3', 'b3', 'c3']), 1).points >= 4, true);
+  check('a cross is two lines and so four points',
+    scoreAndClear(arena(['b4', 'c4', 'd4', 'c3', 'c5']), 1).points, 4);
   check('two of a line is nothing', scoreAndClear(arena(['c3', 'd3']), 1).points, 0);
 
-  // A line already standing is something normal play never shows posValue, because a
-  // line is scored and cleared the moment it is made -- but a pre-seeded opening can
-  // contain one, and the lookup used to run off the end of the weights and poison every
-  // value downstream with NaN.
+  // A line already standing is something normal play never shows posValue, because a line
+  // is scored and cleared the moment it is made -- but a seeded opening could contain one,
+  // and the lookup used to run off the end of the weights and poison everything with NaN.
+  setPos([0.03, 0.12]);
   check('a standing line does not poison the valuation',
-    Number.isFinite(posValue(arena(['c3', 'd3', 'e3']), 1, 2)), true);
-  check('and it is worth about a point',
-    posValue(arena(['c3', 'd3', 'e3']), 1, 2) > posValue(arena(['c3', 'd3']), 1, 2), true);
+    Number.isFinite(posValue(arena(['a1', 'b1', 'c1']), 1, 2)), true);
+  check('and it is worth more than two in a row',
+    posValue(arena(['a1', 'b1', 'c1']), 1, 2) > posValue(arena(['a1', 'b1']), 1, 2), true);
 }
 
 {
-  // Placing the marks: one space per zone, and a shared corner may be claimed
-  // for either of the two zones it belongs to -- which is what lets a line be
-  // built out of a single round.
+  // Placing the marks: one space per zone, so a set can be marked in one round exactly
+  // when no two of them share a zone.
   const idx = (nm) => SPACES.find((s) => s.name === nm).i;
-  const legal = (picks) => picks.length <= 4 && claimable(picks);
-  check('a line across three zones can be claimed at once', claimable(['c3', 'd3', 'e3'].map(idx)), true);
-  check('three spaces of one zone cannot', claimable(['c1', 'd1', 'e1'].map(idx)), false);
-  check('two shared corners of the same zone can, one each', claimable(['c3', 'e3'].map(idx)), true);
+  check('a line across three zones can be claimed at once',
+    claimable(['e3', 'd4', 'c5'].map(idx)), true);
+  check('three spaces of one zone cannot', claimable(['a1', 'b1', 'c1'].map(idx)), false);
+  check('two spaces of different zones can', claimable(['a1', 'd1'].map(idx)), true);
 
   setPos([0.03, 0.12]);
   const marks = new Uint8Array(N_SPACES);
   const base = posValue(marks, 1, 2);
   const gain = new Float64Array(N_SPACES);
-  for (const i of REGULAR) gain[i] = placementValue(marks, 1, 2, [i], base);
-  const taken = ['c3', 'd3', 'e3', 'c5', 'd5', 'e5', 'b4', 'f4'].map(idx);
-  check('the placement is legal', legal(bestPicks(marks, 1, 2, taken, gain, base).picks), true);
+  for (const i of SPACE_IDS) gain[i] = placementValue(marks, 1, 2, [i], base);
 
-  // A line and nothing else on offer is taken, one space claimed for each of the
-  // three zones involved.
-  const only = bestPicks(marks, 1, 2, ['c3', 'd3', 'e3'].map(idx), gain, base);
+  const taken = ['e3', 'd4', 'c5', 'a1', 'f6'].map(idx);
+  const picks = bestPicks(marks, 1, 2, taken, gain, base).picks;
+  check('the placement is legal', picks.length <= 4 && claimable(picks), true);
+
+  // A line and nothing else on offer is taken whole, one space in each of its zones.
+  const only = bestPicks(marks, 1, 2, ['e3', 'd4', 'c5'].map(idx), gain, base);
   check('a line on offer is claimed whole', only.picks.slice().sort((a, b) => a - b),
-    ['c3', 'd3', 'e3'].map(idx).sort((a, b) => a - b));
+    ['e3', 'd4', 'c5'].map(idx).sort((a, b) => a - b));
   const placed = new Uint8Array(N_SPACES);
   for (const i of only.picks) placed[i] = 1;
   check('and scores', scoreAndClear(placed, 1).points, 1);
 
-  // Nothing taken means nothing to place, which is what flips the star.
   check('nothing won, nothing placed', bestPicks(marks, 1, 2, [], gain, base).picks, []);
 }
 
-{
-  // The round, played out. Every position a campaign passes through has to obey
-  // the invariants, whatever the numbers.
+if (existsSync('results/hands-vetoes.json')) {
+  // The round, played out. Every position a campaign passes through has to obey the
+  // invariants, whatever the numbers.
+  const pool = loadHands('results/hands-vetoes.json');
   const cfg = {
-    size: 12, skill: 0.5, targets: 14, defence: 'plan', attack: 'plan',
-    duels: 'coin', restart: 0, step: 'optional', layout: 'pinwheel', clear: 'zones', fill: false, pos: [null, [0.03, 0.12], [0.03, 0.12]],
+    size: 12, targets: 14, defence: 'plan', attack: 'plan', duels: 'coin', restart: 0,
+    arena: 'small', horizon: 24, pool, pos: [0.03, 0.12], seed_marks: 4, seed_handicap: 2,
   };
-  const tables = [null, tailTable(0.5, 13), tailTable(0.5, 13)];
+  setArena('small');
+  const tables = [null, tailTable(0.72, 13), tailTable(0.72, 13)];
   const rng = makeRng(31);
-  const st = newCampaign(0);
+  const st = newCampaign(0, cfg, rng);
   const bad = [];
   for (let r = 0; r < 120; r++) {
     const before = st.marks.slice();
-    const me = ((st.round + st.first) % 2) + 1;
     const { A, D, shape: { pairs }, free } = allocate(st, cfg, rng, tables);
     if (free.length) {
-      if (REGULAR.reduce((n, i) => n + A[i], 0) !== cfg.size) bad.push(`round ${r}: attackers not all placed`);
-      if (REGULAR.reduce((n, i) => n + D[i], 0) !== cfg.size) bad.push(`round ${r}: defenders not all placed`);
-      if (REGULAR.some((i) => A[i] && before[i])) bad.push(`round ${r}: attacked an occupied space`);
-      if (REGULAR.some((i) => pairs[i] > A[i])) bad.push(`round ${r}: more pairs than attackers`);
-      if (REGULAR.reduce((n, i) => n + pairs[i], 0) > cfg.size) bad.push(`round ${r}: more pairs than defenders`);
-      if (A[STAR] || D[STAR]) bad.push(`round ${r}: someone stood on the star`);
+      const sum = (X) => SPACE_IDS.reduce((n, i) => n + X[i], 0);
+      if (sum(A) !== cfg.size) bad.push(`round ${r}: attackers not all placed`);
+      if (sum(D) !== cfg.size) bad.push(`round ${r}: defenders not all placed`);
+      if (SPACE_IDS.some((i) => A[i] && before[i])) bad.push(`round ${r}: attacked an occupied space`);
+      if (SPACE_IDS.some((i) => pairs[i] > A[i])) bad.push(`round ${r}: more pairs than attackers`);
+      if (sum(pairs) > cfg.size) bad.push(`round ${r}: more pairs than defenders`);
     }
-    const { picks, flipped, points } = playRound(st, cfg, rng, tables, null);
+    const { picks } = playRound(st, cfg, rng, tables, null);
     if (!claimable(picks)) bad.push(`round ${r}: illegal claim`);
     if (picks.some((i) => before[i])) bad.push(`round ${r}: marked an occupied space`);
-    // A flip can complete a line through the star, and then the score clears it
-    // again, so the star only has to be the attacker's if nothing scored.
-    if (flipped && !points && st.marks[STAR] !== me) bad.push(`round ${r}: star did not flip`);
-    if (flipped !== !picks.length) bad.push(`round ${r}: flipped with marks placed`);
-    if (picks.length && LINES.some((l) => l.every((j) => st.marks[j] && st.marks[j] === st.marks[l[0]])
-      && !l.some((j) => st.marks[j] === 0))) bad.push(`round ${r}: a line was left standing`);
+    if (LINES.some((l) => st.marks[l[0]] && l.every((j) => st.marks[j] === st.marks[l[0]]))) {
+      bad.push(`round ${r}: a line was left standing`);
+    }
   }
   check('a hundred and twenty rounds hold the invariants', bad.slice(0, 4), []);
 }
 
-// ── Hands that change hands ─────────────────────────────────────────────────
+// ── Hands, and the points that buy them ─────────────────────────────────────
 
-if (existsSync('results/hands.json')) {
-  const pool = loadHands('results/hands.json');
+if (existsSync('results/hands-vetoes.json')) {
+  const pool = loadHands('results/hands-vetoes.json');
   const rng = makeRng(4242);
+  setArena('small');
 
   check('every hand of five is in the table', pool.hands.length, 252);
   check('a hand is one swap from itself and its neighbours',
     pool.neighbours.every((ns, i) => ns.includes(i)), true);
-  check('a chosen swap never leaves a player worse off',
-    pool.bestSwap.mean.every((j, i) => pool.mean[j] >= pool.mean[i]), true);
-  check('the best hand on average cannot be improved on average', pool.bestSwap.mean[pool.top], pool.top);
   check('a duel between equal hands is a coin flip', duelChance(0.4, 0.4), 0.5);
   check('and a better hand wins more often', duelChance(1, 0) > 0.5, true);
 
-  // A roster keeps its size, and a chosen swap only ever climbs.
+  // A swap is priced before it is paid for, and it never leaves a player worse off.
+  check('a swap never prices itself negative',
+    pool.hands.every((h, i) => swapTarget(pool, i).gain >= 0), true);
+  check('the best hand on average cannot be improved on', swapTarget(pool, pool.top).to, pool.top);
+
   const roster = newRoster(12, pool, rng);
   check('a roster has one hand per player', roster.length, 12);
-  const before = roster.map((h) => pool.strength[h]);
-  for (let k = 0; k < roster.length; k++) swap(roster, k, pool, rng, 'choose', 'mean');
+  const before = roster.map((h) => pool.mean[h]);
+  for (let k = 0; k < roster.length; k++) swap(roster, k, pool);
   check('a chosen swap climbs for everyone',
-    roster.every((h, k) => pool.strength[h] >= before[k]), true);
-  check('and the roster is still the same size', roster.length, 12);
+    roster.every((h, k) => pool.mean[h] >= before[k]), true);
 
   // Dealing players out to spaces uses each of them once and no more.
   const counts = new Int32Array(N_SPACES);
-  const order = REGULAR.slice(0, 4);
+  const order = SPACE_IDS.slice(0, 4);
   order.forEach((i, k) => { counts[i] = k + 1; });          // 1 + 2 + 3 + 4 = 10 of 12
   const dealt = assign(order, counts, roster, pool);
   const used = order.flatMap((i) => dealt.at.get(i) ?? []);
@@ -685,90 +668,38 @@ if (existsSync('results/hands.json')) {
     new Set([...used, ...dealt.idle]).size, roster.length);
   check('and the counts are honoured', order.map((i) => dealt.at.get(i).length), [1, 2, 3, 4]);
   check('with the rest standing idle', dealt.idle.length, 2);
-  // The best hands go where the most is at stake, which is the first space in `order`.
-  check('the best player goes to the first space',
-    dealt.at.get(order[0])[0],
-    roster.map((h, k) => k).sort((a, b) => pool.strength[roster[b]] - pool.strength[roster[a]])[0]);
-}
 
-// ── Both phase orders put every player somewhere ───────────────────────────
-
-if (existsSync('results/hands.json')) {
-  const pool = loadHands('results/hands.json');
-  setLayout('square');
-  const cfg0 = {
-    size: 12, rounds: 0, restart: 24, horizon: 24, playRate: 0.6, shopper: 'save',
-    economy: true, grant: 1, swapCost: 2, cardCost: 2, trigger: 'sidewon', swap: 'choose',
-    aim: 'mean', coordinate: 'on', vetoes: true, vetoBy: 'square', pool, edge: 0.72,
-    step: 'forced', skill: 0.5, defence: 'plan', attack: 'plan', duels: 'coin', targets: 14,
-    seed_marks: 4, seed_handicap: 2, clear: 'one', score: 'square', fill: false,
-    layout: 'square', pos: [null, [0.03, 0.12, 1], [0.03, 0.12, 1]],
-  };
-  setRules(cfg0);
-  for (const order of ['defence', 'attack']) {
-    const cfg = { ...cfg0, order };
-    const st = newCampaign(0, cfg, makeRng(5));
-    setPos(cfg.pos[1]);
-    const { A, D, shape } = allocate(st, cfg, makeRng(6), [null, tailTable(0.72, 13), tailTable(0.72, 13)]);
-    const sum = (X) => X.reduce((a, b) => a + b, 0);
-    check(`${order} first: every attacker stands somewhere`, sum(A), 12);
-    check(`${order} first: every defender stands somewhere`, sum(D), 12);
-    check(`${order} first: nobody pairs off twice`,
-      REGULAR.every((i) => shape.pairs[i] <= Math.min(A[i], D[i] + 12)), true);
-    check(`${order} first: no space holds a negative force`,
-      REGULAR.every((i) => A[i] >= 0 && D[i] >= 0 && shape.spare[i] >= 0), true);
-  }
-}
-
-// ── Upgrade points ─────────────────────────────────────────────────────────
-
-if (existsSync('results/hands.json')) {
-  const pool = loadHands('results/hands.json');
-  const rng = makeRng(99);
-
-  // A swap is priced before it is paid for, and the price is what the swap delivers.
-  const hand = 40;
-  const { to, gain } = swapTarget(pool, hand, 'mean');
-  check('a swap never prices itself negative', gain >= 0, true);
-  const r2 = [hand];
-  swap(r2, 0, pool, rng, 'choose', 'mean');
-  check('and the target is where the swap goes', r2[0], to);
-
+  // The economy: every point earned is spent or banked, and cards are spent once, by
+  // defenders only.
   const cfg = {
-    size: 8, rounds: 0, restart: 24, horizon: 24, playRate: 0.6, shopper: 'save',
-    economy: true, grant: 1, swapCost: 2, cardCost: 2, trigger: 'sidewon', swap: 'choose',
-    aim: 'mean', coordinate: 'on', vetoes: true, vetoBy: 'square', pool, edge: 0.72,
-    pos: [null, [0.03, 0.12, 1], [0.03, 0.12, 1]], step: 'forced', skill: 0.5,
-    defence: 'plan', attack: 'plan', duels: 'coin', seed_marks: 4, seed_handicap: 2,
-    clear: 'one', score: 'square', fill: false, layout: 'square',
+    size: 8, targets: 14, defence: 'plan', attack: 'plan', duels: 'coin', restart: 0,
+    arena: 'small', horizon: 24, pool, pos: [0.03, 0.12], seed_marks: 4, seed_handicap: 2,
   };
-  setLayout('square');
-  setRules(cfg);
   const st = newCampaign(0, cfg, makeRng(7));
   const tables = [null, tailTable(0.72, 9), tailTable(0.72, 9)];
-  const tally = { rounds: 0, markHist: new Array(9).fill(0), lineHist: new Array(6).fill(0),
+  const tally = {
+    rounds: 0, markHist: new Array(5).fill(0), lineHist: new Array(6).fill(0),
     teamPoints: [0, 0, 0], seatPoints: [0, 0], handMean: [0, 0, 0], handSpread: [0, 0, 0],
-    atTop: [0, 0, 0], handKinds: [0, 0, 0], halfContested: [0, 0], halfTaken: [0, 0],
-    halfUsed: [0, 0], halfDuels: [0, 0], metHist: [0, 0, 0, 0, 0] };
-  for (const k of ['marks', 'points', 'value', 'cleared', 'lines', 'swept', 'stalled', 'duels',
-    'pivotal', 'stake', 'unpaired', 'idle', 'contested', 'taken', 'free', 'flips', 'declined',
-    'flipPoints', 'starHeld', 'reinforced', 'overestimate', 'swaps', 'swapsUsed', 'roleTotal',
-    'roleMatched', 'econEarn', 'econSwaps', 'econCards', 'econUsed', 'econDefDuels', 'econBank',
-    'econStock', 'econBought', 'econDone', 'econNone', 'firstCard', 'firstRound', 'firstSwaps',
-    'usedWas', 'defWas', 'defended', 'defendedTaken', 'level', 'levelTaken', 'forceA',
-    'forceD', 'attacked', 'wasted']) tally[k] = 0;
+    handKinds: [0, 0, 0], halfContested: [0, 0], halfTaken: [0, 0], halfUsed: [0, 0],
+    halfDuels: [0, 0],
+  };
+  for (const k of ['marks', 'points', 'value', 'cleared', 'lines', 'stalled', 'duels',
+    'pivotal', 'stake', 'unpaired', 'idle', 'contested', 'taken', 'free', 'defended',
+    'defendedTaken', 'forceA', 'forceD', 'wasted', 'reinforced', 'overestimate',
+    'earned', 'swaps', 'cards', 'used', 'defDuels', 'bank', 'stock',
+    'firstCard', 'firstRound', 'firstSwaps', 'usedWas', 'defWas']) tally[k] = 0;
   for (let r = 0; r < 24; r++) playRound(st, cfg, makeRng(1000 + r), tables, tally);
 
-  const purses = st.pts.slice(1).flatMap((p) => [...p]);
-  const swaps = st.bought.slice(1).flat().reduce((a, b) => a + b, 0);
+  const purses = st.pts.slice(1).flat();
+  const bought = st.bought.slice(1).flat().reduce((a, b) => a + b, 0);
   check('a purse never goes negative', purses.every((n) => n >= 0), true);
   check('every point is earned, spent or banked',
-    2 * (tally.econSwaps + tally.econCards) + purses.reduce((a, b) => a + b, 0),
-    tally.econEarn);
-  check('the ladder is climbed', swaps > 0 && swaps === tally.econSwaps, true);
-  check('cards are held as worths', st.cards.slice(1).flat(2).every((w) => CARD_WORTH.includes(w)), true);
-  check('a card is spent once', tally.econUsed <= tally.econCards, true);
-  check('and only ever by a defender', tally.econUsed <= tally.econDefDuels, true);
+    2 * (tally.swaps + tally.cards) + purses.reduce((a, b) => a + b, 0), tally.earned);
+  check('the ladder is climbed', bought > 0 && bought === tally.swaps, true);
+  check('cards are held as worths',
+    st.cards.slice(1).flat(2).every((w) => CARD_WORTH.includes(w)), true);
+  check('a card is spent once', tally.used <= tally.cards, true);
+  check('and only ever by a defender', tally.used <= tally.defDuels, true);
 }
 
 console.log(failures ? `\n${failures} failing` : 'all checks pass');

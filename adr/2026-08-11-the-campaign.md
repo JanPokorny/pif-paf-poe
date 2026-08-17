@@ -642,6 +642,60 @@ giving ties to the attack, which would make matching useless and force the defen
 abandon; and simultaneous deployment behind a screen, which removes the asymmetry entirely but
 needs mixed strategies to be interesting and is awkward to run at a table.
 
+## The code now plays only these rules
+
+Every rule variant has been taken out of the simulation, and with it the machinery that
+only existed to serve a rejected one. What went: the pinwheel and the other two
+arrangements, the centre space and everything that flipped it, the three rejected
+clearing rules and their geometry (whole zones, the halo, line-only), the subboard-fill
+bonus, linear and triangular scoring, the `none` and `optional` step modes, the six
+rejected swap occasions and the standing-out mechanic, roles and the demand counter and
+the three coordination settings, the three rejected swap aims, the reversed phase order,
+the price sweeps, and the per-team position-weight gauntlet. Zones now tile the arena, so
+shared corners and the matching they needed are gone too: a set of spaces can be marked
+in one round exactly when no two of them share a zone.
+
+What is still switchable is *who is playing*, not *what they are playing*: a defence or
+attack that scatters at random, a defence that has already seen the attack, playing every
+pairing out through `engine.js` instead of reading the hand table, and the two arena
+sizes. Those are the instruments the numbers above were measured with, and deleting them
+would make the numbers unreproducible. Prices, weights, seeding and the attacker's edge
+are constants in `campaign.js` rather than flags.
+
+Three things fell out of the simplification, and two of them are corrections.
+
+**The hand table was falling back to a single ladder.** `loadHands` accepted a file with
+no per-veto table and quietly substituted one neutral column for all seven, and the
+default file is exactly such a file -- so the economy runs in the entry above were
+measured on one ladder rather than seven. It now throws instead. Re-measured on the real
+table, per player over a campaign:
+
+| arena, a side | earn/round | swaps | reach 3 | never | hand | bank | cards | 1st card at | after n swaps |
+|---|---|---|---|---|---|---|---|---|---|
+| small, 12 | 0.50 | 2.70 | 58% | 1.0% | 1.21 | 0.84 | 2.84 | r13.4 | 2.64 |
+| small, 30 | 0.50 | 2.76 | 61% | 1.1% | 1.22 | 0.76 | 2.87 | r13.5 | 2.71 |
+| big, 12 | 0.50 | 2.79 | 63% | 1.3% | 1.21 | 0.97 | 2.69 | r13.5 | 2.69 |
+| big, 30 | 0.50 | 2.77 | 62% | 1.0% | 1.21 | 0.96 | 2.76 | r13.3 | 2.66 |
+
+**The prices survive and the case for them gets stronger.** Players climb further up the
+ladder than the single-column run showed (2.7 swaps against 2.4, 58-63% reaching three
+against 45%) and buy their first card later and higher up (round 13.4 holding 2.64 swaps,
+against round 11.8 holding 2.24). One point a space, two for either purchase, unchanged.
+
+**The clairvoyant defence was not a ceiling.** It planned against the attack's answer to
+an *empty* arena and was then re-planned against, which made it worse than the legal
+defence rather than better -- so the "concedes 3.34 marks against 3.50" figure in the
+instruments list was measuring a bad defence, not a bound. Fixed to answer the attack it
+actually faces, with the attack not re-planning. At twelve a side the three now order
+properly, in points an attacking round: random 3.37, planned 3.01, clairvoyant 2.79 --
+and on the spaces somebody defended, the clairvoyant holds 47% where the legal defence
+holds 17%. The legal defence is much nearer the random one than the bound.
+
+**And the targets moved with the hand table.** Rounds to reach a target, 80 campaigns
+each: small 30 → 17.9, 36 → 20.7, **40 → 23.2**, 46 → 26.2; big 120 → 18.6, 150 → 22.4,
+**170 → 23.9**, 200 → 28.7. So 40 and 170 stand, at about twenty-three rounds rather than
+twenty-two.
+
 ## Model bugs and retractions
 
 Recorded rather than quietly fixed. The third bit three times.
