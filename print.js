@@ -1,35 +1,38 @@
-// The pieces, on paper. Three A4 sheets you print, cut out and play with:
+// The pieces, on paper. Five A4 sheets you print and play with:
 //
 //    print/stones-x.svg        48 stones for X, eight of each of the six types
 //    print/stones-o.svg        the same for O
 //    print/counterattacks.svg  ten Counterattack cards, two of each of the five
+//    print/arena-small.svg     the 6x6 arena, four zones, vetoes printed on
+//    print/arena-big.svg       the 9x9 arena, nine zones
 //
-//   node print.js                     write all three into print/
+//   node print.js                     write all five into print/
 //   node print.js --out somewhere     write them somewhere else
 //
 // A stone has to say two things at once: whose it is, and what it does. So the
 // symbol is drawn full size -- an X or an O you read across the table -- and the
-// type's icon sits on top of it, in ink, with a white halo underneath so it stays
-// legible over the strokes of the X. Nothing here is coloured for its own sake:
-// the two symbols differ by shape, so a black and white printer loses nothing.
+// type's icon sits in a white disc punched through the middle of it. Everything is
+// black: the two symbols differ by shape, so nothing here needs a colour printer,
+// and the only text is on the cards, whose rules have to be read.
 //
-// Types and Counterattacks are imported from the engine rather than listed again,
-// so a sheet cannot quietly go out of date with the game.
+// Types, Counterattacks and the arena's geometry are imported from the engine and
+// arena rather than listed again, so a sheet cannot quietly go out of date with
+// the game.
 //
 // Every length is a millimetre: the viewBox is the page in mm, which keeps the
 // geometry below readable and means the sheets print at their true size.
 
 import { existsSync, mkdirSync, writeFileSync } from 'node:fs';
 
+import { setArena, SPACES, VETO, WIDTH, HEIGHT, ZONES, ZONE_SPACES } from './arena.js';
 import { ITEMS, STONE_TYPES } from './engine.js';
 import { arg } from './sim.js';
 
 const PAGE = { w: 210, h: 297 };
 
-const INK = '#1b1b1b';
+const INK = '#000';
 const FAINT = '#b9b9b9';        // the 3x3 boards inside the Counterattack icons
 const CUT = '#c9c9c9';          // where the scissors go
-const COLOUR = { X: '#a8322c', O: '#1f5c96' };
 const FONT = 'Helvetica, Arial, sans-serif';
 
 const n = (v) => (Math.round(v * 100) / 100).toString();
@@ -38,44 +41,33 @@ const esc = (s) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, 
 // ── Drawing ─────────────────────────────────────────────────────────────────
 
 // An icon is a list of shapes in its own coordinates, centred on the origin and
-// about 14 wide, so the same list can be drawn small on a stone and large on a
-// card. Two kinds of shape: a stroked path, and a dot. `faint` marks the parts
-// that are context rather than content -- the board an effect happens on -- and
-// `shut` marks a closed path whose inside is filled white by the halo, so the
-// symbol underneath does not show through the middle of a mountain.
-const path = (d, w = 1, { faint = false, shut = false } = {}) => ({ d, w, faint, shut });
+// no more than FIELD across, so the same list can be drawn small on a stone and
+// large on a card. Three kinds of shape: a stroked path, a dot, and a word.
+// `faint` marks the parts that are context rather than content -- the board an
+// effect happens on -- and `full` fills a closed path in ink.
+const path = (d, w = 1, { faint = false, full = false } = {}) => ({ d, w, faint, full });
 const dot = (x, y, r, solid = true, w = 1) => ({ x, y, r, solid, w });
 const ring = (x, y, r, w = 1) => dot(x, y, r, false, w);
+const word = (t, size) => ({ t, size });
 
-const isDot = (s) => s.r !== undefined;
-
-function shape(s, { white, halo, stroke }) {
-  const colour = white ? '#fff' : s.faint ? FAINT : stroke;
-  const width = (s.faint ? 0.3 : s.w) + (white ? halo : 0);
-  const paint = `stroke="${colour}" stroke-width="${n(width)}" stroke-linecap="round" ` +
-    'stroke-linejoin="round"';
-  if (!isDot(s)) {
-    return `<path d="${s.d}" fill="${white && s.shut ? '#fff' : 'none'}" ${paint}/>`;
+function shape(s, tone = INK) {
+  const colour = s.faint ? FAINT : tone;
+  const paint = `stroke="${colour}" stroke-width="${n(s.faint ? 0.3 : s.w)}" ` +
+    'stroke-linecap="round" stroke-linejoin="round"';
+  if (s.t !== undefined) {
+    return `<text x="0" y="${n(s.size * 0.36)}" font-family="${FONT}" ` +
+      `font-size="${n(s.size)}" font-weight="bold" text-anchor="middle" fill="${colour}" ` +
+      `letter-spacing="0.2">${esc(s.t)}</text>`;
   }
-  if (s.solid) {
-    return `<circle cx="${n(s.x)}" cy="${n(s.y)}" r="${n(s.r + width / 2)}" fill="${colour}"/>`;
+  if (s.r === undefined) {
+    return `<path d="${s.d}" fill="${s.full ? colour : 'none'}" ${paint}/>`;
   }
-  return `<circle cx="${n(s.x)}" cy="${n(s.y)}" r="${n(s.r)}" ` +
-    `fill="${white ? '#fff' : 'none'}" ${paint}/>`;
+  if (s.solid) return `<circle cx="${n(s.x)}" cy="${n(s.y)}" r="${n(s.r)}" fill="${colour}"/>`;
+  return `<circle cx="${n(s.x)}" cy="${n(s.y)}" r="${n(s.r)}" fill="none" ${paint}/>`;
 }
 
-// Icons are drawn twice where they have to survive being laid over an X: once in
-// white and fatter, once in ink. The halo is the only reason the overlay works.
-function icon(shapes, { scale = 1, halo = 0, stroke = INK } = {}) {
-  const out = [];
-  for (const white of halo ? [true, false] : [false]) {
-    for (const s of shapes) {
-      if (white && s.faint) continue;
-      out.push(shape(s, { white, halo, stroke }));
-    }
-  }
-  return `<g transform="scale(${n(scale)})">${out.join('')}</g>`;
-}
+const icon = (shapes, scale = 1, tone = INK) =>
+  `<g transform="scale(${n(scale)})">${shapes.map((s) => shape(s, tone)).join('')}</g>`;
 
 function text(x, y, s, { size = 3, weight = 'normal', fill = INK, anchor = 'middle',
   spacing = 0 } = {}) {
@@ -113,7 +105,6 @@ function board(half = 7) {
 
 // ── The six stone types ─────────────────────────────────────────────────────
 
-const shut = { shut: true };
 const arc = (r, from, to, big = 1) => {
   const p = (a) => [r * Math.cos(a * Math.PI / 180), -r * Math.sin(a * Math.PI / 180)];
   const [sx, sy] = p(from), [ex, ey] = p(to);
@@ -123,46 +114,42 @@ const arc = (r, from, to, big = 1) => {
 const STONE_ICONS = {
   // A row of three squares, an arrow one step along it, and the wrap underneath.
   shift: () => [
-    ...[-6.6, -1.6, 3.4].map((x) => path(box(x, -1.6, 3.2, 3.2), 0.9, shut)),
+    ...[-6.6, -1.6, 3.4].map((x) => path(box(x, -1.6, 3.2, 3.2), 0.9)),
     path('M -3.4 -4.8 H 3', 0.9),
     path(head(3.4, -4.8, 1, 0), 0.9),
     path('M 6.6 3.4 C 6.6 7.4 -6.6 7.4 -6.6 3.8', 0.9),
     path(head(-6.6, 3.4, 0, -1, 2), 0.9),
   ],
-  // Everything slides as far as it can go: a line of four squares whose stones
-  // have all packed up at the far end, and one long arrow for the distance.
-  '2048': () => [
-    path(box(-7, -3.4, 14, 6.8), 0.9, shut),
-    ...[-3.5, 0, 3.5].map((x) => path(`M ${n(x)} -3.4 V 3.4`, 0.6)),
-    dot(1.75, 0, 1.3), dot(5.25, 0, 1.3),
-    path('M -6.2 5.8 H 5.2', 0.9),
-    path(head(5.6, 5.8, 1, 0), 0.9),
-  ],
+  // The tile game it is named after, which is what everyone recognises it by.
+  '2048': () => [word('2048', 6.4)],
   // One 2x2 block, turning a step clockwise.
   rotate: () => {
     const a = arc(6.4, 145, -80);
     return [
       ...[[0.3, -3.1], [-3.1, -3.1], [0.3, 0.3], [-3.1, 0.3]]
-        .map(([x, y]) => path(box(x, y, 2.8, 2.8), 0.9, shut)),
+        .map(([x, y]) => path(box(x, y, 2.8, 2.8), 0.9)),
       path(a.d, 0.9),
       path(head(a.ex, a.ey, -a.ey, a.ex, 2.2), 0.9),
     ];
   },
   // Nothing moves it, and nothing passes through it.
   mountain: () => [
-    path('M -6.8 4.8 L -2 -4.8 L 1.2 0.9 L 2.9 -1.4 L 6.8 4.8 Z', 1, shut),
+    path('M -6.8 4.8 L -2 -4.8 L 1.2 0.9 L 2.9 -1.4 L 6.8 4.8 Z', 1),
   ],
-  // A horseshoe, poles down.
+  // A horseshoe magnet the way it is always drawn: a U, poles up and filled in.
+  // Drawn as an outline rather than one thick stroke, which is what keeps it from
+  // reading as a cave.
   magnet: () => [
-    path('M -4.4 4.2 V -0.6 A 4.4 4.4 0 0 1 4.4 -0.6 V 4.2', 1.5),
-    path('M -6.2 4.6 H -2.6', 1.2),
-    path('M 2.6 4.6 H 6.2', 1.2),
+    path('M -4.9 -5.6 V 1.2 A 4.9 4.9 0 0 0 4.9 1.2 V -5.6 H 2.1 V 1.2 ' +
+      'A 2.1 2.1 0 0 1 -2.1 1.2 V -5.6 Z', 0.9),
+    path(box(-4.9, -5.6, 2.8, 2.2), 0.9, { full: true }),
+    path(box(2.1, -5.6, 2.8, 2.2), 0.9, { full: true }),
   ],
   // Something you keep away from.
   stinky: () => [
     ...[-2.8, 0, 2.8].map((x) =>
       path(`M ${n(x)} 2.4 C ${n(x - 1.8)} 0.2 ${n(x + 1.8)} -1.4 ${n(x)} -3.8`, 0.9)),
-    path('M -4.2 5.4 A 4.2 3.4 0 0 1 4.2 5.4 Z', 1, shut),
+    path('M -4.2 5.4 A 4.2 3.4 0 0 1 4.2 5.4 Z', 1),
   ],
 };
 
@@ -187,7 +174,7 @@ const COUNTERATTACKS = {
       const b = board();
       const [fx, fy] = b.cell(-1, 1), [tx, ty] = b.cell(1, -1);
       const [ex, ey] = [tx - 1.2, ty - 3.2];
-      return [...b.lines, dot(fx, fy, 2.2), ring(tx, ty, 2.4, 0.6),
+      return [...b.lines, dot(fx, fy, 2.6), ring(tx, ty, 2.4, 0.6),
         path(`M ${n(fx)} ${n(fy - 2.9)} C ${n(fx - 1.4)} ${n(fy - 8)} ` +
           `${n(ex - 5)} ${n(ey - 2.4)} ${n(ex)} ${n(ey)}`, 0.9),
         path(head(ex, ey, 1, 0.4, 2.2), 0.9)];
@@ -202,7 +189,7 @@ const COUNTERATTACKS = {
     icon: () => {
       const b = board();
       const [ax, ay] = b.cell(-1, -1), [bx, by] = b.cell(1, 1);
-      return [...b.lines, dot(ax, ay, 2.2), ring(bx, by, 2.4, 1.1),
+      return [...b.lines, dot(ax, ay, 2.6), ring(bx, by, 2.4, 1.1),
         path(`M ${n(ax + 3)} ${n(ay + 3)} L ${n(bx - 3)} ${n(by - 3)}`, 0.9),
         path(head(ax + 2.6, ay + 2.6, -1, -1, 2.2), 0.9),
         path(head(bx - 2.6, by - 2.6, 1, 1, 2.2), 0.9)];
@@ -226,7 +213,7 @@ const COUNTERATTACKS = {
     // One stone of yours, doing its thing a second time.
     icon: () => {
       const a = arc(4.8, 115, -150);
-      return [...board().lines, dot(0, 0, 2),
+      return [...board().lines, dot(0, 0, 2.4),
         path(a.d, 1), path(head(a.ex, a.ey, -a.ey, a.ex, 2.4), 1)];
     },
   },
@@ -238,49 +225,48 @@ const COUNTERATTACKS = {
 // would have wanted scissors, and a square holds a bigger symbol than a circle
 // of the same pitch does.
 const STONE = 30;          // side of the cut square
-// How far each symbol reaches. The X's arms point into the corners, which are
-// empty; the O's ring has to stay clear of the type's name along the bottom.
-const GLYPH = { X: 10.2, O: 9.4 };
+const FIELD = 7.6;         // radius of the clear middle the icon is drawn in
 
-// Centred on the origin: the cut line, the symbol at full size, the type's icon
-// haloed over it, and the type's name below, clear of both symbols.
+// Centred on the origin: the cut line, the symbol at full size, a white disc over
+// the middle of it, and the type's icon on the disc. The X is drawn whole and then
+// interrupted, which keeps its four arms pointing at the corners while the icon
+// gets clean paper to sit on; the O's ring leaves the same disc clear by itself.
+// No name -- the icon is the name, and six of them are learnt in a hand or two.
 function stone(type, player) {
-  const c = COLOUR[player], g = GLYPH[player], h = STONE / 2;
-  const cross = `M ${n(-g)} ${n(-g)} L ${n(g)} ${n(g)} M ${n(g)} ${n(-g)} L ${n(-g)} ${n(g)}`;
+  const h = STONE / 2, g = 10.2;
   const symbol = player === 'X'
-    ? `<path d="${cross}" fill="none" stroke="${c}" stroke-width="3.6" stroke-linecap="round"/>`
-    : `<circle cx="0" cy="0" r="${n(g)}" fill="none" stroke="${c}" stroke-width="3.5"/>`;
+    ? `<path d="M ${n(-g)} ${n(-g)} L ${n(g)} ${n(g)} M ${n(g)} ${n(-g)} L ${n(-g)} ${n(g)}" ` +
+      `fill="none" stroke="${INK}" stroke-width="3.6" stroke-linecap="round"/>`
+    : `<circle cx="0" cy="0" r="10.4" fill="none" stroke="${INK}" stroke-width="3.6"/>`;
   return [
     `<rect x="${n(-h)}" y="${n(-h)}" width="${STONE}" height="${STONE}" fill="#fff" ` +
       `stroke="${CUT}" stroke-width="0.25"/>`,
     symbol,
-    icon(STONE_ICONS[type](), { scale: 0.82, halo: 1.5 }),
-    text(0, h - 1.2, type, { size: 2.4, fill: '#6d6d6d', spacing: 0.25 }),
+    `<circle cx="0" cy="0" r="${n(FIELD)}" fill="#fff"/>`,
+    icon(STONE_ICONS[type](), 0.85),
   ].join('');
 }
 
 // ── The sheets ──────────────────────────────────────────────────────────────
 
-function sheet(title, blurb, body) {
+// Nothing outside the pieces themselves: a sheet is what you cut up, so it carries
+// no title, no caption and no printing advice. Print at 100%, on A4.
+function sheet(body) {
   return `<?xml version="1.0" encoding="UTF-8"?>
 <svg xmlns="http://www.w3.org/2000/svg" width="${PAGE.w}mm" height="${PAGE.h}mm" ` +
     `viewBox="0 0 ${PAGE.w} ${PAGE.h}">
 <rect width="${PAGE.w}" height="${PAGE.h}" fill="#fff"/>
-${text(PAGE.w / 2, 13, title, { size: 5.4, weight: 'bold' })}
-${text(PAGE.w / 2, 18.4, blurb, { size: 2.9, fill: '#6d6d6d' })}
 ${body}
-${text(PAGE.w / 2, PAGE.h - 6, 'Print at 100% — no fit-to-page — on A4.',
-    { size: 2.6, fill: '#9a9a9a' })}
 </svg>
 `;
 }
 
 // Six columns of eight, one column per type: a sheet is eight of everything, so
-// nothing has to be counted out, and the columns tell you what you are cutting.
+// nothing has to be counted out, and a column is one type all the way down.
 function stoneSheet(player) {
   const rows = 8;
-  const left = (PAGE.w - STONE_TYPES.length * STONE) / 2 + STONE / 2;
-  const top = 29 + STONE / 2;
+  const grid = (span, count) => (PAGE[span] - count * STONE) / 2 + STONE / 2;
+  const [left, top] = [grid('w', STONE_TYPES.length), grid('h', rows)];
   const cells = [];
   STONE_TYPES.forEach((type, col) => {
     for (let r = 0; r < rows; r++) {
@@ -288,10 +274,7 @@ function stoneSheet(player) {
         `${stone(type, player)}</g>`);
     }
   });
-  return sheet(
-    `Pif-paf-poe — stones for ${player}`,
-    'Eight of each of the six types. A hand is five stones, drawn at random, repeats and all.',
-    cells.join('\n'));
+  return sheet(cells.join('\n'));
 }
 
 // Rough advance widths, as fractions of the font size, for a sans-serif. Wrapping
@@ -342,7 +325,7 @@ function card(item) {
   return [
     `<rect x="0" y="0" width="${n(CARD.w)}" height="${n(CARD.h)}" rx="2" ` +
       `fill="#fff" stroke="${CUT}" stroke-width="0.25"/>`,
-    `<g transform="translate(19 22)">${icon(shapes(), { scale: 1.05 })}</g>`,
+    `<g transform="translate(19 22)">${icon(shapes(), 1.05)}</g>`,
     text(x, 16.4, title, { size: 5, weight: 'bold', anchor: 'start' }),
     body.svg,
     footnote.svg,
@@ -354,15 +337,53 @@ function card(item) {
 // Two of each of the five, down the page in pairs, so one sheet is a full set for
 // two players.
 function counterattackSheet() {
-  const left = (PAGE.w - (2 * CARD.w + CARD.gap)) / 2;
-  const top = 25;
+  const span = (page, size, count) => (page - (count * size + (count - 1) * CARD.gap)) / 2;
+  const left = span(PAGE.w, CARD.w, 2), top = span(PAGE.h, CARD.h, ITEMS.length);
   const cards = ITEMS.flatMap((item, row) => [0, 1].map((col) =>
     `<g transform="translate(${n(left + col * (CARD.w + CARD.gap))} ` +
     `${n(top + row * (CARD.h + CARD.gap))})">${card(item)}</g>`));
-  return sheet(
-    'Pif-paf-poe — Counterattacks',
-    'Two of each of the five. Hold as many as you like, present up to three, spend at most one.',
-    cards.join('\n'));
+  return sheet(cards.join('\n'));
+}
+
+// ── The arena ───────────────────────────────────────────────────────────────
+
+const TINT = '#f1f1f1';         // every other zone, so the zones read at a glance
+const VETO_TONE = '#5a5a5a';    // printed on the arena, not played onto it
+
+// One page of arena. Every space carries the stone type it switches off, printed
+// small in a corner, so the middle of the space stays free for the symbol of
+// whoever takes it. Zones are drawn heavy and tinted like a chequerboard: three
+// in a row scores anywhere on the arena, so the zone lines have to be readable
+// without ever looking like they stop a line.
+//
+// A neutral space switches nothing off, and gets a dash rather than an icon --
+// there is no stone to draw, and an empty corner reads as a printing fault.
+function arenaSheet(size) {
+  setArena(size);
+  const cell = size === 'big' ? 21 : 32;
+  const left = (PAGE.w - WIDTH * cell) / 2, top = (PAGE.h - HEIGHT * cell) / 2;
+  const at = (x, y) => [left + x * cell, top + y * cell];
+  const out = [];
+
+  for (const s of SPACES) {
+    const [x, y] = at(s.x, s.y);
+    const tinted = (((s.x / 3) | 0) + ((s.y / 3) | 0)) % 2 === 1;
+    out.push(`<rect x="${n(x)}" y="${n(y)}" width="${n(cell)}" height="${n(cell)}" ` +
+      `fill="${tinted ? TINT : '#fff'}" stroke="${CUT}" stroke-width="0.25"/>`);
+    const veto = VETO[s.i];
+    const shapes = veto === 'neutral' ? [path('M -3.4 0 H 3.4', 1)] : STONE_ICONS[veto]();
+    out.push(`<g transform="translate(${n(x + cell * 0.27)} ${n(y + cell * 0.25)})">` +
+      `${icon(shapes, cell * 0.026, VETO_TONE)}</g>`);
+  }
+
+  // Zone borders last, over the tints and the space grid.
+  for (const z of ZONES) {
+    const spaces = ZONE_SPACES[z].map((i) => SPACES[i]);
+    const [x, y] = at(Math.min(...spaces.map((s) => s.x)), Math.min(...spaces.map((s) => s.y)));
+    out.push(`<rect x="${n(x)}" y="${n(y)}" width="${n(3 * cell)}" height="${n(3 * cell)}" ` +
+      `fill="none" stroke="${INK}" stroke-width="0.7"/>`);
+  }
+  return sheet(out.join('\n'));
 }
 
 const out = arg('out', 'print');
@@ -371,6 +392,8 @@ const sheets = {
   'stones-x.svg': stoneSheet('X'),
   'stones-o.svg': stoneSheet('O'),
   'counterattacks.svg': counterattackSheet(),
+  'arena-small.svg': arenaSheet('small'),
+  'arena-big.svg': arenaSheet('big'),
 };
 for (const [name, svg] of Object.entries(sheets)) {
   writeFileSync(`${out}/${name}`, svg);

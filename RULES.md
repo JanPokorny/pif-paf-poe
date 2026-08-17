@@ -223,11 +223,14 @@ Counterattack is only ever spent in a round your team defends.**
 
 # Making a set
 
-Three A4 sheets print the pieces, at `print/`:
+Five A4 sheets print the game, at `print/`:
 
 - `stones-x.svg` and `stones-o.svg` — 48 stones a sheet, eight of each of the six types, the
-  type's icon over the symbol. Eight hands, so print one of each per eight players.
+  type's icon in the middle of the symbol. Eight hands, so print one of each per eight players.
 - `counterattacks.svg` — ten cards, two of each of the five, the rule on the card.
+- `arena-small.svg` and `arena-big.svg` — the 6x6 arena and the 9x9. Zones are drawn heavy and
+  every other one tinted; each space carries the type it switches off in one corner and keeps
+  its middle free for the symbol of whoever takes it.
 
-Print at 100% with no fit-to-page, on card if you have it, and cut the stones along the grid.
-`node print.js` writes all three again.
+Everything is black, so any printer will do. Print at 100% with no fit-to-page, on card if you
+have it, and cut the stones along the grid. `node print.js` writes all five again.
