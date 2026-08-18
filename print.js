@@ -80,16 +80,17 @@ function text(x, y, s, { size = 3, weight = 'normal', fill = INK, anchor = 'midd
     `letter-spacing="${n(spacing)}">${esc(s)}</text>`;
 }
 
-// Arrowheads are two barbs at a tip, pointing along the direction of travel.
-function head(x, y, dx, dy, size = 2.4, spread = 0.55) {
+// An arrowhead is a filled triangle at the tip, pointing along the direction of
+// travel. Two open barbs would do on a straight arrow, but where the arrow bends
+// into its own head the barb and the curve lie along each other and the whole thing
+// reads as a hook. A solid head cannot be mistaken for more line.
+function arrow(x, y, dx, dy, size = 2.4, width = 1.9) {
   const len = Math.hypot(dx, dy) || 1;
   const [ux, uy] = [dx / len, dy / len];
-  const barb = (a) => [
-    x - size * (ux * Math.cos(a) - uy * Math.sin(a)),
-    y - size * (ux * Math.sin(a) + uy * Math.cos(a)),
-  ];
-  const [ax, ay] = barb(spread), [bx, by] = barb(-spread);
-  return `M ${n(ax)} ${n(ay)} L ${n(x)} ${n(y)} L ${n(bx)} ${n(by)}`;
+  const [bx, by] = [x - ux * size, y - uy * size];          // the middle of the base
+  const [px, py] = [(-uy * width) / 2, (ux * width) / 2];   // half of it, across the axis
+  return path(`M ${n(x)} ${n(y)} L ${n(bx + px)} ${n(by + py)} ` +
+    `L ${n(bx - px)} ${n(by - py)} Z`, 0.4, { full: true });
 }
 
 const box = (x, y, w, h) => `M ${n(x)} ${n(y)} h ${n(w)} v ${n(h)} h ${n(-w)} Z`;
@@ -109,20 +110,27 @@ function board(half = 7) {
 
 // ── The six stone types ─────────────────────────────────────────────────────
 
-const arc = (r, from, to, big = 1) => {
+// A clockwise arc, stopping an arrowhead's length short of where it is going and
+// handing back that point and the tangent there, so the head fills the gap and sits
+// on the direction of travel rather than on curve.
+const arc = (r, from, to, big = 1, gap = 2.2) => {
   const p = (a) => [r * Math.cos(a * Math.PI / 180), -r * Math.sin(a * Math.PI / 180)];
-  const [sx, sy] = p(from), [ex, ey] = p(to);
-  return { d: `M ${n(sx)} ${n(sy)} A ${n(r)} ${n(r)} 0 ${big} 1 ${n(ex)} ${n(ey)}`, ex, ey };
+  const [sx, sy] = p(from), [mx, my] = p(to + (gap / r) * (180 / Math.PI));
+  const [ex, ey] = p(to);
+  return {
+    d: `M ${n(sx)} ${n(sy)} A ${n(r)} ${n(r)} 0 ${big} 1 ${n(mx)} ${n(my)}`,
+    ex, ey, dx: -ey, dy: ex,
+  };
 };
 
 const STONE_ICONS = {
   // A row of three squares, an arrow one step along it, and the wrap underneath.
   shift: () => [
     ...[-6.6, -1.6, 3.4].map((x) => path(box(x, -1.6, 3.2, 3.2), 0.9)),
-    path('M -3.4 -4.8 H 3', 0.9),
-    path(head(3.4, -4.8, 1, 0), 0.9),
-    path('M 6.6 3.4 C 6.6 7.4 -6.6 7.4 -6.6 3.8', 0.9),
-    path(head(-6.6, 3.4, 0, -1, 2), 0.9),
+    path('M -3.4 -4.8 H 1.2', 0.9),
+    arrow(3.4, -4.8, 1, 0),
+    path('M 6.6 2.6 C 7.6 6.2 5.4 6.6 3.4 6.6 H -3.2', 0.9),
+    arrow(-5.4, 6.6, -1, 0, 2.2),
   ],
   // The tile game it is named after, which is what everyone recognises it by.
   '2048': () => [word('2048', 6.4)],
@@ -133,7 +141,7 @@ const STONE_ICONS = {
       ...[[0.3, -3.1], [-3.1, -3.1], [0.3, 0.3], [-3.1, 0.3]]
         .map(([x, y]) => path(box(x, y, 2.8, 2.8), 0.9)),
       path(a.d, 0.9),
-      path(head(a.ex, a.ey, -a.ey, a.ex, 2.2), 0.9),
+      arrow(a.ex, a.ey, a.dx, a.dy),
     ];
   },
   // Nothing moves it, and nothing passes through it.
@@ -167,7 +175,7 @@ const COUNTERATTACKS = {
     note: 'A Mountain is not safe from it.',
     // The centre stone, on its way off the board.
     icon: () => [...board().lines, ring(0, 0, 2.4, 1.1),
-      path('M 2.4 -2.4 L 8.2 -8.2', 1), path(head(8.6, -8.6, 1, -1, 2.6), 1)],
+      path('M 2.4 -2.4 L 7.4 -7.4', 1), arrow(8.4, -8.4, 1, -1, 2.8, 2.2)],
   },
   relocate: {
     title: 'Relocate',
@@ -180,8 +188,8 @@ const COUNTERATTACKS = {
       const [ex, ey] = [tx - 1.2, ty - 3.2];
       return [...b.lines, dot(fx, fy, 2.6), ring(tx, ty, 2.4, 0.6),
         path(`M ${n(fx)} ${n(fy - 2.9)} C ${n(fx - 1.4)} ${n(fy - 8)} ` +
-          `${n(ex - 5)} ${n(ey - 2.4)} ${n(ex)} ${n(ey)}`, 0.9),
-        path(head(ex, ey, 1, 0.4, 2.2), 0.9)];
+          `${n(ex - 5)} ${n(ey - 2.4)} ${n(ex - 2.2)} ${n(ey - 1.1)}`, 0.9),
+        arrow(ex, ey, 5, 2.4, 2.4)];
     },
   },
   mirror: {
@@ -193,9 +201,9 @@ const COUNTERATTACKS = {
       const b = board();
       const [ax, ay] = b.cell(-1, -1), [bx, by] = b.cell(1, 1);
       return [...b.lines, dot(ax, ay, 2.6), ring(bx, by, 2.4, 1.1),
-        path(`M ${n(ax + 3)} ${n(ay + 3)} L ${n(bx - 3)} ${n(by - 3)}`, 0.9),
-        path(head(ax + 2.6, ay + 2.6, -1, -1, 2.2), 0.9),
-        path(head(bx - 2.6, by - 2.6, 1, 1, 2.2), 0.9)];
+        path(`M ${n(ax + 3.8)} ${n(ay + 3.8)} L ${n(bx - 3.8)} ${n(by - 3.8)}`, 0.9),
+        arrow(ax + 2.3, ay + 2.3, -1, -1, 2.2),
+        arrow(bx - 2.3, by - 2.3, 1, 1, 2.2)];
     },
   },
   'mind-control': {
@@ -205,8 +213,8 @@ const COUNTERATTACKS = {
     // Their hand, and the one you point at.
     icon: () => [
       ...[-7.4, -2.4, 2.6].map((x) => path(box(x, 2.2, 4.6, 4.6), x === -2.4 ? 1.4 : 0.7)),
-      path('M 0 -7.6 V -0.4', 1),
-      path(head(0, 0.4, 0, 1, 2.6), 1),
+      path('M 0 -7.6 V -1.6', 1),
+      arrow(0, 0.6, 0, 1, 2.6, 2.2),
     ],
   },
   rehearse: {
@@ -217,7 +225,7 @@ const COUNTERATTACKS = {
     icon: () => {
       const a = arc(4.8, 115, -150);
       return [...board().lines, dot(0, 0, 2.4),
-        path(a.d, 1), path(head(a.ex, a.ey, -a.ey, a.ex, 2.4), 1)];
+        path(a.d, 1), arrow(a.ex, a.ey, a.dx, a.dy, 2.6, 2.1)];
     },
   },
 };
