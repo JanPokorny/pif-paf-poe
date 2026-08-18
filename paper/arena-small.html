@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="en">
+<meta charset="utf-8">
+<title>Pif-paf-poe — the 6x6 arena</title>
+<link rel="stylesheet" href="ppp.css">
+
+<!-- The 6x6 arena: four zones of nine spaces, every other zone tinted. Each space
+     carries its name -- its zone, named by where it lies, and its place in it -- and
+     the stone type it switches off, both along the top, leaving the middle free for
+     the mark of whoever takes it. The vetoes step one across and three down, so no
+     line of three repeats one. Print at 100%, no fit-to-page. -->
+
+<ppp-page style="--ppp-space: 32mm">
+  <ppp-arena size="small">
+    <ppp-zone>
+      <ppp-space veto="neutral" name="NW1"></ppp-space>
+      <ppp-space veto="shift" name="NW2"></ppp-space>
+      <ppp-space veto="2048" name="NW3"></ppp-space>
+      <ppp-space veto="rotate" name="NW4"></ppp-space>
+      <ppp-space veto="mountain" name="NW5"></ppp-space>
+      <ppp-space veto="magnet" name="NW6"></ppp-space>
+      <ppp-space veto="stinky" name="NW7"></ppp-space>
+      <ppp-space veto="neutral" name="NW8"></ppp-space>
+      <ppp-space veto="shift" name="NW9"></ppp-space>
+    </ppp-zone>
+    <ppp-zone>
+      <ppp-space veto="rotate" name="NE1"></ppp-space>
+      <ppp-space veto="mountain" name="NE2"></ppp-space>
+      <ppp-space veto="magnet" name="NE3"></ppp-space>
+      <ppp-space veto="stinky" name="NE4"></ppp-space>
+      <ppp-space veto="neutral" name="NE5"></ppp-space>
+      <ppp-space veto="shift" name="NE6"></ppp-space>
+      <ppp-space veto="2048" name="NE7"></ppp-space>
+      <ppp-space veto="rotate" name="NE8"></ppp-space>
+      <ppp-space veto="mountain" name="NE9"></ppp-space>
+    </ppp-zone>
+    <ppp-zone>
+      <ppp-space veto="2048" name="SW1"></ppp-space>
+      <ppp-space veto="rotate" name="SW2"></ppp-space>
+      <ppp-space veto="mountain" name="SW3"></ppp-space>
+      <ppp-space veto="magnet" name="SW4"></ppp-space>
+      <ppp-space veto="stinky" name="SW5"></ppp-space>
+      <ppp-space veto="neutral" name="SW6"></ppp-space>
+      <ppp-space veto="shift" name="SW7"></ppp-space>
+      <ppp-space veto="2048" name="SW8"></ppp-space>
+      <ppp-space veto="rotate" name="SW9"></ppp-space>
+    </ppp-zone>
+    <ppp-zone>
+      <ppp-space veto="magnet" name="SE1"></ppp-space>
+      <ppp-space veto="stinky" name="SE2"></ppp-space>
+      <ppp-space veto="neutral" name="SE3"></ppp-space>
+      <ppp-space veto="shift" name="SE4"></ppp-space>
+      <ppp-space veto="2048" name="SE5"></ppp-space>
+      <ppp-space veto="rotate" name="SE6"></ppp-space>
+      <ppp-space veto="mountain" name="SE7"></ppp-space>
+      <ppp-space veto="magnet" name="SE8"></ppp-space>
+      <ppp-space veto="stinky" name="SE9"></ppp-space>
+    </ppp-zone>
+  </ppp-arena>
+</ppp-page>

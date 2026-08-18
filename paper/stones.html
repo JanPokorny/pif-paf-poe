@@ -1,0 +1,262 @@
+<!doctype html>
+<html lang="en">
+<meta charset="utf-8">
+<title>Pif-paf-poe — the stones</title>
+<link rel="stylesheet" href="ppp.css">
+
+<!-- Written by hand, in the same elements the printed sheets are made of: a board is a
+     ppp-grid of three ppp-rows of three ppp-squares, with a ppp-stone in the squares
+     that have one. The arrow between two boards is a ppp-then, and its dir is what the
+     player named; `played` follows the stone just placed; `open` rings a square the
+     opponent may use. One A4, so keep it that way if you add to it. -->
+
+<style>
+  ppp-page { display: block; align-content: start; padding: 12mm 10mm; }
+  h1 { margin: 0; font-size: 7mm; }
+  p { margin: 1.5mm 0 0; font-size: 3.2mm; line-height: 1.4; color: var(--ppp-fine); }
+
+  main { display: grid; grid-template-columns: 1fr 1fr; gap: 7mm 6mm; margin-top: 8mm; }
+  section { break-inside: avoid; }
+  h2 {
+    display: flex;
+    align-items: center;
+    gap: 2.5mm;
+    margin: 0 0 1.5mm;
+    font-size: 4.4mm;
+    --ppp-stone: 10mm;
+  }
+  section p { margin: 0 0 2.5mm; color: var(--ppp-ink); }
+  /* nowrap, so a pair of boards never stacks and the page stays one page */
+  ppp-figure { --ppp-square: 11.5mm; gap: 2.5mm; flex-wrap: nowrap; }
+  ppp-then { width: 11mm; font-size: 5.5mm; }
+  ppp-then::after { font-size: 2.4mm; }
+</style>
+
+<ppp-page>
+<h1>The stones</h1>
+<p>Three move things, one refuses to be moved, two say where the opponent may play.
+The dashed square follows the stone just played.</p>
+
+<main>
+
+<section>
+  <h2><ppp-stone player="X" type="shift"></ppp-stone> Shift</h2>
+  <p>Name a direction: that row or column slides one step, and what falls off the end
+  wraps to the other.</p>
+  <ppp-figure>
+    <ppp-grid>
+      <ppp-row>
+        <ppp-square></ppp-square>
+        <ppp-square></ppp-square>
+        <ppp-square></ppp-square>
+      </ppp-row>
+      <ppp-row>
+        <ppp-square><ppp-stone player="X" type="shift" played></ppp-stone></ppp-square>
+        <ppp-square><ppp-stone player="O" type="2048"></ppp-stone></ppp-square>
+        <ppp-square><ppp-stone player="O" type="rotate"></ppp-stone></ppp-square>
+      </ppp-row>
+      <ppp-row>
+        <ppp-square></ppp-square>
+        <ppp-square></ppp-square>
+        <ppp-square></ppp-square>
+      </ppp-row>
+    </ppp-grid>
+    <ppp-then dir="right"></ppp-then>
+    <ppp-grid>
+      <ppp-row>
+        <ppp-square></ppp-square>
+        <ppp-square></ppp-square>
+        <ppp-square></ppp-square>
+      </ppp-row>
+      <ppp-row>
+        <ppp-square><ppp-stone player="O" type="rotate"></ppp-stone></ppp-square>
+        <ppp-square><ppp-stone player="X" type="shift" played></ppp-stone></ppp-square>
+        <ppp-square><ppp-stone player="O" type="2048"></ppp-stone></ppp-square>
+      </ppp-row>
+      <ppp-row>
+        <ppp-square></ppp-square>
+        <ppp-square></ppp-square>
+        <ppp-square></ppp-square>
+      </ppp-row>
+    </ppp-grid>
+  </ppp-figure>
+</section>
+
+<section>
+  <h2><ppp-stone player="X" type="2048"></ppp-stone> 2048</h2>
+  <p>Name a direction: every stone on the board slides that way as far as it goes.</p>
+  <ppp-figure>
+    <ppp-grid>
+      <ppp-row>
+        <ppp-square></ppp-square>
+        <ppp-square><ppp-stone player="O" type="rotate"></ppp-stone></ppp-square>
+        <ppp-square></ppp-square>
+      </ppp-row>
+      <ppp-row>
+        <ppp-square><ppp-stone player="X" type="magnet"></ppp-stone></ppp-square>
+        <ppp-square></ppp-square>
+        <ppp-square></ppp-square>
+      </ppp-row>
+      <ppp-row>
+        <ppp-square></ppp-square>
+        <ppp-square><ppp-stone player="O" type="stinky"></ppp-stone></ppp-square>
+        <ppp-square><ppp-stone player="X" type="2048" played></ppp-stone></ppp-square>
+      </ppp-row>
+    </ppp-grid>
+    <ppp-then dir="up"></ppp-then>
+    <ppp-grid>
+      <ppp-row>
+        <ppp-square><ppp-stone player="X" type="magnet"></ppp-stone></ppp-square>
+        <ppp-square><ppp-stone player="O" type="rotate"></ppp-stone></ppp-square>
+        <ppp-square><ppp-stone player="X" type="2048" played></ppp-stone></ppp-square>
+      </ppp-row>
+      <ppp-row>
+        <ppp-square></ppp-square>
+        <ppp-square><ppp-stone player="O" type="stinky"></ppp-stone></ppp-square>
+        <ppp-square></ppp-square>
+      </ppp-row>
+      <ppp-row>
+        <ppp-square></ppp-square>
+        <ppp-square></ppp-square>
+        <ppp-square></ppp-square>
+      </ppp-row>
+    </ppp-grid>
+  </ppp-figure>
+</section>
+
+<section>
+  <h2><ppp-stone player="X" type="rotate"></ppp-stone> Rotate</h2>
+  <p>Pick one of the 2x2 blocks it belongs to: those four squares turn one step
+  clockwise.</p>
+  <ppp-figure>
+    <ppp-grid>
+      <ppp-row>
+        <ppp-square><ppp-stone player="O" type="stinky"></ppp-stone></ppp-square>
+        <ppp-square><ppp-stone player="O" type="magnet"></ppp-stone></ppp-square>
+        <ppp-square></ppp-square>
+      </ppp-row>
+      <ppp-row>
+        <ppp-square><ppp-stone player="X" type="2048"></ppp-stone></ppp-square>
+        <ppp-square><ppp-stone player="X" type="rotate" played></ppp-stone></ppp-square>
+        <ppp-square></ppp-square>
+      </ppp-row>
+      <ppp-row>
+        <ppp-square></ppp-square>
+        <ppp-square></ppp-square>
+        <ppp-square></ppp-square>
+      </ppp-row>
+    </ppp-grid>
+    <ppp-then dir="clockwise"></ppp-then>
+    <ppp-grid>
+      <ppp-row>
+        <ppp-square><ppp-stone player="X" type="2048"></ppp-stone></ppp-square>
+        <ppp-square><ppp-stone player="O" type="stinky"></ppp-stone></ppp-square>
+        <ppp-square></ppp-square>
+      </ppp-row>
+      <ppp-row>
+        <ppp-square><ppp-stone player="X" type="rotate" played></ppp-stone></ppp-square>
+        <ppp-square><ppp-stone player="O" type="magnet"></ppp-stone></ppp-square>
+        <ppp-square></ppp-square>
+      </ppp-row>
+      <ppp-row>
+        <ppp-square></ppp-square>
+        <ppp-square></ppp-square>
+        <ppp-square></ppp-square>
+      </ppp-row>
+    </ppp-grid>
+  </ppp-figure>
+</section>
+
+<section>
+  <h2><ppp-stone player="X" type="mountain"></ppp-stone> Mountain</h2>
+  <p>Nothing moves it, and nothing slides past it. Here someone else's 2048 falls
+  around it.</p>
+  <ppp-figure>
+    <ppp-grid>
+      <ppp-row>
+        <ppp-square><ppp-stone player="X" type="2048" played></ppp-stone></ppp-square>
+        <ppp-square><ppp-stone player="X" type="mountain"></ppp-stone></ppp-square>
+        <ppp-square><ppp-stone player="O" type="magnet"></ppp-stone></ppp-square>
+      </ppp-row>
+      <ppp-row>
+        <ppp-square></ppp-square>
+        <ppp-square><ppp-stone player="O" type="rotate"></ppp-stone></ppp-square>
+        <ppp-square></ppp-square>
+      </ppp-row>
+      <ppp-row>
+        <ppp-square></ppp-square>
+        <ppp-square></ppp-square>
+        <ppp-square></ppp-square>
+      </ppp-row>
+    </ppp-grid>
+    <ppp-then dir="down"></ppp-then>
+    <ppp-grid>
+      <ppp-row>
+        <ppp-square></ppp-square>
+        <ppp-square><ppp-stone player="X" type="mountain"></ppp-stone></ppp-square>
+        <ppp-square></ppp-square>
+      </ppp-row>
+      <ppp-row>
+        <ppp-square></ppp-square>
+        <ppp-square></ppp-square>
+        <ppp-square></ppp-square>
+      </ppp-row>
+      <ppp-row>
+        <ppp-square><ppp-stone player="X" type="2048" played></ppp-stone></ppp-square>
+        <ppp-square><ppp-stone player="O" type="rotate"></ppp-stone></ppp-square>
+        <ppp-square><ppp-stone player="O" type="magnet"></ppp-stone></ppp-square>
+      </ppp-row>
+    </ppp-grid>
+  </ppp-figure>
+</section>
+
+<section>
+  <h2><ppp-stone player="X" type="magnet"></ppp-stone> Magnet</h2>
+  <p>Your opponent must play next to it. Rings show where.</p>
+  <ppp-figure>
+    <ppp-grid>
+      <ppp-row>
+        <ppp-square><ppp-stone player="O" type="rotate"></ppp-stone></ppp-square>
+        <ppp-square open></ppp-square>
+        <ppp-square></ppp-square>
+      </ppp-row>
+      <ppp-row>
+        <ppp-square open></ppp-square>
+        <ppp-square><ppp-stone player="X" type="magnet" played></ppp-stone></ppp-square>
+        <ppp-square open></ppp-square>
+      </ppp-row>
+      <ppp-row>
+        <ppp-square></ppp-square>
+        <ppp-square open></ppp-square>
+        <ppp-square><ppp-stone player="X" type="2048"></ppp-stone></ppp-square>
+      </ppp-row>
+    </ppp-grid>
+  </ppp-figure>
+</section>
+
+<section>
+  <h2><ppp-stone player="X" type="stinky"></ppp-stone> Stinky</h2>
+  <p>Your opponent must play away from it. Only the latest of these two binds.</p>
+  <ppp-figure>
+    <ppp-grid>
+      <ppp-row>
+        <ppp-square open></ppp-square>
+        <ppp-square><ppp-stone player="O" type="rotate"></ppp-stone></ppp-square>
+        <ppp-square open></ppp-square>
+      </ppp-row>
+      <ppp-row>
+        <ppp-square></ppp-square>
+        <ppp-square><ppp-stone player="X" type="stinky" played></ppp-stone></ppp-square>
+        <ppp-square></ppp-square>
+      </ppp-row>
+      <ppp-row>
+        <ppp-square open></ppp-square>
+        <ppp-square><ppp-stone player="X" type="2048"></ppp-stone></ppp-square>
+        <ppp-square open></ppp-square>
+      </ppp-row>
+    </ppp-grid>
+  </ppp-figure>
+</section>
+
+</main>
+</ppp-page>

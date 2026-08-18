@@ -220,3 +220,31 @@ expect to finish your hand first and buy Counterattacks with what is left.
 Counterattacks bought here are held under the duel's rule — as many as you like, present up to
 three, spend at most one, unspent ones kept. Since the campaign's attacker moves first, **a
 Counterattack is only ever spent in a round your team defends.**
+
+# Making a set
+
+Everything that ends up on paper lives in `paper/`: one stylesheet, one SVG for each drawing,
+and HTML documents built out of `ppp-` elements. Open a document in a browser and print it.
+
+- `stones-sheet.html` — 48 stones a sheet, X across the top half and O across the bottom, four
+  of each of the six types a side, the type's icon in the middle of the symbol. Halve the sheet
+  first and each player has their own symbol to cut up.
+- `counterattacks-sheet.html` — ten cards, two of each of the five, the rule on the card. Two
+  columns and five rows, with a wide gutter to cut down.
+- `arena-small.html` and `arena-big.html` — the 6x6 arena and the 9x9. Zones are drawn heavy and
+  every other one tinted, and named by where they lie: NW, N, NE, W, C, E, SW, S, SE. Each space
+  carries its own name — its zone and its place in it, counted along the rows, so NW1 to NW9 —
+  along with the type it switches off, both along the top, leaving its middle free for the symbol
+  of whoever takes it.
+
+Everything is black, so any printer will do. Print at 100% with no fit-to-page, on card if you
+have it, and cut down the middle of the gaps: nothing is printed to cut along, so a wobbling cut
+leaves no line on the piece to show it.
+
+`stones.html` is not for cutting up: it is the six types explained, each with a board before and
+after its effect. It is written by hand in the same elements as the sheets — a `ppp-grid` of
+`ppp-row`s of `ppp-square`s, with a `ppp-stone player="O" type="stinky"` in the squares that have
+one, a `ppp-mark player="O"` on an arena space O has taken, and a `ppp-then dir="up"` between two
+boards for what was named — so a page of your own is written the same way, and how big any of it
+comes out is a custom property. `paper/ppp.css` is the whole vocabulary, and every file in
+`paper/` is one you can open and edit: there is nothing to build.
