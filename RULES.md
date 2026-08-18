@@ -34,8 +34,9 @@ who can spend a Counterattack**, which is what compensates them for moving secon
 
 On your turn, in order:
 
-1. **Place** a stone from your hand on any free square. The only thing that ever narrows the
-   choice is an opponent's Magnet or Stinky.
+1. **Place** a stone from your hand on any free square. The only things that ever narrow the
+   choice are an opponent's Magnets and Stinkies, which say where, and their Mind Control,
+   which says which stone.
 2. **Resolve** its effect, if it has one. This is not optional: you may place a stone where its
    effect has nothing to do, but you may not place it where the effect works and decline it.
 3. **Counterattack** — if you moved second and hold one, you may spend it now.
@@ -75,10 +76,15 @@ Every direction and block always stays legal. An effect that moves nothing is st
 
 **Stinky** — your opponent must place their stones **not adjacent** to this one.
 
-Those two bind only the opponent, never their owner. If no free square satisfies the
-restriction, it does not apply that turn. Neither wears off, and **only one is ever in force** —
-the most recently placed, working from wherever its stone now stands. Placing either one
-replaces the other, whoever owned it.
+Those two bind only the opponent, never their owner, and **every one of them on the board
+binds at once**. Before placing, take the free squares and cross off every one that is not
+beside one of their Magnets — beside any single one of them is enough — and then every one
+that is beside any of their Stinkies. What is left is where you may play, and **if nothing
+is left the whole free board is open again**, which is also what happens when they have
+neither stone down.
+
+Neither wears off, and both work from wherever their stone now stands: a Magnet that gets
+shifted pulls from its new square, and one taken off the board stops pulling.
 
 ## Spaces
 
@@ -137,12 +143,12 @@ Each space's printed veto follows a fixed pattern, stepping one across and three
 no line of three repeats a veto:
 
 ```
-   -  S  2  R  M  M          -  neutral      S  shift
-   R  M  M  S  -  S          2  2048         R  rotate
-   S  -  S  2  R  M          M  mountain     M  magnet
-   2  R  M  M  S  -                          S  stinky
-   M  S  -  S  2  R
-   S  2  R  M  M  S
+   --  sh  20  ro  mo  mg          --  neutral     mo  mountain
+   ro  mo  mg  st  --  sh          sh  shift       mg  magnet
+   st  --  sh  20  ro  mo          20  2048        st  stinky
+   20  ro  mo  mg  st  --          ro  rotate
+   mg  st  --  sh  20  ro
+   sh  20  ro  mo  mg  st
 ```
 
 The 9x9 continues the same pattern.
@@ -158,7 +164,7 @@ The 9x9 continues the same pattern.
 - **The first attacker gives back two.** Attacking first is worth something, so the team that
   goes first removes two of its own opening marks.
 - **The target.** Agree what to play to: **40 points on the 6x6, 170 on the 9x9**. Either is
-  about twenty-three rounds.
+  about two dozen rounds.
 
 ## The round
 
@@ -185,8 +191,10 @@ is worth covering, and the attack has to buy the spaces it wants at the price th
    is two, four in a row is two. **n lines in one round score n²** — 1, 4, 9, 16.
 8. **Clearing.** Every scored line costs ground. For each one, **one** zone that the line
    passed through is wiped clean of both teams' symbols, and **the attack picks which zone**.
-9. **Paying.** Everyone standing on a space their side won — attackers on a space taken,
-   defenders on a space held, whether they fought or not — takes **one upgrade point**.
+9. **Paying.** There are two ways to earn and a player can do both. Everyone standing on a
+   space their side won — attackers on a space taken, defenders on a space held, whether they
+   fought or not — takes **one upgrade point**; and everyone who **won their duel** takes one.
+   So a round pays a player nothing, one, or two, and the second one has to be fought for.
 
 ### Reading a space
 
@@ -211,10 +219,10 @@ Points are spent between rounds, on one of two things:
 
 | | cost |
 |---|---|
-| **replace one stone** in your hand, your choice of both | **2 points** |
-| **a Counterattack**, drawn at random, single use | **2 points** |
+| **replace one stone** in your hand, your choice of both | **3 points** |
+| **a Counterattack**, drawn at random, single use | **3 points** |
 
-Nothing else costs points and they never expire. A campaign pays a player about twelve, so
+Nothing else costs points and they never expire. A campaign pays a player about eighteen, so
 expect to finish your hand first and buy Counterattacks with what is left.
 
 Counterattacks bought here are held under the duel's rule — as many as you like, present up to

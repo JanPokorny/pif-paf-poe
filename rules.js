@@ -1,6 +1,6 @@
-// How much is a restriction that never lets go worth? Each study plays a stone
-// whose restriction lasts one turn against the same stone whose restriction
-// holds until it is replaced.
+// How much is it worth to have every restriction stone binding at once? Each
+// study plays the older rule -- only the most recently placed Magnet or Stinky
+// binds -- against the rule as it stands, where all of them do.
 //
 //   node rules.js --study magnet --pairs 1000 --iters 300 --out results/rules-magnet.json
 //   node rules.js --study stinky --pairs 1000 --iters 300 --out results/rules-stinky.json
@@ -10,9 +10,10 @@
 // pairing differs between them only where the change actually mattered, and the
 // interval is on the per-pairing difference.
 //
-// "Permanent" is the smallest version that deserves the name: the most recently
-// placed restriction stone binds its opponent until another one replaces it or
-// it leaves the board. There is one restriction in force at a time either way.
+// Under both arms a restriction binds from wherever its stone now stands and
+// stops when the stone leaves the board. What differs is how many of them are
+// in force: one, or the intersection of all of them, with the whole free board
+// back when that intersection is empty.
 
 import { Worker, isMainThread, parentPort, workerData } from 'node:worker_threads';
 import { cpus } from 'node:os';
@@ -20,7 +21,7 @@ import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { dirname } from 'node:path';
 import { pathToFileURL } from 'node:url';
 
-import { createGame, applyAction, STONE_TYPES } from './engine.js';
+import { allowedSquares, createGame, applyAction, STONE_TYPES } from './engine.js';
 import { chooseAction, makeRng } from './ai.js';
 import { arg, pad, pct, randomHand, wilson } from './sim.js';
 
@@ -28,12 +29,13 @@ import { arg, pad, pct, randomHand, wilson } from './sim.js';
 const STUDIES = {
   magnet: {
     stone: 'magnet', pool: STONE_TYPES,
-    arms: { 'one turn': { oneTurnMagnet: true }, permanent: {} },
+    arms: { 'one of them': { oneRestriction: true }, 'all at once': {} },
   },
   stinky: {
-    // Stinky is not in the pool, so the study deals it in explicitly.
+    // Stinky is dealt twice as often here, so the study sees hands that hold
+    // more than one of it -- which is where the change can show at all.
     stone: 'stinky', pool: [...STONE_TYPES, 'stinky'],
-    arms: { 'one turn': { oneTurnStinky: true }, permanent: {} },
+    arms: { 'one of them': { oneRestriction: true }, 'all at once': {} },
   },
 };
 
@@ -41,15 +43,15 @@ function playGame(spec) {
   const rng = makeRng(spec.seed);
   const s = createGame({ handX: spec.opener, handO: spec.replier, first: 'X', ...spec.rules });
 
-  // How often a placement was actually made under a restriction: the change is
-  // only worth anything to the extent that this number moves.
+  // How often a placement was actually made under a restriction -- that is, how
+  // often the squares on offer were fewer than the free ones. The change is only
+  // worth anything to the extent that this number moves.
   let placements = 0, pulled = 0;
   let plies = 0;
   while (!s.over && plies++ < 200) {
     if (s.phase === 'place') {
       placements++;
-      const r = s.restriction;
-      if (r && r.owner !== s.player && s.board.some((c) => c?.id === r.id)) pulled++;
+      if (allowedSquares(s).length < s.board.filter((c) => !c).length) pulled++;
     }
     applyAction(s, chooseAction(s, { iterations: spec.iters, rng }));
   }
@@ -86,7 +88,7 @@ function report(state) {
   const study = STUDIES[state.study];
   const names = Object.keys(study.arms);
   const pairings = buildPairings(state.pairs, state.seed, study.pool);
-  console.log(`\npermanent ${study.stone}: ${n} hand pairings per arm, ` +
+  console.log(`\nevery ${study.stone} in force: ${n} hand pairings per arm, ` +
     `${Object.keys(state.arms).length} of ${names.length} arms, iters=${state.iters}, ` +
     `pool of ${study.pool.length}\n`);
 

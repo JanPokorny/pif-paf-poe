@@ -16,7 +16,7 @@ import {
   ZONES, ZONE_SPACES, claimable, setArena,
 } from './arena.js';
 import {
-  CARD_WORTH, allocate, bestPicks, newCampaign, playRound, posValue,
+  CARD_COST, CARD_WORTH, SWAP_COST, allocate, bestPicks, newCampaign, playRound, posValue,
   placementValue, resolve as pairOff, scoreAndClear, setPos, stakePerDuel,
   tailTable, takeChance, winsNeeded,
 } from './campaign.js';
@@ -119,15 +119,69 @@ check('a Mountain in the square blocks its follower and frees the rest',
     { at: 0, selected: 'rotate' }, { square: 'TL' }),
   ['Xro', 'Omo', '.', 'Omg', '.', '.', '.', '.', '.']);
 
-// ── The Magnet still binds ──────────────────────────────────────────────────
+// ── Where a player may place ────────────────────────────────────────────────
+
+// A little state with a board already set and a stone in hand ready to place,
+// so the only question left is which squares are on offer.
+function placing(spec, { player = 'O', stone = 'shift', ...opts } = {}) {
+  const s = createGame({ handX: [stone], handO: [stone], first: player, ...opts });
+  s.board = board(spec);
+  s.player = player;
+  s.selected = stone;
+  s.phase = 'place';
+  return s;
+}
+const offers = (s) => legalActions(s).map((a) => a.pos);
 
 {
   const s = createGame({ handX: ['magnet'], handO: ['shift'], first: 'X' });
   applyAction(s, { type: 'select', stone: 'magnet' });
   applyAction(s, { type: 'place', pos: 4 });
   applyAction(s, { type: 'select', stone: 'shift' });
-  check('a Magnet still compels the opponent to place adjacent to it',
-    legalActions(s).map((a) => a.pos), [1, 3, 5, 7]);
+  check('a Magnet compels the opponent to place adjacent to it',
+    offers(s), [1, 3, 5, 7]);
+}
+
+check('a Stinky on its own still pushes the opponent off it',
+  offers(placing(['.', '.', '.', '.', 'Xst', '.', '.', '.', '.'])),
+  [0, 2, 6, 8]);
+
+check('two Magnets offer the squares beside either of them',
+  offers(placing(['Xmg', '.', '.', '.', '.', '.', '.', '.', 'Xmg'])),
+  [1, 3, 5, 7]);
+
+check('two Stinkies deny the squares beside either of them',
+  offers(placing(['Xst', '.', '.', '.', '.', '.', '.', '.', 'Xst'])),
+  [2, 4, 6]);
+
+check('a Magnet and a Stinky together cut the choice down to what both allow',
+  offers(placing(['.', '.', '.', '.', 'Xmg', '.', '.', 'Xst', '.'])),
+  [1, 3, 5]);
+
+check('a Magnet and a Stinky that leave nothing open the whole free board',
+  offers(placing(['Xmg', '.', '.', '.', 'Xst', '.', '.', '.', '.'])),
+  [1, 2, 3, 5, 6, 7, 8]);
+
+check('your own Magnet and Stinky never bind you',
+  offers(placing(['Omg', '.', '.', 'Ost', '.', '.', '.', '.', '.'])),
+  [1, 2, 4, 5, 6, 7, 8]);
+
+check('a Magnet with no free square beside it binds nobody',
+  offers(placing(['Omo', 'Xmg', 'Xmo', '.', 'Omo', '.', '.', '.', '.'])),
+  [3, 5, 6, 7, 8]);
+
+{
+  // The rule it replaced, kept for the study: only the latest one binds. The
+  // Stinky is the one placed, so the Magnet on the board says nothing.
+  const s = createGame({
+    handX: ['stinky'], handO: ['shift'], first: 'X', oneRestriction: true,
+  });
+  s.board = board(['Xmg', '.', '.', '.', '.', '.', '.', '.', '.']);
+  applyAction(s, { type: 'select', stone: 'stinky' });
+  applyAction(s, { type: 'place', pos: 8 });
+  applyAction(s, { type: 'select', stone: 'shift' });
+  check('under the single-restriction variant the latest one replaces the rest',
+    offers(s), [1, 2, 3, 4, 6]);
 }
 
 // ── A Mountain never removes a choice ───────────────────────────────────────
@@ -694,7 +748,11 @@ if (existsSync('results/hands-vetoes.json')) {
   const bought = st.bought.slice(1).flat().reduce((a, b) => a + b, 0);
   check('a purse never goes negative', purses.every((n) => n >= 0), true);
   check('every point is earned, spent or banked',
-    2 * (tally.swaps + tally.cards) + purses.reduce((a, b) => a + b, 0), tally.earned);
+    SWAP_COST * tally.swaps + CARD_COST * tally.cards
+      + purses.reduce((a, b) => a + b, 0), tally.earned);
+  // Every duel has exactly one winner and every winner is paid, so the duels are a
+  // floor on what the round handed out -- the spaces pay on top of them.
+  check('a duel won pays a point of its own', tally.earned >= tally.duels, true);
   check('the ladder is climbed', bought > 0 && bought === tally.swaps, true);
   check('cards are held as worths',
     st.cards.slice(1).flat(2).every((w) => CARD_WORTH.includes(w)), true);

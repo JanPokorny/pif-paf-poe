@@ -35,6 +35,11 @@ dead weight against a Mountain-heavy board.
 
 ### A Magnet's pull is permanent
 
+*Superseded in part on 2026-08-18: the pull is still permanent, but a restriction no longer
+replaces the one before it — every Magnet and Stinky on the board now binds at once. See
+`adr/2026-08-18-restrictions-compose-and-a-duel-won-pays.md`, which also records what
+happened to the copy curves below.*
+
 It holds until another restriction stone replaces it or it leaves the board, rather than for
 one turn. Measured over the whole hand space this moved the opening seat 71.7% → 69.8% and
 turned the Magnet from a stone you take one of into one every good hand holds — a second

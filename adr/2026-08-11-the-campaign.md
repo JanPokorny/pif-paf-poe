@@ -373,6 +373,11 @@ duel is even.
 
 ## Upgrade points: a square pays one, and both purchases cost two
 
+*Superseded on 2026-08-18: a duel won now pays a point of its own on top of the space, and
+both purchases cost three. The reasoning below is the reasoning that was re-applied; the
+numbers are the old income and the old duel. See
+`adr/2026-08-18-restrictions-compose-and-a-duel-won-pays.md`.*
+
 A square won pays **one point** to each of your players standing on it — the same list the stone
 swap already uses. **A stone swap costs 2. A Counterattack, drawn at random and single use,
 costs 2.**
@@ -651,7 +656,9 @@ clearing rules and their geometry (whole zones, the halo, line-only), the subboa
 bonus, linear and triangular scoring, the `none` and `optional` step modes, the six
 rejected swap occasions and the standing-out mechanic, roles and the demand counter and
 the three coordination settings, the three rejected swap aims, the reversed phase order,
-the price sweeps, and the per-team position-weight gauntlet. Zones now tile the arena, so
+the price sweeps, and the per-team position-weight gauntlet. (The price sweep came back on
+2026-08-18, for the same reason the other instruments stayed: re-pricing was measured with
+it and cannot be re-run without it.) Zones now tile the arena, so
 shared corners and the matching they needed are gone too: a set of spaces can be marked
 in one round exactly when no two of them share a zone.
 

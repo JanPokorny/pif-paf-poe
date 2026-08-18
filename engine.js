@@ -20,7 +20,7 @@ export const LINES = [
   [0, 4, 8], [2, 4, 6],
 ];
 const SUBSQUARES = { TL: [0, 1, 3, 4], TR: [1, 2, 4, 5], BL: [3, 4, 6, 7], BR: [4, 5, 7, 8] };
-// Squares that map onto each other through the centre. What Exchange trades.
+// Squares that map onto each other through the centre. What Mirror trades.
 const SYMMETRIC = [[0, 8], [1, 7], [2, 6], [3, 5]];
 const DIRECTIONS = ['up', 'down', 'left', 'right'];
 
@@ -87,9 +87,10 @@ export function createGame({
   // still occupies its square and still counts towards a line, but it has no
   // effect, no restriction and, for a Mountain, no immovability.
   disabled = null,
-  // The rules as they stand hold a restriction until it is replaced. These put
-  // one back to lasting a single turn, for studies that compare the two.
-  oneTurnMagnet = false, oneTurnStinky = false,
+  // The rules as they stand put every restriction stone on the board in force at
+  // once. This puts one back to the older rule -- only the most recently placed
+  // binds -- for studies that compare the two.
+  oneRestriction = false,
 }) {
   if (disabled !== null && !STONE_TYPES.includes(disabled)) {
     throw new Error(`unknown stone type: ${disabled}`);
@@ -111,10 +112,9 @@ export function createGame({
     player: first,                   // whose turn it is
     phase: 'select',                 // select | place | effect | counter | over
     disabled,                        // the stone type this space switches off
-    oneTurnMagnet,                   // rules variants, both off under the rules as they stand
-    oneTurnStinky,
-    restriction: null,               // {id, owner, kind, sticky}: a Magnet or Stinky on the other player
-    forced: null,                    // {player, stones, deny}: Mind Control or Veto, next turn
+    oneRestriction,                  // a rules variant, off under the rules as they stand
+    restriction: null,               // {id, owner, kind}: the variant's single live restriction
+    forced: null,                    // {player, stones}: what Mind Control named, next turn
     selected: null,                  // stone type taken from hand, awaiting placement
     placedAt: null,                  // where it was placed, awaiting its effect
     placedId: null,                  // and which stone it is, since it may move again
@@ -136,8 +136,7 @@ export function cloneState(s) {
     player: s.player,
     phase: s.phase,
     disabled: s.disabled,
-    oneTurnMagnet: s.oneTurnMagnet,
-    oneTurnStinky: s.oneTurnStinky,
+    oneRestriction: s.oneRestriction,
     restriction: s.restriction ? { ...s.restriction } : null,
     forced: s.forced ? { ...s.forced } : null,
     selected: s.selected,
@@ -261,38 +260,57 @@ function resolves(s, type) { return EFFECT_TYPES.includes(type) && type !== s.di
 
 function selectActions(s) {
   let hand = [...new Set(s.hands[s.player])];
-  // Mind Control named the stone to play, Veto named one not to play. A demand
-  // the hand cannot meet does not apply.
+  // Mind Control named the stone to play. A demand the hand cannot meet does not
+  // apply.
   if (s.forced?.player === s.player) {
-    const { stones, deny } = s.forced;
-    const left = hand.filter((t) => stones.includes(t) !== !!deny);
+    const left = hand.filter((t) => s.forced.stones.includes(t));
     if (left.length) hand = left;
   }
   return hand.map((stone) => ({ type: 'select', stone }));
 }
 
-function placeActions(s) {
-  let free = freeSquares(s.board);
-  const p = s.player;
-  const r = s.restriction;
-
-  // A Magnet the opponent owns pulls you next to it and a Stinky pushes you off
-  // it. A restriction that no free square can satisfy does not apply.
-  const at = r && r.owner === other(p) ? restrictionSquare(s, r) : -1;
-  if (at >= 0) {
-    const pull = r.kind === 'magnet';
-    const allowed = free.filter((i) => adjacent(i, at) === pull);
-    if (allowed.length) free = allowed;
+// Where the opponent's restriction stones stand right now. They bind from
+// wherever they have ended up rather than from where they landed, so one that
+// gets shifted keeps working and one taken off the board stops.
+function restrictionsOn(s, player) {
+  const magnets = [], stinkies = [];
+  for (let i = 0; i < 9; i++) {
+    const c = s.board[i];
+    if (!c || c.player === player || c.type === s.disabled) continue;
+    if (c.type === 'magnet') magnets.push(i);
+    else if (c.type === 'stinky') stinkies.push(i);
   }
-
-  return free.map((pos) => ({ type: 'place', pos }));
+  return { magnets, stinkies };
 }
 
-// The restriction follows the Magnet itself, not the square it landed on: a
-// Magnet that gets shifted keeps pulling from wherever it ends up, and one that
-// leaves the board stops pulling at all.
-function restrictionSquare(s, r) {
-  return s.board.findIndex((c) => c?.id === r.id);
+// The squares this player may place on: every restriction the opponent has on
+// the board is in force at once. A Magnet pulls you next to it -- next to any
+// one of them is enough -- and a Stinky pushes you off it, every one of them,
+// and what is left is the intersection. If that comes out empty, because the
+// two disagree or because a Magnet is walled in, the whole free board is open.
+export function allowedSquares(s, free = freeSquares(s.board)) {
+  if (s.oneRestriction) return soleRestrictionSquares(s, free);
+  const { magnets, stinkies } = restrictionsOn(s, s.player);
+  if (!magnets.length && !stinkies.length) return free;
+  const allowed = free.filter((i) =>
+    (!magnets.length || magnets.some((m) => adjacent(i, m))) &&
+    !stinkies.some((t) => adjacent(i, t)));
+  return allowed.length ? allowed : free;
+}
+
+// The older rule, kept for the study that replaced it: only the most recently
+// placed restriction stone binds, and one no free square can satisfy lapses.
+function soleRestrictionSquares(s, free) {
+  const r = s.restriction;
+  const at = r && r.owner === other(s.player)
+    ? s.board.findIndex((c) => c?.id === r.id) : -1;
+  if (at < 0) return free;
+  const allowed = free.filter((i) => adjacent(i, at) === (r.kind === 'magnet'));
+  return allowed.length ? allowed : free;
+}
+
+function placeActions(s) {
+  return allowedSquares(s).map((pos) => ({ type: 'place', pos }));
 }
 
 // The effect menu for a stone of `type` sitting on `pos`. Usually that is the
@@ -320,8 +338,8 @@ function effectActions(s) {
   return effectOptions(s, s.selected, s.placedAt).map((o) => ({ type: 'effect', ...o }));
 }
 
-// End-of-turn items, spent by the player whose turn is ending. All three resolve
-// before the check for three in a row, so any of them can finish a line.
+// End-of-turn items, spent by the player whose turn is ending. Every one of them
+// resolves before the check for three in a row, so any of them can finish a line.
 function counterActions(s) {
   const p = s.player;
   const out = [{ type: 'counter', use: 'pass' }];
@@ -339,11 +357,6 @@ function addCounterActions(s, p, item, out) {
     // commit to first.
     if (s.board[4] && s.board[4].player === other(p)) {
       out.push({ type: 'counter', use: 'overtake', pos: 4 });
-    }
-  } else if (item === 'king-of-the-hill' && s.hands[p].includes('mountain')) {
-    // An extra placement, out of hand, and it has to be a Mountain.
-    for (const pos of freeSquares(s.board)) {
-      out.push({ type: 'counter', use: 'king-of-the-hill', pos });
     }
   } else if (item === 'mirror') {
     for (const [a, b] of SYMMETRIC) {
@@ -395,21 +408,17 @@ function finish(s, winner, reason) {
 function endTurn(s) {
   const player = s.player;
 
-  // The stone placed this turn may have been moved since -- by its own effect,
-  // or by an item -- so it is found by id rather than by the square it landed on.
-  const placed = s.board.findIndex((c) => c?.id === s.placedId);
-  if (RESTRICTION_TYPES.includes(s.selected) && s.selected !== s.disabled && placed >= 0) {
-    s.restriction = {
-      id: s.placedId, owner: player, kind: s.selected,
-      // A restriction holds until another one replaces it or its stone leaves
-      // the board, unless a study has asked for the one-turn version.
-      sticky: !(s.selected === 'magnet' ? s.oneTurnMagnet : s.oneTurnStinky),
-    };
-  } else if (s.restriction?.owner === other(player) && !s.restriction.sticky) {
-    s.restriction = null;   // it bound us for this turn and is now spent
+  // Restriction stones bind straight off the board, so under the rules as they
+  // stand there is nothing to record. The variant tracks the latest one: the
+  // stone placed this turn may have moved since -- by its own effect, or by an
+  // item -- so it is found by id rather than by the square it landed on.
+  if (s.oneRestriction) {
+    const placed = s.board.findIndex((c) => c?.id === s.placedId);
+    if (RESTRICTION_TYPES.includes(s.selected) && s.selected !== s.disabled && placed >= 0) {
+      s.restriction = { id: s.placedId, owner: player, kind: s.selected };
+    }
+    if (s.restriction && !s.board.some((c) => c?.id === s.restriction.id)) s.restriction = null;
   }
-  // A Magnet that has left the board -- taken by Overtake -- stops binding.
-  if (s.restriction && restrictionSquare(s, s.restriction) < 0) s.restriction = null;
   if (s.forced?.player === player) s.forced = null;   // it covered this turn
 
   if (hasLine(s.board, player)) { finish(s, player, 'line'); return true; }
@@ -423,9 +432,8 @@ function endTurn(s) {
   s.phase = 'select';
 
   // Out of room, or out of stones: the game is over and the player who did not
-  // open takes it. Overtake hands a stone back and King of the Hill adds one, so
-  // the board is not strictly filling every turn, but each happens once at most
-  // and the game still ends.
+  // open takes it. Overtake hands a stone back, so the board is not strictly
+  // filling every turn, but that happens once at most and the game still ends.
   if (isFull(s.board) || !s.hands[s.player].length) {
     finish(s, other(s.first), 'full');
     return true;
@@ -446,7 +454,7 @@ function afterEffect(s) {
 function afterPlacement(s) {
   if (!resolves(s, s.selected)) { afterEffect(s); return; }
 
-  // A Swap with nothing to take: the stone is placed and resolves nothing.
+  // A stone whose menu is empty is placed and resolves nothing.
   s.phase = 'effect';
   if (!effectActions(s).length) afterEffect(s);
 }
@@ -483,10 +491,6 @@ export function applyAction(s, action) {
         s.hands[cell.player].push(cell.type);
         s.board[action.pos] = null;
         s.spent[p] = true;
-      } else if (action.use === 'king-of-the-hill') {
-        s.hands[p].splice(s.hands[p].indexOf('mountain'), 1);
-        s.board[action.pos] = { player: p, type: 'mountain', id: s.nextId++ };
-        s.spent[p] = true;
       } else if (action.use === 'mirror') {
         const held = s.board[action.a];
         s.board[action.a] = s.board[action.b];
@@ -499,10 +503,8 @@ export function applyAction(s, action) {
       } else if (action.use === 'rehearse') {
         resolveOnto(s.board, s.board[action.pos].type, action.pos, action, s.disabled);
         s.spent[p] = true;
-      } else if (action.use === 'veto' || action.use === 'mind-control') {
-        s.forced = {
-          player: other(p), stones: action.stones, deny: action.use === 'veto',
-        };
+      } else if (action.use === 'mind-control') {
+        s.forced = { player: other(p), stones: action.stones };
         s.spent[p] = true;
       }
       endTurn(s);
