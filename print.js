@@ -15,6 +15,10 @@
 // black: the two symbols differ by shape, so nothing here needs a colour printer,
 // and the only text is on the cards, whose rules have to be read.
 //
+// Nothing is drawn around a piece. A cut line you miss shows on the piece for the
+// rest of the campaign, so the stones and the cards are set far apart instead and
+// you cut down the middle of the gap.
+//
 // Types, Counterattacks and the arena's geometry are imported from the engine and
 // arena rather than listed again, so a sheet cannot quietly go out of date with
 // the game.
@@ -32,7 +36,7 @@ const PAGE = { w: 210, h: 297 };
 
 const INK = '#000';
 const FAINT = '#b9b9b9';        // the 3x3 boards inside the Counterattack icons
-const CUT = '#c9c9c9';          // where the scissors go
+const RULE = '#c9c9c9';         // the arena's space grid, and the line on a card
 const FONT = 'Helvetica, Arial, sans-serif';
 
 const n = (v) => (Math.round(v * 100) / 100).toString();
@@ -223,23 +227,25 @@ const COUNTERATTACKS = {
 // Square stones, cut on a shared grid: two straight cuts a row where circles
 // would have wanted scissors, and a square holds a bigger symbol than a circle
 // of the same pitch does.
-const STONE = 30;          // side of the cut square
+const STONE = 34;          // pitch of the grid a sheet of stones is laid out on
 const FIELD = 7.6;         // radius of the clear middle the icon is drawn in
 
-// Centred on the origin: the cut line, the symbol at full size, a white disc over
-// the middle of it, and the type's icon on the disc. The X is drawn whole and then
-// interrupted, which keeps its four arms pointing at the corners while the icon
-// gets clean paper to sit on; the O's ring leaves the same disc clear by itself.
-// No name -- the icon is the name, and six of them are learnt in a hand or two.
+// Centred on the origin: the symbol at full size, a white disc over the middle of
+// it, and the type's icon on the disc. The X is drawn whole and then interrupted,
+// which keeps its four arms pointing at the corners while the icon gets clean paper
+// to sit on; the O's ring leaves the same disc clear by itself. No name -- the icon
+// is the name, and six of them are learnt in a hand or two.
+//
+// Nothing is drawn around a stone. A cut line you miss by a millimetre shows on
+// every piece for the rest of the game, so the stones are simply set far enough
+// apart to cut between by eye.
 function stone(type, player) {
-  const h = STONE / 2, g = 10.2;
+  const g = 10.2;
   const symbol = player === 'X'
     ? `<path d="M ${n(-g)} ${n(-g)} L ${n(g)} ${n(g)} M ${n(g)} ${n(-g)} L ${n(-g)} ${n(g)}" ` +
       `fill="none" stroke="${INK}" stroke-width="3.6" stroke-linecap="round"/>`
     : `<circle cx="0" cy="0" r="10.4" fill="none" stroke="${INK}" stroke-width="3.6"/>`;
   return [
-    `<rect x="${n(-h)}" y="${n(-h)}" width="${STONE}" height="${STONE}" fill="#fff" ` +
-      `stroke="${CUT}" stroke-width="0.25"/>`,
     symbol,
     `<circle cx="0" cy="0" r="${n(FIELD)}" fill="#fff"/>`,
     icon(STONE_ICONS[type](), 0.85),
@@ -307,40 +313,43 @@ function paragraph(x, y, s, { size = 3, width, leading = 1.32, ...rest } = {}) {
   };
 }
 
-// Two columns by five rows, tiling the page edge to edge: square corners and no
-// gutters, so the ten cards come apart along one straight cut a line.
-const CARD = { w: 100, h: 58 };
+// Two columns by five rows, with a wide gutter between them and nothing drawn
+// around a card: ten cards come apart on five straight cuts, and none of them has
+// to land anywhere in particular.
+const CARD = { w: 94, h: 50, gap: 10 };
 
 // Icon on the left, name and rule on the right, and under the rule the two things
 // about a Counterattack that are easy to forget at the table.
 function card(item) {
   const { title, rule, note, icon: shapes } = COUNTERATTACKS[item];
-  const x = 41;
-  const width = CARD.w - x - 6;
-  const body = paragraph(x, 26.4, rule, { size: 3.2, width, anchor: 'start' });
-  const footnote = paragraph(x, body.next + 1.6, note,
-    { size: 2.8, width, anchor: 'start', fill: '#6d6d6d' });
-  const reminder = paragraph(CARD.w / 2, CARD.h - 5.6,
-    'Spend at the end of your turn — moved second only, one a game.',
-    { size: 2.6, width: CARD.w - 14, fill: '#6d6d6d' });
+  const x = 37;
+  const width = CARD.w - x - 4;
+  const body = paragraph(x, 23.6, rule, { size: 3.1, width, anchor: 'start' });
+  const footnote = paragraph(x, body.next + 1.4, note,
+    { size: 2.7, width, anchor: 'start', fill: '#6d6d6d' });
+  // Broken by hand into two lines that each say one thing, rather than wrapped.
+  const reminder = ['Spend at the end of your turn.', 'Moved second only, one a game.']
+    .map((l, i) => text(x, CARD.h - 7.3 + i * 3.3, l,
+      { size: 2.5, anchor: 'start', fill: '#6d6d6d' })).join('\n');
   return [
-    `<rect x="0" y="0" width="${n(CARD.w)}" height="${n(CARD.h)}" ` +
-      `fill="#fff" stroke="${CUT}" stroke-width="0.25"/>`,
-    `<g transform="translate(21 27)">${icon(shapes(), 1.2)}</g>`,
-    text(x, 18.6, title, { size: 5.4, weight: 'bold', anchor: 'start' }),
+    `<g transform="translate(18 22)">${icon(shapes(), 1.05)}</g>`,
+    text(x, 16.4, title, { size: 5, weight: 'bold', anchor: 'start' }),
     body.svg,
     footnote.svg,
-    `<path d="M 7 ${n(CARD.h - 11.4)} H ${n(CARD.w - 7)}" stroke="${CUT}" stroke-width="0.25"/>`,
-    reminder.svg,
+    `<path d="M ${n(x)} ${n(CARD.h - 10.6)} H ${n(CARD.w - 4)}" stroke="${RULE}" ` +
+      'stroke-width="0.25"/>',
+    reminder,
   ].join('\n');
 }
 
 // Two of each of the five, down the page in pairs, so one sheet is a full set for
 // two players.
 function counterattackSheet() {
-  const left = (PAGE.w - 2 * CARD.w) / 2, top = (PAGE.h - ITEMS.length * CARD.h) / 2;
+  const pitch = { w: CARD.w + CARD.gap, h: CARD.h + CARD.gap };
+  const span = (page, size, count) => (page - (count * size - CARD.gap)) / 2;
+  const left = span(PAGE.w, pitch.w, 2), top = span(PAGE.h, pitch.h, ITEMS.length);
   const cards = ITEMS.flatMap((item, row) => [0, 1].map((col) =>
-    `<g transform="translate(${n(left + col * CARD.w)} ${n(top + row * CARD.h)})">` +
+    `<g transform="translate(${n(left + col * pitch.w)} ${n(top + row * pitch.h)})">` +
     `${card(item)}</g>`));
   return sheet(cards.join('\n'));
 }
@@ -385,7 +394,7 @@ function arenaSheet(size) {
     const [x, y] = at(s.x, s.y);
     const tinted = (((s.x / 3) | 0) + ((s.y / 3) | 0)) % 2 === 1;
     out.push(`<rect x="${n(x)}" y="${n(y)}" width="${n(cell)}" height="${n(cell)}" ` +
-      `fill="${tinted ? TINT : '#fff'}" stroke="${CUT}" stroke-width="0.25"/>`);
+      `fill="${tinted ? TINT : '#fff'}" stroke="${RULE}" stroke-width="0.25"/>`);
     const veto = VETO[s.i];
     const shapes = veto === 'neutral' ? [path('M -3.4 0 H 3.4', 1)] : STONE_ICONS[veto]();
     out.push(`<g transform="translate(${n(x + cell * 0.27)} ${n(y + cell * 0.25)})">` +
