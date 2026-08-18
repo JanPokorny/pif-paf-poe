@@ -223,19 +223,27 @@ Counterattack is only ever spent in a round your team defends.**
 
 # Making a set
 
-Four A4 sheets print the game, at `print/`:
+Everything that ends up on paper lives in `paper/`: one stylesheet, one SVG for each drawing,
+and HTML documents built out of `ppp-` elements. Open a document in a browser and print it.
 
-- `stones.svg` — 48 stones a sheet, X across the top half and O across the bottom, four of each
+- `stones.html` — 48 stones a sheet, X across the top half and O across the bottom, four of each
   of the six types a side, the type's icon in the middle of the symbol. Halve the sheet first and
   each player has their own symbol to cut up.
-- `counterattacks.svg` — ten cards, two of each of the five, the rule on the card. Two columns
+- `counterattacks.html` — ten cards, two of each of the five, the rule on the card. Two columns
   and five rows, with a wide gutter to cut down.
-- `arena-small.svg` and `arena-big.svg` — the 6x6 arena and the 9x9. Zones are drawn heavy and
+- `arena-small.html` and `arena-big.html` — the 6x6 arena and the 9x9. Zones are drawn heavy and
   every other one tinted, and named by where they lie: NW, N, NE, W, C, E, SW, S, SE. Each space
   carries its own name — its zone and its place in it, counted along the rows, so NW1 to NW9 —
   along with the type it switches off, both along the top, leaving its middle free for the symbol
   of whoever takes it.
+- `example.html` — not for cutting up. A page of rules written in the same elements, with its
+  positions played out by the engine, to show what the rest of it is for.
 
 Everything is black, so any printer will do. Print at 100% with no fit-to-page, on card if you
 have it, and cut down the middle of the gaps: nothing is printed to cut along, so a wobbling cut
-leaves no line on the piece to show it. `node print.js` writes all four again.
+leaves no line on the piece to show it.
+
+A page of your own is written the same way — a `ppp-grid` of `ppp-row`s of `ppp-square`s, with a
+`ppp-stone player="O" type="stinky"` in the squares that have one — and how big any of it comes
+out is a custom property. `paper/ppp.css` is the whole vocabulary; `node paper.js` writes the lot
+again.
