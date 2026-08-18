@@ -200,6 +200,13 @@ ppp-then::after {
   color: var(--ppp-fine);
 }
 
+/* The stone just played, for a page following one from board to board. Dashed and
+ * grey, so it reads as something said about the game rather than part of it. */
+ppp-stone[played] {
+  outline: 0.4mm dashed var(--ppp-fine);
+  outline-offset: 0.5mm;
+}
+
 /* A square the player to move may use, when that is the point of the picture. */
 ppp-square[open]::after {
   content: "";
@@ -348,13 +355,10 @@ ppp-caption {
 
 @page { size: A4; margin: 0; }
 
-@media screen {
-  body { background: #e8e8e8; }
-  ppp-page { margin: 6mm auto; background: #fff; box-shadow: 0 0.4mm 2mm rgba(0, 0, 0, 0.25); }
-}
+@media screen { ppp-page { margin: 6mm auto; } }
 
 @media print {
-  ppp-page { margin: 0; box-shadow: none; break-after: page; }
+  ppp-page { margin: 0; break-after: page; }
   ppp-page:last-of-type { break-after: auto; }
 }
 `;
