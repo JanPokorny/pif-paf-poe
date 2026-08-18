@@ -120,6 +120,22 @@ ppp-stone {
 ppp-stone[player="X"] { --ppp-symbol: url("icons/symbol-x.svg"); }
 ppp-stone[player="O"] { --ppp-symbol: url("icons/symbol-o.svg"); }
 
+/* A mark is a symbol and nothing else -- a plain X or a plain O -- which is what a
+ * side puts on a space of the arena it has taken. */
+ppp-mark {
+  display: inline-block;
+  vertical-align: middle;
+  width: var(--ppp-stone);
+  height: var(--ppp-stone);
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: 100% 100%;
+  background-image: var(--ppp-symbol, none);
+}
+
+ppp-mark[player="X"] { --ppp-symbol: url("icons/mark-x.svg"); }
+ppp-mark[player="O"] { --ppp-symbol: url("icons/mark-o.svg"); }
+
 ppp-icon {
   width: var(--ppp-glyph);
   height: var(--ppp-glyph);
@@ -223,7 +239,8 @@ ppp-space::after {
   color: var(--ppp-fine);
 }
 
-ppp-space > ppp-stone {
+/* Whoever took the space, below the strip its name and veto sit in. */
+ppp-space > ppp-mark {
   position: absolute;
   right: 0;
   bottom: 7%;
@@ -244,6 +261,7 @@ ppp-deck {
 /* The icon is out of the flow, so the type beside it stacks as tightly as type
  * does and nothing has to be told where to sit. */
 ppp-card {
+  display: block;
   position: relative;
   box-sizing: border-box;
   padding-left: calc(var(--ppp-card-icon) + 4mm);
@@ -326,8 +344,8 @@ const document = (title, body, style = '') => `<!doctype html>
 ${style}${body}
 `;
 
-const stone = (player, type) =>
-  `<ppp-stone player="${player}"${type ? ` type="${type}"` : ''}></ppp-stone>`;
+const stone = (player, type) => `<ppp-stone player="${player}" type="${type}"></ppp-stone>`;
+const mark = (player) => `<ppp-mark player="${player}"></ppp-mark>`;
 
 // Six columns of eight on one grid: X on the top four rows and O on the bottom four,
 // a column to a type, four of each a side. Every gap is the same, the halfway one
@@ -489,13 +507,14 @@ ${gridHtml(after)}
 ${card('mirror')}
 
 <h2>Where the duel is fought</h2>
-<p>The arena, small enough to read at a glance. Marks go in the middle of a space;
-the veto and the space's name sit along the top of it.</p>
+<p>The arena, small enough to read at a glance. A space a side has taken carries that
+side's mark — a plain X or O, and nothing else; the veto and the space's name sit along
+the top of it.</p>
 <ppp-arena size="small" style="--ppp-space: 16mm">
 ${ZONES.map((z) => {
     const spaces = ZONE_SPACES[z].map((i) => {
       const s = SPACES[i];
-      const held = i % 7 === 3 ? stone('X') : i % 11 === 5 ? stone('O') : '';
+      const held = i % 7 === 3 ? mark('X') : i % 11 === 5 ? mark('O') : '';
       return `<ppp-space veto="${VETO[i]}" name="${attr(spaceName(s, 2))}">${held}</ppp-space>`;
     });
     return `  <ppp-zone>\n    ${spaces.join('\n    ')}\n  </ppp-zone>`;

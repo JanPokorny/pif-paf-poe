@@ -57,6 +57,22 @@ ppp-stone {
 ppp-stone[player="X"] { --ppp-symbol: url("icons/symbol-x.svg"); }
 ppp-stone[player="O"] { --ppp-symbol: url("icons/symbol-o.svg"); }
 
+/* A mark is a symbol and nothing else -- a plain X or a plain O -- which is what a
+ * side puts on a space of the arena it has taken. */
+ppp-mark {
+  display: inline-block;
+  vertical-align: middle;
+  width: var(--ppp-stone);
+  height: var(--ppp-stone);
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: 100% 100%;
+  background-image: var(--ppp-symbol, none);
+}
+
+ppp-mark[player="X"] { --ppp-symbol: url("icons/mark-x.svg"); }
+ppp-mark[player="O"] { --ppp-symbol: url("icons/mark-o.svg"); }
+
 ppp-icon {
   width: var(--ppp-glyph);
   height: var(--ppp-glyph);
@@ -171,7 +187,8 @@ ppp-space::after {
   color: var(--ppp-fine);
 }
 
-ppp-space > ppp-stone {
+/* Whoever took the space, below the strip its name and veto sit in. */
+ppp-space > ppp-mark {
   position: absolute;
   right: 0;
   bottom: 7%;
@@ -192,6 +209,7 @@ ppp-deck {
 /* The icon is out of the flow, so the type beside it stacks as tightly as type
  * does and nothing has to be told where to sit. */
 ppp-card {
+  display: block;
   position: relative;
   box-sizing: border-box;
   padding-left: calc(var(--ppp-card-icon) + 4mm);

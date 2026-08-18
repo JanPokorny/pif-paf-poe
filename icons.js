@@ -6,9 +6,10 @@
 // Nothing here knows about pages. paper.js writes these out as paper/icons/*.svg,
 // and paper/ppp.css decides how big each one is and what it sits on.
 //
-// The two symbols are drawn in the stone's own square rather than the icon's, since
-// they fill it: an X or an O, with a white disc punched through the middle for the
-// type's icon to sit in.
+// The symbols are drawn in the stone's own square rather than the icon's, since they
+// fill it, and come two ways: a mark, which is a plain X or O and all an arena space
+// ever carries, and a stone's symbol, which is the same with a disc of paper punched
+// through the middle for the type's icon to sit in.
 
 export const BOX = 18;         // an icon's square, in its own units
 export const SYMBOL_BOX = 30;  // a stone's square, which is what a symbol fills
@@ -157,26 +158,30 @@ const ITEM_ICONS = {
   })(),
 };
 
-// ── The two symbols ─────────────────────────────────────────────────────────
+// ── Marks, and the symbols on a stone ───────────────────────────────────────
 
-// Drawn whole and then interrupted by the disc, which keeps the X's four arms
-// pointing at the corners while the icon gets clean paper to sit on. The O's ring
-// leaves the same disc clear by itself; the disc is drawn for both all the same, so
-// one rule in the stylesheet lays an icon over either symbol.
+// A mark is the symbol and nothing else: a plain X or a plain O, which is all an
+// arena space ever carries. A stone is that same symbol interrupted by a disc of
+// paper, which keeps the X's four arms pointing at the corners while the type's icon
+// gets clean paper to sit on -- and the O's ring, which leaves the middle clear
+// anyway, is punched all the same so one rule lays an icon over either.
 const REACH = 11;
 
-const SYMBOLS = {
-  'symbol-x': [
+const MARKS = {
+  'mark-x': [
     path(`M ${-REACH} ${-REACH} L ${REACH} ${REACH} M ${REACH} ${-REACH} ` +
       `L ${-REACH} ${REACH}`, 3.6),
-    path(`M ${-FIELD} 0 A ${FIELD} ${FIELD} 0 1 0 ${FIELD} 0 ` +
-      `A ${FIELD} ${FIELD} 0 1 0 ${-FIELD} 0 Z`, 0, { blank: true }),
   ],
-  'symbol-o': [
-    ring(0, 0, 10.8, 3.8),
-    path(`M ${-FIELD} 0 A ${FIELD} ${FIELD} 0 1 0 ${FIELD} 0 ` +
-      `A ${FIELD} ${FIELD} 0 1 0 ${-FIELD} 0 Z`, 0, { blank: true }),
-  ],
+  'mark-o': [ring(0, 0, 10.8, 3.8)],
+};
+
+const disc = path(`M ${-FIELD} 0 A ${FIELD} ${FIELD} 0 1 0 ${FIELD} 0 ` +
+  `A ${FIELD} ${FIELD} 0 1 0 ${-FIELD} 0 Z`, 0, { blank: true });
+
+const SYMBOLS = {
+  ...MARKS,
+  'symbol-x': [...MARKS['mark-x'], disc],
+  'symbol-o': [...MARKS['mark-o'], disc],
 };
 
 // Every drawing there is, by the name of the file it is written to.

@@ -244,6 +244,6 @@ have it, and cut down the middle of the gaps: nothing is printed to cut along, s
 leaves no line on the piece to show it.
 
 A page of your own is written the same way — a `ppp-grid` of `ppp-row`s of `ppp-square`s, with a
-`ppp-stone player="O" type="stinky"` in the squares that have one — and how big any of it comes
-out is a custom property. `paper/ppp.css` is the whole vocabulary; `node paper.js` writes the lot
+`ppp-stone player="O" type="stinky"` in the squares that have one, and a `ppp-mark player="O"` on
+the arena spaces O has taken — and how big any of it comes out is a custom property. `paper/ppp.css` is the whole vocabulary; `node paper.js` writes the lot
 again.
