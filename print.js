@@ -1,12 +1,11 @@
-// The pieces, on paper. Five A4 sheets you print and play with:
+// The pieces, on paper. Four A4 sheets you print and play with:
 //
-//    print/stones-x.svg        48 stones for X, eight of each of the six types
-//    print/stones-o.svg        the same for O
+//    print/stones.svg          48 stones, X on the top half and O on the bottom
 //    print/counterattacks.svg  ten Counterattack cards, two of each of the five
 //    print/arena-small.svg     the 6x6 arena, four zones, vetoes printed on
 //    print/arena-big.svg       the 9x9 arena, nine zones
 //
-//   node print.js                     write all five into print/
+//   node print.js                     write all four into print/
 //   node print.js --out somewhere     write them somewhere else
 //
 // A stone has to say two things at once: whose it is, and what it does. So the
@@ -236,7 +235,7 @@ const COUNTERATTACKS = {
 // would have wanted scissors, and a square holds a bigger symbol than a circle
 // of the same pitch does.
 const STONE = 34;          // pitch of the grid a sheet of stones is laid out on
-const FIELD = 7.6;         // radius of the clear middle the icon is drawn in
+const FIELD = 8.4;         // radius of the clear middle the icon is drawn in
 
 // Centred on the origin: the symbol at full size, a white disc over the middle of
 // it, and the type's icon on the disc. The X is drawn whole and then interrupted,
@@ -248,11 +247,13 @@ const FIELD = 7.6;         // radius of the clear middle the icon is drawn in
 // every piece for the rest of the game, so the stones are simply set far enough
 // apart to cut between by eye.
 function stone(type, player) {
-  const g = 10.2;
+  // The arms reach further out than they used to, so that widening the disc took
+  // the middle of the X and not its reach.
+  const g = 11;
   const symbol = player === 'X'
     ? `<path d="M ${n(-g)} ${n(-g)} L ${n(g)} ${n(g)} M ${n(g)} ${n(-g)} L ${n(-g)} ${n(g)}" ` +
       `fill="none" stroke="${INK}" stroke-width="3.6" stroke-linecap="round"/>`
-    : `<circle cx="0" cy="0" r="10.4" fill="none" stroke="${INK}" stroke-width="3.6"/>`;
+    : `<circle cx="0" cy="0" r="10.8" fill="none" stroke="${INK}" stroke-width="3.8"/>`;
   return [
     symbol,
     `<circle cx="0" cy="0" r="${n(FIELD)}" fill="#fff"/>`,
@@ -274,18 +275,24 @@ ${body}
 `;
 }
 
-// Six columns of eight, one column per type: a sheet is eight of everything, so
-// nothing has to be counted out, and a column is one type all the way down.
-function stoneSheet(player) {
-  const rows = 8;
-  const grid = (span, count) => (PAGE[span] - count * STONE) / 2 + STONE / 2;
-  const [left, top] = [grid('w', STONE_TYPES.length), grid('h', rows)];
+// Both symbols on one sheet: X across the top half, O across the bottom, four of
+// each of the six types a side and a column to a type. The two blocks sit apart, so
+// the first cut halves the sheet and hands each player their own symbol.
+const HALF = { rows: 4, split: 12 };
+
+function stoneSheet() {
+  const block = HALF.rows * STONE;
+  const left = (PAGE.w - STONE_TYPES.length * STONE) / 2 + STONE / 2;
+  const top = (PAGE.h - (2 * block + HALF.split)) / 2 + STONE / 2;
   const cells = [];
-  STONE_TYPES.forEach((type, col) => {
-    for (let r = 0; r < rows; r++) {
-      cells.push(`<g transform="translate(${n(left + col * STONE)} ${n(top + r * STONE)})">` +
-        `${stone(type, player)}</g>`);
-    }
+  ['X', 'O'].forEach((player, half) => {
+    STONE_TYPES.forEach((type, col) => {
+      for (let r = 0; r < HALF.rows; r++) {
+        const y = top + half * (block + HALF.split) + r * STONE;
+        cells.push(`<g transform="translate(${n(left + col * STONE)} ${n(y)})">` +
+          `${stone(type, player)}</g>`);
+      }
+    });
   });
   return sheet(cells.join('\n'));
 }
@@ -323,30 +330,29 @@ function paragraph(x, y, s, { size = 3, width, leading = 1.32, ...rest } = {}) {
 
 // Two columns by five rows, with a wide gutter between them and nothing drawn
 // around a card: ten cards come apart on five straight cuts, and none of them has
-// to land anywhere in particular.
-const CARD = { w: 94, h: 50, gap: 10 };
+// to land anywhere in particular. A card is only as tall as what it has to say --
+// icon, name, rule, footnote, and the one line nobody should have to be reminded of
+// twice -- which leaves the rest of the paper to the gutters.
+const CARD = { w: 94, h: 42, gap: 12 };
 
 // Icon on the left, name and rule on the right, and under the rule the two things
 // about a Counterattack that are easy to forget at the table.
 function card(item) {
   const { title, rule, note, icon: shapes } = COUNTERATTACKS[item];
-  const x = 37;
-  const width = CARD.w - x - 4;
-  const body = paragraph(x, 23.6, rule, { size: 3.1, width, anchor: 'start' });
-  const footnote = paragraph(x, body.next + 1.4, note,
-    { size: 2.7, width, anchor: 'start', fill: '#6d6d6d' });
-  // Broken by hand into two lines that each say one thing, rather than wrapped.
-  const reminder = ['Spend at the end of your turn.', 'Moved second only, one a game.']
-    .map((l, i) => text(x, CARD.h - 7.3 + i * 3.3, l,
-      { size: 2.5, anchor: 'start', fill: '#6d6d6d' })).join('\n');
+  const x = 32;
+  const width = CARD.w - x - 5;
+  const body = paragraph(x, 19.2, rule, { size: 3, width, anchor: 'start' });
+  const footnote = paragraph(x, body.next + 1.2, note,
+    { size: 2.6, width, anchor: 'start', fill: '#6d6d6d' });
   return [
-    `<g transform="translate(18 22)">${icon(shapes(), 1.05)}</g>`,
-    text(x, 16.4, title, { size: 5, weight: 'bold', anchor: 'start' }),
+    `<g transform="translate(16 21)">${icon(shapes(), 1)}</g>`,
+    text(x, 13.2, title, { size: 4.8, weight: 'bold', anchor: 'start' }),
     body.svg,
     footnote.svg,
-    `<path d="M ${n(x)} ${n(CARD.h - 10.6)} H ${n(CARD.w - 4)}" stroke="${RULE}" ` +
+    `<path d="M ${n(x)} ${n(CARD.h - 8.5)} H ${n(CARD.w - 5)}" stroke="${RULE}" ` +
       'stroke-width="0.25"/>',
-    reminder,
+    text(x, CARD.h - 4.6, 'Moved second only — spend at the end of your turn.',
+      { size: 2.3, anchor: 'start', fill: '#6d6d6d' }),
   ].join('\n');
 }
 
@@ -425,8 +431,7 @@ function arenaSheet(size) {
 const out = arg('out', 'print');
 if (!existsSync(out)) mkdirSync(out, { recursive: true });
 const sheets = {
-  'stones-x.svg': stoneSheet('X'),
-  'stones-o.svg': stoneSheet('O'),
+  'stones.svg': stoneSheet(),
   'counterattacks.svg': counterattackSheet(),
   'arena-small.svg': arenaSheet('small'),
   'arena-big.svg': arenaSheet('big'),
