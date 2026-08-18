@@ -246,5 +246,5 @@ after its effect. It is written by hand in the same elements as the sheets — a
 `ppp-row`s of `ppp-square`s, with a `ppp-stone player="O" type="stinky"` in the squares that have
 one, a `ppp-mark player="O"` on an arena space O has taken, and a `ppp-then dir="up"` between two
 boards for what was named — so a page of your own is written the same way, and how big any of it
-comes out is a custom property. `paper/ppp.css` is the whole vocabulary; `node paper.js` writes
-the stylesheet, the drawings and the four sheets again, and never touches a page you wrote.
+comes out is a custom property. `paper/ppp.css` is the whole vocabulary, and every file in
+`paper/` is one you can open and edit: there is nothing to build.
