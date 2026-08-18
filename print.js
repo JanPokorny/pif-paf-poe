@@ -47,8 +47,10 @@ const esc = (s) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, 
 // no more than FIELD across, so the same list can be drawn small on a stone and
 // large on a card. Three kinds of shape: a stroked path, a dot, and a word.
 // `faint` marks the parts that are context rather than content -- the board an
-// effect happens on -- and `full` fills a closed path in ink.
-const path = (d, w = 1, { faint = false, full = false } = {}) => ({ d, w, faint, full });
+// effect happens on -- `full` fills a closed path in ink, and `blank` fills it with
+// paper, for a shape that has to cover what is drawn under it.
+const path = (d, w = 1, { faint = false, full = false, blank = false } = {}) =>
+  ({ d, w, faint, full, blank });
 const dot = (x, y, r, solid = true, w = 1) => ({ x, y, r, solid, w });
 const ring = (x, y, r, w = 1) => dot(x, y, r, false, w);
 const word = (t, size) => ({ t, size });
@@ -63,7 +65,8 @@ function shape(s, tone = INK) {
       `letter-spacing="0.2">${esc(s.t)}</text>`;
   }
   if (s.r === undefined) {
-    return `<path d="${s.d}" fill="${s.full ? colour : 'none'}" ${paint}/>`;
+    const fill = s.full ? colour : s.blank ? '#fff' : 'none';
+    return `<path d="${s.d}" fill="${fill}" ${paint}/>`;
   }
   if (s.solid) return `<circle cx="${n(s.x)}" cy="${n(s.y)}" r="${n(s.r)}" fill="${colour}"/>`;
   return `<circle cx="${n(s.x)}" cy="${n(s.y)}" r="${n(s.r)}" fill="none" ${paint}/>`;
@@ -156,11 +159,12 @@ const STONE_ICONS = {
     path(box(-4.9, -5.6, 2.8, 2.2), 0.9, { full: true }),
     path(box(2.1, -5.6, 2.8, 2.2), 0.9, { full: true }),
   ],
-  // Something you keep away from.
+  // Something you keep away from: the waves rise out of it, so it is filled with
+  // paper and laid over them rather than letting them run through it.
   stinky: () => [
     ...[-2.8, 0, 2.8].map((x) =>
-      path(`M ${n(x)} 2.4 C ${n(x - 1.8)} 0.2 ${n(x + 1.8)} -1.4 ${n(x)} -3.8`, 0.9)),
-    path('M -4.2 5.4 A 4.2 3.4 0 0 1 4.2 5.4 Z', 1),
+      path(`M ${n(x)} 3.4 C ${n(x - 1.8)} 0.6 ${n(x + 1.8)} -1.2 ${n(x)} -3.8`, 0.9)),
+    path('M -4.2 5.4 A 4.2 3.4 0 0 1 4.2 5.4 Z', 1, { blank: true }),
   ],
 };
 
@@ -276,24 +280,22 @@ ${body}
 }
 
 // Both symbols on one sheet: X across the top half, O across the bottom, four of
-// each of the six types a side and a column to a type. The two blocks sit apart, so
-// the first cut halves the sheet and hands each player their own symbol.
-const HALF = { rows: 4, split: 12 };
+// each of the six types a side and a column to a type. It is one grid of eight rows
+// rather than two blocks -- every gap between stones the same, and the halfway cut
+// no wider than the rest.
+const HALF_ROWS = 4;
 
 function stoneSheet() {
-  const block = HALF.rows * STONE;
-  const left = (PAGE.w - STONE_TYPES.length * STONE) / 2 + STONE / 2;
-  const top = (PAGE.h - (2 * block + HALF.split)) / 2 + STONE / 2;
+  const rows = 2 * HALF_ROWS;
+  const grid = (span, count) => (PAGE[span] - count * STONE) / 2 + STONE / 2;
+  const [left, top] = [grid('w', STONE_TYPES.length), grid('h', rows)];
   const cells = [];
-  ['X', 'O'].forEach((player, half) => {
+  for (let r = 0; r < rows; r++) {
     STONE_TYPES.forEach((type, col) => {
-      for (let r = 0; r < HALF.rows; r++) {
-        const y = top + half * (block + HALF.split) + r * STONE;
-        cells.push(`<g transform="translate(${n(left + col * STONE)} ${n(y)})">` +
-          `${stone(type, player)}</g>`);
-      }
+      cells.push(`<g transform="translate(${n(left + col * STONE)} ${n(top + r * STONE)})">` +
+        `${stone(type, r < HALF_ROWS ? 'X' : 'O')}</g>`);
     });
-  });
+  }
   return sheet(cells.join('\n'));
 }
 
