@@ -227,10 +227,13 @@ Five A4 sheets print the game, at `print/`:
 
 - `stones-x.svg` and `stones-o.svg` — 48 stones a sheet, eight of each of the six types, the
   type's icon in the middle of the symbol. Eight hands, so print one of each per eight players.
-- `counterattacks.svg` — ten cards, two of each of the five, the rule on the card.
+- `counterattacks.svg` — ten cards, two of each of the five, the rule on the card. They tile the
+  sheet, so they come apart along one straight cut a line.
 - `arena-small.svg` and `arena-big.svg` — the 6x6 arena and the 9x9. Zones are drawn heavy and
-  every other one tinted; each space carries the type it switches off in one corner and keeps
-  its middle free for the symbol of whoever takes it.
+  every other one tinted, and named by where they lie: NW, N, NE, W, C, E, SW, S, SE. Each space
+  carries its own name — its zone and its place in it, counted along the rows, so NW1 to NW9 —
+  along with the type it switches off, both along the top, leaving its middle free for the symbol
+  of whoever takes it.
 
 Everything is black, so any printer will do. Print at 100% with no fit-to-page, on card if you
 have it, and cut the stones along the grid. `node print.js` writes all five again.

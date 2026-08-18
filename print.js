@@ -182,8 +182,7 @@ const COUNTERATTACKS = {
   },
   mirror: {
     title: 'Mirror',
-    rule: 'Swap what stands on one facing pair through the centre: 0 and 8, 1 and 7, ' +
-      '2 and 6, 3 and 5.',
+    rule: 'Swap what stands on two squares symmetric about the centre.',
     note: 'Whoever owns the two stones.',
     // One pair through the centre, trading places.
     icon: () => {
@@ -308,28 +307,30 @@ function paragraph(x, y, s, { size = 3, width, leading = 1.32, ...rest } = {}) {
   };
 }
 
-const CARD = { w: 93, h: 50, gap: 1.2 };
+// Two columns by five rows, tiling the page edge to edge: square corners and no
+// gutters, so the ten cards come apart along one straight cut a line.
+const CARD = { w: 100, h: 58 };
 
 // Icon on the left, name and rule on the right, and under the rule the two things
 // about a Counterattack that are easy to forget at the table.
 function card(item) {
   const { title, rule, note, icon: shapes } = COUNTERATTACKS[item];
-  const x = 37;
-  const width = CARD.w - x - 5.5;
-  const body = paragraph(x, 23.6, rule, { size: 3.1, width, anchor: 'start' });
-  const footnote = paragraph(x, body.next + 1.4, note,
-    { size: 2.7, width, anchor: 'start', fill: '#6d6d6d' });
-  const reminder = paragraph(CARD.w / 2, CARD.h - 5.4,
+  const x = 41;
+  const width = CARD.w - x - 6;
+  const body = paragraph(x, 26.4, rule, { size: 3.2, width, anchor: 'start' });
+  const footnote = paragraph(x, body.next + 1.6, note,
+    { size: 2.8, width, anchor: 'start', fill: '#6d6d6d' });
+  const reminder = paragraph(CARD.w / 2, CARD.h - 5.6,
     'Spend at the end of your turn — moved second only, one a game.',
-    { size: 2.5, width: CARD.w - 12, fill: '#6d6d6d' });
+    { size: 2.6, width: CARD.w - 14, fill: '#6d6d6d' });
   return [
-    `<rect x="0" y="0" width="${n(CARD.w)}" height="${n(CARD.h)}" rx="2" ` +
+    `<rect x="0" y="0" width="${n(CARD.w)}" height="${n(CARD.h)}" ` +
       `fill="#fff" stroke="${CUT}" stroke-width="0.25"/>`,
-    `<g transform="translate(19 22)">${icon(shapes(), 1.05)}</g>`,
-    text(x, 16.4, title, { size: 5, weight: 'bold', anchor: 'start' }),
+    `<g transform="translate(21 27)">${icon(shapes(), 1.2)}</g>`,
+    text(x, 18.6, title, { size: 5.4, weight: 'bold', anchor: 'start' }),
     body.svg,
     footnote.svg,
-    `<path d="M 6 ${n(CARD.h - 10.6)} H ${n(CARD.w - 6)}" stroke="${CUT}" stroke-width="0.25"/>`,
+    `<path d="M 7 ${n(CARD.h - 11.4)} H ${n(CARD.w - 7)}" stroke="${CUT}" stroke-width="0.25"/>`,
     reminder.svg,
   ].join('\n');
 }
@@ -337,11 +338,10 @@ function card(item) {
 // Two of each of the five, down the page in pairs, so one sheet is a full set for
 // two players.
 function counterattackSheet() {
-  const span = (page, size, count) => (page - (count * size + (count - 1) * CARD.gap)) / 2;
-  const left = span(PAGE.w, CARD.w, 2), top = span(PAGE.h, CARD.h, ITEMS.length);
+  const left = (PAGE.w - 2 * CARD.w) / 2, top = (PAGE.h - ITEMS.length * CARD.h) / 2;
   const cards = ITEMS.flatMap((item, row) => [0, 1].map((col) =>
-    `<g transform="translate(${n(left + col * (CARD.w + CARD.gap))} ` +
-    `${n(top + row * (CARD.h + CARD.gap))})">${card(item)}</g>`));
+    `<g transform="translate(${n(left + col * CARD.w)} ${n(top + row * CARD.h)})">` +
+    `${card(item)}</g>`));
   return sheet(cards.join('\n'));
 }
 
@@ -350,8 +350,23 @@ function counterattackSheet() {
 const TINT = '#f1f1f1';         // every other zone, so the zones read at a glance
 const VETO_TONE = '#5a5a5a';    // printed on the arena, not played onto it
 
-// One page of arena. Every space carries the stone type it switches off, printed
-// small in a corner, so the middle of the space stays free for the symbol of
+// Zones are named by where they lie, so a 2x2 arena has NW NE SW SE and a 3x3
+// fills in the middle bands: N, W, C, E, S. A space is then its zone and its place
+// within it, counted along the rows -- NW1, NW2, NW3 across the top of NW -- which
+// is short enough to shout across a hall and needs no ruler to find.
+const BANDS = {
+  2: { rows: ['N', 'S'], cols: ['W', 'E'] },
+  3: { rows: ['N', '', 'S'], cols: ['W', '', 'E'] },
+};
+
+function spaceName(s, zones) {
+  const { rows, cols } = BANDS[zones];
+  const zone = rows[(s.y / 3) | 0] + cols[(s.x / 3) | 0] || 'C';
+  return zone + ((s.y % 3) * 3 + (s.x % 3) + 1);
+}
+
+// One page of arena. Every space carries its name and the stone type it switches
+// off, both along the top, so the middle of the space stays free for the symbol of
 // whoever takes it. Zones are drawn heavy and tinted like a chequerboard: three
 // in a row scores anywhere on the arena, so the zone lines have to be readable
 // without ever looking like they stop a line.
@@ -361,6 +376,7 @@ const VETO_TONE = '#5a5a5a';    // printed on the arena, not played onto it
 function arenaSheet(size) {
   setArena(size);
   const cell = size === 'big' ? 21 : 32;
+  const zones = WIDTH / 3;
   const left = (PAGE.w - WIDTH * cell) / 2, top = (PAGE.h - HEIGHT * cell) / 2;
   const at = (x, y) => [left + x * cell, top + y * cell];
   const out = [];
@@ -374,6 +390,9 @@ function arenaSheet(size) {
     const shapes = veto === 'neutral' ? [path('M -3.4 0 H 3.4', 1)] : STONE_ICONS[veto]();
     out.push(`<g transform="translate(${n(x + cell * 0.27)} ${n(y + cell * 0.25)})">` +
       `${icon(shapes, cell * 0.026, VETO_TONE)}</g>`);
+    const label = Math.max(2.2, cell * 0.08);
+    out.push(text(x + cell - cell * 0.13, y + cell * 0.13 + label, spaceName(s, zones),
+      { size: label, weight: 'bold', fill: VETO_TONE, anchor: 'end', spacing: 0.15 }));
   }
 
   // Zone borders last, over the tints and the space grid.
