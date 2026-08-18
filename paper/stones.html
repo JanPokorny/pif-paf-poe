@@ -1,57 +1,265 @@
 <!doctype html>
 <html lang="en">
 <meta charset="utf-8">
-<title>Pif-paf-poe — stones</title>
+<title>Pif-paf-poe — the stones</title>
 <link rel="stylesheet" href="ppp.css">
-<ppp-page>
-  <ppp-tray>
-    <ppp-stone player="X" type="shift"></ppp-stone>
-    <ppp-stone player="X" type="2048"></ppp-stone>
-    <ppp-stone player="X" type="rotate"></ppp-stone>
-    <ppp-stone player="X" type="mountain"></ppp-stone>
-    <ppp-stone player="X" type="magnet"></ppp-stone>
-    <ppp-stone player="X" type="stinky"></ppp-stone>
-    <ppp-stone player="X" type="shift"></ppp-stone>
-    <ppp-stone player="X" type="2048"></ppp-stone>
-    <ppp-stone player="X" type="rotate"></ppp-stone>
-    <ppp-stone player="X" type="mountain"></ppp-stone>
-    <ppp-stone player="X" type="magnet"></ppp-stone>
-    <ppp-stone player="X" type="stinky"></ppp-stone>
-    <ppp-stone player="X" type="shift"></ppp-stone>
-    <ppp-stone player="X" type="2048"></ppp-stone>
-    <ppp-stone player="X" type="rotate"></ppp-stone>
-    <ppp-stone player="X" type="mountain"></ppp-stone>
-    <ppp-stone player="X" type="magnet"></ppp-stone>
-    <ppp-stone player="X" type="stinky"></ppp-stone>
-    <ppp-stone player="X" type="shift"></ppp-stone>
-    <ppp-stone player="X" type="2048"></ppp-stone>
-    <ppp-stone player="X" type="rotate"></ppp-stone>
-    <ppp-stone player="X" type="mountain"></ppp-stone>
-    <ppp-stone player="X" type="magnet"></ppp-stone>
-    <ppp-stone player="X" type="stinky"></ppp-stone>
-    <ppp-stone player="O" type="shift"></ppp-stone>
-    <ppp-stone player="O" type="2048"></ppp-stone>
-    <ppp-stone player="O" type="rotate"></ppp-stone>
-    <ppp-stone player="O" type="mountain"></ppp-stone>
-    <ppp-stone player="O" type="magnet"></ppp-stone>
-    <ppp-stone player="O" type="stinky"></ppp-stone>
-    <ppp-stone player="O" type="shift"></ppp-stone>
-    <ppp-stone player="O" type="2048"></ppp-stone>
-    <ppp-stone player="O" type="rotate"></ppp-stone>
-    <ppp-stone player="O" type="mountain"></ppp-stone>
-    <ppp-stone player="O" type="magnet"></ppp-stone>
-    <ppp-stone player="O" type="stinky"></ppp-stone>
-    <ppp-stone player="O" type="shift"></ppp-stone>
-    <ppp-stone player="O" type="2048"></ppp-stone>
-    <ppp-stone player="O" type="rotate"></ppp-stone>
-    <ppp-stone player="O" type="mountain"></ppp-stone>
-    <ppp-stone player="O" type="magnet"></ppp-stone>
-    <ppp-stone player="O" type="stinky"></ppp-stone>
-    <ppp-stone player="O" type="shift"></ppp-stone>
-    <ppp-stone player="O" type="2048"></ppp-stone>
-    <ppp-stone player="O" type="rotate"></ppp-stone>
-    <ppp-stone player="O" type="mountain"></ppp-stone>
-    <ppp-stone player="O" type="magnet"></ppp-stone>
-    <ppp-stone player="O" type="stinky"></ppp-stone>
-  </ppp-tray>
-</ppp-page>
+
+<!-- Written by hand, in the same elements the printed sheets are made of. Every board
+     below is a ppp-grid of three ppp-rows of three ppp-squares, with a ppp-stone in the
+     squares that have one; the arrow between two boards is a ppp-then, and its dir is
+     what the player named. Nothing generates this page: change a board by moving a
+     stone from one square to the next. -->
+
+<style>
+  body { margin: 0 auto; padding: 12mm; max-width: 190mm; }
+  h1 { font-size: 8mm; margin: 0 0 3mm; }
+  h2 {
+    display: flex;
+    align-items: center;
+    gap: 3mm;
+    margin: 14mm 0 3mm;
+    font-size: 5.4mm;
+    --ppp-stone: 13mm;
+  }
+  p { max-width: 155mm; font-size: 3.6mm; line-height: 1.5; }
+  ppp-figure { margin-top: 5mm; --ppp-square: 21mm; }
+</style>
+
+<h1>The stones</h1>
+<p>Six types. Three of them move things, one refuses to be moved, and two dictate where
+the opponent may play. You each hold five, place one a turn, and three in a row wins —
+so a stone is never only a square, it is a square and an effect.</p>
+
+<h2><ppp-stone player="X" type="shift"></ppp-stone> Shift</h2>
+<p>Name a direction. The row or column this stone sits in slides one step that way, and
+whatever falls off the end wraps around to the other end.</p>
+<ppp-figure>
+  <ppp-grid>
+    <ppp-row>
+      <ppp-square></ppp-square>
+      <ppp-square></ppp-square>
+      <ppp-square></ppp-square>
+    </ppp-row>
+    <ppp-row>
+      <ppp-square><ppp-stone player="X" type="shift"></ppp-stone></ppp-square>
+      <ppp-square><ppp-stone player="O" type="2048"></ppp-stone></ppp-square>
+      <ppp-square><ppp-stone player="O" type="rotate"></ppp-stone></ppp-square>
+    </ppp-row>
+    <ppp-row>
+      <ppp-square></ppp-square>
+      <ppp-square></ppp-square>
+      <ppp-square></ppp-square>
+    </ppp-row>
+  </ppp-grid>
+  <ppp-then dir="right"></ppp-then>
+  <ppp-grid>
+    <ppp-row>
+      <ppp-square></ppp-square>
+      <ppp-square></ppp-square>
+      <ppp-square></ppp-square>
+    </ppp-row>
+    <ppp-row>
+      <ppp-square><ppp-stone player="O" type="rotate"></ppp-stone></ppp-square>
+      <ppp-square><ppp-stone player="X" type="shift"></ppp-stone></ppp-square>
+      <ppp-square><ppp-stone player="O" type="2048"></ppp-stone></ppp-square>
+    </ppp-row>
+    <ppp-row>
+      <ppp-square></ppp-square>
+      <ppp-square></ppp-square>
+      <ppp-square></ppp-square>
+    </ppp-row>
+  </ppp-grid>
+</ppp-figure>
+<ppp-caption>The middle row is full, so all three shuffle along and the one on the end
+comes back at the beginning. Only that row moves: the rest of the board is none of a
+Shift’s business.</ppp-caption>
+
+<h2><ppp-stone player="X" type="2048"></ppp-stone> 2048</h2>
+<p>Name a direction. Every stone on the board slides that way as far as it can go, just
+as in the tile game.</p>
+<ppp-figure>
+  <ppp-grid>
+    <ppp-row>
+      <ppp-square></ppp-square>
+      <ppp-square><ppp-stone player="O" type="rotate"></ppp-stone></ppp-square>
+      <ppp-square></ppp-square>
+    </ppp-row>
+    <ppp-row>
+      <ppp-square><ppp-stone player="X" type="magnet"></ppp-stone></ppp-square>
+      <ppp-square></ppp-square>
+      <ppp-square></ppp-square>
+    </ppp-row>
+    <ppp-row>
+      <ppp-square></ppp-square>
+      <ppp-square><ppp-stone player="O" type="stinky"></ppp-stone></ppp-square>
+      <ppp-square><ppp-stone player="X" type="2048"></ppp-stone></ppp-square>
+    </ppp-row>
+  </ppp-grid>
+  <ppp-then dir="up"></ppp-then>
+  <ppp-grid>
+    <ppp-row>
+      <ppp-square><ppp-stone player="X" type="magnet"></ppp-stone></ppp-square>
+      <ppp-square><ppp-stone player="O" type="rotate"></ppp-stone></ppp-square>
+      <ppp-square><ppp-stone player="X" type="2048"></ppp-stone></ppp-square>
+    </ppp-row>
+    <ppp-row>
+      <ppp-square></ppp-square>
+      <ppp-square><ppp-stone player="O" type="stinky"></ppp-stone></ppp-square>
+      <ppp-square></ppp-square>
+    </ppp-row>
+    <ppp-row>
+      <ppp-square></ppp-square>
+      <ppp-square></ppp-square>
+      <ppp-square></ppp-square>
+    </ppp-row>
+  </ppp-grid>
+</ppp-figure>
+<ppp-caption>Every stone on the board, not just the ones near it, and each of them as
+far as it will go — until it runs out of board or into another stone. The stone that was
+just played travels too.</ppp-caption>
+
+<h2><ppp-stone player="X" type="rotate"></ppp-stone> Rotate</h2>
+<p>Pick one of the 2x2 blocks this stone belongs to. Those four squares turn one step
+clockwise.</p>
+<ppp-figure>
+  <ppp-grid>
+    <ppp-row>
+      <ppp-square><ppp-stone player="O" type="stinky"></ppp-stone></ppp-square>
+      <ppp-square><ppp-stone player="O" type="magnet"></ppp-stone></ppp-square>
+      <ppp-square></ppp-square>
+    </ppp-row>
+    <ppp-row>
+      <ppp-square><ppp-stone player="X" type="2048"></ppp-stone></ppp-square>
+      <ppp-square><ppp-stone player="X" type="rotate"></ppp-stone></ppp-square>
+      <ppp-square></ppp-square>
+    </ppp-row>
+    <ppp-row>
+      <ppp-square></ppp-square>
+      <ppp-square></ppp-square>
+      <ppp-square></ppp-square>
+    </ppp-row>
+  </ppp-grid>
+  <ppp-then dir="clockwise"></ppp-then>
+  <ppp-grid>
+    <ppp-row>
+      <ppp-square><ppp-stone player="X" type="2048"></ppp-stone></ppp-square>
+      <ppp-square><ppp-stone player="O" type="stinky"></ppp-stone></ppp-square>
+      <ppp-square></ppp-square>
+    </ppp-row>
+    <ppp-row>
+      <ppp-square><ppp-stone player="X" type="rotate"></ppp-stone></ppp-square>
+      <ppp-square><ppp-stone player="O" type="magnet"></ppp-stone></ppp-square>
+      <ppp-square></ppp-square>
+    </ppp-row>
+    <ppp-row>
+      <ppp-square></ppp-square>
+      <ppp-square></ppp-square>
+      <ppp-square></ppp-square>
+    </ppp-row>
+  </ppp-grid>
+</ppp-figure>
+<ppp-caption>The top-left block, one step round: each of the four stones takes the
+square clockwise of it, the Rotate itself included. A stone in the middle belongs to all
+four blocks and may pick any of them.</ppp-caption>
+
+<h2><ppp-stone player="X" type="mountain"></ppp-stone> Mountain</h2>
+<p>Does nothing when placed, and nothing ever moves it. It blocks rather than forbids:
+other effects still happen, they just cannot move it or pass through it.</p>
+<ppp-figure>
+  <ppp-grid>
+    <ppp-row>
+      <ppp-square><ppp-stone player="X" type="2048"></ppp-stone></ppp-square>
+      <ppp-square><ppp-stone player="X" type="mountain"></ppp-stone></ppp-square>
+      <ppp-square><ppp-stone player="O" type="magnet"></ppp-stone></ppp-square>
+    </ppp-row>
+    <ppp-row>
+      <ppp-square></ppp-square>
+      <ppp-square><ppp-stone player="O" type="rotate"></ppp-stone></ppp-square>
+      <ppp-square></ppp-square>
+    </ppp-row>
+    <ppp-row>
+      <ppp-square></ppp-square>
+      <ppp-square></ppp-square>
+      <ppp-square></ppp-square>
+    </ppp-row>
+  </ppp-grid>
+  <ppp-then dir="down"></ppp-then>
+  <ppp-grid>
+    <ppp-row>
+      <ppp-square></ppp-square>
+      <ppp-square><ppp-stone player="X" type="mountain"></ppp-stone></ppp-square>
+      <ppp-square></ppp-square>
+    </ppp-row>
+    <ppp-row>
+      <ppp-square></ppp-square>
+      <ppp-square></ppp-square>
+      <ppp-square></ppp-square>
+    </ppp-row>
+    <ppp-row>
+      <ppp-square><ppp-stone player="X" type="2048"></ppp-stone></ppp-square>
+      <ppp-square><ppp-stone player="O" type="rotate"></ppp-stone></ppp-square>
+      <ppp-square><ppp-stone player="O" type="magnet"></ppp-stone></ppp-square>
+    </ppp-row>
+  </ppp-grid>
+</ppp-figure>
+<ppp-caption>Somebody else’s 2048, naming down. Everything falls to the bottom and the
+Mountain stays where it was put — and nothing slides past it either, so a line it stands
+in packs up on both sides of it.</ppp-caption>
+
+<h2><ppp-stone player="X" type="magnet"></ppp-stone> Magnet</h2>
+<p>Your opponent must place their stones adjacent to this one.</p>
+<ppp-figure>
+  <ppp-grid>
+    <ppp-row>
+      <ppp-square><ppp-stone player="O" type="rotate"></ppp-stone></ppp-square>
+      <ppp-square open></ppp-square>
+      <ppp-square></ppp-square>
+    </ppp-row>
+    <ppp-row>
+      <ppp-square open></ppp-square>
+      <ppp-square><ppp-stone player="X" type="magnet"></ppp-stone></ppp-square>
+      <ppp-square open></ppp-square>
+    </ppp-row>
+    <ppp-row>
+      <ppp-square></ppp-square>
+      <ppp-square open></ppp-square>
+      <ppp-square><ppp-stone player="X" type="2048"></ppp-stone></ppp-square>
+    </ppp-row>
+  </ppp-grid>
+</ppp-figure>
+<ppp-caption>The rings are every square O may play on next: adjacent means sharing an
+edge, never a corner. A Magnet binds the opponent and never its owner, and it holds until
+another restriction replaces it — but if no free square would satisfy it, it does not
+apply that turn.</ppp-caption>
+
+<h2><ppp-stone player="X" type="stinky"></ppp-stone> Stinky</h2>
+<p>Your opponent must place their stones not adjacent to this one.</p>
+<ppp-figure>
+  <ppp-grid>
+    <ppp-row>
+      <ppp-square open></ppp-square>
+      <ppp-square><ppp-stone player="O" type="rotate"></ppp-stone></ppp-square>
+      <ppp-square open></ppp-square>
+    </ppp-row>
+    <ppp-row>
+      <ppp-square></ppp-square>
+      <ppp-square><ppp-stone player="X" type="stinky"></ppp-stone></ppp-square>
+      <ppp-square></ppp-square>
+    </ppp-row>
+    <ppp-row>
+      <ppp-square open></ppp-square>
+      <ppp-square><ppp-stone player="X" type="2048"></ppp-stone></ppp-square>
+      <ppp-square open></ppp-square>
+    </ppp-row>
+  </ppp-grid>
+</ppp-figure>
+<ppp-caption>The same thing the other way about: O is pushed off the four squares beside
+it, and the corners are all that is left. Only one restriction is ever in force — the
+most recently placed, whoever owns it — so playing either of these replaces the
+other.</ppp-caption>
+
+<h2>What they are for</h2>
+<p>A line can be made by moving a stone into it rather than by placing one there, and a
+line you were about to complete can be taken apart by the stone your opponent plays next.
+Stones are never removed, so the ninth placement fills the board — and if nobody is in a
+line by then, the player who moved second wins.</p>

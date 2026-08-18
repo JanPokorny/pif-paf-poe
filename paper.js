@@ -8,7 +8,7 @@
 //        <ppp-square></ppp-square>
 //        ...
 //
-// Three kinds of file come out of here, and each does one thing:
+// Three kinds of file, and each does one thing:
 //
 //    paper/icons/*.svg   one drawing each, from icons.js and nothing else
 //    paper/ppp.css       what every element is, in element names and custom
@@ -18,16 +18,16 @@
 //   node paper.js                     write them all into paper/
 //   node paper.js --out somewhere     write them somewhere else
 //
-// The sheets you print and cut up are four of those documents. The point of the
-// split is the fifth: a page of rules or a tutorial is written in the same elements,
-// so an illustration is a position rather than a picture of one, and resizing every
-// stone on it is one custom property. paper/example.html is that, and its positions
-// come out of the engine, so they cannot disagree with the game.
+// What comes out of here is the four sheets you print and cut up, and the stylesheet
+// and drawings they are made of. The point of the split is what does not come out of
+// here: paper/stones.html is written by hand in the same elements, because a page
+// that explains something wants its boards where it wants them, and a page of
+// elements is easier to write than a program that writes one.
 
 import { existsSync, mkdirSync, writeFileSync } from 'node:fs';
 
 import { setArena, SPACES, VETO, WIDTH, ZONES, ZONE_SPACES } from './arena.js';
-import { applyAction, createGame, ITEMS, STONE_TYPES } from './engine.js';
+import { ITEMS, STONE_TYPES } from './engine.js';
 import { ICONS, svg } from './icons.js';
 import { arg } from './sim.js';
 
@@ -174,15 +174,40 @@ ppp-figure {
   gap: 6mm;
 }
 
-/* Between two boards: what the effect did. */
+/* Between two boards: what happened, and what was named to make it happen. With no
+ * direction on it, it is just "and then this". */
 ppp-then {
   display: inline-block;
   vertical-align: middle;
-  width: 14mm;
+  width: 16mm;
   text-align: center;
-  font-size: 7mm;
+  font-size: 8mm;
+  line-height: 1;
 }
+
 ppp-then::before { content: "\\2192"; }
+ppp-then[dir="up"]::before { content: "\\2191"; }
+ppp-then[dir="down"]::before { content: "\\2193"; }
+ppp-then[dir="left"]::before { content: "\\2190"; }
+ppp-then[dir="right"]::before { content: "\\2192"; }
+ppp-then[dir="clockwise"]::before { content: "\\21BB"; }
+
+ppp-then::after {
+  content: attr(dir);
+  display: block;
+  margin-top: 1mm;
+  font-size: 2.8mm;
+  color: var(--ppp-fine);
+}
+
+/* A square the player to move may use, when that is the point of the picture. */
+ppp-square[open]::after {
+  content: "";
+  width: 22%;
+  height: 22%;
+  border: 0.4mm solid var(--ppp-fine);
+  border-radius: 50%;
+}
 
 /* ── The arena ───────────────────────────────────────────────────────────── */
 
@@ -345,18 +370,17 @@ ${style}${body}
 `;
 
 const stone = (player, type) => `<ppp-stone player="${player}" type="${type}"></ppp-stone>`;
-const mark = (player) => `<ppp-mark player="${player}"></ppp-mark>`;
 
 // Six columns of eight on one grid: X on the top four rows and O on the bottom four,
 // a column to a type, four of each a side. Every gap is the same, the halfway one
 // included, so the sheet comes apart on straight cuts wherever the eye puts them.
-function stonesPage() {
+function stoneSheet() {
   const rows = 8;
   const cells = [];
   for (let r = 0; r < rows; r++) {
     for (const type of STONE_TYPES) cells.push(stone(r < rows / 2 ? 'X' : 'O', type));
   }
-  return document('Pif-paf-poe — stones',
+  return document('Pif-paf-poe — a sheet of stones',
     `<ppp-page>\n  <ppp-tray>\n    ${cells.join('\n    ')}\n  </ppp-tray>\n</ppp-page>`);
 }
 
@@ -407,9 +431,9 @@ const card = (item, indent = '') => {
 
 // Two of each of the five, down the page in pairs, so one sheet is a full set for
 // two players.
-function cardsPage() {
+function cardSheet() {
   const cards = ITEMS.flatMap((item) => [card(item, '    '), card(item, '    ')]);
-  return document('Pif-paf-poe — Counterattacks',
+  return document('Pif-paf-poe — a sheet of Counterattacks',
     `<ppp-page>\n  <ppp-deck>\n    ${cards.join('\n    ')}\n  </ppp-deck>\n</ppp-page>`);
 }
 
@@ -430,113 +454,19 @@ function arenaPage(size) {
     `  <ppp-arena size="${size}">\n${html}\n  </ppp-arena>\n</ppp-page>`);
 }
 
-// ── A page that is not for cutting up ───────────────────────────────────────
-
-const gridHtml = (board, indent = '    ') => {
-  const rows = [0, 1, 2].map((r) => {
-    const squares = [0, 1, 2].map((c) => {
-      const cell = board[r * 3 + c];
-      return `<ppp-square>${cell ? stone(cell.player, cell.type) : ''}</ppp-square>`;
-    });
-    return `${indent}  <ppp-row>\n${indent}    ${squares.join(`\n${indent}    `)}` +
-      `\n${indent}  </ppp-row>`;
-  });
-  return `${indent}<ppp-grid>\n${rows.join('\n')}\n${indent}</ppp-grid>`;
-};
-
-// The illustration is a position, and the position is the engine's: X opens with a
-// Magnet, which binds O to a square beside it; O answers with a Stinky, which pushes
-// X away from that one; and X's Shift then slides the column it lands in, wrapping
-// what falls off the top around to the bottom.
-function shiftStudy() {
-  const s = createGame({
-    handX: ['magnet', 'shift', 'rotate', '2048', 'mountain'],
-    handO: ['stinky', 'mountain', 'rotate', 'shift', 'magnet'],
-    first: 'X',
-  });
-  const play = (...actions) => actions.forEach((a) => applyAction(s, a));
-  play({ type: 'select', stone: 'magnet' }, { type: 'place', pos: 0 });
-  play({ type: 'select', stone: 'stinky' }, { type: 'place', pos: 1 });
-  play({ type: 'select', stone: 'shift' }, { type: 'place', pos: 6 });
-  const before = s.board.map((c) => c && { ...c });
-  play({ type: 'effect', direction: 'up' });
-  return { before, after: s.board.map((c) => c && { ...c }), hand: [...s.hands.X] };
-}
-
-function examplePage() {
-  const { before, after, hand } = shiftStudy();
-  const types = STONE_TYPES.map((t) =>
-    `<li><ppp-icon type="${t}"></ppp-icon> <b>${esc(t)}</b></li>`).join('\n    ');
-  const style = `<style>
-  body { margin: 0 auto; padding: 12mm; max-width: 180mm; }
-  h1 { font-size: 8mm; margin: 0 0 2mm; }
-  h2 { font-size: 5mm; margin: 12mm 0 3mm; }
-  p { font-size: 3.6mm; line-height: 1.5; max-width: 150mm; }
-  ul { list-style: none; padding: 0; display: flex; gap: 6mm; flex-wrap: wrap; font-size: 3.4mm; }
-  li { display: flex; align-items: center; gap: 1.5mm; }
-</style>
-`;
-  const body = `<h1>Pif-paf-poe, on a page</h1>
-<p>Every piece here is an element. Nothing in this document is a picture of the game:
-it is the game, written down, at whatever size the page asks for.</p>
-
-<h2>The six types</h2>
-<ul>
-    ${types}
-</ul>
-
-<h2>A Shift, resolving</h2>
-<p>X opens with a Magnet, so O must answer beside it. O plays a Stinky, so X must go
-somewhere not beside <em>that</em> — and X's Shift lands bottom left and names
-<b>up</b>. The column slides, and what falls off the top comes back at the bottom.</p>
-
-<ppp-figure style="--ppp-square: 22mm">
-${gridHtml(before)}
-  <ppp-then></ppp-then>
-${gridHtml(after)}
-</ppp-figure>
-<ppp-caption>The same two boards at any size you like: the squares are
-<code>--ppp-square</code>, and the stones follow them.</ppp-caption>
-
-<h2>What X holds afterwards</h2>
-<ppp-hand style="--ppp-stone: 18mm">
-  ${hand.map((t) => stone('X', t)).join('\n  ')}
-</ppp-hand>
-
-<h2>One Counterattack</h2>
-${card('mirror')}
-
-<h2>Where the duel is fought</h2>
-<p>The arena, small enough to read at a glance. A space a side has taken carries that
-side's mark — a plain X or O, and nothing else; the veto and the space's name sit along
-the top of it.</p>
-<ppp-arena size="small" style="--ppp-space: 16mm">
-${ZONES.map((z) => {
-    const spaces = ZONE_SPACES[z].map((i) => {
-      const s = SPACES[i];
-      const held = i % 7 === 3 ? mark('X') : i % 11 === 5 ? mark('O') : '';
-      return `<ppp-space veto="${VETO[i]}" name="${attr(spaceName(s, 2))}">${held}</ppp-space>`;
-    });
-    return `  <ppp-zone>\n    ${spaces.join('\n    ')}\n  </ppp-zone>`;
-  }).join('\n')}
-</ppp-arena>
-`;
-  return document('Pif-paf-poe — the elements', body, style);
-}
-
 // ── Writing it all out ──────────────────────────────────────────────────────
 
 const out = arg('out', 'paper');
 if (!existsSync(`${out}/icons`)) mkdirSync(`${out}/icons`, { recursive: true });
 
+// The sheets you print and cut up. The pages you read -- stones.html and any others
+// -- are written by hand in the same elements, and nothing here touches them.
 const files = {
   'ppp.css': stylesheet(),
-  'stones.html': stonesPage(),
-  'counterattacks.html': cardsPage(),
+  'stones-sheet.html': stoneSheet(),
+  'counterattacks-sheet.html': cardSheet(),
   'arena-small.html': arenaPage('small'),
   'arena-big.html': arenaPage('big'),
-  // Last, because the arena it draws is whichever size was set up before it.
-  'example.html': (setArena('small'), examplePage()),
 };
 
 for (const name of Object.keys(ICONS)) {
