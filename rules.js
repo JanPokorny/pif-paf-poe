@@ -12,8 +12,8 @@
 //
 // Under both arms a restriction binds from wherever its stone now stands and
 // stops when the stone leaves the board. What differs is how many of them are
-// in force: one, or the intersection of all of them, with the whole free board
-// back when that intersection is empty.
+// in force: only the latest, or all of them at once, where the squares on offer
+// are the ones satisfying as many as any square can.
 
 import { Worker, isMainThread, parentPort, workerData } from 'node:worker_threads';
 import { cpus } from 'node:os';

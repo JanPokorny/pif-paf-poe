@@ -88,8 +88,8 @@ export function createGame({
   // effect, no restriction and, for a Mountain, no immovability.
   disabled = null,
   // The rules as they stand put every restriction stone on the board in force at
-  // once. This puts one back to the older rule -- only the most recently placed
-  // binds -- for studies that compare the two.
+  // once, satisfying as many as a square can. This puts one back to the older
+  // rule -- only the most recently placed binds -- for studies comparing the two.
   oneRestriction = false,
 }) {
   if (disabled !== null && !STONE_TYPES.includes(disabled)) {
@@ -283,19 +283,29 @@ function restrictionsOn(s, player) {
   return { magnets, stinkies };
 }
 
+// How many of the opponent's restriction stones this square keeps happy: a
+// Magnet wants you beside it, a Stinky wants you away from it, and each one
+// asks separately.
+function satisfies(i, magnets, stinkies) {
+  let n = 0;
+  for (const m of magnets) if (adjacent(i, m)) n++;
+  for (const t of stinkies) if (!adjacent(i, t)) n++;
+  return n;
+}
+
 // The squares this player may place on: every restriction the opponent has on
-// the board is in force at once. A Magnet pulls you next to it -- next to any
-// one of them is enough -- and a Stinky pushes you off it, every one of them,
-// and what is left is the intersection. If that comes out empty, because the
-// two disagree or because a Magnet is walled in, the whole free board is open.
+// the board pulls at once, and you must place where you satisfy as many of them
+// as any square can. Two Magnets far apart cannot both be answered, so either
+// will do; two whose reaches overlap can, so the overlap is where you go. It
+// never comes out empty -- with no restrictions in play every square scores
+// zero and the whole free board is on offer.
 export function allowedSquares(s, free = freeSquares(s.board)) {
   if (s.oneRestriction) return soleRestrictionSquares(s, free);
   const { magnets, stinkies } = restrictionsOn(s, s.player);
   if (!magnets.length && !stinkies.length) return free;
-  const allowed = free.filter((i) =>
-    (!magnets.length || magnets.some((m) => adjacent(i, m))) &&
-    !stinkies.some((t) => adjacent(i, t)));
-  return allowed.length ? allowed : free;
+  const scores = free.map((i) => satisfies(i, magnets, stinkies));
+  const best = Math.max(...scores);
+  return free.filter((_, k) => scores[k] === best);
 }
 
 // The older rule, kept for the study that replaced it: only the most recently

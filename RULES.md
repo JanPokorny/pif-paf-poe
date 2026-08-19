@@ -77,11 +77,17 @@ Every direction and block always stays legal. An effect that moves nothing is st
 **Stinky** — your opponent must place their stones **not adjacent** to this one.
 
 Those two bind only the opponent, never their owner, and **every one of them on the board
-binds at once**. Before placing, take the free squares and cross off every one that is not
-beside one of their Magnets — beside any single one of them is enough — and then every one
-that is beside any of their Stinkies. What is left is where you may play, and **if nothing
-is left the whole free board is open again**, which is also what happens when they have
-neither stone down.
+pulls at once**. Each one asks separately, and a square **satisfies** a Magnet by being
+beside it and a Stinky by not being beside it. So count, for each free square, how many of
+their Magnets and Stinkies it satisfies — and **you must place on a square that satisfies
+as many as any square can**.
+
+Two Magnets far apart cannot both be answered, so answering either is the best there is and
+either will do. Two whose neighbourhoods overlap can both be answered, so the overlap is
+where you go. A Magnet and a Stinky pulling against each other leave you the squares that
+answer one of them, and the squares that answer neither are out. There is always somewhere
+to play, and when they have neither stone down every square satisfies nothing equally and
+the whole free board is yours.
 
 Neither wears off, and both work from wherever their stone now stands: a Magnet that gets
 shifted pulls from its new square, and one taken off the board stops pulling.
