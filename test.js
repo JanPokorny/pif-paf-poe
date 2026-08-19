@@ -5,7 +5,8 @@
 //   node test.js
 
 import {
-  createGame, applyAction, legalActions, render, STONE_TYPES, ITEMS, other, toMove,
+  allowedSquares, createGame, applyAction, legalActions, render, STONE_TYPES, ITEMS,
+  other, toMove,
 } from './engine.js';
 import { existsSync } from 'node:fs';
 
@@ -16,7 +17,7 @@ import {
   ZONES, ZONE_SPACES, claimable, setArena,
 } from './arena.js';
 import {
-  CARD_WORTH, allocate, bestPicks, newCampaign, playRound, posValue,
+  CARD_COST, CARD_WORTH, SWAP_COST, allocate, bestPicks, newCampaign, playRound, posValue,
   placementValue, resolve as pairOff, scoreAndClear, setPos, stakePerDuel,
   tailTable, takeChance, winsNeeded,
 } from './campaign.js';
@@ -119,15 +120,123 @@ check('a Mountain in the square blocks its follower and frees the rest',
     { at: 0, selected: 'rotate' }, { square: 'TL' }),
   ['Xro', 'Omo', '.', 'Omg', '.', '.', '.', '.', '.']);
 
-// ── The Magnet still binds ──────────────────────────────────────────────────
+// ── Where a player may place ────────────────────────────────────────────────
+
+// A little state with a board already set and a stone in hand ready to place,
+// so the only question left is which squares are on offer.
+function placing(spec, { player = 'O', stone = 'shift', ...opts } = {}) {
+  const s = createGame({ handX: [stone], handO: [stone], first: player, ...opts });
+  s.board = board(spec);
+  s.player = player;
+  s.selected = stone;
+  s.phase = 'place';
+  return s;
+}
+const offers = (s) => legalActions(s).map((a) => a.pos);
 
 {
   const s = createGame({ handX: ['magnet'], handO: ['shift'], first: 'X' });
   applyAction(s, { type: 'select', stone: 'magnet' });
   applyAction(s, { type: 'place', pos: 4 });
   applyAction(s, { type: 'select', stone: 'shift' });
-  check('a Magnet still compels the opponent to place adjacent to it',
-    legalActions(s).map((a) => a.pos), [1, 3, 5, 7]);
+  check('a Magnet compels the opponent to place adjacent to it',
+    offers(s), [1, 3, 5, 7]);
+}
+
+check('a Stinky on its own still pushes the opponent off it',
+  offers(placing(['.', '.', '.', '.', 'Xst', '.', '.', '.', '.'])),
+  [0, 2, 6, 8]);
+
+// Two Magnets whose reaches do not meet: no square answers both, so answering
+// either is the best on offer.
+check('two Magnets too far apart offer the squares beside either of them',
+  offers(placing(['Xmg', '.', '.', '.', '.', '.', '.', '.', 'Xmg'])),
+  [1, 3, 5, 7]);
+
+// Two whose reaches do meet: the square that answers both beats the ones that
+// answer one, so it is the only square left.
+check('two Magnets that overlap send you to the overlap',
+  offers(placing(['Xmg', '.', 'Xmg', '.', '.', '.', '.', '.', '.'])),
+  [1]);
+
+check('two Stinkies deny the squares beside either of them',
+  offers(placing(['Xst', '.', '.', '.', '.', '.', '.', '.', 'Xst'])),
+  [2, 4, 6]);
+
+check('a Magnet and a Stinky that can both be answered leave what answers both',
+  offers(placing(['.', '.', '.', '.', 'Xmg', '.', '.', 'Xst', '.'])),
+  [1, 3, 5]);
+
+// Nothing here answers both -- the Magnet's two free squares are the Stinky's
+// two forbidden ones -- so every square answering exactly one is on offer, and
+// the two that answer neither are not.
+check('a Magnet and a Stinky at odds leave the squares that answer one of them',
+  offers(placing(['Xmg', '.', '.', '.', 'Xst', '.', '.', '.', '.'])),
+  [1, 2, 3, 6, 8]);
+
+check('your own Magnet and Stinky never bind you',
+  offers(placing(['Omg', '.', '.', 'Ost', '.', '.', '.', '.', '.'])),
+  [1, 2, 4, 5, 6, 7, 8]);
+
+// Every free square scores the same nothing, so nothing is ruled out.
+check('a Magnet with no free square beside it binds nobody',
+  offers(placing(['Omo', 'Xmg', 'Xmo', '.', 'Omo', '.', '.', '.', '.'])),
+  [3, 5, 6, 7, 8]);
+
+// Three at once, to check the count and not just the pair. The Magnet at 0
+// reaches 1 and 3; the Stinky at 5 forbids 2, 4 and 8; the Stinky at 6 forbids
+// 3 and 7. Square 1 answers all three and nothing else does.
+check('the square answering the most wins outright, however many are in play',
+  offers(placing(['Xmg', '.', '.', '.', '.', 'Xst', 'Xst', '.', '.'])),
+  [1]);
+
+{
+  // The same rule, checked by brute force over random boards rather than by
+  // hand: what comes back is always free, never empty, and always ties for the
+  // most restrictions answered.
+  const rng = makeRng(4242);
+  const kinds = [null, 'shift', 'mountain', 'magnet', 'stinky'];
+  const near = (a, b) => Math.abs(((a / 3) | 0) - ((b / 3) | 0)) + Math.abs((a % 3) - (b % 3)) === 1;
+  let bad = 0, sawTie = 0, sawSole = 0;
+  for (let t = 0; t < 3000; t++) {
+    const s = createGame({ handX: ['shift'], handO: ['shift'], first: 'X' });
+    s.player = rng() < 0.5 ? 'X' : 'O';
+    s.board = Array.from({ length: 9 }, (_, i) => {
+      const type = kinds[(rng() * kinds.length) | 0];
+      return type ? { player: rng() < 0.5 ? 'X' : 'O', type, id: i } : null;
+    });
+    const free = s.board.map((c, i) => (c ? -1 : i)).filter((i) => i >= 0);
+    if (!free.length) continue;
+    const foe = other(s.player);
+    const score = (i) => s.board.reduce((n, c, j) => n + (c?.player !== foe ? 0
+      : c.type === 'magnet' ? (near(i, j) ? 1 : 0)
+        : c.type === 'stinky' ? (near(i, j) ? 0 : 1) : 0), 0);
+    const best = Math.max(...free.map(score));
+    const got = allowedSquares(s);
+    const want = free.filter((i) => score(i) === best);
+    if (JSON.stringify(got) !== JSON.stringify(want) || !got.length) bad++;
+    if (got.length > 1 && best > 0) sawTie++;
+    if (got.length === 1 && free.length > 1) sawSole++;
+  }
+  check('over random boards the offer is always the maximal set', bad, 0);
+  // And the two interesting shapes both actually turned up, so the run above is
+  // not passing on boards that never restrict anything.
+  check('and both a tie and a forced single square were seen',
+    sawTie > 0 && sawSole > 0, true);
+}
+
+{
+  // The rule it replaced, kept for the study: only the latest one binds. The
+  // Stinky is the one placed, so the Magnet on the board says nothing.
+  const s = createGame({
+    handX: ['stinky'], handO: ['shift'], first: 'X', oneRestriction: true,
+  });
+  s.board = board(['Xmg', '.', '.', '.', '.', '.', '.', '.', '.']);
+  applyAction(s, { type: 'select', stone: 'stinky' });
+  applyAction(s, { type: 'place', pos: 8 });
+  applyAction(s, { type: 'select', stone: 'shift' });
+  check('under the single-restriction variant the latest one replaces the rest',
+    offers(s), [1, 2, 3, 4, 6]);
 }
 
 // ── A Mountain never removes a choice ───────────────────────────────────────
@@ -694,7 +803,11 @@ if (existsSync('results/hands-vetoes.json')) {
   const bought = st.bought.slice(1).flat().reduce((a, b) => a + b, 0);
   check('a purse never goes negative', purses.every((n) => n >= 0), true);
   check('every point is earned, spent or banked',
-    2 * (tally.swaps + tally.cards) + purses.reduce((a, b) => a + b, 0), tally.earned);
+    SWAP_COST * tally.swaps + CARD_COST * tally.cards
+      + purses.reduce((a, b) => a + b, 0), tally.earned);
+  // Every duel has exactly one winner and every winner is paid, so the duels are a
+  // floor on what the round handed out -- the spaces pay on top of them.
+  check('a duel won pays a point of its own', tally.earned >= tally.duels, true);
   check('the ladder is climbed', bought > 0 && bought === tally.swaps, true);
   check('cards are held as worths',
     st.cards.slice(1).flat(2).every((w) => CARD_WORTH.includes(w)), true);

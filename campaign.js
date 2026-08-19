@@ -3,6 +3,7 @@
 //   node campaign.js --sizes 10-30 --rounds 800 --reps 3
 //   node campaign.js --arenas small,big --sizes 12,30 --rounds 600
 //   node campaign.js --economy --sizes 12 --rounds 720        # what a campaign leaves players
+//   node campaign.js --economy --swap-cost 2,3,4 --card-cost 2,3,4   # what the prices should be
 //   node campaign.js --pair defence --sizes 12 --rounds 500   # what a defensive plan is worth
 //   node campaign.js --sizes 12 --defence oracle              # the defence's ceiling
 //   node campaign.js --sizes 12 --rounds 200 --duels real     # every pairing played out
@@ -649,13 +650,16 @@ export const edgeShift = (edge) => Math.log(edge / (1 - edge));
 export const CARD_WORTH = [1.23, 0.80, 0.67, 0.34, 0.03]; // Overtake .. Rehearse
 const MEAN_CARD = CARD_WORTH.reduce((a, b) => a + b, 0) / CARD_WORTH.length;
 
-// The prices. A space won pays one point; a stone replaced costs two, and so does a
-// Counterattack. Two is the most a swap can cost and still let a player finish their
-// hand out of a campaign's twelve points, and pricing a card level with a swap is what
-// keeps a player who spends on impulse from starving their own hand ladder.
+// The prices. A round pays a point for standing on a space your side won and a point
+// for winning your duel, so a player who does both takes two; a stone replaced costs
+// three, and so does a Counterattack. The two prices are held level because pricing a
+// card below a swap is what makes a player who spends on impulse starve their own hand
+// ladder. `--swap-cost` and `--card-cost` move them, which is how they were chosen.
 export const GRANT = 1;
-export const SWAP_COST = 2;
-export const CARD_COST = 2;
+export const SWAP_COST = 3;
+export const CARD_COST = 3;
+const swapCost = (cfg) => cfg.swapCost ?? SWAP_COST;
+const cardCost = (cfg) => cfg.cardCost ?? CARD_COST;
 
 // What a player thinks the next purchase is worth, in the strength that decides a duel.
 // A swap applies to every duel they have left; a card to one, and only if they have a
@@ -684,17 +688,17 @@ function spend(st, cfg, team, k, rng, tally) {
   for (;;) {
     const purse = st.pts[team][k];
     const v = buys(st, cfg, team, k);
-    const a = v.swap > 0 ? v.swap / SWAP_COST : -1;
-    const b = v.card > 0 ? v.card / CARD_COST : -1;
+    const a = v.swap > 0 ? v.swap / swapCost(cfg) : -1;
+    const b = v.card > 0 ? v.card / cardCost(cfg) : -1;
     if (a < 0 && b < 0) break;
-    if (a >= b ? purse < SWAP_COST : purse < CARD_COST) break;
+    if (a >= b ? purse < swapCost(cfg) : purse < cardCost(cfg)) break;
     if (a >= b) {
-      st.pts[team][k] -= SWAP_COST;
+      st.pts[team][k] -= swapCost(cfg);
       st.roster[team][k] = v.to;
       st.bought[team][k]++;
       if (tally) tally.swaps++;
     } else {
-      st.pts[team][k] -= CARD_COST;
+      st.pts[team][k] -= cardCost(cfg);
       st.cards[team][k].push(CARD_WORTH[(rng() * CARD_WORTH.length) | 0]);
       // When a player buys their first card, how far up the hand ladder are they? That
       // is the whole of "something to buy once you are happy with your hand".
@@ -777,8 +781,8 @@ export function playRound(st, cfg, rng, tables, tally) {
     atk: assign(order, A, st.roster[me], cfg.pool),
     def: assign(order, D, st.roster[them], cfg.pool),
   };
-  // Filed by team number, so [1] is X and [2] is O whichever of them is attacking.
-  const log = { won: [null, [], []], lost: [null, [], []] };
+  // Who won their duel, filed by team number, since winning one pays a point.
+  const log = { won: [null, [], []] };
 
   const taken = [];
   let duels = 0, pivotal = 0, stake = 0;
@@ -803,12 +807,9 @@ export function playRound(st, cfg, rng, tables, tally) {
   const { lines, points, cleared } = scoreAndClear(st.marks, me, them);
   st.points[me] += points;
 
-  // The trigger rule. Every one of these hands out the same thing -- one stone
-  // replaced -- and differs only in who gets it, which is the whole question.
-  // Everybody standing on a space their side won -- the attackers on a space the
-  // attack took, the defenders on one it held -- paired or not. An unpaired attacker's
-  // presence is already part of how a space is taken, so standing there is already a
-  // contribution. Both the stone swap and the upgrade points follow this list.
+  // Who stood on a space their side won -- the attackers on a space the attack took,
+  // the defenders on one it held -- paired or not. An unpaired attacker's presence is
+  // already part of how a space is taken, so standing there is already a contribution.
   const winnersOn = () => {
     const took = new Set(taken);
     const out = [[], [], []];
@@ -820,15 +821,18 @@ export function playRound(st, cfg, rng, tables, tally) {
     return out;
   };
 
-  // A space won pays its winners, and they spend what they have on whatever is worth
-  // most per point. Nothing is handed out free.
+  // The round pays twice over: a point for standing on a space your side won, and a
+  // point for winning your duel. Both lists hold a player at most once, so two is the
+  // most a round can pay and it takes a fight to earn it. They then spend what they
+  // have on whatever is worth most per point; nothing is handed out free.
   const winners = winnersOn();
   for (const team of [me, them]) {
-    for (const k of winners[team]) {
+    const paid = [...winners[team], ...log.won[team]];
+    for (const k of paid) {
       st.pts[team][k] += GRANT;
       if (tally) tally.earned += GRANT;
     }
-    for (const k of new Set(winners[team])) spend(st, cfg, team, k, rng, tally);
+    for (const k of new Set(paid)) spend(st, cfg, team, k, rng, tally);
   }
   st.round++;
 
@@ -897,8 +901,8 @@ export function playRound(st, cfg, rng, tables, tally) {
 // The duels on one space, attacker hands against defender hands. The defence chooses
 // which attacker each of its players takes, so it pairs off the way that wins it the
 // most games -- champion against champion, or its best against their weakest, whichever
-// of the two comes out higher. Returns how many the attack lost, and files each player
-// under won or lost for whichever trigger rule is in force.
+// of the two comes out higher. Returns how many the attack lost, and files the winner
+// of each duel under their team, since a duel won pays its winner a point.
 function fight(i, pairs, sides, st, me, them, cfg, rng, log, tally = null) {
   const roster = st.roster;
   const v = VETO[i];
@@ -928,8 +932,8 @@ function fight(i, pairs, sides, st, me, them, cfg, rng, log, tally = null) {
         if (tally) tally.used++;
       }
       if (tally) tally.defDuels++;
-      if (r.openerWon > 0.5) { log.won[1].push(atk[k]); log.lost[2].push(def[k]); }
-      else { lost++; log.won[2].push(def[k]); log.lost[1].push(atk[k]); }
+      if (r.openerWon > 0.5) log.won[me].push(atk[k]);
+      else { lost++; log.won[them].push(def[k]); }
       continue;
     }
     // The defender spends a Counterattack if they are carrying one. Presenting three
@@ -948,14 +952,8 @@ function fight(i, pairs, sides, st, me, them, cfg, rng, log, tally = null) {
         if (tally) tally.used++;
       }
     }
-    if (rng() < duelChance(sa(atk[k]) + edge, sd(def[k]))) {
-      log.won[1].push(atk[k]);
-      log.lost[2].push(def[k]);
-    } else {
-      lost++;
-      log.won[2].push(def[k]);
-      log.lost[1].push(atk[k]);
-    }
+    if (rng() < duelChance(sa(atk[k]) + edge, sd(def[k]))) log.won[me].push(atk[k]);
+    else { lost++; log.won[them].push(def[k]); }
   }
   return lost;
 }
@@ -1226,6 +1224,8 @@ function row(t) {
     cardsEarly: per(t.halfUsed[0], t.halfDuels[0]),
     cardsLate: per(t.halfUsed[1], t.halfDuels[1]),
     zones: t.zones,
+    swapCost: t.swapCost ?? SWAP_COST,
+    cardCost: t.cardCost ?? CARD_COST,
     // The share of rounds where every zone claimed a space, and where two or more came
     // away with nothing: the two ends that say whether the defence is denying anything.
     allMarks: per(t.markHist[t.zones], r),
@@ -1243,11 +1243,12 @@ function row(t) {
 function group(tallies) {
   const byKey = new Map();
   for (const t of tallies) {
-    const k = `${t.size}|${t.arena}|${t.defence}|${t.attack}`;
+    const k = `${t.size}|${t.arena}|${t.defence}|${t.attack}|${t.swapCost}|${t.cardCost}`;
     if (!byKey.has(k)) { byKey.set(k, { ...t }); continue; }
     const into = byKey.get(k);
     for (const [f, v] of Object.entries(t)) {
-      const constant = ['size', 'seed', 'rep', 'rounds', 'spaces', 'zones', 'horizon'];
+      const constant = ['size', 'seed', 'rep', 'rounds', 'spaces', 'zones', 'horizon',
+        'swapCost', 'cardCost'];
       if (typeof v === 'number' && typeof into[f] === 'number' && !constant.includes(f)) into[f] += v;
       else if (Array.isArray(v) && Array.isArray(into[f])) into[f] = into[f].map((x, i) => x + v[i]);
     }
@@ -1283,12 +1284,14 @@ function report(rows) {
 // And the economy: what a player earns and what a campaign leaves them holding, all per
 // player, plus the two halves that show the cards coming off the attacker's edge.
 function reportEconomy(rows) {
-  const head = ['size', 'arena', 'earn/r', 'swaps', 'done3%', 'never%', 'hand', 'bank',
-    'cards', 'card@r', 'after', 'card%1st', 'card%2nd', 'take%1st', 'take%2nd'];
+  const head = ['size', 'arena', 'swap$', 'card$', 'earn/r', 'swaps', 'done3%', 'never%',
+    'hand', 'bank', 'cards', 'card@r', 'after', 'card%1st', 'card%2nd', 'take%1st',
+    'take%2nd'];
   console.log(head.map((h) => pad(h, h.length > 5 ? 10 : 7)).join(''));
   for (const r of rows) {
     console.log([
-      pad(r.size, 7), pad(r.arena, 7), pad(r.earn.toFixed(2), 10),
+      pad(r.size, 7), pad(r.arena, 7), pad(r.swapCost, 7), pad(r.cardCost, 7),
+      pad(r.earn.toFixed(2), 10),
       pad(r.endSwaps.toFixed(2), 7), pad(pct(r.endDone), 10), pad(pct(r.endNone), 10),
       pad(r.endHand.toFixed(2), 7), pad(r.bank.toFixed(2), 7),
       pad(r.cardsBought.toFixed(2), 7), pad(r.firstAt.toFixed(1), 10),
@@ -1344,6 +1347,9 @@ async function main() {
     iters: parseInt(arg('iters', '120'), 10),
     handsFile: arg('hands-file', 'results/hands-vetoes.json'),
     horizon: parseInt(arg('horizon', '24'), 10),   // how long the players think it runs
+    // Prices take a list, so one run can sweep them: --swap-cost 2,3 --card-cost 2,3
+    swapCosts: sizes(arg('swap-cost', String(SWAP_COST))),
+    cardCosts: sizes(arg('card-cost', String(CARD_COST))),
     economy: process.argv.includes('--economy'),   // report the economy table instead
     workers: parseInt(arg('workers', String(Math.max(1, cpus().length - 1))), 10),
     out: arg('out', null),
@@ -1362,15 +1368,20 @@ async function main() {
   // size from several seeds and sums them. The hand table is loaded once and shared.
   const pool = loadHands(opts.handsFile);
 
+  const prices = opts.swapCosts.flatMap((swapCost) =>
+    opts.cardCosts.map((cardCost) => ({ swapCost, cardCost })));
+
   const configs = opts.arenas.flatMap((arena, ai) =>
-    opts.sizes.flatMap((size, k) => Array.from({ length: opts.reps }, (_, rep) => ({
-      ...opts, arena, size, rep, pool,
-      pos: WEIGHTS[arena] ?? WEIGHTS.small,
-      seed_marks: SEED_PAIRS[arena] ?? SEED_PAIRS.small,
-      seed_handicap: HANDICAP,
-      sizes: undefined, arenas: undefined,
-      seed: opts.seed + 1000 * k + 97 * rep + 13 * ai,
-    }))));
+    opts.sizes.flatMap((size, k) => prices.flatMap((price) =>
+      Array.from({ length: opts.reps }, (_, rep) => ({
+        ...opts, ...price, arena, size, rep, pool,
+        pos: WEIGHTS[arena] ?? WEIGHTS.small,
+        seed_marks: SEED_PAIRS[arena] ?? SEED_PAIRS.small,
+        seed_handicap: HANDICAP,
+        sizes: undefined, arenas: undefined, swapCosts: undefined, cardCosts: undefined,
+        // The same seed across prices, so a price is read against the same rounds.
+        seed: opts.seed + 1000 * k + 97 * rep + 13 * ai,
+      })))));
 
   const started = Date.now();
   const tallies = opts.workers > 1 && configs.length > 1
@@ -1381,7 +1392,8 @@ async function main() {
       .map((a, i) => [a, group(tallies.map((p) => p[1])).map(row)[i]])
       .sort((a, b) => a[0].size - b[0].size)
     : group(tallies).map(row)
-      .sort((a, b) => a.arena.localeCompare(b.arena) || (a.size - b.size));
+      .sort((a, b) => a.arena.localeCompare(b.arena) || (a.size - b.size)
+        || (a.swapCost - b.swapCost) || (a.cardCost - b.cardCost));
   if (opts.pair) reportPaired(rows);
   else if (opts.economy) reportEconomy(rows);
   else report(rows);

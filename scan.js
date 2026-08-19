@@ -37,10 +37,11 @@ export function allHands(pool = STONE_TYPES) {
 }
 
 // How a census labels itself: the rules it was played under, if not the current
-// ones. An older checkpoint predates `rules` and recorded `sticky` instead.
+// ones. Older checkpoints predate this field, and predate the rule where every
+// restriction stone binds at once, so they read as the single-restriction rule.
 function rulesOf(stateOpts) {
-  const r = stateOpts.rules ?? { oneTurnMagnet: !stateOpts.sticky };
-  return { oneTurnMagnet: !!r.oneTurnMagnet, oneTurnStinky: !!r.oneTurnStinky };
+  const r = stateOpts.rules ?? { oneRestriction: true };
+  return { oneRestriction: !!r.oneRestriction };
 }
 function rulesLabel(rules) {
   const on = Object.keys(rules).filter((k) => rules[k]);
@@ -269,8 +270,7 @@ async function main() {
     compare: arg('compare', null),   // another census to read this one against
     // A census of the game as it stands unless a variant is asked for.
     rules: {
-      oneTurnMagnet: process.argv.includes('--one-turn-magnet'),
-      oneTurnStinky: process.argv.includes('--one-turn-stinky'),
+      oneRestriction: process.argv.includes('--one-restriction'),
     },
     pool: STONE_TYPES,
   };
