@@ -1,152 +1,34 @@
 # Pif-paf-poe
 
-Tic-tac-toe where the pieces move. Two players duel on a 3x3 board; twenty to sixty players fight
-those duels for one big arena of four or nine zones, in a campaign that runs an evening.
+Tic-tac-toe where the pieces move. Two players duel on a 3x3 board; 20–60 players fight those
+duels over one big arena, in a campaign that runs an evening.
 
-Read the duel first — the campaign is built on it.
+# What you are trying to do
 
-# The duel
+Four nested layers, each fed by the one below:
 
-You each hold **five stones** and place one a turn on a 3x3 board. Three in a row, orthogonal or
-diagonal, wins.
+| layer | you win it by |
+|---|---|
+| **campaign**, an evening | reaching the agreed score first |
+| **arena**, a round | lining up three of your marks — that scores |
+| **space**, a scrum | out-powering the other side there: duels won plus spare players |
+| **duel**, two players | three of your stones in a row on a 3x3 board |
 
-The difference from tic-tac-toe is that most stones **do something when placed**, and what they
-do is move stones already on the board — yours and your opponent's. So a line can be made by
-moving a stone into it rather than by placing one there, and a line you were about to complete
-can be taken apart by the stone your opponent plays next. You are never only choosing a square;
-you are choosing a square and an effect.
+That is the order below, outside in. The arena is what an evening looks like; the duel is what you
+actually play.
 
-Squares are numbered left to right, then top to bottom:
+# The arena
 
-```
-0 1 2
-3 4 5
-6 7 8
-```
+Two teams, **X** and **O**, 10–30 players each. They take turns attacking an **arena** of
+**spaces**, grouped into **zones** of nine. Spaces won take your symbol; three marks in a row
+anywhere on the arena — any direction, across zone boundaries — scores.
 
-**Adjacent** always means sharing an edge, never a corner.
+**Size by headcount.** 6x6, four zones, 36 spaces, ~12 a side. 9x9, nine zones, 81 spaces, ~30
+a side. Nothing else changes.
 
-## A turn
-
-Hands may hold repeats, and the two hands need not match. Who goes first is decided at the
-table — in a campaign it is always the attacker. **The player who moves second is the only one
-who can spend a Counterattack**, which is what compensates them for moving second.
-
-On your turn, in order:
-
-1. **Place** a stone from your hand on any free square. The only things that ever narrow the
-   choice are an opponent's Magnets and Stinkies, which say where, and their Mind Control,
-   which says which stone.
-2. **Resolve** its effect, if it has one. This is not optional: you may place a stone where its
-   effect has nothing to do, but you may not place it where the effect works and decline it.
-3. **Counterattack** — if you moved second and hold one, you may spend it now.
-4. **Check.** If you have three in a row you win; if only your opponent does, they win.
-5. Pass the turn.
-
-Stones are never removed, so the ninth placement fills the board. **If the board fills with nobody
-in a line, the player who moved second wins** — as they do if the player to move has no stones
-left. There are no draws.
-
-## The stones
-
-Six types. Three of them move things, one refuses to be moved, and two dictate where the
-opponent may play.
-
-**Shift** — name a direction. The row or column this stone sits in slides one step that way, and
-whatever falls off the end wraps around to the other end.
-
-**2048** — name a direction. Every stone on the board slides that way as far as it can go, just
-as in the tile game.
-
-**Rotate** — pick one of the 2x2 blocks this stone belongs to. Those four squares turn one step
-clockwise.
-
-**Mountain** — does nothing when placed, and nothing ever moves it. It **blocks rather than
-forbids**: other effects still happen, they just cannot move it or pass through it.
-
-- **2048** — stones cannot slide past it, so each stretch of the line packs up on its own.
-- **Shift** — a stone whose destination is the Mountain stays put, and so does anything queued
-  behind it. Nothing wraps through a Mountain.
-- **Rotate** — the Mountain keeps its corner; each of the other three advances if the corner
-  ahead of it is free, or becomes free.
-
-Every direction and block always stays legal. An effect that moves nothing is still a legal move.
-
-**Magnet** — your opponent must place their stones **adjacent** to this one.
-
-**Stinky** — your opponent must place their stones **not adjacent** to this one.
-
-Those two bind only the opponent, never their owner, and **every one of them on the board
-pulls at once**. Each one asks separately, and a square **satisfies** a Magnet by being
-beside it and a Stinky by not being beside it. So count, for each free square, how many of
-their Magnets and Stinkies it satisfies — and **you must place on a square that satisfies
-as many as any square can**.
-
-Two Magnets far apart cannot both be answered, so answering either is the best there is and
-either will do. Two whose neighbourhoods overlap can both be answered, so the overlap is
-where you go. A Magnet and a Stinky pulling against each other leave you the squares that
-answer one of them, and the squares that answer neither are out. There is always somewhere
-to play, and when they have neither stone down every square satisfies nothing equally and
-the whole free board is yours.
-
-Neither wears off, and both work from wherever their stone now stands: a Magnet that gets
-shifted pulls from its new square, and one taken off the board stops pulling.
-
-## Spaces
-
-A duel is always fought on a **space**, and every space **switches one stone type off** for both
-players. A switched-off stone is still placed, still occupies its square and still counts towards
-a line — it simply has no effect. A dead Magnet or Stinky binds nobody; a dead Mountain shoves
-around like any other stone.
-
-There is a space for each of the six types, and a neutral space that switches nothing off. Which
-space you are on changes which hands are good, so it matters more than it sounds.
-
-## Counterattacks
-
-A Counterattack is not a stone and is never placed. **Only the player who moves second can spend
-one.**
-
-Hold as many as you like, **present up to three** at the start of the game so your opponent knows
-what they face, and **spend at most one**, chosen with the board in front of you. An unspent
-Counterattack is kept for another game; only a spent one is discarded.
-
-All of them are spent at the end of your turn — after your stone has resolved, before the check
-for three in a row — so any of them can finish a line.
-
-**Overtake** — if your opponent holds the centre square, take that stone off the board and back
-into their hand. It is not a movement effect, so a Mountain is not safe from it.
-
-**Relocate** — move one of your own stones to any free square. It resolves nothing on arrival.
-
-**Mirror** — pick one of the four pairs facing each other through the centre — 0 and 8, 1 and 7,
-2 and 6, 3 and 5 — and swap what stands on them, whoever owns it.
-
-**Mind Control** — name a stone in your opponent's hand. That is what they must play next turn.
-
-**Rehearse** — resolve one of your stones on the board again, from wherever it now stands. A
-stone the space has switched off cannot be rehearsed.
-
-# The campaign
-
-Two teams, **X** and **O**, of ten to thirty players each. They take turns attacking one
-**arena**, divided into **zones** of nine spaces each. Spaces you win take your symbol; three
-in a row anywhere on the arena scores; first to the agreed score wins the evening.
-
-Every space of the arena has a stone type printed on it, switched off for every duel fought
-there. So where you are sent decides which of your stones work.
-
-## The arena
-
-**Pick the size by the headcount.** Four zones in a 2x2 — a 6x6 arena, 36 spaces — suits about
-twelve a side. Nine zones in a 3x3 — a 9x9 arena, 81 spaces — suits about thirty. The rules do
-not otherwise change.
-
-Three in a row **anywhere on the arena** scores, in any direction, across zone boundaries as
-freely as within one.
-
-Each space's printed veto follows a fixed pattern, stepping one across and three down, so that
-no line of three repeats a veto:
+Every space prints one **stone type it switches off**, for both players, in every duel fought
+there. So where you are sent decides which of your stones work. The pattern steps one across and
+three down, so no line of three repeats a veto:
 
 ```
    --  sh  20  ro  mo  mg          --  neutral     mo  mountain
@@ -161,104 +43,167 @@ The 9x9 continues the same pattern.
 
 ## Setting up
 
-- **Hands.** Everyone draws five stones at random.
-- **The opening position.** Mark about a fifth of the arena before play, half to each side —
-  **four spaces each on the 6x6, nine each on the 9x9** — so that the first round already has
-  ground worth fighting over. Place them in rotational pairs: for every space X starts on, O
-  starts on the one half a turn about the centre away from it. Draw the pairs one at a time and
-  reject any pair that would complete a three in a row.
-- **The first attacker gives back two.** Attacking first is worth something, so the team that
-  goes first removes two of its own opening marks.
-- **The target.** Agree what to play to: **40 points on the 6x6, 170 on the 9x9**. Either is
-  about two dozen rounds.
+- **Hands.** Five random stones each.
+- **Opening marks.** About a fifth of the arena, half to each side — four each on the 6x6, nine
+  each on the 9x9 — so round one has ground worth fighting over. Place them in rotational pairs:
+  for every X space, O takes the one half a turn about the centre away. Draw pairs one at a time,
+  rejecting any that completes a three in a row.
+- **First attacker gives back two.** Attacking first is worth something; that team removes two of
+  its own opening marks.
+- **Target.** 40 points on the 6x6, 170 on the 9x9 — about two dozen rounds either way.
 
 ## The round
 
-One team attacks, the other defends, and they swap every round. The defence commits without
-knowing where the attack will go; the attack then places knowing exactly where the defenders
-are. That asymmetry is the game: the defence cannot cover everything, so it has to decide what
-is worth covering, and the attack has to buy the spaces it wants at the price the defence set.
+One team attacks, one defends, swapping every round. The defence commits blind; the attack places
+knowing exactly where the defenders stand. That asymmetry is the game: the defence cannot cover
+everything, and the attack pays the price the defence set.
 
-1. **The defence takes positions.** Every defender stands on a space, any space, as many to a
-   space as you like.
-2. **The attack takes positions.** Every attacker stands on a space with no symbol on it,
-   having seen the whole defence. Again, as many to a space as you like.
-3. **Pairing.** On each space, defenders pair off one to one with attackers, and a defender
-   with a choice picks their opponent. **A defender with nobody to fight must step** to an
-   adjacent space where attackers outnumber defenders, and pair up there. Only a defender with
-   no unpaired attacker on their space or beside it stands idle.
-4. **The duels.** Every pair plays a duel on that space, **attacker moving first**.
-5. **Taking the spaces.** Each side's **power** on a space is the duels it won there plus its
-   players left unpaired there. **The attack takes the space if its power is strictly higher**;
-   level power holds it for the defence.
-6. **Placing the marks.** Each zone may mark **one** of the spaces its attack took, with the
-   attacking team's symbol — or none, if none is worth having.
-7. **Scoring.** Count the attacking team's three-in-a-rows, overlapping ones separately: a cross
-   is two, four in a row is two. **n lines in one round score n²** — 1, 4, 9, 16.
-8. **Clearing.** Every scored line costs ground. For each one, **one** zone that the line
-   passed through is wiped clean of both teams' symbols, and **the attack picks which zone**.
-9. **Paying.** There are two ways to earn and a player can do both. Everyone standing on a
-   space their side won — attackers on a space taken, defenders on a space held, whether they
-   fought or not — takes **one upgrade point**; and everyone who **won their duel** takes one.
-   So a round pays a player nothing, one, or two, and the second one has to be fought for.
+1. **Defence takes positions.** Every defender stands on any space, any number to a space.
+2. **Attack takes positions.** Every attacker stands on a space with no symbol on it, having seen
+   the whole defence.
+3. **Pairing.** On each space, defenders pair off one to one with attackers; a defender with a
+   choice picks. A defender with nobody to fight **must step** to an adjacent space where
+   attackers outnumber defenders and pair up there. Only one with no unpaired attacker on or
+   beside their space stands idle.
+4. **Duels.** Every pair plays a duel on that space, **attacker first**.
+5. **Taking spaces.** A side's **power** on a space is duels won there plus players left unpaired
+   there. The attack takes the space if its power is **strictly higher**; level holds it for the
+   defence.
+6. **Marks.** Each zone may mark **one** of the spaces its attack took — or none.
+7. **Scoring.** Count the attacker's three-in-a-rows, overlapping ones separately (a cross is two,
+   four in a row is two). **n lines score n²** — 1, 4, 9, 16.
+8. **Clearing.** Each scored line costs ground: one zone the line passed through is wiped of both
+   symbols, and the **attack picks which**.
+9. **Paying.** One **upgrade point** for standing on a space your side won, fought or not; one for
+   winning your duel. So nothing, one, or two a round.
 
-### Reading a space
+**Power, as rules of thumb.** Three attackers, two defenders: two duels, one attacker spare — win
+both and it's 3–0, split and it's 2–1, lose both and it's 1–2 for the defence.
 
-Power is the whole of the tactics, and it comes to two rules of thumb.
+- **Twice the defenders plus one takes a space whatever the duels do.**
+- **Twice the attackers denies it whatever the duels do** — level holds.
 
-Say three attackers meet two defenders. Two pairs fight, one attacker is left over. If the
-attack wins both duels its power is 2 + 1 = 3 against 0, and it takes the space; one duel each
-makes it 1 + 1 = 2 against 1, still enough; lose both and it is 0 + 1 = 1 against 2, and the
-defence holds.
-
-- **Twice the defenders and one more takes a space whatever the duels do.** Five attackers
-  against two: three are left over, so losing both duels still wins it 3 to 2.
-- **Twice the attackers denies it whatever the duels do.** Two defenders against one attacker:
-  one fights, one is spare, so even losing the duel leaves the defence level — and level holds.
-
-Between those two, every extra player on either side helps their own side, and nobody standing
-on a space is wasted: an unpaired defender holds just as an unpaired attacker takes.
+Between those, every extra body helps its own side. Nobody standing is wasted.
 
 ## Upgrade points
 
-Points are spent between rounds, on one of two things:
+Spent between rounds, never expiring:
 
 | | cost |
 |---|---|
 | **replace one stone** in your hand, your choice of both | **3 points** |
 | **a Counterattack**, drawn at random, single use | **3 points** |
 
-Nothing else costs points and they never expire. A campaign pays a player about eighteen, so
-expect to finish your hand first and buy Counterattacks with what is left.
+A campaign pays about eighteen, so expect to fix your hand first and buy Counterattacks with the
+rest. Since the campaign's attacker moves first, **a Counterattack is only ever spent in a round
+your team defends.**
 
-Counterattacks bought here are held under the duel's rule — as many as you like, present up to
-three, spend at most one, unspent ones kept. Since the campaign's attacker moves first, **a
-Counterattack is only ever spent in a round your team defends.**
+# The duel
+
+**Five stones** each, one placed a turn on a 3x3 board. Three in a row, orthogonal or diagonal,
+wins. Hands may hold repeats and need not match.
+
+The twist: most stones **do something when placed**, and what they do is move stones already on
+the board, yours and theirs alike. A line can be made by moving a stone into it, and taken apart
+by the next stone played. You never just pick a square — you pick a square and an effect.
+
+```
+0 1 2
+3 4 5   Adjacent always means sharing an edge, never a corner.
+6 7 8
+```
+
+**Who goes first** is decided at the table; in a campaign it is the attacker. The player moving
+second is the only one who may hold and spend **Counterattacks** — that is their compensation.
+
+## A turn
+
+1. **Place** a stone from your hand on any free square. Only an opponent's Magnets and Stinkies
+   (which say where) and Mind Control (which says which stone) ever narrow the choice.
+2. **Resolve** its effect, if it has one. Not optional: you may place where the effect does
+   nothing, but not decline an effect that works.
+3. **Counterattack**, if you moved second and hold one.
+4. **Check.** Your line wins; a line only your opponent has wins for them.
+5. Pass.
+
+Stones are never removed, so the ninth placement fills the board. **A full board with no line, or
+a player to move with no stones, goes to whoever moved second.** There are no draws.
+
+## The stones
+
+Six types: three move things, one refuses to be moved, two dictate where the opponent may play.
+
+- **Shift** — name a direction. This stone's row or column slides one step that way; what falls
+  off the end wraps around.
+- **2048** — name a direction. Every stone slides that way as far as it goes, as in the tile game.
+- **Rotate** — pick a 2x2 block this stone belongs to. Those four squares turn one step clockwise.
+- **Mountain** — does nothing, and nothing ever moves it. It **blocks rather than forbids**: other
+  effects still happen, they just cannot move it or pass through it.
+  - *2048* — each stretch of the line packs up on its own side of it.
+  - *Shift* — a stone whose destination is the Mountain stays put, and so does anything behind it.
+    Nothing wraps through a Mountain.
+  - *Rotate* — the Mountain keeps its corner; each other stone advances if the corner ahead is
+    free, or becomes free.
+- **Magnet** — your opponent must place **adjacent** to it.
+- **Stinky** — your opponent must place **not adjacent** to it.
+
+Every direction and block stays legal; an effect that moves nothing is still a legal move.
+
+**Magnets and Stinkies bind only the opponent, and all of them pull at once.** A square
+**satisfies** a Magnet by being beside it, a Stinky by not being beside it. Count, for every free
+square, how many of their restrictions it satisfies — **you must place where you satisfy as many
+as any square can.**
+
+So: two distant Magnets cannot both be answered, and either will do. Two overlapping ones can, so
+the overlap is where you go. A Magnet against a Stinky leaves the squares answering one of them.
+There is always somewhere to play, and with no restrictions down the whole free board is yours.
+Neither wears off; both work from wherever their stone now stands, and one taken off the board
+stops pulling.
+
+## Spaces
+
+Every duel is fought on a **space**, which **switches one stone type off** for both players. A
+switched-off stone is still placed, still occupies its square, still counts towards a line — it
+just has no effect. A dead Magnet binds nobody; a dead Mountain shoves like any other stone.
+There is a space per type plus a neutral one. It changes which hands are good, so it matters.
+
+## Counterattacks
+
+Not stones, never placed, and **only the player moving second may spend one.** Hold as many as you
+like, **present up to three** at the start so your opponent knows what they face, and **spend at
+most one** per game, chosen with the board in front of you. Unspent ones are kept; only a spent one
+is discarded.
+
+All resolve at the end of your turn — after your stone, before the line check — so any of them can
+finish a line.
+
+- **Overtake** — if your opponent holds the centre, that stone goes back to their hand. Not a
+  movement, so a Mountain is not safe from it.
+- **Relocate** — move one of your stones to any free square. It resolves nothing on arrival.
+- **Mirror** — swap what stands on one pair facing through the centre (0–8, 1–7, 2–6, 3–5),
+  whoever owns it.
+- **Mind Control** — name a stone in your opponent's hand; that is what they must play next turn.
+- **Rehearse** — resolve one of your stones on the board again, from where it now stands. Not one
+  the space has switched off.
 
 # Making a set
 
-Everything that ends up on paper lives in `paper/`: one stylesheet, one SVG for each drawing,
-and HTML documents built out of `ppp-` elements. Open a document in a browser and print it.
+Everything printable lives in `paper/`: one stylesheet, an SVG per drawing, and HTML built from
+`ppp-` elements. Open a document in a browser and print it — there is nothing to build.
 
-- `stones-sheet.html` — 48 stones a sheet, X across the top half and O across the bottom, four
-  of each of the six types a side, the type's icon in the middle of the symbol. Halve the sheet
-  first and each player has their own symbol to cut up.
-- `counterattacks-sheet.html` — ten cards, two of each of the five, the rule on the card. Two
-  columns and five rows, with a wide gutter to cut down.
-- `arena-small.html` and `arena-big.html` — the 6x6 arena and the 9x9. Zones are drawn heavy and
-  every other one tinted, and named by where they lie: NW, N, NE, W, C, E, SW, S, SE. Each space
-  carries its own name — its zone and its place in it, counted along the rows, so NW1 to NW9 —
-  along with the type it switches off, both along the top, leaving its middle free for the symbol
-  of whoever takes it.
+- `stones-sheet.html` — 48 stones, X on the top half and O on the bottom, four of each type a
+  side. Halve the sheet and each player cuts up their own symbol.
+- `counterattacks-sheet.html` — ten cards, two of each of the five, rule printed on the card.
+- `arena-small.html` / `arena-big.html` — the 6x6 and 9x9 arenas. Zones drawn heavy and alternately
+  tinted, named NW, N, NE, W, C, E, SW, S, SE; each space carries its name (zone plus place in it,
+  NW1–NW9) and its switched-off type along the top, leaving the middle for a symbol.
+- `stones.html` — not for cutting: the six types, each with a board before and after its effect.
 
-Everything is black, so any printer will do. Print at 100% with no fit-to-page, on card if you
-have it, and cut down the middle of the gaps: nothing is printed to cut along, so a wobbling cut
-leaves no line on the piece to show it.
+Everything is black, so any printer will do. Print at 100% with no fit-to-page, on card if you have
+it, and cut down the middle of the gaps: nothing is printed to cut along, so a wobbling cut leaves
+no line on the piece.
 
-`stones.html` is not for cutting up: it is the six types explained, each with a board before and
-after its effect. It is written by hand in the same elements as the sheets — a `ppp-grid` of
-`ppp-row`s of `ppp-square`s, with a `ppp-stone player="O" type="stinky"` in the squares that have
-one, a `ppp-mark player="O"` on an arena space O has taken, and a `ppp-then dir="up"` between two
-boards for what was named — so a page of your own is written the same way, and how big any of it
-comes out is a custom property. `paper/ppp.css` is the whole vocabulary, and every file in
-`paper/` is one you can open and edit: there is nothing to build.
+`paper/ppp.css` is the whole vocabulary — a `ppp-grid` of `ppp-row`s of `ppp-square`s, a
+`ppp-stone player="O" type="stinky"` in a square, a `ppp-mark player="O"` on a taken arena space, a
+`ppp-then dir="up"` between two boards — so a page of your own is written the same way, and sizes
+are custom properties.
