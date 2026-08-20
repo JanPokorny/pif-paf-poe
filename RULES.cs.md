@@ -66,7 +66,7 @@ Materiál pro hráče:
 - Karty protiútoků. Potřeba 1 na hráče.
 
 Materiál pro řízení hry:
-- Aréna ve velkém formátu, rozdělená na 9 papírů s 3x3 čtvercovou zónou arény 4 papíry (JZ, SZ, JV, SV) tvoří 6x6 arénu, doplněním 5 papírů (S, J, V, Z, C) vznikne 9x9 aréna. Tato poslouží dvakrát: v centrálním stanovišti se slepí velká přehledová tabulka celé arény, a na duelových stanovištích budou vyvěšeny rozstříhány jednotlivé čtverečky.
+- Aréna ve velkém formátu, rozdělená na 9 papírů s 3x3 čtvercovou zónou arény. 4 papíry (JZ, SZ, JV, SV) tvoří 6x6 arénu, doplněním 5 papírů (S, J, V, Z, C) vznikne 9x9 aréna. Tato poslouží dvakrát: v centrálním stanovišti se slepí velká přehledová tabulka celé arény, a na duelových stanovištích budou vyvěšeny rozstříhány jednotlivé čtverečky.
 - Symboly X a O určené k vystřižení čtverečků a umisťování na pole papírové arény k vyznačení vlastnictví pole.
 
 Materiál pro pomoc se hrou:

@@ -206,6 +206,7 @@ text is Czech, the language of the table; names follow RULES.cs.md.
   spaces to hang at the duel stations.
 - `rules-stones.html` — not for cutting: the six types, each with a board before and after its
   effect.
+- `rules.html` — RULES.cs.md as a printable document, verbatim, with the type icons inline.
 
 Everything is black, so any printer will do. Print at 100% with no fit-to-page, on card if you have
 it, and cut down the middle of the gaps: nothing is printed to cut along, so a wobbling cut leaves

@@ -1,0 +1,157 @@
+<!doctype html>
+<html lang="cs">
+<meta charset="utf-8">
+<title>Pif-paf-poe — pravidla</title>
+<link rel="stylesheet" href="ppp.css">
+
+<!-- The Czech rules (RULES.cs.md) as a printable document, text kept verbatim; only
+     the type icons are added inline. Flowing text, so no ppp-page here -- the @page
+     margin below carries the print layout instead. -->
+
+<style>
+  @page { margin: 14mm; }
+  article { max-width: 182mm; margin: 0 auto; padding: 8mm; font-size: 3.4mm; line-height: 1.45; }
+  @media print { article { padding: 0; } }
+  h1 { margin: 0; font-size: 7mm; }
+  h2 { margin: 6mm 0 0; font-size: 5mm; }
+  p { margin: 2.5mm 0 0; }
+  ul { margin: 2.5mm 0 0; padding-left: 6mm; }
+  li { margin: 1mm 0; }
+  ppp-icon { --ppp-glyph: 4mm; margin-right: 0.5mm; }
+</style>
+
+<article>
+
+<h1>Pif-paf-poe</h1>
+
+<p>Tic-tac-toe s RPG prvky. Tahová neběhací hra pro 24-60 hráčů na cca 2 hodiny.</p>
+
+<p>Hráči tvoří dva týmy, X a O, které bojují v získávání bodů. Body se získávají pomocí
+stavění tří symbolů v řadě v aréně.</p>
+
+<h2>Aréna</h2>
+
+<p>Aréna je herní prostor tvořený 6x6 nebo 9x9 poli (dle počtu hráčů), dále rozdělené na
+4 nebo 9 zón o velikosti 3x3 pole. Každé pole v Aréně má náhodně přiřazeno „veto“
+konkrétního kamenu v duelu &mdash; o tom později. Aréna je reprezentována v prostoru
+fyzicky: tedy všech 36 nebo 81 polí je rozmístěno po prostoru hry (např. vyvěšené na
+stromech), a v centrální lokaci je vyvěšená mapa celé arény včetně toho kdo drží dané
+pole.</p>
+
+<p>Před hrou se aréna předvyplní úvodními značkami, aby bylo v prvním kole o co bojovat
+&mdash; zhruba pětina arény, napůl mezi týmy: 4 značky na tým na 6x6, 9 na tým na 9x9.
+Značky se umisťují ve středově souměrných dvojicích: ke každému poli X dostane O pole
+otočené o půl otáčky kolem středu arény. Dvojice se losují postupně, zamítne se každá,
+která by dokončila 3-v-řadě. Tým, který útočí jako první, si za tuto výhodu odebere dvě
+své úvodní značky.</p>
+
+<p>V každém kole jeden tým útočí, druhý brání, v dalším kole se vystřídají.</p>
+
+<p>Fáze kola:</p>
+<ul>
+  <li>Hráči bránícího týmu se rozmístí na neobsazená pole arény, každý hráč na nějaké
+  pole, může jich tam být více.</li>
+  <li>Hráči útočícího týmu se rozmístí obdobným způsobem.</li>
+  <li>Hráči bránícího týmu si rozdělí mezi sebe s jakým útočníkem budou bojovat. Zbylí
+  bránící hráči se musí přesunout na ortogonálně sousedící pole kde je útočník v přesile,
+  pokud takové je.</li>
+  <li>Rozdělené dvojice sehrají duel &mdash; pravidla duelu níže. Nespárovaní hráči se
+  počítají jako kontumační výhra.</li>
+  <li>Pole vyhraje ten tým, který zde vyhrál více duelů. Při remíze vyhrává obránce.</li>
+  <li>Za vyhraný duel (ne kontumačně) si hráč přičte 1 XP. Také si přičte 1 XP pokud jeho
+  tým vyhrál toto pole.</li>
+  <li>Útočníci se vrátí do centrální lokace a zvolí si v každé zóně, kde vyhráli nějaké
+  pole, na které z nich umístí svou značku.</li>
+  <li>Všechny 3-v-řadě se vyhodnotí, včetně překrývajících. Za každé 3-v-řadě vybere
+  útočník která zóna, do které 3-v-řadě zasáhlo, bude vyčištěna (zbavena značek obou
+  týmů).</li>
+  <li>Útočník obdrží body v počtu druhá mocnina počtu 3-v-řadě které vytvořil.</li>
+</ul>
+
+<h2>Duel</h2>
+
+<p>Duel probíhá na hrací desce 3x3 ve stylu tradičního tic-tac-toe.</p>
+
+<p>Každý hráč má u sebe 5 kamenů se znakem svého týmu (X/O), vylosované náhodně z nabídky
+6 speciálních schopností:</p>
+<ul>
+  <li><ppp-icon type="shift"></ppp-icon> Šoup: Po umístění pohne řádkem nebo sloupcem na
+  zvolenou stranu, přetékajíc obsah posledního pole na opačnou stranu.</li>
+  <li><ppp-icon type="rotate"></ppp-icon> Rotát: Po umístění pohne zvoleným 2x2 čtvercem,
+  jehož je součástí, po směru hodinových ručiček.</li>
+  <li><ppp-icon type="2048"></ppp-icon> 2048: Po umístění pohne všemi umístěnými kameny
+  zvoleným směrem tak daleko dokud nenarazí („gravitačně“).</li>
+  <li><ppp-icon type="mountain"></ppp-icon> Hora: Nepůsobí na ni pohybové efekty. Působí
+  jako zarážka pro pohybující se kameny.</li>
+  <li><ppp-icon type="magnet"></ppp-icon> Magnet: Vynucuje, aby soupeř hrál do
+  sousedícího volného pole.</li>
+  <li><ppp-icon type="stinky"></ppp-icon> Smraďoch: Vynucuje, aby soupeř hrál jinam než
+  do sousedícího pole.</li>
+</ul>
+
+<p>Pole arény může definovat „veto“, určující jaký kámen při duelu zde pozbývá svůj
+efekt.</p>
+
+<p>Hráč u sebe také má kartu se zásobou protiútoků, kde jsou vyznačené typy protiútoků a
+počty které má hráč k dispozici:</p>
+<ul>
+  <li><ppp-icon item="overtake"></ppp-icon> Výstřednost: Pokud se ve středu desky nachází
+  soupeřův kámen, vrať mu ho do ruky.</li>
+  <li><ppp-icon item="relocate"></ppp-icon> Ústup: Přesuň libovolný svůj kámen na volné
+  místo. Nezohledňuj Magnety a Smraďochy pro umístění a nevyhodnocuj pohybové
+  schopnosti.</li>
+  <li><ppp-icon item="mirror"></ppp-icon> Zrcadlo: Prohoď obsah dvou polí středově
+  symetrických se středem. Není to pohybový efekt, takže pohne i Horou.</li>
+  <li><ppp-icon item="mind-control"></ppp-icon> Vyhláška: Vynuť, aby soupeř ve svém
+  dalším kole musel hrát konkrétní ze svých kamenů.</li>
+  <li><ppp-icon item="rehearse"></ppp-icon> Opáčko: Urči jeden svůj kámen na desce s
+  pohybovým efektem. Pohybový efekt se provede ze současné pozice kamene, zvoleným
+  směrem.</li>
+</ul>
+
+<p>Při duelu hráči vyloží své kameny a karty protiútoků aby byly pro oba viditelné. Poté
+se střídají v tazích, přičemž hráč útočícího týmu začíná:</p>
+<ul>
+  <li>Hráč na tahu zvolí jeden ze svých kamenů a umístí jej na takové volné pole desky,
+  které uspokojí nejvyšší možný počet soupeřových umístěných Magnetů a Smraďochů.</li>
+  <li>Provede se efekt kamene, pokud se jedná o pohyb.</li>
+  <li>Pokud hraje obránce, smí využít protiútok, avšak jen jednou za duel. Škrtne si na
+  svojí kartě jeden kus použitého protiútoku.</li>
+  <li>Vyhodnotí se, zda vznikly 3-v-řadě. Pokud ano, daný hráč vítězí. Pokud vznikly oba
+  naráz, vítězí obránce.</li>
+  <li>Pokud je deska plná, vítězí obránce.</li>
+</ul>
+
+<h2>Vylepšení</h2>
+
+<p>V centrální lokaci bude existovat obchod s vylepšeními.</p>
+<ul>
+  <li>3 XP: Vyměň jeden svůj kámen za jiný zvolený.</li>
+  <li>3 XP: Získej zvolený protiútok.</li>
+</ul>
+
+<h2>Herní materiál</h2>
+
+<p>Materiál pro hráče:</p>
+<ul>
+  <li>Kameny hráčů. Potřeba přibližně 12 na hráče.</li>
+  <li>Karty protiútoků. Potřeba 1 na hráče.</li>
+</ul>
+
+<p>Materiál pro řízení hry:</p>
+<ul>
+  <li>Aréna ve velkém formátu, rozdělená na 9 papírů s 3x3 čtvercovou zónou arény. 4
+  papíry (JZ, SZ, JV, SV) tvoří 6x6 arénu, doplněním 5 papírů (S, J, V, Z, C) vznikne 9x9
+  aréna. Tato poslouží dvakrát: v centrálním stanovišti se slepí velká přehledová tabulka
+  celé arény, a na duelových stanovištích budou vyvěšeny rozstříhány jednotlivé
+  čtverečky.</li>
+  <li>Symboly X a O určené k vystřižení čtverečků a umisťování na pole papírové arény k
+  vyznačení vlastnictví pole.</li>
+</ul>
+
+<p>Materiál pro pomoc se hrou:</p>
+<ul>
+  <li>Přehledová pomůcka kamenů.</li>
+</ul>
+
+</article>
