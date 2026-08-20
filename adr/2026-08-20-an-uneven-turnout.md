@@ -2,22 +2,28 @@
 
 Twenty to sixty people turn up and are split into two teams. Sometimes the split does not come
 out even. This record measures what a missing player is worth, tries every currency the game
-already has for paying it back, and settles what the rules should say: **field the same number,
-the fuller team sitting the difference out a player a round; or, one player short and only one,
-hand the short team four extra opening marks on the 6x6 and two on the 9x9.**
+already has for paying it back, and settles what the rules should say. Everybody plays, and the
+short team is paid twice over: **it attacks in round one, and it keeps three extra opening marks
+on the 6x6 — none on the 9x9, where round one covers a missing body on its own.** One player
+short is what that is priced for; two or more, and the teams want splitting again.
 
-`campaign.js` grew the asymmetry it needed: `teamSize` is now read per team rather than off
-one `--sizes`, so a round is planned, paired and resolved with the real numbers on both sides,
-and the levers are `--short` (how many players team X is missing) with `--short-handicap`,
-`--short-marks`, `--short-xp`, `--head-start` and `--bench` for the answers. Team X is always
-the short one and the opening seat still alternates, so the first attacker's advantage cancels
-out of every figure below rather than being tangled up in it.
+`campaign.js` grew the asymmetry it needed: `teamSize` is now read per team rather than off one
+`--sizes`, so a round is planned, paired and resolved with the real numbers on both sides. Team X
+is always the short one, and the levers are `--short` (how many players it is missing) with
+`--short-marks`, `--short-handicap`, `--short-xp`, `--head-start` and `--bench` for the answers,
+plus `--first` for who attacks in round one and `--seed-handicap` for what they give back.
 
-Two instruments, both from the earlier records. The **sweep** — fixed rounds, three seeds
-summed, campaigns of 24 rounds — measures points per attacking round, which is the unit the
-first attacker's handicap was set in. **Campaigns played to a finish** measure the thing that
-actually decides an evening: how often the short team wins the race to the target. The hand
-table is the 40-opponent, 120-iteration per-veto fit; every number here is from that table.
+Two instruments, both from the earlier records. The **sweep** — fixed rounds, three seeds summed,
+campaigns of 24 rounds — measures points per attacking round, which is the unit the first
+attacker's handicap was set in. **Campaigns played to a finish** measure the thing that actually
+decides an evening: how often the short team wins the race to the target. The hand table is the
+40-opponent, 120-iteration per-veto fit; every number here is from that table.
+
+**One thing about the seat had to change to measure any of this.** Earlier records ran campaigns
+half from each opening seat, so that whoever attacks in round one could not bias a total. That is a
+measurement device, not a rule: a real evening has one first attacker. Where a section below says
+the seat is *pinned*, the short team attacks in round one of every campaign measured, which is what
+the rules now say; teams alternate round by round inside a campaign either way.
 
 ## A missing body is the most expensive thing that can happen to a team
 
@@ -84,91 +90,136 @@ short: 25.8% at ten a side, 27.5% at twelve, 33.0% at sixteen, 31.8% at twenty �
 fades slowly with team size, and nothing like fast enough to explain the 9x9 result at thirty. The
 arena is doing most of the work, not the headcount.
 
-## Evening the numbers is the answer, and it comes out level
+## Round one is the first half of the handicap, and it is free
 
-The fuller team sits the difference out each round. Both sides then put the same number on the
-arena, and what is left over is two effects pulling against each other: the fuller team fields
-its best eleven of twelve, which helps it, and the round's earnings are shared by twelve players
-rather than eleven, since a benched player earns nothing that round, which hurts it. 400
-campaigns a cell, against level controls of 47.3% on the 6x6 and 50.5% on the 9x9:
+Whoever attacks in round one is a round ahead of the other side all evening, and the round-by-round
+alternation never hands that back. With the seat pinned and even teams, 600 campaigns a cell:
 
-| benched | short team's win% | gap, points an attacking round |
+| even teams, seat pinned | seat-holder's win% |
+|---|---|
+| 6x6, twelve a side | 54.7% |
+| 9x9, thirty a side | 54.7% |
+
+So round one is worth about **five points of win rate** on both arenas, which is a good deal more
+than the earlier per-round measure suggested — that record put the seat at +0.10 ± 0.14 points an
+attacking round after its two marks and called it level, and on the race it is not. Giving the
+short team round one therefore pays part of the debt before a single mark changes hands.
+
+**How far it can be paid down in marks differs by arena**, which is the one place the two need
+different numbers for the same reason. Sweeping what the first attacker gives back, even teams, seat
+pinned, 600 campaigns a cell:
+
+| gives back | 6x6 | 9x9 |
 |---|---|---|
-| 6x6, one short | **50.7%** | +0.04 |
-| 6x6, two short | 51.5% | −0.07 |
-| 9x9, one short | **48.5%** | +0.30 |
-| 9x9, two short | 53.5% | −0.16 |
+| **two** | 54.7% | 54.7% |
+| **three** | 53.0% | **49.3%** |
+| four | 53.2% | 49.0% |
+| six | — | 43.3% |
 
-Every row is inside the noise of even, at both arenas and for one or two players missing — the
-selection and the dilution cancel, and there is nothing left to tune. That is a better result
-than any handicap could be: it needs no number, so it cannot be calibrated to the wrong headcount
-or the wrong arena.
+**The 9x9 pays it off at three** and lands on the fair line. **The 6x6 never does**: at four back the
+first attacker has no opening marks at all and still wins 53.2%, so the curve is flat inside the
+noise from two onwards. The tempo is not a position, and on a 36-space arena there is not enough
+position to take away — nine pairs give the 9x9 the granularity the 6x6 hasn't got. So the 6x6 keeps
+its two and a drawn seat worth about 55/45 with it; see the last of the open questions.
 
-## If everyone would rather play, the price is four opening marks a body
+## The second half is marks, and the two arenas want different numbers
 
-Three of the four currencies the game already has can pay the debt, and the best of them is the
-one the first attacker's handicap is already paid in: **opening marks**. The short team draws
-extra pairs the same way as the rest and keeps its own half of each; the fuller team's half is
-left off. 400 to 600 campaigns a cell, twelve a side on the 6x6, one player short:
+The short team takes round one and keeps extra opening marks on top. 600 campaigns a cell, one
+player short, against a **50%** target — the two teams should be even, which is not the same as
+matching the 54.7% a seat-holder gets with even teams:
 
-| marks | short team's win% |
+| short team's opening marks | 6x6, twelve a side | 9x9, thirty a side |
+|---|---|---|
+| two | 35.5% | — |
+| **five** | **51.7%** | — |
+| six | 54.7% | — |
+| seven | 62.8% | **50.0%**, and 52.3% the other way round |
+| eight | — | 56.3% |
+| nine | — | 54.7% |
+
+Marks are counted absolutely here, on the arena at the start of round one, because it does not
+matter how they are bookkept: seven on the 9x9 measures 50.0% reached as *give back two, add none*
+and 52.3% as *give back three, add one*, which is the same position by a different route and the
+same answer inside the noise.
+
+**On the 6x6 the short team wants five**, against the four its opponent holds. The crossing sits
+just under five; six overshoots to 54.7%, and five is the side to err on because every mark handed
+over front-loads the game — at five the campaign runs 20.9 rounds against the level 23, and at
+seven it is down to 18.
+
+**On the 9x9 it wants seven**, which is one mark more than the six the even row settled on. One body
+among thirty is worth about a mark and a half there, and the seat covers most of it.
+
+That makes the rules table, in marks on the arena when round one starts:
+
+| | 6x6 | 9x9 |
+|---|---|---|
+| **even teams** | 2 / 4 | 6 / 9 |
+| **first team a player short** | 5 / 4 | 7 / 9 |
+
+## The same lever with the seat alternating, and where it stops working
+
+The marks were first fitted with the opening seat alternating, before the rules gave it to the
+short team. Those figures are kept because they price the mark itself, free of the seat: 400 to 600
+campaigns a cell, twelve a side on the 6x6, one player short, against a 47.3% level control.
+
+| extra marks | short team's win% |
 |---|---|
 | none | 29.3% |
 | one | 33.0% |
 | two | 36.8% |
 | three | 40.5% |
-| **four** | **46.5%** |
+| four | 46.5% |
 | five | 52.3% |
 | six | 61.5% |
 
-Four is the number the rules take. It leaves the short team a point or two light of the 47.3%
-level control and five puts it a few over; four is the side to err on, because every mark handed
-over front-loads the game a little more — at four the campaign runs 20.4 rounds against the level
-23, and at six it is down to 17.5.
+**A mark is worth about four and a half points of win rate on the 6x6 and three on the 9x9**, and
+the seat is worth about five. Four marks a body pays for a body outright; with the seat doing part
+of the work, three do — which is the arithmetic behind the rules table, and it holds because the two
+handicaps add rather than interfering.
 
-**It is a rate rather than a threshold.** Two players short wants twice as many, at the same four
-a body:
-
-| two players short, marks a body | short team's win% |
-|---|---|
-| **four** | **49.3%** |
-| five | 71.5% |
-| six | 80.5% |
-
-Four a body lands level again at eight marks handed over, which is what makes it a rate worth
-stating as one — but level on the scoreboard only. That campaign is finished in 14.9 rounds
-against the level 23, so half the evening has gone: **the rules state the marks handicap for one
-player short and send anybody two or more short to even the numbers instead.** The rows above are
-the same warning, louder: **the lever is far too strong past level.** At
-five a body the short team wins 71.5% and the campaign is over in 10 rounds instead of 23, because
-ten extra marks on a 36-space arena is most of a scored line handed to a team that only has to
-hold it once. A shortfall of two or three is where paying in marks stops being a handicap and
-starts being a different game, and where evening the numbers is the only sane answer.
+**It is a rate rather than a threshold, and that is the problem with it.** Two players short takes
+twice as many, at the same four a body with the seat alternating: 49.3% at four each, 71.5% at five,
+80.5% at six. Level on the scoreboard, but that campaign is finished in **14.9 rounds against the
+level 23** — half the evening gone, because eight extra marks on a 36-space arena is most of a
+scored line handed to a team that only has to hold it once. **So the rules price the handicap for
+one player short and send anybody two or more short back to splitting the teams.**
 
 **Handing marks over beats taking them away.** The other direction — the fuller team gives back
-marks, exactly as the first attacker does — was measured too, and buys about half as much per
-mark: 29.3% at none, then 29.8%, 31.8% and 36.0% for one, two and three, and three is nearly all
-there is to give when only four pairs are seeded. The two are not the same manipulation. A mark
-taken off the fuller team leaves a space empty, and an empty space is something both sides can
-attack — the side with more players more effectively. A mark handed to the short team occupies
-that space and adds to its position at once.
+marks, exactly as the first attacker does — buys about half as much per mark: 29.3% at none, then
+29.8%, 31.8% and 36.0% for one, two and three, and three is nearly all there is to give when only
+four pairs are seeded. The two are not the same manipulation. A mark taken off the fuller team
+leaves a space empty, and an empty space is something both sides can attack — the side with more
+players more effectively. A mark handed to the short team occupies that space and adds to its
+position at once.
 
-**On the 9x9 the lever is barely needed and prices the same way.** One player short of thirty is
-already inside the noise of level, so there is nothing to pay; from two players short:
+**And the 9x9 at two and three players short**, seat alternating, for the same reason the 6x6 rows
+are kept: 43.5% / 45.7% / 46.0% / 53.7% at none, one, two and three marks a body with two missing,
+and 38.5% / 49.5% / 67.5% at none, two and four with three missing. About two a body there, against
+a 50.5% control — consistent with a mark being worth three points on the 9x9 and the debt being much
+smaller to begin with.
 
-| 9x9, thirty a side, marks a body | two short | three short |
+## Evening the numbers was measured, and not taken
+
+The other way to answer an uneven turnout is to refuse it: the fuller team sits players out until
+both sides field the same number. It works, exactly, and the rules do not use it.
+
+| benched, seat alternating | short team's win% | gap, points an attacking round |
 |---|---|---|
-| none | 43.5% | 38.5% |
-| one | 45.7% | — |
-| **two** | 46.0% | **49.5%** |
-| three | 53.7% | — |
-| four | 58.0% | 67.5% |
-| six | 74.5% | 83.5% |
+| 6x6, one short | 50.7% | +0.04 |
+| 6x6, two short | 51.5% | −0.07 |
+| 9x9, one short | 48.5% | +0.30 |
+| 9x9, two short | 53.5% | −0.16 |
 
-**Two a body**, against the 50.5% level control — level at three short, a little light at two, and
-three a body is a little heavy at both. The 9x9's slope is about three points of win rate a mark
-where the 6x6's is four and a half, and it starts from a much smaller debt, which is the whole of
-why the two arenas are handed different numbers.
+Every row is inside the noise of even, at both arenas and for one or two missing, and it needs no
+number at all — the fuller team's better selection from a deeper bench and its diluted income (a
+benched player earns nothing that round) cancel. It is the most robust result in this record.
+
+It is not the rule because of what it costs off the table: somebody who turned up to play stands
+and watches, every round, and the game is written for an evening where twenty to sixty people all
+have something to do. The handicap above buys the same fairness at the price of a slightly
+front-loaded opening, and everybody plays. Worth knowing it is there if a table would rather have
+the exact answer.
 
 ## The other two currencies work, and are worse
 
@@ -204,32 +255,43 @@ the game is scored in, so the scoreboard stops meaning what it says, and it has 
 for every target. It is recorded here because it is the one handicap that can be applied halfway
 through an evening, when somebody has to leave.
 
-## The two handicaps are paid in the same coin, and both are paid
+## What the rules ended up saying
 
-The first attacker still gives back two marks. Nothing about an uneven turnout changes what
-attacking first is worth — the seat alternates every round and the shortfall does not — so the
-two are separate debts that happen to be settled in the same currency: **four out to the short
-team, two back from whoever attacks first, and if that is the short team it nets two.** Every
-figure above was measured with the seat handicap in place and the opening seat alternating, so the
-four already accounts for that arithmetic rather than assuming it away.
+One bullet for the seat, one table, and no third case:
 
-**Measured rather than assumed.** Points an attacking round by seat, 3600 rounds: level teams give
-the first attacker +0.27, and a short team paid its handicap gives +0.08. Both sit inside the
-±0.14 the earlier record put on the two-mark handicap, so an uneven turnout does not move the
-seat, and the seat does not eat the turnout's handicap.
+- The team a player short attacks in round one; with even teams, draw for it. Teams alternate from
+  there as before.
+- Opening marks, first attacker / second: **2 / 4** on the 6x6 and **6 / 9** on the 9x9 with even
+  teams, **5 / 4** and **7 / 9** when the first team is a player short.
+- Priced for one player short. Two or more, split the teams again.
+
+The seeding did not move and nothing new was invented to pay for a shortfall: the handicap is a seat
+the rules were already handing out, plus three marks on the 6x6 and one on the 9x9. The 9x9's own
+seat handicap did move, from two marks back to three, and that is a correction to the old rule
+rather than anything to do with an uneven turnout — it only became visible once the seat stopped
+being averaged away.
 
 ## Open
 
 - **The size of the effect is the model's; the direction is the game's.** Both sides here are
   planners that place whole players over whole spaces and know each other's numbers. A table of
   humans will not extract the full value of an extra body, so 37% of a scoring rate is closer to a
-  ceiling on what a shortfall costs than to a prediction, and the four marks that pay for it are
-  priced against that ceiling. What is not model-dependent is which way it runs: the margin is
+  ceiling on what a shortfall costs than to a prediction, and the seat and three marks that pay for
+  it are priced against that ceiling. What is not model-dependent is which way it runs: the margin is
   where bodies decide spaces, and the 6x6 is where a body is worth most.
 - **Why the two arenas differ by a factor of five is not established.** A space being a bigger
   share of a 6x6 round's marks and squared scoring being steeper at fewer lines account for two
   or three of it. The rest is unexplained, and it is the load-bearing part of the rule: it is why
   the 9x9 and the 6x6 are not handed the same number.
+- **A drawn seat is worth 55/45, and marks will not buy it down.** That is a wart in the game as it
+  already stood, not something an uneven turnout created — it was invisible while the records
+  alternated the seat and averaged it away. With even teams the rules now say to draw for round one,
+  which makes it fair before the draw and lopsided after it — and unlike the 9x9, the 6x6 cannot
+  buy it back with marks: at four back the first attacker starts with none and still wins 53.2%.
+  Three things were not tried: a
+  compensation that is not a position (a Counterattack in hand for the second team, say), a shorter
+  target for the first attacker, and simply letting the team that lost the draw pick their arena
+  half. Any of them would want its own record.
 - **Benching is measured as a captain would play it** — the weakest player on the vetoes in front
   of them sits out, chosen fresh each round. A team that rotates the bench fairly instead, so that
   nobody sits out twice before everybody has, gives up some of that selection, which pushes the
@@ -245,7 +307,10 @@ seat, and the seat does not eat the turnout's handicap.
   strictly more than a real player, because an unpaired body counts towards holding a space and
   never loses a duel. What is left is arithmetic at a duel station, which is why the answers here
   are all paid at setup.
-- **The marks handicap front-loads the game.** A short team holding four extra marks has a
+- **The marks handicap front-loads the game.** A short team holding three extra marks has a
   position it cannot defend with the bodies it has, so it has to cash the opening early; campaigns
-  run 20 rounds against the level 23. That is a change in the shape of the evening, not just in
+  run 20.9 rounds against the level 23. That is a change in the shape of the evening, not just in
   who wins it, and it is the strongest argument for benching over paying.
+- **The 9x9's short row rests on two numbers a point and a half apart.** Seven marks measures 50.0%
+  and 52.3% by the two routes to it, and the neighbours are 56.3% at eight and 43.5% unpaid with the
+  seat alternating. So seven is right to within about a mark, and no finer than that.

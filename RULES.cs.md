@@ -8,11 +8,20 @@ Hráči tvoří dva týmy, X a O, které bojují v získávání bodů. Body se 
 
 Aréna je herní prostor tvořený 6x6 nebo 9x9 poli (dle počtu hráčů), dále rozdělené na 4 nebo 9 zón o velikosti 3x3 pole. Každé pole v Aréně má náhodně přiřazeno "veto" konkrétního kamenu v duelu -- o tom později. Aréna je reprezentována v prostoru fyzicky: tedy všech 36 nebo 81 polí je rozmístěno po prostoru hry (např. vyvěšené na stromech), a v centrální lokaci je vyvěšená mapa celé arény včetně toho kdo drží dané pole.
 
-Před hrou se aréna předvyplní úvodními značkami, aby bylo v prvním kole o co bojovat -- zhruba pětina arény, napůl mezi týmy: 4 značky na tým na 6x6, 9 na tým na 9x9. Značky se umisťují ve středově souměrných dvojicích: ke každému poli X dostane O pole otočené o půl otáčky kolem středu arény. Dvojice se losují postupně, zamítne se každá, která by dokončila 3-v-řadě. Tým, který útočí jako první, si za tuto výhodu odebere dvě své úvodní značky.
+Před hrou se aréna předvyplní úvodními značkami, aby bylo v prvním kole o co bojovat -- zhruba pětina arény, napůl mezi týmy: 4 značky na tým na 6x6, 9 na tým na 9x9. Značky se umisťují ve středově souměrných dvojicích: ke každému poli X dostane O pole otočené o půl otáčky kolem středu arény. Dvojice se losují postupně, zamítne se každá, která by dokončila 3-v-řadě. Kolik značek si který tým nechá, určuje tabulka níže: tým, který útočí v prvním kole, si značky odebere, a tým, kterému chybí hráč, si přilosuje dvojice navíc a značku druhého týmu nepokládá.
 
-Oba týmy nastupují ve stejném počtu hráčů: chybějící hráč je to nejdražší, co se týmu může stát -- jeden chybějící hráč z dvanácti stojí asi třetinu bodů, které tým v kole získá, a prohraje kampaň v sedmi případech z deseti. Pokud počet hráčů nevychází, tým s více hráči v každém kole nechá odpovídající počet svých hráčů mimo kolo, a mění se kdo to je; vynechaný hráč v tom kole nezíská žádné XP, právě to oba týmy srovnává.
+V prvním kole útočí tým, kterému chybí hráč; při vyrovnaných týmech se o první útok losuje. Dál se týmy střídají jako obvykle.
 
-Pokud chtějí místo toho hrát všichni v každém kole, dostane menší tým za jednoho chybějícího hráče čtyři úvodní značky navíc (na 9x9 dvě, protože tam chybějící hráč stojí zlomek toho co na 6x6). Dvojice na tyto značky se losují stejně jako ostatní, jen se značka druhého týmu nepoloží. Odebrání dvou úvodních značek prvnímu útočníkovi platí i tak: jsou to dva nezávislé handicapy placené ve stejné měně, takže menší tým, který útočí jako první, si čtyři značky přidá a dvě odebere. Tento handicap je spočítaný pro jednoho chybějícího hráče; osm značek navíc na aréně o 36 polích už není handicap, ale darovaná 3-v-řadě, takže pokud chybí dva a více hráčů, srovnejte počty.
+Úvodní značky, první útočník / druhý tým:
+
+| | 6x6 | 9x9 |
+|---|---|---|
+| vyrovnané týmy | 2 / 4 | 6 / 9 |
+| prvnímu týmu chybí hráč | 5 / 4 | 7 / 9 |
+
+V tabulce jsou oba handicapy a míří proti sobě. První kolo se vyplatí -- tým, který v něm útočí, je celý večer o kolo napřed a střídání mu to nevrátí -- takže začíná s méně značkami. Chybějící hráč stojí mnohem víc, na 6x6 asi třetinu bodů, které tým v kole získá, takže menší tým útočí v prvním kole a značek má navíc. Na 9x9 jeden hráč z třiceti neznamená téměř nic, což tabulka ukazuje.
+
+Handicap je spočítaný pro jednoho chybějícího hráče. Pokud chybí dva a více, přerozdělte týmy: značky, které by to vyrovnaly, jsou spíš darovaná 3-v-řadě než handicap.
 
 V každém kole jeden tým útočí, druhý brání, v dalším kole se vystřídají.
 

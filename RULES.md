@@ -44,25 +44,31 @@ The 9x9 continues the same pattern.
 ## Setting up
 
 - **Hands.** Five random stones each.
-- **Opening marks.** About a fifth of the arena, half to each side — four each on the 6x6, nine
-  each on the 9x9 — so round one has ground worth fighting over. Place them in rotational pairs:
-  for every X space, O takes the one half a turn about the centre away. Draw pairs one at a time,
-  rejecting any that completes a three in a row.
-- **First attacker gives back two.** Attacking first is worth something; that team removes two of
-  its own opening marks.
-- **Even the numbers.** A missing body is the most expensive thing that can happen to a team: one
-  player short of twelve costs a third of what a team scores in a round and loses seven campaigns
-  in ten. So both sides field the same number — where the split will not divide, the fuller team
-  **sits the difference out each round, a different player each time**. A benched player earns
-  nothing that round, and that is what keeps the two level.
-- **Or pay the short team in marks.** If everyone would rather play every round, the short team
-  instead **keeps four extra opening marks — two on the 9x9 — for the one player it is missing**.
-  Draw the extra pairs like the rest and leave the fuller team's half off. The first attacker still
-  gives its two back: two separate debts, settled in the same coin, so a short team attacking first
-  keeps four and hands two back. This is priced for being **one** player short; eight marks on a
-  36-space arena is not a handicap but a scored line, so where two or more are missing, even the
-  numbers.
+- **Opening marks.** About a fifth of the arena, half to each side — four pairs on the 6x6, nine on
+  the 9x9 — so round one has ground worth fighting over. Place them in rotational pairs: for every X
+  space, O takes the one half a turn about the centre away. Draw pairs one at a time, rejecting any
+  that completes a three in a row. Then each side keeps the count the table gives it: the first
+  attacker takes marks off, and a team a player short draws extra pairs the same way and leaves the
+  other side's half off.
+- **A team a player short attacks in round one.** With even teams, draw for it. The teams alternate
+  from there as usual.
 - **Target.** 40 points on the 6x6, 170 on the 9x9 — about two dozen rounds either way.
+
+Opening marks, first attacker / second:
+
+| | 6x6 | 9x9 |
+|---|---|---|
+| **even teams** | 2 / 4 | 6 / 9 |
+| **first team a player short** | 5 / 4 | 7 / 9 |
+
+Both handicaps are in that table and they pull opposite ways. Round one is worth having — the team
+that takes it is a round ahead all evening and the alternation never gives that back — so it starts
+marks down. A missing body is worth far more, a third of what a team scores in a round on the 6x6,
+so a short team takes round one *and* comes out ahead on marks. On the 9x9 one body among thirty is
+worth almost nothing, and the table says so.
+
+One missing player is what this is priced for. Where two or more are missing, split the teams again:
+the marks that would even that up are a scored line handed over rather than a handicap.
 
 ## The round
 
