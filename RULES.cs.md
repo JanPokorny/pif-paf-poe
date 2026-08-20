@@ -40,8 +40,8 @@ Pole arény může definovat "veto", určující jaký kámen při duelu zde poz
 
 Hráč u sebe také má kartu se zásobou protiútoků, kde jsou vyznačené typy protiútoků a počty které má hráč k dispozici:
 
-- Výstřednost: Pokud se ve středu desky nachází soupeřův kámen, vrať mu ho do ruky.
-- Ústup: Přesuň libovolný svůj kámen na volné místo. Nezohledňuj Magnety a Smraďochy pro umístění a nevyhodnocuj pohybové schopnosti.
+- Výstřednost: Pokud se ve středu desky nachází soupeřův kámen, vrať mu ho do ruky. Pohne i Horou.
+- Ústup: Přesuň libovolný svůj kámen na volné místo. Nezohledňuj Magnety a Smraďochy pro umístění a nevyhodnocuj pohybové schopnosti. Pohne i Horou.
 - Zrcadlo: Prohoď obsah dvou polí středově symetrických se středem. Není to pohybový efekt, takže pohne i Horou.
 - Vyhláška: Vynuť, aby soupeř ve svém dalším kole musel hrát konkrétní ze svých kamenů.
 - Opáčko: Urči jeden svůj kámen na desce s pohybovým efektem. Pohybový efekt se provede ze současné pozice kamene, zvoleným směrem.

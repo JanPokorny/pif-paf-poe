@@ -6,8 +6,10 @@
 
 <!-- One roster card per player, four to a sheet, in two columns with a wide gutter
      to cut down. Every Counterattack with eight circles: fill one when bought, cross
-     it off when spent. The card lies open during a duel, so both players see what
-     they face. Print at 100%, no fit-to-page. -->
+     it off when spent. At the foot, the XP counter that buys them: thirty circles
+     against the right edge, more than a campaign pays -- fill one when earned, cross
+     three off for a purchase. The card lies open during a duel, so both players see what they
+     face. Print at 100%, no fit-to-page. -->
 
 <ppp-page>
   <ppp-deck>
@@ -16,12 +18,12 @@
       <ppp-card item="overtake">
         <ppp-slots><ppp-slot></ppp-slot><ppp-slot></ppp-slot><ppp-slot></ppp-slot><ppp-slot></ppp-slot><ppp-slot></ppp-slot><ppp-slot></ppp-slot><ppp-slot></ppp-slot><ppp-slot></ppp-slot></ppp-slots>
         <ppp-name>Výstřednost</ppp-name>
-        <ppp-rule>Pokud se ve středu desky nachází soupeřův kámen, vrať mu ho do ruky. Není to pohyb &mdash; neochrání se ani Hora.</ppp-rule>
+        <ppp-rule>Pokud se ve středu desky nachází soupeřův kámen, vrať mu ho do ruky. Pohne i Horou.</ppp-rule>
       </ppp-card>
       <ppp-card item="relocate">
         <ppp-slots><ppp-slot></ppp-slot><ppp-slot></ppp-slot><ppp-slot></ppp-slot><ppp-slot></ppp-slot><ppp-slot></ppp-slot><ppp-slot></ppp-slot><ppp-slot></ppp-slot><ppp-slot></ppp-slot></ppp-slots>
         <ppp-name>Ústup</ppp-name>
-        <ppp-rule>Přesuň svůj kámen na volné pole. Nic se nevyhodnotí, Magnety a Smraďoši se neuplatní.</ppp-rule>
+        <ppp-rule>Přesuň svůj kámen na volné pole. Nic se nevyhodnotí, Magnety a Smraďoši se neuplatní. Pohne i Horou.</ppp-rule>
       </ppp-card>
       <ppp-card item="mirror">
         <ppp-slots><ppp-slot></ppp-slot><ppp-slot></ppp-slot><ppp-slot></ppp-slot><ppp-slot></ppp-slot><ppp-slot></ppp-slot><ppp-slot></ppp-slot><ppp-slot></ppp-slot><ppp-slot></ppp-slot></ppp-slots>
@@ -38,18 +40,24 @@
         <ppp-name>Opáčko</ppp-name>
         <ppp-rule>Vyhodnoť znovu svůj pohybový kámen, ze současné pozice, zvoleným směrem.</ppp-rule>
       </ppp-card>
+      <ppp-xp>
+        <ppp-name>XP</ppp-name>
+        <ppp-slots><ppp-slot></ppp-slot><ppp-slot></ppp-slot><ppp-slot></ppp-slot><ppp-slot></ppp-slot><ppp-slot></ppp-slot><ppp-slot></ppp-slot><ppp-slot></ppp-slot><ppp-slot></ppp-slot><ppp-slot></ppp-slot><ppp-slot></ppp-slot><ppp-slot></ppp-slot><ppp-slot></ppp-slot><ppp-slot></ppp-slot><ppp-slot></ppp-slot><ppp-slot></ppp-slot>
+                    <ppp-slot></ppp-slot><ppp-slot></ppp-slot><ppp-slot></ppp-slot><ppp-slot></ppp-slot><ppp-slot></ppp-slot><ppp-slot></ppp-slot><ppp-slot></ppp-slot><ppp-slot></ppp-slot><ppp-slot></ppp-slot><ppp-slot></ppp-slot><ppp-slot></ppp-slot><ppp-slot></ppp-slot><ppp-slot></ppp-slot><ppp-slot></ppp-slot><ppp-slot></ppp-slot></ppp-slots>
+        <ppp-note>1 XP pokud ses podílel na poli, kde vyhrál tvůj tým. 1 XP pokud vyhraješ duel. Tři škrtnutá XP koupí protiútok nebo výměnu kamene.</ppp-note>
+      </ppp-xp>
     </ppp-roster>
     <ppp-roster>
       <ppp-name>Protiútoky</ppp-name>
       <ppp-card item="overtake">
         <ppp-slots><ppp-slot></ppp-slot><ppp-slot></ppp-slot><ppp-slot></ppp-slot><ppp-slot></ppp-slot><ppp-slot></ppp-slot><ppp-slot></ppp-slot><ppp-slot></ppp-slot><ppp-slot></ppp-slot></ppp-slots>
         <ppp-name>Výstřednost</ppp-name>
-        <ppp-rule>Pokud se ve středu desky nachází soupeřův kámen, vrať mu ho do ruky. Není to pohyb &mdash; neochrání se ani Hora.</ppp-rule>
+        <ppp-rule>Pokud se ve středu desky nachází soupeřův kámen, vrať mu ho do ruky. Pohne i Horou.</ppp-rule>
       </ppp-card>
       <ppp-card item="relocate">
         <ppp-slots><ppp-slot></ppp-slot><ppp-slot></ppp-slot><ppp-slot></ppp-slot><ppp-slot></ppp-slot><ppp-slot></ppp-slot><ppp-slot></ppp-slot><ppp-slot></ppp-slot><ppp-slot></ppp-slot></ppp-slots>
         <ppp-name>Ústup</ppp-name>
-        <ppp-rule>Přesuň svůj kámen na volné pole. Nic se nevyhodnotí, Magnety a Smraďoši se neuplatní.</ppp-rule>
+        <ppp-rule>Přesuň svůj kámen na volné pole. Nic se nevyhodnotí, Magnety a Smraďoši se neuplatní. Pohne i Horou.</ppp-rule>
       </ppp-card>
       <ppp-card item="mirror">
         <ppp-slots><ppp-slot></ppp-slot><ppp-slot></ppp-slot><ppp-slot></ppp-slot><ppp-slot></ppp-slot><ppp-slot></ppp-slot><ppp-slot></ppp-slot><ppp-slot></ppp-slot><ppp-slot></ppp-slot></ppp-slots>
@@ -66,18 +74,24 @@
         <ppp-name>Opáčko</ppp-name>
         <ppp-rule>Vyhodnoť znovu svůj pohybový kámen, ze současné pozice, zvoleným směrem.</ppp-rule>
       </ppp-card>
+      <ppp-xp>
+        <ppp-name>XP</ppp-name>
+        <ppp-slots><ppp-slot></ppp-slot><ppp-slot></ppp-slot><ppp-slot></ppp-slot><ppp-slot></ppp-slot><ppp-slot></ppp-slot><ppp-slot></ppp-slot><ppp-slot></ppp-slot><ppp-slot></ppp-slot><ppp-slot></ppp-slot><ppp-slot></ppp-slot><ppp-slot></ppp-slot><ppp-slot></ppp-slot><ppp-slot></ppp-slot><ppp-slot></ppp-slot><ppp-slot></ppp-slot>
+                    <ppp-slot></ppp-slot><ppp-slot></ppp-slot><ppp-slot></ppp-slot><ppp-slot></ppp-slot><ppp-slot></ppp-slot><ppp-slot></ppp-slot><ppp-slot></ppp-slot><ppp-slot></ppp-slot><ppp-slot></ppp-slot><ppp-slot></ppp-slot><ppp-slot></ppp-slot><ppp-slot></ppp-slot><ppp-slot></ppp-slot><ppp-slot></ppp-slot><ppp-slot></ppp-slot></ppp-slots>
+        <ppp-note>1 XP pokud ses podílel na poli, kde vyhrál tvůj tým. 1 XP pokud vyhraješ duel. Tři škrtnutá XP koupí protiútok nebo výměnu kamene.</ppp-note>
+      </ppp-xp>
     </ppp-roster>
     <ppp-roster>
       <ppp-name>Protiútoky</ppp-name>
       <ppp-card item="overtake">
         <ppp-slots><ppp-slot></ppp-slot><ppp-slot></ppp-slot><ppp-slot></ppp-slot><ppp-slot></ppp-slot><ppp-slot></ppp-slot><ppp-slot></ppp-slot><ppp-slot></ppp-slot><ppp-slot></ppp-slot></ppp-slots>
         <ppp-name>Výstřednost</ppp-name>
-        <ppp-rule>Pokud se ve středu desky nachází soupeřův kámen, vrať mu ho do ruky. Není to pohyb &mdash; neochrání se ani Hora.</ppp-rule>
+        <ppp-rule>Pokud se ve středu desky nachází soupeřův kámen, vrať mu ho do ruky. Pohne i Horou.</ppp-rule>
       </ppp-card>
       <ppp-card item="relocate">
         <ppp-slots><ppp-slot></ppp-slot><ppp-slot></ppp-slot><ppp-slot></ppp-slot><ppp-slot></ppp-slot><ppp-slot></ppp-slot><ppp-slot></ppp-slot><ppp-slot></ppp-slot><ppp-slot></ppp-slot></ppp-slots>
         <ppp-name>Ústup</ppp-name>
-        <ppp-rule>Přesuň svůj kámen na volné pole. Nic se nevyhodnotí, Magnety a Smraďoši se neuplatní.</ppp-rule>
+        <ppp-rule>Přesuň svůj kámen na volné pole. Nic se nevyhodnotí, Magnety a Smraďoši se neuplatní. Pohne i Horou.</ppp-rule>
       </ppp-card>
       <ppp-card item="mirror">
         <ppp-slots><ppp-slot></ppp-slot><ppp-slot></ppp-slot><ppp-slot></ppp-slot><ppp-slot></ppp-slot><ppp-slot></ppp-slot><ppp-slot></ppp-slot><ppp-slot></ppp-slot><ppp-slot></ppp-slot></ppp-slots>
@@ -94,18 +108,24 @@
         <ppp-name>Opáčko</ppp-name>
         <ppp-rule>Vyhodnoť znovu svůj pohybový kámen, ze současné pozice, zvoleným směrem.</ppp-rule>
       </ppp-card>
+      <ppp-xp>
+        <ppp-name>XP</ppp-name>
+        <ppp-slots><ppp-slot></ppp-slot><ppp-slot></ppp-slot><ppp-slot></ppp-slot><ppp-slot></ppp-slot><ppp-slot></ppp-slot><ppp-slot></ppp-slot><ppp-slot></ppp-slot><ppp-slot></ppp-slot><ppp-slot></ppp-slot><ppp-slot></ppp-slot><ppp-slot></ppp-slot><ppp-slot></ppp-slot><ppp-slot></ppp-slot><ppp-slot></ppp-slot><ppp-slot></ppp-slot>
+                    <ppp-slot></ppp-slot><ppp-slot></ppp-slot><ppp-slot></ppp-slot><ppp-slot></ppp-slot><ppp-slot></ppp-slot><ppp-slot></ppp-slot><ppp-slot></ppp-slot><ppp-slot></ppp-slot><ppp-slot></ppp-slot><ppp-slot></ppp-slot><ppp-slot></ppp-slot><ppp-slot></ppp-slot><ppp-slot></ppp-slot><ppp-slot></ppp-slot><ppp-slot></ppp-slot></ppp-slots>
+        <ppp-note>1 XP pokud ses podílel na poli, kde vyhrál tvůj tým. 1 XP pokud vyhraješ duel. Tři škrtnutá XP koupí protiútok nebo výměnu kamene.</ppp-note>
+      </ppp-xp>
     </ppp-roster>
     <ppp-roster>
       <ppp-name>Protiútoky</ppp-name>
       <ppp-card item="overtake">
         <ppp-slots><ppp-slot></ppp-slot><ppp-slot></ppp-slot><ppp-slot></ppp-slot><ppp-slot></ppp-slot><ppp-slot></ppp-slot><ppp-slot></ppp-slot><ppp-slot></ppp-slot><ppp-slot></ppp-slot></ppp-slots>
         <ppp-name>Výstřednost</ppp-name>
-        <ppp-rule>Pokud se ve středu desky nachází soupeřův kámen, vrať mu ho do ruky. Není to pohyb &mdash; neochrání se ani Hora.</ppp-rule>
+        <ppp-rule>Pokud se ve středu desky nachází soupeřův kámen, vrať mu ho do ruky. Pohne i Horou.</ppp-rule>
       </ppp-card>
       <ppp-card item="relocate">
         <ppp-slots><ppp-slot></ppp-slot><ppp-slot></ppp-slot><ppp-slot></ppp-slot><ppp-slot></ppp-slot><ppp-slot></ppp-slot><ppp-slot></ppp-slot><ppp-slot></ppp-slot><ppp-slot></ppp-slot></ppp-slots>
         <ppp-name>Ústup</ppp-name>
-        <ppp-rule>Přesuň svůj kámen na volné pole. Nic se nevyhodnotí, Magnety a Smraďoši se neuplatní.</ppp-rule>
+        <ppp-rule>Přesuň svůj kámen na volné pole. Nic se nevyhodnotí, Magnety a Smraďoši se neuplatní. Pohne i Horou.</ppp-rule>
       </ppp-card>
       <ppp-card item="mirror">
         <ppp-slots><ppp-slot></ppp-slot><ppp-slot></ppp-slot><ppp-slot></ppp-slot><ppp-slot></ppp-slot><ppp-slot></ppp-slot><ppp-slot></ppp-slot><ppp-slot></ppp-slot><ppp-slot></ppp-slot></ppp-slots>
@@ -122,6 +142,12 @@
         <ppp-name>Opáčko</ppp-name>
         <ppp-rule>Vyhodnoť znovu svůj pohybový kámen, ze současné pozice, zvoleným směrem.</ppp-rule>
       </ppp-card>
+      <ppp-xp>
+        <ppp-name>XP</ppp-name>
+        <ppp-slots><ppp-slot></ppp-slot><ppp-slot></ppp-slot><ppp-slot></ppp-slot><ppp-slot></ppp-slot><ppp-slot></ppp-slot><ppp-slot></ppp-slot><ppp-slot></ppp-slot><ppp-slot></ppp-slot><ppp-slot></ppp-slot><ppp-slot></ppp-slot><ppp-slot></ppp-slot><ppp-slot></ppp-slot><ppp-slot></ppp-slot><ppp-slot></ppp-slot><ppp-slot></ppp-slot>
+                    <ppp-slot></ppp-slot><ppp-slot></ppp-slot><ppp-slot></ppp-slot><ppp-slot></ppp-slot><ppp-slot></ppp-slot><ppp-slot></ppp-slot><ppp-slot></ppp-slot><ppp-slot></ppp-slot><ppp-slot></ppp-slot><ppp-slot></ppp-slot><ppp-slot></ppp-slot><ppp-slot></ppp-slot><ppp-slot></ppp-slot><ppp-slot></ppp-slot><ppp-slot></ppp-slot></ppp-slots>
+        <ppp-note>1 XP pokud ses podílel na poli, kde vyhrál tvůj tým. 1 XP pokud vyhraješ duel. Tři škrtnutá XP koupí protiútok nebo výměnu kamene.</ppp-note>
+      </ppp-xp>
     </ppp-roster>
   </ppp-deck>
 </ppp-page>

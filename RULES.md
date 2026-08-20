@@ -179,7 +179,8 @@ finish a line.
 
 - **Overtake** — if your opponent holds the centre, that stone goes back to their hand. Not a
   movement, so a Mountain is not safe from it.
-- **Relocate** — move one of your stones to any free square. It resolves nothing on arrival.
+- **Relocate** — move one of your stones to any free square. It resolves nothing on arrival. Not
+  a movement, so it moves even a Mountain.
 - **Mirror** — swap what stands on one pair facing through the centre (0–8, 1–7, 2–6, 3–5),
   whoever owns it. Not a movement, so it moves even a Mountain.
 - **Mind Control** — name a stone in your opponent's hand; that is what they must play next turn.
@@ -197,7 +198,9 @@ text is Czech, the language of the table; names follow RULES.cs.md.
 - `pnp-marks.html` — plain X and O symbols to cut out and lay on the overview map, marking who
   holds a space.
 - `pnp-counterattacks.html` — one roster card per player, four to a sheet: every Counterattack,
-  its rule, and eight circles — fill one when bought, cross it off when spent.
+  its rule, and eight circles — fill one when bought, cross it off when spent. At the foot, the
+  upgrade points that buy them: thirty circles, more than a campaign pays — fill one when earned,
+  cross three off for a purchase.
 - `pnp-arena.html` — the arena as nine sheets, a zone to a sheet, named by the Czech compass —
   SZ, S, SV, Z, C, V, JZ, J, JV; each space carries its name (zone plus place in it, SZ1–SZ9) and
   its switched-off type along the top, leaving the middle for a symbol. The first four sheets
