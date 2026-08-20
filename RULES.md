@@ -197,7 +197,9 @@ text is Czech, the language of the table; names follow RULES.cs.md.
 - `pnp-marks.html` — plain X and O symbols to cut out and lay on the overview map, marking who
   holds a space.
 - `pnp-counterattacks.html` — one roster card per player, four to a sheet: every Counterattack,
-  its rule, and eight circles — fill one when bought, cross it off when spent.
+  its rule, and eight circles — fill one when bought, cross it off when spent. At the foot, the
+  upgrade points that buy them: twenty-four circles, about what a campaign pays — fill one when
+  earned, cross three off for a purchase.
 - `pnp-arena.html` — the arena as nine sheets, a zone to a sheet, named by the Czech compass —
   SZ, S, SV, Z, C, V, JZ, J, JV; each space carries its name (zone plus place in it, SZ1–SZ9) and
   its switched-off type along the top, leaving the middle for a symbol. The first four sheets

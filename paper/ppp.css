@@ -290,6 +290,34 @@ ppp-slot {
   border-radius: 50%;
 }
 
+/* ── The XP counter ──────────────────────────────────────────────────────── */
+
+/* At the foot of the roster, what everything above is bought with: twenty-four
+ * circles, about what a campaign pays. Fill one when earned, cross three off for a
+ * purchase. */
+ppp-xp {
+  display: block;
+  margin-top: 1mm;
+  padding-top: 2.6mm;
+  border-top: 0.2mm solid var(--ppp-rule);
+}
+
+ppp-xp > ppp-name,
+ppp-xp > ppp-slots { display: inline-block; vertical-align: middle; }
+
+ppp-xp > ppp-name { margin-right: 3.5mm; }
+
+/* Twelve to a row, so a card's width carries all of them in two. Out of the flow is
+ * for a card's own circles; these have a line of their own to sit on. */
+ppp-xp > ppp-slots {
+  position: static;
+  display: inline-grid;
+  grid-template-columns: repeat(12, auto);
+  gap: 1.5mm;
+}
+
+ppp-xp > ppp-note { display: block; margin-top: 2mm; }
+
 /* ── Pages ───────────────────────────────────────────────────────────────── */
 
 /* A sheet of pieces to cut up. Nothing is drawn around them: a cut line you miss by
