@@ -292,31 +292,29 @@ ppp-slot {
 
 /* ── The XP counter ──────────────────────────────────────────────────────── */
 
-/* At the foot of the roster, what everything above is bought with: twenty-four
- * circles, about what a campaign pays. Fill one when earned, cross three off for a
- * purchase. */
+/* At the foot of the roster, what everything above is bought with: thirty circles,
+ * more than a campaign pays. Fill one when earned, cross three off for a purchase. */
 ppp-xp {
-  display: block;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
   margin-top: 1mm;
   padding-top: 2.6mm;
   border-top: 0.2mm solid var(--ppp-rule);
 }
 
-ppp-xp > ppp-name,
-ppp-xp > ppp-slots { display: inline-block; vertical-align: middle; }
-
-ppp-xp > ppp-name { margin-right: 3.5mm; }
-
-/* Twelve to a row, so a card's width carries all of them in two. Out of the flow is
- * for a card's own circles; these have a line of their own to sit on. */
+/* Fifteen to a row, so a card's width carries all of them in two, and pushed to the
+ * right edge to hang under the circles above. Out of the flow is for a card's own
+ * circles; these have a line of their own to sit on. */
 ppp-xp > ppp-slots {
   position: static;
-  display: inline-grid;
-  grid-template-columns: repeat(12, auto);
-  gap: 1.5mm;
+  display: grid;
+  grid-template-columns: repeat(15, auto);
+  gap: 1.2mm;
+  margin-left: auto;
 }
 
-ppp-xp > ppp-note { display: block; margin-top: 2mm; }
+ppp-xp > ppp-note { width: 100%; margin-top: 2mm; }
 
 /* ── Pages ───────────────────────────────────────────────────────────────── */
 
