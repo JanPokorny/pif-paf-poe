@@ -23,8 +23,8 @@ Two teams, **X** and **O**, 10–30 players each. They take turns attacking an *
 **spaces**, grouped into **zones** of nine. Spaces won take your symbol; three marks in a row
 anywhere on the arena — any direction, across zone boundaries — scores.
 
-**Size by headcount.** 6x6, four zones, 36 spaces, ~12 a side. 9x9, nine zones, 81 spaces, ~30
-a side. Nothing else changes.
+**Size by headcount.** 6x6, four zones, 36 spaces, ten to twenty a side. 9x9, nine zones, 81
+spaces, twenty a side at the least and about thirty at its best. Nothing else changes.
 
 Every space prints one **stone type it switches off**, for both players, in every duel fought
 there. So where you are sent decides which of your stones work. The pattern steps one across and
@@ -51,7 +51,7 @@ The 9x9 continues the same pattern.
   attacker takes marks off, and a team a player short draws extra pairs the same way and leaves the
   other side's half off.
 - **A team a player short attacks in round one.** With even teams, draw for it. The teams alternate
-  from there as usual.
+  from there as usual. Where two or more are missing, split the teams again.
 - **Target.** 40 points on the 6x6, 170 on the 9x9 — about two dozen rounds either way.
 
 Opening marks, first attacker / second:
@@ -60,15 +60,6 @@ Opening marks, first attacker / second:
 |---|---|---|
 | **even teams** | 2 / 4 | 6 / 9 |
 | **first team a player short** | 5 / 4 | 7 / 9 |
-
-Both handicaps are in that table and they pull opposite ways. Round one is worth having — the team
-that takes it is a round ahead all evening and the alternation never gives that back — so it starts
-marks down. A missing body is worth far more, a third of what a team scores in a round on the 6x6,
-so a short team takes round one *and* comes out ahead on marks. On the 9x9 one body among thirty is
-worth almost nothing, and the table says so.
-
-One missing player is what this is priced for. Where two or more are missing, split the teams again:
-the marks that would even that up are a scored line handed over rather than a handicap.
 
 ## The round
 
