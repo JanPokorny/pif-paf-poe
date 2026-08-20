@@ -179,7 +179,8 @@ finish a line.
 
 - **Overtake** — if your opponent holds the centre, that stone goes back to their hand. Not a
   movement, so a Mountain is not safe from it.
-- **Relocate** — move one of your stones to any free square. It resolves nothing on arrival.
+- **Relocate** — move one of your stones to any free square. It resolves nothing on arrival. Not
+  a movement, so it moves even a Mountain.
 - **Mirror** — swap what stands on one pair facing through the centre (0–8, 1–7, 2–6, 3–5),
   whoever owns it. Not a movement, so it moves even a Mountain.
 - **Mind Control** — name a stone in your opponent's hand; that is what they must play next turn.
