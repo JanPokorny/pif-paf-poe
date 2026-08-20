@@ -1,7 +1,7 @@
 <!doctype html>
-<html lang="en">
+<html lang="cs">
 <meta charset="utf-8">
-<title>Pif-paf-poe — the stones</title>
+<title>Pif-paf-poe — kameny</title>
 <link rel="stylesheet" href="ppp.css">
 
 <!-- Written by hand, in the same elements the printed sheets are made of: a board is a
@@ -12,10 +12,9 @@
 
 <style>
   ppp-page { display: block; align-content: start; padding: 12mm 10mm; }
-  h1 { margin: 0; font-size: 7mm; }
-  p { margin: 1.5mm 0 0; font-size: 3.2mm; line-height: 1.4; color: var(--ppp-fine); }
+  p { margin: 1.5mm 0 0; font-size: 3.2mm; line-height: 1.4; }
 
-  main { display: grid; grid-template-columns: 1fr 1fr; gap: 7mm 6mm; margin-top: 8mm; }
+  main { display: grid; grid-template-columns: 1fr 1fr; gap: 7mm 6mm; }
   section { break-inside: avoid; }
   h2 {
     display: flex;
@@ -26,6 +25,8 @@
     --ppp-stone: 10mm;
   }
   section p { margin: 0 0 2.5mm; color: var(--ppp-ink); }
+  /* the note the two placement stones share, under both of them */
+  main > p { grid-column: 1 / -1; margin: 0; color: var(--ppp-ink); }
   /* nowrap, so a pair of boards never stacks and the page stays one page */
   ppp-figure { --ppp-square: 11.5mm; gap: 2.5mm; flex-wrap: nowrap; }
   ppp-then { width: 11mm; font-size: 5.5mm; }
@@ -33,16 +34,12 @@
 </style>
 
 <ppp-page>
-<h1>The stones</h1>
-<p>Three move things, one refuses to be moved, two say where the opponent may play.
-The dashed square follows the stone just played.</p>
-
 <main>
 
 <section>
-  <h2><ppp-stone player="X" type="shift"></ppp-stone> Shift</h2>
-  <p>Name a direction: that row or column slides one step, and what falls off the end
-  wraps to the other.</p>
+  <h2><ppp-stone player="X" type="shift"></ppp-stone> Šoup</h2>
+  <p>Zvol směr: jeho řádek nebo sloupec se posune o krok tím směrem, a co spadne
+  z konce, objeví se na druhém.</p>
   <ppp-figure>
     <ppp-grid>
       <ppp-row>
@@ -84,7 +81,7 @@ The dashed square follows the stone just played.</p>
 
 <section>
   <h2><ppp-stone player="X" type="2048"></ppp-stone> 2048</h2>
-  <p>Name a direction: every stone on the board slides that way as far as it goes.</p>
+  <p>Zvol směr: každý kámen na desce sjede tím směrem, kam až to jde.</p>
   <ppp-figure>
     <ppp-grid>
       <ppp-row>
@@ -125,9 +122,9 @@ The dashed square follows the stone just played.</p>
 </section>
 
 <section>
-  <h2><ppp-stone player="X" type="rotate"></ppp-stone> Rotate</h2>
-  <p>Pick one of the 2x2 blocks it belongs to: those four squares turn one step
-  clockwise.</p>
+  <h2><ppp-stone player="X" type="rotate"></ppp-stone> Rotát</h2>
+  <p>Vyber jeden z 2x2 čtverců, do kterých patří: ta čtyři pole se otočí o krok
+  po směru hodinových ručiček.</p>
   <ppp-figure>
     <ppp-grid>
       <ppp-row>
@@ -146,7 +143,7 @@ The dashed square follows the stone just played.</p>
         <ppp-square></ppp-square>
       </ppp-row>
     </ppp-grid>
-    <ppp-then dir="clockwise"></ppp-then>
+    <ppp-then dir="top-left"></ppp-then>
     <ppp-grid>
       <ppp-row>
         <ppp-square><ppp-stone player="X" type="2048"></ppp-stone></ppp-square>
@@ -168,9 +165,9 @@ The dashed square follows the stone just played.</p>
 </section>
 
 <section>
-  <h2><ppp-stone player="X" type="mountain"></ppp-stone> Mountain</h2>
-  <p>Nothing moves it, and nothing slides past it. Here someone else's 2048 falls
-  around it.</p>
+  <h2><ppp-stone player="X" type="mountain"></ppp-stone> Hora</h2>
+  <p>Nic s ní nepohne a ostatní se o ni zarazí. Tady kolem ní padá cizí
+  2048.</p>
   <ppp-figure>
     <ppp-grid>
       <ppp-row>
@@ -212,7 +209,7 @@ The dashed square follows the stone just played.</p>
 
 <section>
   <h2><ppp-stone player="X" type="magnet"></ppp-stone> Magnet</h2>
-  <p>Your opponent must play next to it. Rings show where.</p>
+  <p>Soupeř musí hrát vedle něj. Kroužky ukazují kam.</p>
   <ppp-figure>
     <ppp-grid>
       <ppp-row>
@@ -235,9 +232,8 @@ The dashed square follows the stone just played.</p>
 </section>
 
 <section>
-  <h2><ppp-stone player="X" type="stinky"></ppp-stone> Stinky</h2>
-  <p>Your opponent must play away from it. Every Magnet and Stinky of yours asks at once,
-    and they must play where they satisfy as many of them as any square can.</p>
+  <h2><ppp-stone player="X" type="stinky"></ppp-stone> Smraďoch</h2>
+  <p>Soupeř musí hrát jinam než vedle něj.</p>
   <ppp-figure>
     <ppp-grid>
       <ppp-row>
@@ -258,6 +254,9 @@ The dashed square follows the stone just played.</p>
     </ppp-grid>
   </ppp-figure>
 </section>
+
+<p>Všechny tvé Magnety a Smraďoši se ptají naráz a soupeř musí hrát tam, kde jich
+uspokojí tolik, kolik jen některé pole dovolí.</p>
 
 </main>
 </ppp-page>

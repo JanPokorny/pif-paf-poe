@@ -8,6 +8,8 @@ Hráči tvoří dva týmy, X a O, které bojují v získávání bodů. Body se 
 
 Aréna je herní prostor tvořený 6x6 nebo 9x9 poli (dle počtu hráčů), dále rozdělené na 4 nebo 9 zón o velikosti 3x3 pole. Každé pole v Aréně má náhodně přiřazeno "veto" konkrétního kamenu v duelu -- o tom později. Aréna je reprezentována v prostoru fyzicky: tedy všech 36 nebo 81 polí je rozmístěno po prostoru hry (např. vyvěšené na stromech), a v centrální lokaci je vyvěšená mapa celé arény včetně toho kdo drží dané pole.
 
+Před hrou se aréna předvyplní úvodními značkami, aby bylo v prvním kole o co bojovat -- zhruba pětina arény, napůl mezi týmy: 4 značky na tým na 6x6, 9 na tým na 9x9. Značky se umisťují ve středově souměrných dvojicích: ke každému poli X dostane O pole otočené o půl otáčky kolem středu arény. Dvojice se losují postupně, zamítne se každá, která by dokončila 3-v-řadě. Tým, který útočí jako první, si za tuto výhodu odebere dvě své úvodní značky.
+
 V každém kole jeden tým útočí, druhý brání, v dalším kole se vystřídají.
 
 Fáze kola:
@@ -40,7 +42,7 @@ Hráč u sebe také má kartu se zásobou protiútoků, kde jsou vyznačené typ
 
 - Výstřednost: Pokud se ve středu desky nachází soupeřův kámen, vrať mu ho do ruky.
 - Ústup: Přesuň libovolný svůj kámen na volné místo. Nezohledňuj Magnety a Smraďochy pro umístění a nevyhodnocuj pohybové schopnosti.
-- Zrcadlo: Prohoď obsah dvou polí středově symetrických se středem.
+- Zrcadlo: Prohoď obsah dvou polí středově symetrických se středem. Není to pohybový efekt, takže pohne i Horou.
 - Vyhláška: Vynuť, aby soupeř ve svém dalším kole musel hrát konkrétní ze svých kamenů.
 - Opáčko: Urči jeden svůj kámen na desce s pohybovým efektem. Pohybový efekt se provede ze současné pozice kamene, zvoleným směrem.
 
@@ -69,4 +71,3 @@ Materiál pro řízení hry:
 
 Materiál pro pomoc se hrou:
 - Přehledová pomůcka kamenů.
-- Přehledová pomůcka protiútoků.

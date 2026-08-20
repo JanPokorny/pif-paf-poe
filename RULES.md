@@ -181,7 +181,7 @@ finish a line.
   movement, so a Mountain is not safe from it.
 - **Relocate** — move one of your stones to any free square. It resolves nothing on arrival.
 - **Mirror** — swap what stands on one pair facing through the centre (0–8, 1–7, 2–6, 3–5),
-  whoever owns it.
+  whoever owns it. Not a movement, so it moves even a Mountain.
 - **Mind Control** — name a stone in your opponent's hand; that is what they must play next turn.
 - **Rehearse** — resolve one of your stones on the board again, from where it now stands. Not one
   the space has switched off.
@@ -189,15 +189,23 @@ finish a line.
 # Making a set
 
 Everything printable lives in `paper/`: one stylesheet, an SVG per drawing, and HTML built from
-`ppp-` elements. Open a document in a browser and print it — there is nothing to build.
+`ppp-` elements. Open a document in a browser and print it — there is nothing to build. Printed
+text is Czech, the language of the table; names follow RULES.cs.md.
 
-- `stones-sheet.html` — 48 stones, X on the top half and O on the bottom, four of each type a
-  side. Halve the sheet and each player cuts up their own symbol.
-- `counterattacks-sheet.html` — ten cards, two of each of the five, rule printed on the card.
-- `arena-small.html` / `arena-big.html` — the 6x6 and 9x9 arenas. Zones drawn heavy and alternately
-  tinted, named NW, N, NE, W, C, E, SW, S, SE; each space carries its name (zone plus place in it,
-  NW1–NW9) and its switched-off type along the top, leaving the middle for a symbol.
-- `stones.html` — not for cutting: the six types, each with a board before and after its effect.
+- `pnp-stones.html` — 48 stones, X on the top half and O on the bottom, four of each type a
+  side. A player needs about twelve — two of each type — so one sheet serves four.
+- `pnp-marks.html` — plain X and O symbols to cut out and lay on the overview map, marking who
+  holds a space.
+- `pnp-counterattacks.html` — one roster card per player, four to a sheet: every Counterattack,
+  its rule, and eight circles — fill one when bought, cross it off when spent.
+- `pnp-arena.html` — the arena as nine sheets, a zone to a sheet, named by the Czech compass —
+  SZ, S, SV, Z, C, V, JZ, J, JV; each space carries its name (zone plus place in it, SZ1–SZ9) and
+  its switched-off type along the top, leaving the middle for a symbol. The first four sheets
+  (SZ, SV, JZ, JV) make the 6x6; all nine make the 9x9. Print the set twice: trim one to the
+  border and glue it into the overview map for the central location, cut the other into single
+  spaces to hang at the duel stations.
+- `rules-stones.html` — not for cutting: the six types, each with a board before and after its
+  effect.
 
 Everything is black, so any printer will do. Print at 100% with no fit-to-page, on card if you have
 it, and cut down the middle of the gaps: nothing is printed to cut along, so a wobbling cut leaves

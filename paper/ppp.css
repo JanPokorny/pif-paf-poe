@@ -18,9 +18,8 @@
 
 :root {
   --ppp-ink: #000;
-  --ppp-fine: #6d6d6d;          /* what is worth saying quietly */
-  --ppp-rule: #c9c9c9;          /* a line that is not a cut line */
-  --ppp-tint: #f1f1f1;          /* every other zone of the arena */
+  --ppp-fine: #000;             /* what is worth saying quietly */
+  --ppp-rule: #000;             /* a line that is not a cut line */
   --ppp-font: Helvetica, Arial, sans-serif;
 
   --ppp-stone: 30mm;
@@ -139,18 +138,25 @@ ppp-then[dir="up"]::before { content: "\2191"; }
 ppp-then[dir="down"]::before { content: "\2193"; }
 ppp-then[dir="left"]::before { content: "\2190"; }
 ppp-then[dir="right"]::before { content: "\2192"; }
-ppp-then[dir="clockwise"]::before { content: "\21BB"; }
+/* Rotate turns clockwise always -- what the player names is the 2x2 block. */
+ppp-then[dir="top-left"]::before { content: "\21BB"; }
 
+/* The label under the arrow, in the language of the table. */
 ppp-then::after {
-  content: attr(dir);
   display: block;
   margin-top: 1mm;
   font-size: 2.8mm;
   color: var(--ppp-fine);
 }
 
-/* The stone just played, for a page following one from board to board. Dashed and
- * grey, so it reads as something said about the game rather than part of it. */
+ppp-then[dir="up"]::after { content: "nahoru"; }
+ppp-then[dir="down"]::after { content: "dolů"; }
+ppp-then[dir="left"]::after { content: "doleva"; }
+ppp-then[dir="right"]::after { content: "doprava"; }
+ppp-then[dir="top-left"]::after { content: "levý horní"; }
+
+/* The stone just played, for a page following one from board to board. Dashed,
+ * so it reads as something said about the game rather than part of it. */
 ppp-stone[played] {
   outline: 0.4mm dashed var(--ppp-fine);
   outline-offset: 0.5mm;
@@ -167,22 +173,11 @@ ppp-square[open]::after {
 
 /* ── The arena ───────────────────────────────────────────────────────────── */
 
-ppp-arena { display: inline-grid; }
-ppp-arena[size="small"] { grid-template-columns: repeat(2, max-content); }
-ppp-arena[size="big"] { grid-template-columns: repeat(3, max-content); }
-
 ppp-zone {
   display: grid;
   grid-template-columns: repeat(3, var(--ppp-space));
   border: 0.35mm solid var(--ppp-ink);
 }
-
-/* Every other zone tinted, so the zones read at a glance without ever looking like
- * they stop a line -- three in a row scores anywhere on the arena. Four zones want
- * the second and third; nine want the evens. */
-ppp-arena[size="small"] > ppp-zone:nth-child(2),
-ppp-arena[size="small"] > ppp-zone:nth-child(3),
-ppp-arena[size="big"] > ppp-zone:nth-child(even) { background: var(--ppp-tint); }
 
 ppp-space {
   position: relative;
@@ -206,7 +201,6 @@ ppp-space::before {
   width: 34%;
   height: 34%;
   background: var(--ppp-drawing, none) center / contain no-repeat;
-  opacity: 0.68;
 }
 
 ppp-space::after {
@@ -270,6 +264,30 @@ ppp-fine {
   color: var(--ppp-fine);
   border-top: 0.2mm solid var(--ppp-rule);
   padding-top: 1.2mm;
+}
+
+/* ── A player's Counterattack roster ─────────────────────────────────────── */
+
+/* One card per player: every Counterattack with its circles. Fill one when bought,
+ * cross it off when spent. */
+ppp-roster { display: block; }
+ppp-roster > ppp-name { display: block; margin-bottom: 3.5mm; }
+ppp-roster ppp-card { --ppp-card-icon: 10mm; min-height: 12mm; margin-bottom: 4mm; }
+
+ppp-slots {
+  position: absolute;
+  top: 0.8mm;
+  right: 0;
+  display: flex;
+  gap: 1.5mm;
+}
+
+ppp-slot {
+  box-sizing: border-box;
+  width: 4mm;
+  height: 4mm;
+  border: 0.35mm solid var(--ppp-ink);
+  border-radius: 50%;
 }
 
 /* ── Pages ───────────────────────────────────────────────────────────────── */

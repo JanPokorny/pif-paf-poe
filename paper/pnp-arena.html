@@ -1,0 +1,139 @@
+<!doctype html>
+<html lang="cs">
+<meta charset="utf-8">
+<title>Pif-paf-poe — aréna, zóna na arch</title>
+<link rel="stylesheet" href="ppp.css">
+
+<!-- The arena as nine sheets, one zone of nine spaces each. The first four (SZ, SV,
+     JZ, JV) glued in a 2x2 make the 6x6; all nine in a 3x3 make the 9x9. Print the
+     set twice: trim one to the zone border and glue it into the overview map for the
+     central location, cut the other into single spaces to hang at the duel stations.
+     Each space carries its name and the stone type it switches off along the top,
+     leaving the middle free for a mark. The vetoes continue the 9x9 pattern -- one
+     across and three down. Print at 100%, no fit-to-page. -->
+
+<ppp-page style="--ppp-space: 60mm">
+  <ppp-zone>
+    <ppp-space veto="neutral" name="SZ1"></ppp-space>
+    <ppp-space veto="shift" name="SZ2"></ppp-space>
+    <ppp-space veto="2048" name="SZ3"></ppp-space>
+    <ppp-space veto="rotate" name="SZ4"></ppp-space>
+    <ppp-space veto="mountain" name="SZ5"></ppp-space>
+    <ppp-space veto="magnet" name="SZ6"></ppp-space>
+    <ppp-space veto="stinky" name="SZ7"></ppp-space>
+    <ppp-space veto="neutral" name="SZ8"></ppp-space>
+    <ppp-space veto="shift" name="SZ9"></ppp-space>
+  </ppp-zone>
+</ppp-page>
+
+<ppp-page style="--ppp-space: 60mm">
+  <ppp-zone>
+    <ppp-space veto="stinky" name="SV1"></ppp-space>
+    <ppp-space veto="neutral" name="SV2"></ppp-space>
+    <ppp-space veto="shift" name="SV3"></ppp-space>
+    <ppp-space veto="2048" name="SV4"></ppp-space>
+    <ppp-space veto="rotate" name="SV5"></ppp-space>
+    <ppp-space veto="mountain" name="SV6"></ppp-space>
+    <ppp-space veto="magnet" name="SV7"></ppp-space>
+    <ppp-space veto="stinky" name="SV8"></ppp-space>
+    <ppp-space veto="neutral" name="SV9"></ppp-space>
+  </ppp-zone>
+</ppp-page>
+
+<ppp-page style="--ppp-space: 60mm">
+  <ppp-zone>
+    <ppp-space veto="mountain" name="JZ1"></ppp-space>
+    <ppp-space veto="magnet" name="JZ2"></ppp-space>
+    <ppp-space veto="stinky" name="JZ3"></ppp-space>
+    <ppp-space veto="neutral" name="JZ4"></ppp-space>
+    <ppp-space veto="shift" name="JZ5"></ppp-space>
+    <ppp-space veto="2048" name="JZ6"></ppp-space>
+    <ppp-space veto="rotate" name="JZ7"></ppp-space>
+    <ppp-space veto="mountain" name="JZ8"></ppp-space>
+    <ppp-space veto="magnet" name="JZ9"></ppp-space>
+  </ppp-zone>
+</ppp-page>
+
+<ppp-page style="--ppp-space: 60mm">
+  <ppp-zone>
+    <ppp-space veto="rotate" name="JV1"></ppp-space>
+    <ppp-space veto="mountain" name="JV2"></ppp-space>
+    <ppp-space veto="magnet" name="JV3"></ppp-space>
+    <ppp-space veto="stinky" name="JV4"></ppp-space>
+    <ppp-space veto="neutral" name="JV5"></ppp-space>
+    <ppp-space veto="shift" name="JV6"></ppp-space>
+    <ppp-space veto="2048" name="JV7"></ppp-space>
+    <ppp-space veto="rotate" name="JV8"></ppp-space>
+    <ppp-space veto="mountain" name="JV9"></ppp-space>
+  </ppp-zone>
+</ppp-page>
+
+<ppp-page style="--ppp-space: 60mm">
+  <ppp-zone>
+    <ppp-space veto="rotate" name="S1"></ppp-space>
+    <ppp-space veto="mountain" name="S2"></ppp-space>
+    <ppp-space veto="magnet" name="S3"></ppp-space>
+    <ppp-space veto="stinky" name="S4"></ppp-space>
+    <ppp-space veto="neutral" name="S5"></ppp-space>
+    <ppp-space veto="shift" name="S6"></ppp-space>
+    <ppp-space veto="2048" name="S7"></ppp-space>
+    <ppp-space veto="rotate" name="S8"></ppp-space>
+    <ppp-space veto="mountain" name="S9"></ppp-space>
+  </ppp-zone>
+</ppp-page>
+
+<ppp-page style="--ppp-space: 60mm">
+  <ppp-zone>
+    <ppp-space veto="2048" name="Z1"></ppp-space>
+    <ppp-space veto="rotate" name="Z2"></ppp-space>
+    <ppp-space veto="mountain" name="Z3"></ppp-space>
+    <ppp-space veto="magnet" name="Z4"></ppp-space>
+    <ppp-space veto="stinky" name="Z5"></ppp-space>
+    <ppp-space veto="neutral" name="Z6"></ppp-space>
+    <ppp-space veto="shift" name="Z7"></ppp-space>
+    <ppp-space veto="2048" name="Z8"></ppp-space>
+    <ppp-space veto="rotate" name="Z9"></ppp-space>
+  </ppp-zone>
+</ppp-page>
+
+<ppp-page style="--ppp-space: 60mm">
+  <ppp-zone>
+    <ppp-space veto="magnet" name="C1"></ppp-space>
+    <ppp-space veto="stinky" name="C2"></ppp-space>
+    <ppp-space veto="neutral" name="C3"></ppp-space>
+    <ppp-space veto="shift" name="C4"></ppp-space>
+    <ppp-space veto="2048" name="C5"></ppp-space>
+    <ppp-space veto="rotate" name="C6"></ppp-space>
+    <ppp-space veto="mountain" name="C7"></ppp-space>
+    <ppp-space veto="magnet" name="C8"></ppp-space>
+    <ppp-space veto="stinky" name="C9"></ppp-space>
+  </ppp-zone>
+</ppp-page>
+
+<ppp-page style="--ppp-space: 60mm">
+  <ppp-zone>
+    <ppp-space veto="shift" name="V1"></ppp-space>
+    <ppp-space veto="2048" name="V2"></ppp-space>
+    <ppp-space veto="rotate" name="V3"></ppp-space>
+    <ppp-space veto="mountain" name="V4"></ppp-space>
+    <ppp-space veto="magnet" name="V5"></ppp-space>
+    <ppp-space veto="stinky" name="V6"></ppp-space>
+    <ppp-space veto="neutral" name="V7"></ppp-space>
+    <ppp-space veto="shift" name="V8"></ppp-space>
+    <ppp-space veto="2048" name="V9"></ppp-space>
+  </ppp-zone>
+</ppp-page>
+
+<ppp-page style="--ppp-space: 60mm">
+  <ppp-zone>
+    <ppp-space veto="neutral" name="J1"></ppp-space>
+    <ppp-space veto="shift" name="J2"></ppp-space>
+    <ppp-space veto="2048" name="J3"></ppp-space>
+    <ppp-space veto="rotate" name="J4"></ppp-space>
+    <ppp-space veto="mountain" name="J5"></ppp-space>
+    <ppp-space veto="magnet" name="J6"></ppp-space>
+    <ppp-space veto="stinky" name="J7"></ppp-space>
+    <ppp-space veto="neutral" name="J8"></ppp-space>
+    <ppp-space veto="shift" name="J9"></ppp-space>
+  </ppp-zone>
+</ppp-page>
