@@ -19,7 +19,7 @@ import {
 import {
   CARD_COST, CARD_WORTH, SWAP_COST, allocate, bestPicks, newCampaign, playRound, posValue,
   placementValue, resolve as pairOff, scoreAndClear, setPos, stakePerDuel,
-  tailTable, takeChance, winsNeeded,
+  tailTable, takeChance, teamSize, winsNeeded,
 } from './campaign.js';
 
 let failures = 0;
@@ -740,6 +740,60 @@ if (existsSync('results/hands-vetoes.json')) {
     }
   }
   check('a hundred and twenty rounds hold the invariants', bad.slice(0, 4), []);
+}
+
+// ── An uneven turnout ───────────────────────────────────────────────────────
+
+if (existsSync('results/hands-vetoes.json')) {
+  const pool = loadHands('results/hands-vetoes.json');
+  setArena('small');
+  const base = {
+    size: 12, targets: 14, defence: 'plan', attack: 'plan', duels: 'coin', restart: 0,
+    arena: 'small', horizon: 24, pool, pos: [0.03, 0.12], seed_marks: 4, seed_handicap: 2,
+  };
+  const count = (st, team) => SPACE_IDS.filter((i) => st.marks[i] === team).length;
+
+  // Both teams field everyone they have, and everyone stands somewhere.
+  const cfg = { ...base, short: 1 };
+  check('a short team has a player fewer', [teamSize(cfg, 1), teamSize(cfg, 2)], [11, 12]);
+  const tables = [null, tailTable(0.72, 13), tailTable(0.72, 13)];
+  const st = newCampaign(0, cfg, makeRng(11));
+  const placed = [];
+  for (let r = 0; r < 8; r++) {
+    const { me, them, A, D, free } = allocate(st, cfg, makeRng(500 + r), tables);
+    const sum = (X) => SPACE_IDS.reduce((n, i) => n + X[i], 0);
+    if (free.length) placed.push([sum(A) - teamSize(cfg, me), sum(D) - teamSize(cfg, them)]);
+    playRound(st, cfg, makeRng(600 + r), tables, null);
+  }
+  check('and both sides still place every player they have',
+    placed.filter(([a, d]) => a || d), []);
+
+  // A benched turnout puts the same number on the arena from a longer roster.
+  const benched = { ...base, short: 1, bench: true };
+  check('benching evens the numbers up',
+    [teamSize(benched, 1), teamSize(benched, 2)], [11, 11]);
+  check('and leaves the fuller team a player in hand',
+    newCampaign(0, benched, makeRng(12)).roster[2].length, 12);
+
+  // The two handicaps are paid in the same coin and come off the right teams: four pairs
+  // are seeded, team 1 attacks first and gives two back, and team 2 gives one back for
+  // the player team 1 is missing.
+  const both = newCampaign(0, { ...base, short: 1, short_handicap: 1 }, makeRng(13));
+  check('the first attacker and the fuller team each pay their own marks',
+    [count(both, 1), count(both, 2)], [2, 3]);
+  // The other way round: team 2 attacks first, so it owes both debts at once.
+  const stacked = newCampaign(1, { ...base, short: 1, short_handicap: 1 }, makeRng(14));
+  check('and one team can owe both at once',
+    [count(stacked, 1), count(stacked, 2)], [4, 1]);
+  // Marks handed to the short team are extra pairs with the fuller team's half left off.
+  const kept = newCampaign(0, { ...base, short: 1, short_marks: 2 }, makeRng(15));
+  check('extra marks go to the short team alone',
+    [count(kept, 1), count(kept, 2)], [4, 4]);
+
+  // Points and upgrade points, the other two currencies a shortfall can be paid in.
+  const paid = newCampaign(0, { ...base, short: 2, head_start: 3, short_xp: 1 }, makeRng(16));
+  check('a head start is per missing player', paid.points[1], 6);
+  check('and so is a purse', [paid.pts[1][0], paid.pts[2][0]], [2, 0]);
 }
 
 // ── Hands, and the points that buy them ─────────────────────────────────────

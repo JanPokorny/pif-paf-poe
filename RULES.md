@@ -50,6 +50,18 @@ The 9x9 continues the same pattern.
   rejecting any that completes a three in a row.
 - **First attacker gives back two.** Attacking first is worth something; that team removes two of
   its own opening marks.
+- **Even the numbers.** A missing body is the most expensive thing that can happen to a team: one
+  player short of twelve costs a third of what a team scores in a round and loses seven campaigns
+  in ten. So both sides field the same number — where the split will not divide, the fuller team
+  **sits the difference out each round, a different player each time**. A benched player earns
+  nothing that round, and that is what keeps the two level.
+- **Or pay the short team in marks.** If everyone would rather play every round, the short team
+  instead **keeps four extra opening marks — two on the 9x9 — for the one player it is missing**.
+  Draw the extra pairs like the rest and leave the fuller team's half off. The first attacker still
+  gives its two back: two separate debts, settled in the same coin, so a short team attacking first
+  keeps four and hands two back. This is priced for being **one** player short; eight marks on a
+  36-space arena is not a handicap but a scored line, so where two or more are missing, even the
+  numbers.
 - **Target.** 40 points on the 6x6, 170 on the 9x9 — about two dozen rounds either way.
 
 ## The round

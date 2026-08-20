@@ -10,6 +10,10 @@ Aréna je herní prostor tvořený 6x6 nebo 9x9 poli (dle počtu hráčů), dál
 
 Před hrou se aréna předvyplní úvodními značkami, aby bylo v prvním kole o co bojovat -- zhruba pětina arény, napůl mezi týmy: 4 značky na tým na 6x6, 9 na tým na 9x9. Značky se umisťují ve středově souměrných dvojicích: ke každému poli X dostane O pole otočené o půl otáčky kolem středu arény. Dvojice se losují postupně, zamítne se každá, která by dokončila 3-v-řadě. Tým, který útočí jako první, si za tuto výhodu odebere dvě své úvodní značky.
 
+Oba týmy nastupují ve stejném počtu hráčů: chybějící hráč je to nejdražší, co se týmu může stát -- jeden chybějící hráč z dvanácti stojí asi třetinu bodů, které tým v kole získá, a prohraje kampaň v sedmi případech z deseti. Pokud počet hráčů nevychází, tým s více hráči v každém kole nechá odpovídající počet svých hráčů mimo kolo, a mění se kdo to je; vynechaný hráč v tom kole nezíská žádné XP, právě to oba týmy srovnává.
+
+Pokud chtějí místo toho hrát všichni v každém kole, dostane menší tým za jednoho chybějícího hráče čtyři úvodní značky navíc (na 9x9 dvě, protože tam chybějící hráč stojí zlomek toho co na 6x6). Dvojice na tyto značky se losují stejně jako ostatní, jen se značka druhého týmu nepoloží. Odebrání dvou úvodních značek prvnímu útočníkovi platí i tak: jsou to dva nezávislé handicapy placené ve stejné měně, takže menší tým, který útočí jako první, si čtyři značky přidá a dvě odebere. Tento handicap je spočítaný pro jednoho chybějícího hráče; osm značek navíc na aréně o 36 polích už není handicap, ale darovaná 3-v-řadě, takže pokud chybí dva a více hráčů, srovnejte počty.
+
 V každém kole jeden tým útočí, druhý brání, v dalším kole se vystřídají.
 
 Fáze kola:
