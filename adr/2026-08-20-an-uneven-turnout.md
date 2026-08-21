@@ -19,6 +19,15 @@ attacker's handicap was set in. **Campaigns played to a finish** measure the thi
 decides an evening: how often the short team wins the race to the target. The hand table is the
 40-opponent, 120-iteration per-veto fit; every number here is from that table.
 
+**The seeding procedure changed while this was being written, and it moved the numbers.** The
+rules now say: read the pair off the table, place the **higher** of the two for both teams in
+rotational pairs, and then whichever team the table gives fewer **discards its own down to that
+number, choosing which**. Earlier sections here fitted marks against a seeding that removed them
+arbitrarily instead. A chosen discard is a different thing — a team keeps the marks that line up
+and drops the isolated ones — so everything from "the discard is chosen" onwards supersedes the
+figures above it, which are kept because they price a mark cleanly and because the shape of the
+argument is theirs.
+
 **One thing about the seat had to change to measure any of this.** Earlier records ran campaigns
 half from each opening seat, so that whoever attacks in round one could not bias a total. That is a
 measurement device, not a rule: a real evening has one first attacker. Where a section below says
@@ -255,21 +264,87 @@ the game is scored in, so the scoreboard stops meaning what it says, and it has 
 for every target. It is recorded here because it is the one handicap that can be applied halfway
 through an evening, when somebody has to leave.
 
+## The discard is chosen, and that costs the handicap most of its bite
+
+`newCampaign` now plays the procedure as written: both teams place the higher count, then the
+lesser team drops, one at a time, the mark whose loss costs its own position least — priced with the
+attack planner's own positional weights, so a discard is valued in the same currency as everything
+else the round does. 600 campaigns a cell, seat pinned, even teams:
+
+| even teams | arbitrary discard | **chosen** |
+|---|---|---|
+| 6x6, 2 / 4 | 54.7% | **63.2%** |
+| 9x9, 6 / 9 | 49.3% | **54.7%** |
+
+**Keeping your best two of four is worth about as much as four at random**, and the effect is large
+enough to swamp the handicap it was meant to carry: 8.5 points of win rate on the 6x6, 5.4 on the
+9x9.
+
+**And it saturates, so taking more away stops working.** 9x9 even: 60.3% at 7/9, 54.7% at 6/9,
+54.7% at 5/9. The first attacker keeps the marks that matter, so the fourth one taken costs it
+almost nothing. The lever that still works is the other number: **hand the second team more**, which
+the procedure allows — the table's higher number is what both teams place.
+
+**So the table was fitted again from scratch**, sweeping both numbers rather than one. 600
+campaigns a cell on the 6x6, 300 on the 9x9, seat to the first attacker, against a 50% target —
+the two teams even, which is not the same as matching what a seat-holder gets:
+
+| first / second | 6x6, even | 6x6, a player short | 9x9, even | 9x9, a player short |
+|---|---|---|---|---|
+| 0 / 4 | 53.2% | — | — | — |
+| 1 / 4 | 60.0% | — | — | — |
+| 2 / 4 | 63.2% | — | — | — |
+| 4 / 4 | — | 44.7% | — | — |
+| 6 / 4 | — | 54.0% | — | — |
+| **0 / 5** | **48.5%** | — | — | — |
+| 1 / 5 | 54.7% | — | — | — |
+| 2 / 5 | 57.0% | 34.8% | — | — |
+| 3 / 5 | — | 42.7% | — | — |
+| 4 / 5 | — | 45.0% | — | — |
+| **5 / 5** | — | **48.5%** | — | — |
+| 6 / 5 | — | 51.0% | — | — |
+| 1 / 6 | 46.3% | — | — | — |
+| 0 / 6 | 40.3% | — | — | — |
+| 0 / 9 | — | — | 45.0% | — |
+| 1 / 9 | — | — | 42.0% | — |
+| **3 / 9** | — | — | **48.3%** | 40.0% |
+| **5 / 9** | — | — | 54.7% | **49.3%** |
+| 6 / 9 | — | — | 54.7% | 56.0% |
+| 7 / 9 | — | — | 60.3% | 59.0% |
+| 5 / 10 | — | — | 51.0% | — |
+| 5 / 11 | — | — | 49.3% | — |
+
+Three things fall out of it.
+
+**A mark is worth much less than it was, and the first attacker's are worth least of all.** On the
+6x6 it takes every one of its five to level the seat, and 0/4 — nothing at all against four — still
+comes in at 53.2%, which is why the second number had to go to five. On the 9x9 six of its nine go.
+
+**The 6x6 needs a denser opening than it had.** Five pairs against four: ten marks placed and five
+discarded, where the old rules placed eight and discarded two. Still about a fifth of a 36-space
+arena once the discard is done, which is what the seeding was for.
+
+**And a missing body is still worth about what it was**, five marks on the 6x6 and two on the 9x9 —
+the gap between the two rows of each column. That number did not move when the procedure did, which
+is the one reassuring thing in this section: the shortfall is priced in marks, and only the seat's
+own handicap was distorted by letting a team choose.
+
 ## What the rules ended up saying
 
 One bullet for the seat, one table, and no third case:
 
 - The team a player short attacks in round one; with even teams, draw for it. Teams alternate from
   there as before.
-- Opening marks, first attacker / second: **2 / 4** on the 6x6 and **6 / 9** on the 9x9 with even
-  teams, **5 / 4** and **7 / 9** when the first team is a player short.
+- Opening marks, first attacker / second: **0 / 5** on the 6x6 and **3 / 9** on the 9x9 with even
+  teams, **5 / 5** and **5 / 9** when the first team is a player short. Every cell measures 48–49%,
+  a hair on the second team's side of even.
 - Priced for one player short. Two or more, split the teams again.
 
-The seeding did not move and nothing new was invented to pay for a shortfall: the handicap is a seat
-the rules were already handing out, plus three marks on the 6x6 and one on the 9x9. The 9x9's own
-seat handicap did move, from two marks back to three, and that is a correction to the old rule
-rather than anything to do with an uneven turnout — it only became visible once the seat stopped
-being averaged away.
+Nothing new was invented to pay for a shortfall: the handicap is a seat the rules were already
+handing out, plus five marks on the 6x6 and two on the 9x9. What did change is the seat's own
+handicap, from two marks back to all five on the 6x6 and to six of nine on the 9x9 — a correction to
+the old rule rather than anything to do with an uneven turnout. Two things made it necessary: the
+seat stopped being averaged away between campaigns, and the discard became a choice.
 
 ## Open
 
@@ -307,10 +382,14 @@ being averaged away.
   strictly more than a real player, because an unpaired body counts towards holding a space and
   never loses a duel. What is left is arithmetic at a duel station, which is why the answers here
   are all paid at setup.
-- **The marks handicap front-loads the game.** A short team holding three extra marks has a
-  position it cannot defend with the bodies it has, so it has to cash the opening early; campaigns
-  run 20.9 rounds against the level 23. That is a change in the shape of the evening, not just in
-  who wins it, and it is the strongest argument for benching over paying.
-- **The 9x9's short row rests on two numbers a point and a half apart.** Seven marks measures 50.0%
-  and 52.3% by the two routes to it, and the neighbours are 56.3% at eight and 43.5% unpaid with the
-  seat alternating. So seven is right to within about a mark, and no finer than that.
+- **The marks handicap front-loads the game.** A short team holding all five marks against five has
+  a position it cannot defend with the bodies it has, so it has to cash the opening early: 21.4
+  rounds against the 23.6 the level row runs. That is a change in the shape of the evening, not just
+  in who wins it, and it is the strongest argument for benching over paying.
+- **Every cell of the final table is one 600- or 300-campaign measurement**, good to about ±2 or
+  ±3 points of win rate, and the neighbouring rows are 3 to 9 points away. So each number is right
+  to within about a mark and no finer, and all four sit 1 to 2 points below even rather than on it.
+- **The discard is modelled as a captain would play it** — drop the mark whose loss costs your own
+  position least, judged by the attack planner's weights — and a real table may do better or worse
+  than that. It is the single most load-bearing assumption in the table above: an arbitrary discard
+  wants 2/4 on the 6x6 where a chosen one wants 0/5.

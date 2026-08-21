@@ -630,13 +630,31 @@ export function newCampaign(first = 0, cfg = null, rng = null) {
       st.marks[j] = 0;
       return bad;
     };
+    // How many marks each team is supposed to end up with. The handicaps are all in
+    // these two numbers: the team attacking in round one gives `seed_handicap` back, a
+    // short team keeps `short_marks` extra a missing player, and `short_handicap` takes
+    // that many off the fuller team instead. The rules print the pair as a table.
+    const short = cfg.short ?? 0;
+    // `mark_pair` states the two outright, first attacker then second, which is how the
+    // rules print it; without it the pair is derived from the handicaps.
+    const target = [0, cfg.seed_marks, cfg.seed_marks];
+    if (cfg.mark_pair) {
+      target[first + 1] = cfg.mark_pair[0];
+      target[2 - first] = cfg.mark_pair[1];
+    } else {
+      target[first + 1] -= cfg.seed_handicap ?? 0;
+      if (short) {
+        target[1] += (cfg.short_marks ?? 0) * short;
+        target[2] -= (cfg.short_handicap ?? 0) * short;
+      }
+    }
+    // Both teams place the higher of the two, in rotational pairs, so whatever the
+    // opening position is worth they start with exactly the same of it. Then whoever the
+    // table gives fewer discards down to their number, and **chooses** which to drop --
+    // which is worth something, so it is modelled rather than assumed away.
+    const pairs = Math.max(target[1], target[2]);
     const placed = [];
-    // The short team can be paid in marks two ways round, and they are not the same
-    // manipulation: taking one off the fuller team frees a space for both sides, while
-    // giving one to the short team occupies a space and adds to its position. `extra` is
-    // the second -- pairs drawn like the rest, with the fuller team's half left off.
-    const extra = cfg.short ? (cfg.short_marks ?? 0) * cfg.short : 0;
-    for (let n = 0; n < cfg.seed_marks + extra; n++) {
+    for (let n = 0; n < pairs; n++) {
       const options = free.filter((i) => !makesLine(i, opposite.get(i)));
       if (!options.length) break;
       const i = options[(rng() * options.length) | 0], j = opposite.get(i);
@@ -646,20 +664,26 @@ export function newCampaign(first = 0, cfg = null, rng = null) {
       const gone = new Set([i, j]);
       free.splice(0, free.length, ...free.filter((x) => !gone.has(x)));
     }
-    // Marks given back. Two teams can owe them at once, and for two different reasons:
-    // the team attacking first has the tempo, so `seed_handicap` takes that many off it,
-    // and the team with the fuller bench is ahead on bodies, so `short_handicap` takes
-    // that many off it for every player the other side is missing. Each removal breaks
-    // the rotational pairing by exactly one mark and no more; when both teams owe, a pair
-    // gives up both of its marks before the next pair is touched.
-    const owed = [0, 0, 0];
-    owed[first + 1] += cfg.seed_handicap ?? 0;
-    if (cfg.short) owed[2] += (cfg.short_handicap ?? 0) * cfg.short;
-    owed[2] += Math.min(extra, placed.length);
-    for (let n = 0; n < placed.length && (owed[1] || owed[2]); n++) {
-      const [i, j] = placed[placed.length - 1 - n];
-      if (owed[1]) { st.marks[i] = 0; owed[1]--; }
-      if (owed[2]) { st.marks[j] = 0; owed[2]--; }
+    // The discard, one mark at a time: of the marks it still holds, the team drops the
+    // one it can most afford to lose -- the one whose loss costs its own position least,
+    // which is what a team looking at the arena would do. Positional value is the
+    // attack planner's own, so a discard is priced in the same currency as everything
+    // the round does with it.
+    setPos(cfg.pos);
+    for (const team of [1, 2]) {
+      const them = 3 - team;
+      for (let n = placed.length - target[team]; n > 0; n--) {
+        const mine = placed.map(([i, j]) => (team === 1 ? i : j)).filter((i) => st.marks[i] === team);
+        if (!mine.length) break;
+        let best = mine[0], bestValue = -Infinity;
+        for (const i of mine) {
+          st.marks[i] = 0;
+          const v = posValue(st.marks, team, them);
+          st.marks[i] = team;
+          if (v > bestValue) { bestValue = v; best = i; }
+        }
+        st.marks[best] = 0;
+      }
     }
   }
   // A team short of players can be paid for it in either of the two currencies the
@@ -1299,6 +1323,7 @@ function row(t) {
     bench: !!t.bench,
     firstSeat: t.first_seat ?? null,
     seedHandicap: t.seed_handicap ?? 0,
+    markPair: t.mark_pair ? t.mark_pair.join('/') : '',
     shortHandicap: t.short_handicap ?? 0,
     shortMarks: t.short_marks ?? 0,
     headStart: t.head_start ?? 0,
@@ -1314,6 +1339,7 @@ function group(tallies) {
   for (const t of tallies) {
     const k = `${t.size}|${t.arena}|${t.defence}|${t.attack}|${t.swapCost}|${t.cardCost}`
       + `|${t.short ?? 0}|${t.bench ? 'b' : ''}|${t.first_seat ?? 'a'}|${t.seed_handicap ?? 0}`
+      + `|${t.mark_pair ? t.mark_pair.join('/') : ''}`
       + `|${t.short_handicap ?? 0}|${t.short_marks ?? 0}`
       + `|${t.head_start ?? 0}|${t.short_xp ?? 0}`;
     if (!byKey.has(k)) { byKey.set(k, { ...t }); continue; }
@@ -1321,8 +1347,9 @@ function group(tallies) {
     for (const [f, v] of Object.entries(t)) {
       const constant = ['size', 'seed', 'rep', 'rounds', 'spaces', 'zones', 'horizon',
         'swapCost', 'cardCost', 'short', 'short_handicap', 'short_marks', 'head_start',
-        'short_xp', 'first_seat', 'seed_handicap'];
-      if (typeof v === 'number' && typeof into[f] === 'number' && !constant.includes(f)) into[f] += v;
+        'short_xp', 'first_seat', 'seed_handicap', 'mark_pair'];
+      if (constant.includes(f)) continue;
+      if (typeof v === 'number' && typeof into[f] === 'number') into[f] += v;
       else if (Array.isArray(v) && Array.isArray(into[f])) into[f] = into[f].map((x, i) => x + v[i]);
     }
     into.rounds += t.rounds;
@@ -1378,15 +1405,15 @@ function reportEconomy(rows) {
 // short, and what a handicap in opening marks does to the gap. `gap` is the fuller team's
 // advantage, so a handicap that levels the game brings it to zero.
 function reportTeams(rows) {
-  const head = ['size', 'arena', 'short', 'first', 'seat$', 'bench', 'give', 'keep', 'xp',
-    'head', 'short/r', 'full/r', 'gap', 'marks', 'take%', 'play%', 'X win%', 'length'];
+  const head = ['size', 'arena', 'short', 'first', 'marks', 'seat$', 'give', 'keep', 'xp',
+    'head', 'short/r', 'full/r', 'gap', 'mk/r', 'take%', 'play%', 'X win%', 'length'];
   console.log(head.map((h) => pad(h, h.length > 5 ? 9 : 7)).join(''));
   for (const r of rows) {
     const gap = r.pointsFull - r.pointsShort;
     console.log([
       pad(r.size, 7), pad(r.arena, 7), pad(r.short, 7),
       pad(r.firstSeat == null ? 'alt' : ['X', 'O'][r.firstSeat], 7),
-      pad(r.seedHandicap, 7), pad(r.bench ? 'y' : '-', 7),
+      pad(r.markPair || (r.bench ? 'bench' : '-'), 7), pad(r.seedHandicap, 7),
       pad(r.shortHandicap, 7), pad(r.shortMarks, 7), pad(r.shortXp, 7), pad(r.headStart, 7),
       pad(r.pointsShort.toFixed(3), 9), pad(r.pointsFull.toFixed(3), 9),
       pad((gap >= 0 ? '+' : '') + gap.toFixed(3), 9),
@@ -1414,17 +1441,25 @@ function sizes(spec) {
 // can still use, 36 do not -- and they are the AI's valuation rather than a rule.
 const WEIGHTS = { small: [0.03, 0.12], big: [0.05, 0.20] };
 
-// The opening position: a fifth of the arena marked, half to each side, which is one pair
-// per zone. The team attacking in round one gives some of theirs back -- two on the 6x6,
-// where nothing beyond that buys anything, and three on the 9x9, where it does.
-const SEED_PAIRS = { small: 4, big: 9 };
-const HANDICAP = { small: 2, big: 3 };
+// The opening position, and both handicaps in it. Pairs are drawn rotationally and then
+// the team the table gives fewer discards its own down to that number, choosing which --
+// so these three constants come to the table the rules print, opening marks for the team
+// attacking in round one against the other team's:
+//
+//                              6x6      9x9
+//   even teams                 0 / 5    3 / 9
+//   first team a player short  5 / 5    5 / 9
+//
+// A discard is chosen rather than random, which costs a mark most of its bite: the team
+// keeps whatever lines up. That is why the first attacker on the 6x6 gives back all five.
+const SEED_PAIRS = { small: 5, big: 9 };
+const HANDICAP = { small: 5, big: 6 };
 // And when the turnout is uneven, the short team takes round one and keeps extra marks of
-// its own on top: three on the 6x6, one on the 9x9, where round one covers most of a
-// missing body by itself. `--short-handicap`, which takes marks off the fuller team
-// instead, is the other direction and buys about half as much a mark; it is kept because
-// the record measured both.
-const SHORT_MARKS = { small: 3, big: 1 };
+// its own on top -- all five of them on the 6x6, two of the nine on the 9x9, where round
+// one covers most of a missing body by itself. `--short-handicap`, which takes marks off
+// the fuller team instead, is the other direction and buys about half as much a mark; it
+// is kept because the record measured both.
+const SHORT_MARKS = { small: 5, big: 2 };
 const SHORT_HANDICAP = 0;
 
 async function main() {
@@ -1467,6 +1502,9 @@ async function main() {
     // What the first attacker gives back. A list sweeps it, which is what repricing the
     // seat needs once the rules stop alternating it.
     handicaps: arg('seed-handicap', null) === null ? [] : sizes(arg('seed-handicap', '0')),
+    // Mark pairs stated outright, as the rules table does: --marks 2/4,1/4 sweeps two rows.
+    markPairs: (arg('marks', null) ?? '').split(',').filter(Boolean)
+      .map((pair) => pair.split('/').map(Number)),
     // Extra opening marks for the short team. Left unset it is the rule's own number for
     // the arena, which differs between the two; given a list it sweeps, which is how that
     // number was found.
@@ -1497,8 +1535,10 @@ async function main() {
     opts.cardCosts.map((cardCost) => ({ swapCost, cardCost })));
   // The turnout, as the pair the round is played with: how short team 1 is and what team
   // 2 gives back for it. A full turnout owes nothing, so the handicaps collapse to one.
-  const seats = (arena) => (opts.handicaps.length ? opts.handicaps
-    : [HANDICAP[arena] ?? HANDICAP.small]).map((seed_handicap) => ({ seed_handicap }));
+  const seats = (arena) => (opts.markPairs.length
+    ? opts.markPairs.map((mark_pair) => ({ mark_pair, seed_handicap: 0 }))
+    : (opts.handicaps.length ? opts.handicaps : [HANDICAP[arena] ?? HANDICAP.small])
+      .map((seed_handicap) => ({ seed_handicap, mark_pair: undefined })));
   const turnouts = (arena) => opts.shorts.flatMap((short) => (short
     ? opts.shortHandicaps.flatMap((h) => (opts.shortMarkses.length
       ? opts.shortMarkses : [SHORT_MARKS[arena] ?? SHORT_MARKS.small]).flatMap((m) =>
@@ -1519,6 +1559,7 @@ async function main() {
         sizes: undefined, arenas: undefined, swapCosts: undefined, cardCosts: undefined,
         shorts: undefined, shortHandicaps: undefined, shortMarkses: undefined,
         headStarts: undefined, shortXps: undefined, handicaps: undefined,
+        markPairs: undefined,
         // The same seed across prices, so a price is read against the same rounds.
         seed: opts.seed + 1000 * k + 97 * rep + 13 * ai,
       })))))));

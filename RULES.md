@@ -44,12 +44,11 @@ The 9x9 continues the same pattern.
 ## Setting up
 
 - **Hands.** Five random stones each.
-- **Opening marks.** About a fifth of the arena, half to each side — four pairs on the 6x6, nine on
-  the 9x9 — so round one has ground worth fighting over. Place them in rotational pairs: for every X
-  space, O takes the one half a turn about the centre away. Draw pairs one at a time, rejecting any
-  that completes a three in a row. Then each side keeps the count the table gives it: the first
-  attacker takes marks off, and a team a player short draws extra pairs the same way and leaves the
-  other side's half off.
+- **Opening marks.** The table says how many each side starts with. Place the higher of its two
+  numbers for **both** teams, in rotational pairs — for every X space, O takes the one half a turn
+  about the centre away — drawing pairs one at a time and rejecting any that would complete a three
+  in a row. Then the side the table gives fewer discards its own down to that number, its choice
+  which.
 - **A team a player short attacks in round one.** With even teams, draw for it. The teams alternate
   from there as usual. Where two or more are missing, split the teams again.
 - **Target.** 40 points on the 6x6, 170 on the 9x9 — about two dozen rounds either way.
@@ -58,8 +57,8 @@ Opening marks, first attacker / second:
 
 | | 6x6 | 9x9 |
 |---|---|---|
-| **even teams** | 2 / 4 | 6 / 9 |
-| **first team a player short** | 5 / 4 | 7 / 9 |
+| **even teams** | 0 / 5 | 3 / 9 |
+| **first team a player short** | 5 / 5 | 5 / 9 |
 
 ## The round
 

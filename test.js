@@ -752,6 +752,27 @@ if (existsSync('results/hands-vetoes.json')) {
     arena: 'small', horizon: 24, pool, pos: [0.03, 0.12], seed_marks: 4, seed_handicap: 2,
   };
   const count = (st, team) => SPACE_IDS.filter((i) => st.marks[i] === team).length;
+  // The table the rules print, read off the arena: opening marks for the team attacking in
+  // round one against the other team's, on each arena, even and a player short. If a
+  // constant moves and this fails, the rules and the code have come apart.
+  const opening = (arena, extra) => {
+    setArena(arena);
+    const cfg = { ...base, arena, ...extra };
+    const st = newCampaign(0, cfg, makeRng(99));
+    return [count(st, 1), count(st, 2)];
+  };
+  check('the 6x6 opens level teams 0 / 5',
+    opening('small', { seed_marks: 5, seed_handicap: 5 }), [0, 5]);
+  check('and a player short 5 / 5',
+    opening('small', { seed_marks: 5, seed_handicap: 5, short: 1, short_marks: 5 }), [5, 5]);
+  check('the 9x9 opens level teams 3 / 9',
+    opening('big', { seed_marks: 9, seed_handicap: 6 }), [3, 9]);
+  check('and a player short 5 / 9',
+    opening('big', { seed_marks: 9, seed_handicap: 6, short: 1, short_marks: 2 }), [5, 9]);
+  // A pair stated outright, which is how the sweeps that fitted the table were run.
+  check('a stated pair is placed as stated',
+    opening('small', { mark_pair: [1, 6] }), [1, 6]);
+  setArena('small');
 
   // Both teams field everyone they have, and everyone stands somewhere.
   const cfg = { ...base, short: 1 };
@@ -775,9 +796,9 @@ if (existsSync('results/hands-vetoes.json')) {
   check('and leaves the fuller team a player in hand',
     newCampaign(0, benched, makeRng(12)).roster[2].length, 12);
 
-  // The two handicaps are paid in the same coin and come off the right teams: four pairs
-  // are seeded, team 1 attacks first and gives two back, and team 2 gives one back for
-  // the player team 1 is missing.
+  // Both teams place the higher of the two counts and the lesser discards: four pairs are
+  // asked for, team 1 attacks first and gives two back, and team 2 gives one back for the
+  // player team 1 is missing.
   const both = newCampaign(0, { ...base, short: 1, short_handicap: 1 }, makeRng(13));
   check('the first attacker and the fuller team each pay their own marks',
     [count(both, 1), count(both, 2)], [2, 3]);
