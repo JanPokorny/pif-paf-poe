@@ -50,7 +50,7 @@ The 9x9 continues the same pattern.
   in a row. Then the side the table gives fewer discards its own down to that number, its choice
   which.
 - **A team a player short attacks in round one.** With even teams, draw for it. The teams alternate
-  from there as usual. Where two or more are missing, split the teams again.
+  from there as usual.
 - **Target.** 40 points on the 6x6, 170 on the 9x9 — about two dozen rounds either way.
 
 Opening marks, first attacker / second:

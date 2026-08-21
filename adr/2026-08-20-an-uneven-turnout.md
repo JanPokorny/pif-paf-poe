@@ -3,9 +3,10 @@
 Twenty to sixty people turn up and are split into two teams. Sometimes the split does not come
 out even. This record measures what a missing player is worth, tries every currency the game
 already has for paying it back, and settles what the rules should say. Everybody plays, and the
-short team is paid twice over: **it attacks in round one, and it keeps three extra opening marks
-on the 6x6 — none on the 9x9, where round one covers a missing body on its own.** One player
-short is what that is priced for; two or more, and the teams want splitting again.
+short team is paid twice over: **it attacks in round one, and it keeps five extra opening marks on
+the 6x6 and two on the 9x9, where round one covers most of a missing body on its own.** One player
+short is the only case there is: the teams are split evenly, so an odd headcount leaves exactly
+one player over and nothing else can happen.
 
 `campaign.js` grew the asymmetry it needed: `teamSize` is now read per team rather than off one
 `--sizes`, so a round is planned, paired and resolved with the real numbers on both sides. Team X
@@ -191,8 +192,9 @@ handicaps add rather than interfering.
 twice as many, at the same four a body with the seat alternating: 49.3% at four each, 71.5% at five,
 80.5% at six. Level on the scoreboard, but that campaign is finished in **14.9 rounds against the
 level 23** — half the evening gone, because eight extra marks on a 36-space arena is most of a
-scored line handed to a team that only has to hold it once. **So the rules price the handicap for
-one player short and send anybody two or more short back to splitting the teams.**
+scored line handed to a team that only has to hold it once. **Which is a reason not to extrapolate the rate, and no
+reason to write a rule: an evenly split headcount is never short by more than one.** The rows are
+here as evidence of where the lever stops behaving, not as a case the rules have to meet.
 
 **Handing marks over beats taking them away.** The other direction — the fuller team gives back
 marks, exactly as the first attacker does — buys about half as much per mark: 29.3% at none, then
@@ -338,7 +340,7 @@ One bullet for the seat, one table, and no third case:
 - Opening marks, first attacker / second: **0 / 5** on the 6x6 and **3 / 9** on the 9x9 with even
   teams, **5 / 5** and **5 / 9** when the first team is a player short. Every cell measures 48–49%,
   a hair on the second team's side of even.
-- Priced for one player short. Two or more, split the teams again.
+- Nothing about being short by more than one, because an evenly split headcount cannot be.
 
 Nothing new was invented to pay for a shortfall: the handicap is a seat the rules were already
 handing out, plus five marks on the 6x6 and two on the 9x9. What did change is the seat's own

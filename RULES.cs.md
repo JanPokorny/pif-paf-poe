@@ -10,7 +10,7 @@ Aréna je herní prostor tvořený 6x6 nebo 9x9 poli, dále rozdělené na 4 neb
 
 Před hrou se aréna předvyplní úvodními značkami. Kolik jich který tým má, určuje tabulka níže. Položte vyšší z jejích dvou čísel pro oba týmy, a to ve středově souměrných dvojicích: ke každému poli X dostane O pole otočené o půl otáčky kolem středu arény. Dvojice se losují postupně, zamítne se každá, která by dokončila 3-v-řadě. Pak tým, kterému tabulka dává méně, odebere své značky na daný počet -- vybírá si které.
 
-V prvním kole útočí tým, kterému chybí hráč; při vyrovnaných týmech se o první útok losuje. Dál se týmy střídají jako obvykle. Pokud chybí dva a více hráčů, přerozdělte týmy.
+V prvním kole útočí tým, kterému chybí hráč; při vyrovnaných týmech se o první útok losuje. Dál se týmy střídají jako obvykle.
 
 Úvodní značky, první útočník / druhý tým:
 
