@@ -6,9 +6,18 @@ Hráči tvoří dva týmy, X a O, které bojují v získávání bodů. Body se 
 
 ## Aréna
 
-Aréna je herní prostor tvořený 6x6 nebo 9x9 poli (dle počtu hráčů), dále rozdělené na 4 nebo 9 zón o velikosti 3x3 pole. Každé pole v Aréně má náhodně přiřazeno "veto" konkrétního kamenu v duelu -- o tom později. Aréna je reprezentována v prostoru fyzicky: tedy všech 36 nebo 81 polí je rozmístěno po prostoru hry (např. vyvěšené na stromech), a v centrální lokaci je vyvěšená mapa celé arény včetně toho kdo drží dané pole.
+Aréna je herní prostor tvořený 6x6 nebo 9x9 poli, dále rozdělené na 4 nebo 9 zón o velikosti 3x3 pole. Velikost se volí podle počtu hráčů: 6x6 na deset až dvacet hráčů v týmu, 9x9 nejméně na dvacet a nejlépe na třicet. Každé pole v Aréně má náhodně přiřazeno "veto" konkrétního kamenu v duelu -- o tom později. Aréna je reprezentována v prostoru fyzicky: tedy všech 36 nebo 81 polí je rozmístěno po prostoru hry (např. vyvěšené na stromech), a v centrální lokaci je vyvěšená mapa celé arény včetně toho kdo drží dané pole.
 
-Před hrou se aréna předvyplní úvodními značkami, aby bylo v prvním kole o co bojovat -- zhruba pětina arény, napůl mezi týmy: 4 značky na tým na 6x6, 9 na tým na 9x9. Značky se umisťují ve středově souměrných dvojicích: ke každému poli X dostane O pole otočené o půl otáčky kolem středu arény. Dvojice se losují postupně, zamítne se každá, která by dokončila 3-v-řadě. Tým, který útočí jako první, si za tuto výhodu odebere dvě své úvodní značky.
+Před hrou se aréna předvyplní úvodními značkami. Kolik jich který tým má, určuje tabulka níže. Položte vyšší z jejích dvou čísel pro oba týmy, a to ve středově souměrných dvojicích: ke každému poli X dostane O pole otočené o půl otáčky kolem středu arény. Dvojice se losují postupně, zamítne se každá, která by dokončila 3-v-řadě. Pak tým, kterému tabulka dává méně, odebere své značky na daný počet -- vybírá si které.
+
+V prvním kole útočí tým, kterému chybí hráč; při vyrovnaných týmech se o první útok losuje. Dál se týmy střídají jako obvykle.
+
+Úvodní značky, první útočník / druhý tým:
+
+| | 6x6 | 9x9 |
+|---|---|---|
+| vyrovnané týmy | 0 / 5 | 3 / 9 |
+| prvnímu týmu chybí hráč | 5 / 5 | 5 / 9 |
 
 V každém kole jeden tým útočí, druhý brání, v dalším kole se vystřídají.
 

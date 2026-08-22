@@ -23,8 +23,8 @@ Two teams, **X** and **O**, 10–30 players each. They take turns attacking an *
 **spaces**, grouped into **zones** of nine. Spaces won take your symbol; three marks in a row
 anywhere on the arena — any direction, across zone boundaries — scores.
 
-**Size by headcount.** 6x6, four zones, 36 spaces, ~12 a side. 9x9, nine zones, 81 spaces, ~30
-a side. Nothing else changes.
+**Size by headcount.** 6x6, four zones, 36 spaces, ten to twenty a side. 9x9, nine zones, 81
+spaces, twenty a side at the least and about thirty at its best. Nothing else changes.
 
 Every space prints one **stone type it switches off**, for both players, in every duel fought
 there. So where you are sent decides which of your stones work. The pattern steps one across and
@@ -44,13 +44,21 @@ The 9x9 continues the same pattern.
 ## Setting up
 
 - **Hands.** Five random stones each.
-- **Opening marks.** About a fifth of the arena, half to each side — four each on the 6x6, nine
-  each on the 9x9 — so round one has ground worth fighting over. Place them in rotational pairs:
-  for every X space, O takes the one half a turn about the centre away. Draw pairs one at a time,
-  rejecting any that completes a three in a row.
-- **First attacker gives back two.** Attacking first is worth something; that team removes two of
-  its own opening marks.
+- **Opening marks.** The table says how many each side starts with. Place the higher of its two
+  numbers for **both** teams, in rotational pairs — for every X space, O takes the one half a turn
+  about the centre away — drawing pairs one at a time and rejecting any that would complete a three
+  in a row. Then the side the table gives fewer discards its own down to that number, its choice
+  which.
+- **A team a player short attacks in round one.** With even teams, draw for it. The teams alternate
+  from there as usual.
 - **Target.** 40 points on the 6x6, 170 on the 9x9 — about two dozen rounds either way.
+
+Opening marks, first attacker / second:
+
+| | 6x6 | 9x9 |
+|---|---|---|
+| **even teams** | 0 / 5 | 3 / 9 |
+| **first team a player short** | 5 / 5 | 5 / 9 |
 
 ## The round
 

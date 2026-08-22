@@ -18,6 +18,10 @@
   ul { margin: 2.5mm 0 0; padding-left: 6mm; }
   li { margin: 1mm 0; }
   ppp-icon { --ppp-glyph: 4mm; margin-right: 0.5mm; }
+  table { margin: 3mm 0 0; border-collapse: collapse; }
+  th, td { border: 0.3mm solid #000; padding: 1mm 3mm; text-align: left; }
+  th { font-weight: 700; }
+  td.n { text-align: center; }
 </style>
 
 <article>
@@ -31,19 +35,28 @@ stavění tří symbolů v řadě v aréně.</p>
 
 <h2>Aréna</h2>
 
-<p>Aréna je herní prostor tvořený 6x6 nebo 9x9 poli (dle počtu hráčů), dále rozdělené na
-4 nebo 9 zón o velikosti 3x3 pole. Každé pole v Aréně má náhodně přiřazeno „veto“
+<p>Aréna je herní prostor tvořený 6x6 nebo 9x9 poli, dále rozdělené na 4 nebo 9 zón o
+velikosti 3x3 pole. Velikost se volí podle počtu hráčů: 6x6 na deset až dvacet hráčů v
+týmu, 9x9 nejméně na dvacet a nejlépe na třicet. Každé pole v Aréně má náhodně přiřazeno „veto“
 konkrétního kamenu v duelu &mdash; o tom později. Aréna je reprezentována v prostoru
 fyzicky: tedy všech 36 nebo 81 polí je rozmístěno po prostoru hry (např. vyvěšené na
 stromech), a v centrální lokaci je vyvěšená mapa celé arény včetně toho kdo drží dané
 pole.</p>
 
-<p>Před hrou se aréna předvyplní úvodními značkami, aby bylo v prvním kole o co bojovat
-&mdash; zhruba pětina arény, napůl mezi týmy: 4 značky na tým na 6x6, 9 na tým na 9x9.
-Značky se umisťují ve středově souměrných dvojicích: ke každému poli X dostane O pole
-otočené o půl otáčky kolem středu arény. Dvojice se losují postupně, zamítne se každá,
-která by dokončila 3-v-řadě. Tým, který útočí jako první, si za tuto výhodu odebere dvě
-své úvodní značky.</p>
+<p>Před hrou se aréna předvyplní úvodními značkami. Kolik jich který tým má, určuje
+tabulka níže. Položte vyšší z jejích dvou čísel pro oba týmy, a to ve středově souměrných
+dvojicích: ke každému poli X dostane O pole otočené o půl otáčky kolem středu arény.
+Dvojice se losují postupně, zamítne se každá, která by dokončila 3-v-řadě. Pak tým,
+kterému tabulka dává méně, odebere své značky na daný počet &mdash; vybírá si které.</p>
+
+<p>V prvním kole útočí tým, kterému chybí hráč; při vyrovnaných týmech se o první útok
+losuje. Dál se týmy střídají jako obvykle.</p>
+
+<table>
+  <tr><th>Úvodní značky: první útočník / druhý</th><th>6x6</th><th>9x9</th></tr>
+  <tr><td>vyrovnané týmy</td><td class="n">0 / 5</td><td class="n">3 / 9</td></tr>
+  <tr><td>prvnímu týmu chybí hráč</td><td class="n">5 / 5</td><td class="n">5 / 9</td></tr>
+</table>
 
 <p>V každém kole jeden tým útočí, druhý brání, v dalším kole se vystřídají.</p>
 

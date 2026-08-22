@@ -8,6 +8,9 @@
 //   node campaign.js --sizes 12 --defence oracle              # the defence's ceiling
 //   node campaign.js --sizes 12 --rounds 200 --duels real     # every pairing played out
 //   node campaign.js --sizes 12 --target 40 --campaigns 200   # how long a campaign runs
+//   node campaign.js --teams --sizes 12 --short 1 --short-marks 0   # an uneven turnout, unpaid
+//   node campaign.js --teams --sizes 12 --short 1 --short-marks 3,4,5 --target 40  # its price
+//   node campaign.js --teams --sizes 12 --short 1 --bench --target 40   # or even the numbers
 //   node campaign.js --report --out results/sizes.json
 //
 // A round is a Blotto game with a duel as its coin. The defence commits first and the
@@ -368,7 +371,10 @@ function estimate(A, D, free) {
 // one more is the top of the staircase, and nothing above it buys anything.
 const LADDER = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 14, 16, 19, 22, 25, 30];
 
-function attackPlan(marks, me, them, D, free, gain, buckets, combos, cfg, tail) {
+// `force` is how many players the attack has to place, which is `cfg.size` unless the
+// turnout was uneven -- see `teamSize`.
+function attackPlan(marks, me, them, D, free, gain, buckets, combos, cfg, tail,
+  force = cfg.size) {
   const A = new Int32Array(N_SPACES);
   const candidates = free.filter((i) => gain[i] > 0).sort((a, b) => gain[b] - gain[a]).slice(0, cfg.targets);
   const shape = estimate(A, D, free);
@@ -385,7 +391,7 @@ function attackPlan(marks, me, them, D, free, gain, buckets, combos, cfg, tail) 
     for (const i of candidates) {
       const from = A[i], ceiling = 2 * shape.reach(i) + 1;
       for (const a of LADDER) {
-        if (a <= from || a - from > cfg.size - spent) continue;
+        if (a <= from || a - from > force - spent) continue;
         A[i] = a; repair(i);
         const ratio = (planValue(A, shape, buckets, gain, tail, combos) - value) / (a - from);
         if (ratio > bestRatio) { bestRatio = ratio; best = { i, a }; }
@@ -402,12 +408,12 @@ function attackPlan(marks, me, them, D, free, gain, buckets, combos, cfg, tail) 
   // Everyone has to stand somewhere, and an extra attacker on a space already past
   // the top of the staircase cannot spoil it. So the leftovers go there, or failing
   // that to the thinnest space.
-  if (spent < cfg.size) {
+  if (spent < force) {
     const safe = free.filter((i) => A[i] > 0 && A[i] > 2 * shape.reach(i));
     const dump = safe.length
       ? safe.sort((a, b) => gain[b] - gain[a])[0]
       : free.slice().sort((a, b) => (D[a] - D[b]) || (gain[b] - gain[a]))[0];
-    A[dump] += cfg.size - spent;
+    A[dump] += force - spent;
   }
   return A;
 }
@@ -475,10 +481,13 @@ function defenceCandidates(free, gain, buckets, size) {
   return out;
 }
 
-function defencePlan(marks, me, them, free, gain, buckets, combos, cfg, tail) {
+// `force` is the defence's own strength, `against` the attack's: two numbers rather than
+// one, because the two teams need not be the same size.
+function defencePlan(marks, me, them, free, gain, buckets, combos, cfg, tail,
+  force = cfg.size, against = cfg.size) {
   let best = null, bestValue = Infinity;
-  for (const D of defenceCandidates(free, gain, buckets, cfg.size)) {
-    const A = attackPlan(marks, me, them, D, free, gain, buckets, combos, cfg, tail);
+  for (const D of defenceCandidates(free, gain, buckets, force)) {
+    const A = attackPlan(marks, me, them, D, free, gain, buckets, combos, cfg, tail, against);
     const v = planValue(A, resolve(A, D), buckets, gain, tail, combos);
     if (v < bestValue) { bestValue = v; best = D; }
   }
@@ -496,9 +505,9 @@ function randomPlan(free, size, rng) {
 // way round -- and it is here as a ceiling on what the defensive phase could be worth.
 // Twice the attackers on a space denies it outright, so it buys shutouts from the most
 // dangerous space down until the players run out.
-function oracleAnswer(A, free, gain, cfg) {
+function oracleAnswer(A, free, gain, cfg, force = cfg.size) {
   const D = new Int32Array(N_SPACES);
-  let left = cfg.size;
+  let left = force;
   for (const i of free.filter((j) => A[j]).sort((a, b) => gain[b] - gain[a])) {
     const take = Math.min(left, 2 * A[i]);
     D[i] = take; left -= take;
@@ -565,6 +574,28 @@ function bestPicks(marks, me, them, taken, gain, base) {
 
 // ── A round ────────────────────────────────────────────────────────────────
 
+// How many players a team has, and how many it puts on the arena. Both are `cfg.size`
+// unless the turnout was uneven: `cfg.short` is how many players team 1 is missing, which
+// is the only asymmetry the campaign models. Everything downstream reads the force off
+// `teamSize` rather than off `cfg.size`, so a round is planned, paired and resolved with
+// the real numbers on both sides.
+//
+// `cfg.bench` is the other way to answer an uneven turnout: the fuller team sits players
+// out until the two field the same number. It is not quite the same as being that size,
+// because a benched player earns nothing that round while still counting when the team's
+// earnings are read per head -- so the same income is spread over more players, and the
+// fuller team's hands come up slightly slower. Who sits out is not modelled as a
+// rotation: `assign` sends the strongest players to the spaces that matter and the
+// weakest are the ones left over, which is what a captain would do anyway.
+export const rosterSize = (cfg, team) => cfg.size - (team === 1 ? (cfg.short ?? 0) : 0);
+export const teamSize = (cfg, team) => (cfg.bench
+  ? cfg.size - (cfg.short ?? 0) : rosterSize(cfg, team));
+
+// Which team attacks in round 0. Campaigns are normally run half from each seat, so that
+// the seat cannot bias a total; `cfg.first_seat` pins it instead, which is what the rules
+// need measuring once they say who attacks first -- 0 is team 1, the short one.
+export const openingSeat = (cfg, n) => (cfg.first_seat == null ? n % 2 : cfg.first_seat);
+
 // `first` is which team attacks in round 0. It matters: the team that attacks
 // first is always the team with more marks on the arena when the other one scores,
 // and a scored line clears whole zones, so attacking first means having more to
@@ -599,8 +630,31 @@ export function newCampaign(first = 0, cfg = null, rng = null) {
       st.marks[j] = 0;
       return bad;
     };
+    // How many marks each team is supposed to end up with. The handicaps are all in
+    // these two numbers: the team attacking in round one gives `seed_handicap` back, a
+    // short team keeps `short_marks` extra a missing player, and `short_handicap` takes
+    // that many off the fuller team instead. The rules print the pair as a table.
+    const short = cfg.short ?? 0;
+    // `mark_pair` states the two outright, first attacker then second, which is how the
+    // rules print it; without it the pair is derived from the handicaps.
+    const target = [0, cfg.seed_marks, cfg.seed_marks];
+    if (cfg.mark_pair) {
+      target[first + 1] = cfg.mark_pair[0];
+      target[2 - first] = cfg.mark_pair[1];
+    } else {
+      target[first + 1] -= cfg.seed_handicap ?? 0;
+      if (short) {
+        target[1] += (cfg.short_marks ?? 0) * short;
+        target[2] -= (cfg.short_handicap ?? 0) * short;
+      }
+    }
+    // Both teams place the higher of the two, in rotational pairs, so whatever the
+    // opening position is worth they start with exactly the same of it. Then whoever the
+    // table gives fewer discards down to their number, and **chooses** which to drop --
+    // which is worth something, so it is modelled rather than assumed away.
+    const pairs = Math.max(target[1], target[2]);
     const placed = [];
-    for (let n = 0; n < cfg.seed_marks; n++) {
+    for (let n = 0; n < pairs; n++) {
       const options = free.filter((i) => !makesLine(i, opposite.get(i)));
       if (!options.length) break;
       const i = options[(rng() * options.length) | 0], j = opposite.get(i);
@@ -610,21 +664,42 @@ export function newCampaign(first = 0, cfg = null, rng = null) {
       const gone = new Set([i, j]);
       free.splice(0, free.length, ...free.filter((x) => !gone.has(x)));
     }
-    // The team attacking first has the tempo, so it can be handed fewer marks to start
-    // with. `seed_handicap` takes that many off it, breaking the rotational pairing by
-    // exactly that much and no more.
-    const firstTeam = first + 1;
-    for (let n = 0; n < (cfg.seed_handicap ?? 0) && n < placed.length; n++) {
-      const [i, j] = placed[placed.length - 1 - n];
-      st.marks[firstTeam === 1 ? i : j] = 0;
+    // The discard, one mark at a time: of the marks it still holds, the team drops the
+    // one it can most afford to lose -- the one whose loss costs its own position least,
+    // which is what a team looking at the arena would do. Positional value is the
+    // attack planner's own, so a discard is priced in the same currency as everything
+    // the round does with it.
+    setPos(cfg.pos);
+    for (const team of [1, 2]) {
+      const them = 3 - team;
+      for (let n = placed.length - target[team]; n > 0; n--) {
+        const mine = placed.map(([i, j]) => (team === 1 ? i : j)).filter((i) => st.marks[i] === team);
+        if (!mine.length) break;
+        let best = mine[0], bestValue = -Infinity;
+        for (const i of mine) {
+          st.marks[i] = 0;
+          const v = posValue(st.marks, team, them);
+          st.marks[i] = team;
+          if (v > bestValue) { bestValue = v; best = i; }
+        }
+        st.marks[best] = 0;
+      }
     }
   }
+  // A team short of players can be paid for it in either of the two currencies the
+  // campaign has: points on the scoreboard, which shorten its race, or upgrade points in
+  // its players' pockets, which buy them better hands. Both are per missing player.
+  st.points[1] += (cfg.head_start ?? 0) * (cfg.short ?? 0);
+
   // Every player starts on a hand drawn at random -- nobody is handed a good one -- and
   // buys their way up from there. `pts` is what each has earned and not yet spent,
   // `cards` the Counterattacks they carry, `bought` and `drawn` what they have bought.
-  st.roster = [null, newRoster(cfg.size, cfg.pool, rng), newRoster(cfg.size, cfg.pool, rng)];
-  const each = (f) => [null, Array.from({ length: cfg.size }, f), Array.from({ length: cfg.size }, f)];
+  const n1 = rosterSize(cfg, 1), n2 = rosterSize(cfg, 2);
+  st.roster = [null, newRoster(n1, cfg.pool, rng), newRoster(n2, cfg.pool, rng)];
+  const each = (f) => [null, Array.from({ length: n1 }, f), Array.from({ length: n2 }, f)];
   st.pts = each(() => 0);
+  const purse = (cfg.short_xp ?? 0) * (cfg.short ?? 0);
+  if (purse) for (let k = 0; k < n1; k++) st.pts[1][k] = purse;
   st.cards = each(() => []);
   st.bought = each(() => 0);
   st.drawn = each(() => 0);
@@ -724,10 +799,13 @@ export const EDGE = 0.72;
 export function allocate(st, cfg, rng, tables) {
   const me = ((st.round + st.first) % 2) + 1, them = 3 - me;
 
+  // What each side has to place. The two differ when the turnout was uneven.
+  const mine = teamSize(cfg, me), theirs = teamSize(cfg, them);
+
   // Both sides plan against the duel odds they can expect, which with hands in play is
   // their own average against the other side's rather than a flat half.
   const tail = cfg.pool && st.roster
-    ? tailTable(expectedChance(st, cfg, me, them), cfg.size + 1)
+    ? tailTable(expectedChance(st, cfg, me, them), Math.max(mine, theirs) + 1)
     : tables[me];
   const free = SPACE_IDS.filter((i) => !st.marks[i]);
   const base = posValue(st.marks, me, them);
@@ -743,15 +821,16 @@ export function allocate(st, cfg, rng, tables) {
   if (free.length && cfg.defence === 'oracle') {
     // The ceiling: the attack plans against the defence it expects, and then the defence
     // answers what it actually did.
-    const expected = defencePlan(st.marks, me, them, free, gain, buckets, combos, cfg, tail);
-    A = attackPlan(st.marks, me, them, expected, free, gain, buckets, combos, cfg, tail);
-    D = oracleAnswer(A, free, gain, cfg);
+    const expected = defencePlan(st.marks, me, them, free, gain, buckets, combos, cfg, tail,
+      theirs, mine);
+    A = attackPlan(st.marks, me, them, expected, free, gain, buckets, combos, cfg, tail, mine);
+    D = oracleAnswer(A, free, gain, cfg, theirs);
     shape = resolve(A, D);
   } else if (free.length) {
-    D = cfg.defence === 'random' ? randomPlan(free, cfg.size, rng)
-      : defencePlan(st.marks, me, them, free, gain, buckets, combos, cfg, tail);
-    A = cfg.attack === 'random' ? randomPlan(free, cfg.size, rng)
-      : attackPlan(st.marks, me, them, D, free, gain, buckets, combos, cfg, tail);
+    D = cfg.defence === 'random' ? randomPlan(free, theirs, rng)
+      : defencePlan(st.marks, me, them, free, gain, buckets, combos, cfg, tail, theirs, mine);
+    A = cfg.attack === 'random' ? randomPlan(free, mine, rng)
+      : attackPlan(st.marks, me, them, D, free, gain, buckets, combos, cfg, tail, mine);
     shape = resolve(A, D);
   }
   // The attack plans against an upper bound on the defenders it will face; this
@@ -856,7 +935,7 @@ export function playRound(st, cfg, rng, tables, tally) {
     tally.pivotal += pivotal;
     tally.stake += stake;
     tally.unpaired += heldA - duels;
-    tally.idle += cfg.size - duels;
+    tally.idle += teamSize(cfg, me) - duels;
     tally.free += free.length;
     tally.contested += free.filter((i) => A[i] > 0).length;
     tally.taken += taken.length;
@@ -1013,7 +1092,7 @@ const tablesFor = (cfg) => [null, tailTable(EDGE, cfg.size + 1), tailTable(EDGE,
 function snapshot(st, cfg, tally) {
   if (!tally) return;
   tally.ends++;
-  const mean = (xs) => xs.reduce((a, b) => a + b, 0) / (2 * cfg.size);
+  const mean = (xs) => xs.reduce((a, b) => a + b, 0) / (2 * xs.length);
   for (const team of [1, 2]) {
     tally.endSwaps += mean(st.bought[team]);
     tally.endCards += mean(st.cards[team].map((c) => c.length));
@@ -1030,7 +1109,7 @@ export function runConfig(cfg) {
   const tables = tablesFor(cfg);
   const tally = newTally(cfg);
   let started = 0;
-  let st = newCampaign(0, cfg, rng);
+  let st = newCampaign(openingSeat(cfg, 0), cfg, rng);
   for (let r = 0; r < cfg.rounds; r++) {
     playRound(st, cfg, rng, tables, tally);
     // Long campaigns are one continuous arena; --restart chops them into
@@ -1038,7 +1117,7 @@ export function runConfig(cfg) {
     // alternates the opening seat so that it cannot bias the totals.
     if (cfg.restart && st.round % cfg.restart === 0) {
       snapshot(st, cfg, tally);
-      st = newCampaign(++started % 2, cfg, rng);
+      st = newCampaign(openingSeat(cfg, ++started), cfg, rng);
     }
   }
   if (st.round % (cfg.restart || Infinity)) snapshot(st, cfg, tally);
@@ -1055,7 +1134,7 @@ export function runCampaigns(cfg) {
   const tables = tablesFor(cfg);
   const tally = { ...newTally(cfg), mode: 'campaigns', ran: 0, wonByX: 0, drawn: 0, length: 0 };
   for (let c = 0; c < cfg.campaigns; c++) {
-    const st = newCampaign(c % 2, cfg, rng);
+    const st = newCampaign(openingSeat(cfg, c), cfg, rng);
     while (Math.max(st.points[1], st.points[2]) < cfg.target && st.round < cfg.cap) {
       playRound(st, cfg, rng, tables, tally);
     }
@@ -1090,7 +1169,7 @@ function runPaired(cfg) {
   const variants = PAIRS[cfg.pair](cfg);
   const tallies = variants.map((v) => newTally(v));
   let started = 0;
-  let st = newCampaign(0, cfg, rng);
+  let st = newCampaign(openingSeat(cfg, 0), cfg, rng);
 
   for (let r = 0; r < cfg.rounds; r++) {
     for (let s = 0; s < cfg.samples; s++) {
@@ -1108,7 +1187,9 @@ function runPaired(cfg) {
       ));
     }
     playRound(st, variants[r % variants.length], rng, tables, null);
-    if (cfg.restart && st.round % cfg.restart === 0) st = newCampaign(++started % 2, cfg, rng);
+    if (cfg.restart && st.round % cfg.restart === 0) {
+      st = newCampaign(openingSeat(cfg, ++started), cfg, rng);
+    }
   }
   return tallies;
 }
@@ -1236,6 +1317,19 @@ function row(t) {
     length: per(t.length, t.ran),
     pointsFirst: per(t.seatPoints[0], r / 2),
     pointsSecond: per(t.seatPoints[1], r / 2),
+    // Per team rather than per seat, which is the axis an uneven turnout runs along:
+    // team 1 is the short one, and each team attacks half the rounds.
+    short: t.short ?? 0,
+    bench: !!t.bench,
+    firstSeat: t.first_seat ?? null,
+    seedHandicap: t.seed_handicap ?? 0,
+    markPair: t.mark_pair ? t.mark_pair.join('/') : '',
+    shortHandicap: t.short_handicap ?? 0,
+    shortMarks: t.short_marks ?? 0,
+    headStart: t.head_start ?? 0,
+    shortXp: t.short_xp ?? 0,
+    pointsShort: per(t.teamPoints[1], r / 2),
+    pointsFull: per(t.teamPoints[2], r / 2),
   };
 }
 
@@ -1243,13 +1337,19 @@ function row(t) {
 function group(tallies) {
   const byKey = new Map();
   for (const t of tallies) {
-    const k = `${t.size}|${t.arena}|${t.defence}|${t.attack}|${t.swapCost}|${t.cardCost}`;
+    const k = `${t.size}|${t.arena}|${t.defence}|${t.attack}|${t.swapCost}|${t.cardCost}`
+      + `|${t.short ?? 0}|${t.bench ? 'b' : ''}|${t.first_seat ?? 'a'}|${t.seed_handicap ?? 0}`
+      + `|${t.mark_pair ? t.mark_pair.join('/') : ''}`
+      + `|${t.short_handicap ?? 0}|${t.short_marks ?? 0}`
+      + `|${t.head_start ?? 0}|${t.short_xp ?? 0}`;
     if (!byKey.has(k)) { byKey.set(k, { ...t }); continue; }
     const into = byKey.get(k);
     for (const [f, v] of Object.entries(t)) {
       const constant = ['size', 'seed', 'rep', 'rounds', 'spaces', 'zones', 'horizon',
-        'swapCost', 'cardCost'];
-      if (typeof v === 'number' && typeof into[f] === 'number' && !constant.includes(f)) into[f] += v;
+        'swapCost', 'cardCost', 'short', 'short_handicap', 'short_marks', 'head_start',
+        'short_xp', 'first_seat', 'seed_handicap', 'mark_pair'];
+      if (constant.includes(f)) continue;
+      if (typeof v === 'number' && typeof into[f] === 'number') into[f] += v;
       else if (Array.isArray(v) && Array.isArray(into[f])) into[f] = into[f].map((x, i) => x + v[i]);
     }
     into.rounds += t.rounds;
@@ -1301,6 +1401,28 @@ function reportEconomy(rows) {
   }
 }
 
+// An uneven turnout: what the two teams score per attacking round when one of them is
+// short, and what a handicap in opening marks does to the gap. `gap` is the fuller team's
+// advantage, so a handicap that levels the game brings it to zero.
+function reportTeams(rows) {
+  const head = ['size', 'arena', 'short', 'first', 'marks', 'seat$', 'give', 'keep', 'xp',
+    'head', 'short/r', 'full/r', 'gap', 'mk/r', 'take%', 'play%', 'X win%', 'length'];
+  console.log(head.map((h) => pad(h, h.length > 5 ? 9 : 7)).join(''));
+  for (const r of rows) {
+    const gap = r.pointsFull - r.pointsShort;
+    console.log([
+      pad(r.size, 7), pad(r.arena, 7), pad(r.short, 7),
+      pad(r.firstSeat == null ? 'alt' : ['X', 'O'][r.firstSeat], 7),
+      pad(r.markPair || (r.bench ? 'bench' : '-'), 7), pad(r.seedHandicap, 7),
+      pad(r.shortHandicap, 7), pad(r.shortMarks, 7), pad(r.shortXp, 7), pad(r.headStart, 7),
+      pad(r.pointsShort.toFixed(3), 9), pad(r.pointsFull.toFixed(3), 9),
+      pad((gap >= 0 ? '+' : '') + gap.toFixed(3), 9),
+      pad(r.marks.toFixed(2), 7), pad(pct(r.takeRate), 7), pad(pct(r.playing), 7),
+      pad(r.ran ? pct(r.wonByX) : '-', 9), pad(r.ran ? r.length.toFixed(1) : '-', 9),
+    ].join(''));
+  }
+}
+
 // ── CLI ────────────────────────────────────────────────────────────────────
 
 function sizes(spec) {
@@ -1319,10 +1441,26 @@ function sizes(spec) {
 // can still use, 36 do not -- and they are the AI's valuation rather than a rule.
 const WEIGHTS = { small: [0.03, 0.12], big: [0.05, 0.20] };
 
-// The opening position: a fifth of the arena marked, half to each side, which is one pair
-// per zone. The team attacking first gives two of theirs back.
-const SEED_PAIRS = { small: 4, big: 9 };
-const HANDICAP = 2;
+// The opening position, and both handicaps in it. Pairs are drawn rotationally and then
+// the team the table gives fewer discards its own down to that number, choosing which --
+// so these three constants come to the table the rules print, opening marks for the team
+// attacking in round one against the other team's:
+//
+//                              6x6      9x9
+//   even teams                 0 / 5    3 / 9
+//   first team a player short  5 / 5    5 / 9
+//
+// A discard is chosen rather than random, which costs a mark most of its bite: the team
+// keeps whatever lines up. That is why the first attacker on the 6x6 gives back all five.
+const SEED_PAIRS = { small: 5, big: 9 };
+const HANDICAP = { small: 5, big: 6 };
+// And when the turnout is uneven, the short team takes round one and keeps extra marks of
+// its own on top -- all five of them on the 6x6, two of the nine on the 9x9, where round
+// one covers most of a missing body by itself. `--short-handicap`, which takes marks off
+// the fuller team instead, is the other direction and buys about half as much a mark; it
+// is kept because the record measured both.
+const SHORT_MARKS = { small: 5, big: 2 };
+const SHORT_HANDICAP = 0;
 
 async function main() {
   const opts = {
@@ -1350,6 +1488,30 @@ async function main() {
     // Prices take a list, so one run can sweep them: --swap-cost 2,3 --card-cost 2,3
     swapCosts: sizes(arg('swap-cost', String(SWAP_COST))),
     cardCosts: sizes(arg('card-cost', String(CARD_COST))),
+    // An uneven turnout: how many players team 1 is missing, and how many opening marks
+    // team 2 gives back for each of them. Both take lists, so one run can sweep them.
+    shorts: sizes(arg('short', '0')),
+    shortHandicaps: sizes(arg('short-handicap', String(SHORT_HANDICAP))),   // off the fuller team
+    bench: process.argv.includes('--bench'),        // the fuller team sits players out
+    // Who attacks first: alternating, or pinned to one team. The rules pin it to the
+    // short team, so that is the seat the handicap has to be priced in.
+    // Who attacks in round one. Campaigns are normally run half from each seat so that the
+    // seat cannot bias a total; the rules give it to the short team, so an uneven turnout
+    // pins it to X unless told otherwise.
+    first: arg('first', null),                     // alternate | x | o
+    // What the first attacker gives back. A list sweeps it, which is what repricing the
+    // seat needs once the rules stop alternating it.
+    handicaps: arg('seed-handicap', null) === null ? [] : sizes(arg('seed-handicap', '0')),
+    // Mark pairs stated outright, as the rules table does: --marks 2/4,1/4 sweeps two rows.
+    markPairs: (arg('marks', null) ?? '').split(',').filter(Boolean)
+      .map((pair) => pair.split('/').map(Number)),
+    // Extra opening marks for the short team. Left unset it is the rule's own number for
+    // the arena, which differs between the two; given a list it sweeps, which is how that
+    // number was found.
+    shortMarkses: arg('short-marks', null) === null ? [] : sizes(arg('short-marks', '0')),
+    headStarts: sizes(arg('head-start', '0')),      // points the short team starts on
+    shortXps: sizes(arg('short-xp', '0')),          // upgrade points its players start with
+    teams: process.argv.includes('--teams'),     // report the uneven-turnout table
     economy: process.argv.includes('--economy'),   // report the economy table instead
     workers: parseInt(arg('workers', String(Math.max(1, cpus().length - 1))), 10),
     out: arg('out', null),
@@ -1358,6 +1520,7 @@ async function main() {
   if (process.argv.includes('--report')) {
     const saved = JSON.parse(readFileSync(opts.out, 'utf8'));
     if (saved.opts.pair) reportPaired(saved.rows);
+    else if (saved.opts.teams) reportTeams(saved.rows);
     else if (saved.opts.economy) reportEconomy(saved.rows);
     else report(saved.rows);
     return;
@@ -1370,18 +1533,36 @@ async function main() {
 
   const prices = opts.swapCosts.flatMap((swapCost) =>
     opts.cardCosts.map((cardCost) => ({ swapCost, cardCost })));
+  // The turnout, as the pair the round is played with: how short team 1 is and what team
+  // 2 gives back for it. A full turnout owes nothing, so the handicaps collapse to one.
+  const seats = (arena) => (opts.markPairs.length
+    ? opts.markPairs.map((mark_pair) => ({ mark_pair, seed_handicap: 0 }))
+    : (opts.handicaps.length ? opts.handicaps : [HANDICAP[arena] ?? HANDICAP.small])
+      .map((seed_handicap) => ({ seed_handicap, mark_pair: undefined })));
+  const turnouts = (arena) => opts.shorts.flatMap((short) => (short
+    ? opts.shortHandicaps.flatMap((h) => (opts.shortMarkses.length
+      ? opts.shortMarkses : [SHORT_MARKS[arena] ?? SHORT_MARKS.small]).flatMap((m) =>
+      opts.headStarts.flatMap((head) => opts.shortXps.map((xp) => ({
+        short, short_handicap: h, short_marks: m, head_start: head, short_xp: xp,
+      })))))
+    : [{ short, short_handicap: 0, short_marks: 0, head_start: 0, short_xp: 0 }]));
 
   const configs = opts.arenas.flatMap((arena, ai) =>
     opts.sizes.flatMap((size, k) => prices.flatMap((price) =>
+      turnouts(arena).flatMap((turnout) => seats(arena).flatMap((seat) =>
       Array.from({ length: opts.reps }, (_, rep) => ({
-        ...opts, ...price, arena, size, rep, pool,
+        ...opts, ...price, ...turnout, ...seat, arena, size, rep, pool,
+        first_seat: { x: 0, o: 1 }[opts.first ?? (turnout.short ? 'x' : 'alternate')] ?? null,
         pos: WEIGHTS[arena] ?? WEIGHTS.small,
         seed_marks: SEED_PAIRS[arena] ?? SEED_PAIRS.small,
-        seed_handicap: HANDICAP,
+        ...seat,
         sizes: undefined, arenas: undefined, swapCosts: undefined, cardCosts: undefined,
+        shorts: undefined, shortHandicaps: undefined, shortMarkses: undefined,
+        headStarts: undefined, shortXps: undefined, handicaps: undefined,
+        markPairs: undefined,
         // The same seed across prices, so a price is read against the same rounds.
         seed: opts.seed + 1000 * k + 97 * rep + 13 * ai,
-      })))));
+      })))))));
 
   const started = Date.now();
   const tallies = opts.workers > 1 && configs.length > 1
@@ -1393,8 +1574,12 @@ async function main() {
       .sort((a, b) => a[0].size - b[0].size)
     : group(tallies).map(row)
       .sort((a, b) => a.arena.localeCompare(b.arena) || (a.size - b.size)
+        || (a.short - b.short) || (a.shortHandicap - b.shortHandicap)
+        || (a.shortMarks - b.shortMarks)
+        || (a.headStart - b.headStart) || (a.shortXp - b.shortXp)
         || (a.swapCost - b.swapCost) || (a.cardCost - b.cardCost));
   if (opts.pair) reportPaired(rows);
+  else if (opts.teams) reportTeams(rows);
   else if (opts.economy) reportEconomy(rows);
   else report(rows);
   console.log(`\n${configs.length} configs, ${opts.rounds} rounds each, ${((Date.now() - started) / 1000).toFixed(1)}s`);
