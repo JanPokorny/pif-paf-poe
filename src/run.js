@@ -194,7 +194,11 @@ export function prepareDuel(run, enemyId, context = {}) {
 // What the player brings: the chosen stones (by uid) as a duel hand.
 export function playerHand(run, uids) {
   return uids.map((u) => run.pouch.find((s) => s.uid === u)).filter(Boolean)
-    .map((s) => ({ type: s.type, plus: s.plus || (s.type === 'pebble' && has(run, 'polisher')) }));
+    .map((s) => ({ type: s.type, plus: s.plus || (s.type === 'pebble' && has(run, 'polisher')) || autoUpgraded(run, s.type) }));
+}
+
+export function autoUpgraded(run, type) {
+  return run.relics.some((r) => RELICS[r]?.upgrades?.includes(type));
 }
 
 export function playerMods(run) {

@@ -32,10 +32,16 @@ const meta = Object.assign({ runs: 0, wins: 0, best: null, heat: 0, maxHeat: 0, 
 const saveMeta = () => saveJSON(META, meta);
 
 function recordEnd() {
+  if (run.recorded) return;
+  run.recorded = true;
   meta.runs++;
   const reached = { act: run.act, row: run.row, victory: run.victory };
   const score = (r) => (r ? (r.victory ? 100 : 0) + r.act * 10 + r.row : -1);
   if (score(reached) > score(meta.best)) meta.best = reached;
+  if (run.daily) {
+    meta.daily = { ...(meta.daily ?? {}) };
+    meta.daily[run.daily] = run.victory ? 'conquered the Summit' : `fell in act ${run.act}, floor ${Math.max(1, run.row + 1)}`;
+  }
   if (run.victory) {
     meta.wins++;
     meta.bestHeatWon = Math.max(meta.bestHeatWon, run.heat);
@@ -120,10 +126,34 @@ function title() {
       h('div.title-buttons', {},
         saved?.run && !saved.run.over ? h('button.btn.primary.wide.big', { onclick: () => { run = saved.run; duelState = saved.duel; route(); } }, 'Continue run') : null,
         h('button.btn.wide.big' + (saved?.run ? '' : '.primary'), { onclick: chooseKit }, 'New run'),
+        h('button.btn.wide', { onclick: startDaily }, `Daily climb${meta.daily?.[today()] ? ' ✓' : ''}`),
         h('button.btn.wide', { onclick: showHelp }, 'How to play'),
         h('button.btn.wide', { onclick: showCodex }, 'Codex'),
         h('button.btn.wide.ghost', { onclick: () => { setSound(!soundOn()); title(); } }, soundOn() ? '🔊 Sound on' : '🔇 Sound off')),
       h('div.title-foot', {}, best, h('br'), `${meta.runs} runs · ${meta.wins} wins`)));
+}
+
+const today = () => new Date().toISOString().slice(0, 10);
+
+// Everyone gets the same seed and kit on the same day.
+function startDaily() {
+  const d = today();
+  const seed = [...d].reduce((a, ch) => (Math.imul(a, 31) + ch.charCodeAt(0)) | 0, 7);
+  const kits = Object.keys(R.KITS).filter((k) => !R.KITS[k].locked);
+  const kit = kits[Math.abs(seed) % kits.length];
+  const go = () => {
+    run = R.newRun({ kit, seed: Math.abs(seed), heat: 0 });
+    run.daily = d;
+    duelState = null;
+    save();
+    route();
+  };
+  const body = h('div.menu', {}, h('h2', {}, `Daily climb · ${d}`),
+    h('p', {}, `Today everyone climbs the same mountain as ${R.KITS[kit].name} ${R.KITS[kit].emoji}. Same maps, same enemies, same loot.`),
+    meta.daily?.[d] ? h('p.dim', {}, `Your result today: ${meta.daily[d]}`) : null,
+    h('button.btn.primary.wide', { onclick: () => { close(); go(); } }, 'Climb'),
+    h('button.btn.ghost.wide', { onclick: () => close() }, 'Back'));
+  const close = modal(body);
 }
 
 function chooseKit() {
@@ -271,7 +301,7 @@ function preDuel() {
           draw();
         },
         oncontextmenu: (e) => { e.preventDefault(); infoStone(s, 'X'); },
-      }, stoneEl(s, 'X', { dead }), h('span', {}, stoneName(s)),
+      }, stoneEl({ ...s, plus: s.plus || R.autoUpgraded(run, s.type) }, 'X', { dead }), h('span', {}, stoneName(s)),
       h('span.slot-info', { onclick: (e) => { e.stopPropagation(); infoStone(s, 'X'); } }, 'ⓘ'));
     }));
     const need = Math.min(size, run.pouch.length);
@@ -338,7 +368,7 @@ function duelScreen() {
       } else {
         const res = R.duelLost(run);
         if (res.kind === 'rematch') toast('🎟️ Rematch Token: try again!');
-        else if (res.kind === 'dead') { recordEnd(); }
+        else if (res.kind === 'dead') { /* recorded by the end screen */ }
         else if (res.kind === 'lost') toast(`−${R.heartsLost(duel)} ❤`, 'bad');
         else if (res.kind === 'boss-retry') toast(`−1 ❤. Again!`, 'bad');
       }
@@ -595,6 +625,7 @@ function eventScreen() {
 // ── The end ─────────────────────────────────────────────────────────────────
 
 function endScreen(victory) {
+  recordEnd();
   const st = run.stats;
   const mins = Math.round((Date.now() - st.started) / 60000);
   const kit = R.KITS[run.kit];
