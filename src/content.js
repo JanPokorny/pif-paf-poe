@@ -298,12 +298,20 @@ export const EVENTS = [
     ],
   },
   {
-    id: 'fountain', title: 'The Fountain of Letting Go', emoji: '⛲',
-    text: 'A sign reads: "Leave behind what weighs you down."',
+    id: 'fountain', title: 'The Wishing Fountain', emoji: '⛲',
+    text: 'Coins glint under the water. A sign reads: "One wish per traveller."',
     choices: [
-      { label: 'Toss a stone in', detail: 'Remove a stone from your pouch. Heal 1.', can: (r) => r.pouch.length > 5,
-        act: (r, api) => api.removeStone(true) },
-      { label: 'Move on', act: () => t('You keep what you have.') },
+      { label: 'Wish for strength', detail: 'Upgrade a random stone. Lose 1 heart.', can: (r) => r.hearts > 1 && r.pouch.some((s) => !s.plus),
+        act: (r, api) => {
+          const plain = r.pouch.filter((s) => !s.plus);
+          const s = plain[(api.rng() * plain.length) | 0];
+          s.plus = true;
+          r.hearts--;
+          return t('The water boils for a moment. Your {stone} comes out upgraded.', { stone: STONES[s.type].name });
+        } },
+      { label: 'Wish for health', detail: 'Pay 20 gold, heal 2 hearts.', can: (r) => r.gold >= 20,
+        act: (r) => { r.gold -= 20; r.hearts = Math.min(r.maxHearts, r.hearts + 2); return t('You feel much better.'); } },
+      { label: 'Move on', act: () => t('You keep your coins.') },
     ],
   },
   {

@@ -285,7 +285,7 @@ function practice(act) {
   const duel = R.prepareDuel(fake, id);
   const handX = Array.from({ length: 5 }, () => R.randomStone(fake));
   const state = createGame({ ...R.gameConfig(fake, duel, []), handX, tricksX: [R.randomTrick(fake)] });
-  const enemy = { ...ENEMIES[id], iters: duel.iters, blunder: duel.blunder, tier: 'normal' };
+  const enemy = { ...ENEMIES[id], iters: duel.iters, blunder: duel.blunder, tier: 'normal', lives: 1, livesLeft: 1 };
   const holder = screen(h('div.duel-host'));
   const extra = h('div.duel-side', {},
     h('button.icon-btn.small', { onclick: () => { duelView?.destroy(); title(); }, 'aria-label': t('Quit') }, h('span', { html: icon('close') })),
@@ -515,12 +515,13 @@ function preDuel() {
 
 function duelScreen() {
   const duel = run.pending.duel;
-  const enemy = { ...ENEMIES[duel.enemyId], iters: duel.iters, blunder: duel.blunder, tier: duel.tier };
+  const lives = duel.tier === 'boss' ? R.BOSS_LIVES : 1;
+  const enemy = { ...ENEMIES[duel.enemyId], iters: duel.iters, blunder: duel.blunder, tier: duel.tier, lives, livesLeft: duel.tier === 'boss' ? lives - duel.bossWins : 1 };
   const holder = screen(h('div.duel-host'));
   const extra = h('div.duel-side', {},
     h('button.icon-btn.small', { onclick: showDuelMenu, 'aria-label': t('Menu') }, h('span', { html: icon('gear') })),
     h('div.hearts.small', {}, h('span', { html: icon('heart') }), `${run.hearts}`),
-    duel.tier === 'boss' ? h('div.boss-lives', { title: t('Boss lives') }, Array.from({ length: R.BOSS_LIVES }, (_, k) => h('span' + (k < R.BOSS_LIVES - duel.bossWins ? '.alive' : ''), { html: icon('heart') }))) : null);
+  );
   duelView = mountDuel(holder.querySelector('.duel-host'), {
     state: duelState, enemy, extra,
     onSave: (s) => { duelState = s; save(); },
@@ -681,12 +682,6 @@ function shopScreen() {
         onclick: () => buy(shop.upgradePrice, (pay) => pickFromPouch(t('Upgrade which stone?'), (s) => { if (s) { s.plus = true; shop.upgraded = true; pay(); } }, { filter: (s) => !s.plus, upgrade: true })),
       }, h('b', {}, t('Upgrade a stone')), h('span.price', {}, iconEl('coin'), shop.upgradePrice), shop.upgraded ? h('span.dim', {}, t(' (done)')) : null),
       h('button.service', {
-        disabled: run.pouch.length <= 5 || undefined,
-        onclick: () => buy(shop.removePrice, (pay) => pickFromPouch(t('Remove which stone?'), (s) => {
-          if (s) { run.pouch = run.pouch.filter((p) => p.uid !== s.uid); run.removals++; shop.removePrice = R.price(run, 50 + 25 * run.removals); pay(); }
-        })),
-      }, h('b', {}, t('Remove a stone')), h('span.price', {}, iconEl('coin'), shop.removePrice), run.pouch.length <= 5 ? h('span.dim', {}, t(' (keep 5)')) : null),
-      h('button.service', {
         disabled: run.hearts >= run.maxHearts || shop.healed >= 2 || undefined,
         onclick: () => buy(shop.healPrice, (pay) => { run.hearts++; shop.healed++; sfx('heal'); pay(); }),
       }, h('b', {}, t('Bandage (+1 ❤)')), h('span.price', {}, iconEl('coin'), shop.healPrice), h('span.dim', {}, t(' {n} left', { n: 2 - shop.healed })))),
@@ -793,12 +788,6 @@ function eventScreen() {
       if (!s) return resolve(t('The reflection fades.'));
       R.gainStone(run, { type: s.type, plus: s.plus });
       resolve(t('A second {stone} climbs out of the pond.', { stone: stoneName(s) }));
-    })),
-    removeStone: (heal) => new Promise((resolve) => pickFromPouch(t('Let go of which stone?'), (s) => {
-      if (!s) return resolve(t('You keep everything.'));
-      run.pouch = run.pouch.filter((p) => p.uid !== s.uid);
-      if (heal) run.hearts = Math.min(run.maxHearts, run.hearts + 1);
-      resolve(t('The {stone} sinks out of sight. You feel lighter.', { stone: stoneName(s) }));
     })),
     fight: (id) => {
       run.pending = { kind: 'duel', duel: R.prepareDuel(run, id, { tier: 'event', event: id }) };

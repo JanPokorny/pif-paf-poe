@@ -47,7 +47,6 @@ const api = (run) => ({
   gainRandomRelic: (t) => { R.gainRelic(run, R.randomRelic(run)); return t; },
   transmute: () => { const p = run.pouch.find((s) => s.type === 'pebble') ?? run.pouch[0]; const n = R.randomStone(run, 'uncommon'); p.type = n.type; return 'ok'; },
   duplicate: () => { const b = run.pouch.slice().sort((a, b) => value(b) - value(a))[0]; R.gainStone(run, { type: b.type, plus: b.plus }); return 'ok'; },
-  removeStone: () => { const w = run.pouch.slice().sort((a, b) => value(a) - value(b))[0]; run.pouch = run.pouch.filter((p) => p !== w); return 'ok'; },
   fight: (id) => { run.pending = { kind: 'duel', duel: R.prepareDuel(run, id, { tier: 'event', event: id }) }; run.screen = 'predual'; return null; },
 });
 

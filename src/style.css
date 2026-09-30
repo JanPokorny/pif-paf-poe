@@ -655,3 +655,4 @@ b { font-weight: 400; background: linear-gradient(transparent 55%, var(--hi) 55%
 /* On the endless sheet every open square can be taken: no highlight needed. */
 .map-sheet .map-cell.reach::before { display: none; }
 .map-sheet .map-cell:not(.marked):active { background: var(--hi); }
+.boss-lives span.lost-life { opacity: 0.3; animation: crack 0.7s ease-out; }

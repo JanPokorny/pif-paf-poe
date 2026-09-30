@@ -86,7 +86,7 @@ export function newRun({ kit = 'apprentice', seed = (Math.random() * 2 ** 31) | 
     hearts: k.hearts - (heat >= 3 ? 1 : 0), maxHearts: k.hearts - (heat >= 3 ? 1 : 0),
     gold: k.gold, pouch: [], tricks: [...k.tricks], relics: [...(k.relics ?? [])],
     lastHand: null, nextUid: 1,
-    rematchUsed: {}, phoenixUsed: false, removals: 0,
+    rematchUsed: {}, phoenixUsed: false,
     stats: { won: 0, lost: 0, elites: 0, bosses: 0, gold: 0, started: Date.now() },
     screen: 'actintro', pending: null, over: false, victory: false,
   };
@@ -681,7 +681,7 @@ export function makeShop(run) {
   }
   return {
     stones, tricks, relics,
-    removePrice: price(run, 50 + 25 * run.removals), upgradePrice: price(run, 70), healPrice: price(run, 30),
+    upgradePrice: price(run, 70), healPrice: price(run, 30),
     upgraded: false, healed: 0,
   };
 }

@@ -102,6 +102,7 @@ export function mountDuel(root, opts) {
   const header = h('div.enemy-bar', {},
     h('div.portrait', { onclick: () => toast(t('“{quote}”', { quote: enemy.quote ?? '…' })) }, h('div.photo', {}, enemy.emoji)),
     h('div.enemy-meta', {}, h('div.enemy-name', {}, enemy.name,
+      enemy.lives ? h('span.boss-lives', { title: t('Enemy lives') }, Array.from({ length: enemy.lives }, (_, k) => h('span' + (k < enemy.livesLeft ? '.alive' : ''), { html: icon('heart') }))) : null,
       enemy.tier && enemy.tier !== 'normal' ? h('span.tier.' + enemy.tier, {}, t(enemy.tier === 'event' ? 'challenge' : enemy.tier)) : null),
     h('div.enemy-row', {}, enemyHand, enemyTricks)), extra);
 
@@ -684,6 +685,7 @@ export function mountDuel(root, opts) {
       for (const e of stoneEls.values()) if (line.includes(+e.dataset.at)) e.classList.add('in-line');
     }
     const won = state.winner === 'X';
+    if (won) [...header.querySelectorAll('.boss-lives span.alive')].pop()?.classList.replace('alive', 'lost-life');
     sfx(won ? 'win' : 'lose');
     await sleep(900);
     const v = { enemy: enemy.name };
