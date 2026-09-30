@@ -62,25 +62,26 @@ duel, and a rule for who wins when someone runs out. The second version slows it
 
 ## The map
 
-Each act is tic-tac-toe with its boss, a 3×3 page at a time, every square on view from the
-start. The boss makes the first mark on each page, anywhere but the middle: from the middle every O
-it adds threatens a line, and a careful player could only ever draw. Wherever you go you mark an X and the boss
-answers with an O, anywhere: a shop, campfire or gift it takes is gone, and it likes taking them.
-A lost duel scorches its square: no line runs through it, for either side.
+Each act is Ultimate tic-tac-toe with its boss: nine clearings in a 3×3, each a 3×3 of squares
+(duels, elites, shops, campfires, treasure, events), all on view. The boss opens in the very
+middle.
 
-- **Three Xs in a row** open the boss's door, and the boss duel follows.
-- **Three Os in a row** cost you a heart, and the page turns.
-- **A full page** with neither is a draw, and the page turns.
+- **The send rule.** Where you step inside a clearing decides the clearing the boss must answer
+  in, and its step sends you. A clearing that is finished, or has nothing left for you, frees
+  you to step in any open one.
+- **Scorching.** A lost duel costs its hearts and scorches the square: you may not step there
+  again, but the boss may. You choose again at once — the boss answers only a real X.
+- **The boss fights too.** On a square with an enemy it may lose (30% of duels, half of elites,
+  at the moment 50/70% while balance is open): the square is scorched and its turn is gone.
+- **Clearings.** Three in a row takes a clearing (+15 gold for you, −1 ❤ if it is the boss's).
+  Three clearings in a row open the boss's door. The boss's three in a row costs another heart
+  and starts a fresh map; so does a map nobody can win any more. Each new map of an act is less
+  friendly than the last.
+- The boss judges a square by what it takes, what it blocks (when it notices: more often map by
+  map) and where it sends you; greed for treasure and shops breaks ties. The run bot plays by
+  the same judgement.
 
-A fresh page is less friendly than the last: more duels and elites, fewer shops, campfires and
-chests; corners, on three lines each, hide harder squares than edges. The boss blocks your two in
-a row only some of the time (half on the first page, more on each after), and it looks for forks;
-a player who plays the map well never loses a page, one who plays it loosely gets forked. The
-first page of the climb hides a **gift**: a special stone of two, free.
-
-Two things were tried and dropped. A lost duel that left its square open for a rematch pulled
-players (and bots) into spending heart after heart on the one square their line needed. A lost
-duel that handed the square to the boss made every loss cost twice.
+Acts are long: a map takes some 25–35 of your steps. Balance for this map is still open.
 
 ## The stones
 

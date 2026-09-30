@@ -9,10 +9,9 @@ evolve into stronger, named stones along the way. Some duels carry a condition f
 (gravity, a hollow centre, open hands); bosses bring no stones at all, only a rule in their
 favour.
 
-Each of the three acts is itself tic-tac-toe against its boss, a 3×3 page of encounters at a
-time: the boss makes the first mark, you mark an X wherever you go and it answers with an O.
-Three Xs in a row open the boss's door; three Os cost a heart, and a full page is a draw — either
-way a fresh, less friendly page follows.
+Each of the three acts is Ultimate tic-tac-toe against its boss: nine forest clearings, each a
+3×3 of encounters. Where you step sends the boss to the matching clearing, and where it steps
+sends you; three in a row takes a clearing, and three clearings in a row open the boss's door.
 
 It grew out of a physical summer-camp game; the original rules, simulations and print-and-play
 sheets live in [`old/`](old/).

@@ -58,26 +58,6 @@ const api = (run) => ({
   fight: (id) => { run.pending = { kind: 'duel', duel: R.prepareDuel(run, id, { tier: 'event', event: id }) }; run.screen = 'predual'; return null; },
 });
 
-// Plain tic-tac-toe on the map, the boss playing perfectly: +1 you win, -1 it
-// does. Scorched squares count for nobody.
-const LINES3 = [[0, 1, 2], [3, 4, 5], [6, 7, 8], [0, 3, 6], [1, 4, 7], [2, 5, 8], [0, 4, 8], [2, 4, 6]];
-function minimax(b, turn) {
-  for (const l of LINES3) {
-    if (l.every((i) => b[i] === 'X')) return 1;
-    if (l.every((i) => b[i] === 'O')) return -1;
-  }
-  const free = b.map((m, i) => (m ? -1 : i)).filter((i) => i >= 0);
-  if (!free.length) return 0;
-  let best = turn === 'X' ? -2 : 2;
-  for (const i of free) {
-    b[i] = turn;
-    const v = minimax(b, turn === 'X' ? 'O' : 'X');
-    b[i] = null;
-    best = turn === 'X' ? Math.max(best, v) : Math.min(best, v);
-  }
-  return best;
-}
-
 function playRun(spec) {
   const run = R.newRun({ seed: spec.seed, heat: spec.heat });
   const rng = makeRng(spec.seed);
@@ -91,17 +71,11 @@ function playRun(spec) {
         // A page lost or drawn turns; a page won opens the boss's door.
         if (run.map.result === 'lost' || run.map.result === 'draw') { log.push(run.map.result === 'lost' ? '[O]' : '[=]'); R.nextPage(run); break; }
         if (opts.includes('boss')) { log.push(`[X p${run.map.page}]`); R.enterNode(run, 'boss'); break; }
+        if (!opts.length) throw new Error('nowhere to step');
         // Tic-tac-toe first: win, block, fork; then corners; then what the
         // hearts want.
         const want = run.hearts <= 2 ? { rest: 3, shop: 2, event: 1 } : run.hearts >= run.maxHearts - 1 ? { elite: 1, treasure: 2, fight: 1 } : { treasure: 2, fight: 1, event: 1 };
-        const board = [0, 1, 2].flatMap((y) => [0, 1, 2].map((x) => run.map.cells[`${x},${y}`].mark));
-        const score = (k) => {
-          const [x, y] = R.coords(k);
-          const b2 = board.slice(); b2[y * 3 + x] = 'X';
-          // Among safe moves, the one that makes the most threats: the boss does not always see them.
-          const threats = LINES3.filter((l) => l.includes(y * 3 + x) && l.filter((i) => b2[i] === 'X').length === 2 && l.some((i) => !b2[i])).length;
-          return 100 * minimax(b2, 'O') + 6 * threats + (want[run.map.cells[k].kind] ?? 0) + R.rand(run);
-        };
+        const score = (k) => R.judge(run.map, k, 'X') + (want[R.cellAt(run.map, k).kind] ?? 0) * 5 + R.rand(run);
         R.enterNode(run, opts.sort((a, b) => score(b) - score(a))[0]);
         break;
       }
