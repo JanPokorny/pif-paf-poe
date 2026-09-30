@@ -769,7 +769,8 @@ function endTurn(s) {
   // The Head Start: the boss's first turn is two.
   if (p === 'O' && s.extra > 0) { s.extra--; s.turns++; note(s, 'rule:headstart'); return; }
 
-  if (p === 'O' && dictateOptions(s).length) { s.phase = 'dictate'; return; }
+  // A word only when there is a choice to make.
+  if (p === 'O' && dictateOptions(s).length > 1) { s.phase = 'dictate'; return; }
   passTurn(s);
 }
 

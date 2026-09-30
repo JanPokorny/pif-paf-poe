@@ -746,11 +746,10 @@ test('Patience: a full board goes to the boss', () => {
   play(s, 'pebble', 8);
   assert.equal(s.winner, 'O');
 });
-test('a rule the boss cannot use leaves its turn plain', () => {
-  const s = B(['tactics']);
+test('a rule with nothing to choose leaves the boss\'s turn plain', () => {
+  const s = B(['tactics']);   // you hold only Pebbles: nothing to name
   play(s, 'pebble', 4);
-  assert.equal(s.phase, 'dictate', 'Pebble is always on offer');
-  assert.deepEqual(legalActions(s).map((a) => a.value), ['pebble']);
+  turnPassedTo(s, 'X');
 });
 
 // ── cloneState ──────────────────────────────────────────────────────────────
