@@ -385,7 +385,7 @@ export function mountDuel(root, opts) {
     const s = preview ? preview.state : state;
     renderBoard(s);
     renderHands(state, s);
-    renderChips(s);
+    renderChips(state);
     cells.forEach((c, i) => { c.onclick = () => tapSquare(i); });
     clearOverlay();
     if (!state.over) lineLayer.innerHTML = '';
@@ -409,9 +409,9 @@ export function mountDuel(root, opts) {
     if (state.phase === 'select') {
       markDangers();
       setStatus(state.half ? t('Your second stone — pick one') : t('Your turn — pick a stone'), 'you');
-      info.textContent = caption.length ? `${enemy.name}: ${caption.filter(Boolean).join(', ')}.`
-        : state.conds.includes('shared') && state.hands.O.length ? t('Open Hands: you may also tap one of their stones, up top, and play it as yours.')
-          : t('Tap a stone in your hand. Tap any stone on the board to read it.');
+      const hint = state.conds.includes('shared') && state.hands.O.length ? t('Open Hands: you may also tap one of their stones, up top, and play it as yours.') : '';
+      info.textContent = caption.length ? `${enemy.name}: ${caption.filter(Boolean).join(', ')}.${hint ? ' ' + hint : ''}`
+        : hint || t('Tap a stone in your hand. Tap any stone on the board to read it.');
       if (state.turns >= 2 && state.board.some(Boolean) && cells.some((c) => c.classList.contains('threat'))) coach('enemy'); else coach('select');
       renderActions([]);
     } else if (state.phase === 'place' && !preview) {
@@ -440,7 +440,9 @@ export function mountDuel(root, opts) {
         .filter((b, k, arr) => b && arr.indexOf(b) === k));
       verdict();
     } else if (state.phase === 'trick') {
-      setStatus(t('Spend a trick, or end your turn'), 'you');
+      const mine = winningLine(state, 'X'), theirs = !mine && winningLine(state, 'O');
+      if (mine || theirs) lineLayer.innerHTML = lineSvg(mine || theirs, mine ? 'X' : 'O', true);
+      setStatus(mine ? t('Three in a row! End your turn to win — or spend a trick first.') : theirs ? t('Careful: this gives them three in a row.') : t('Spend a trick, or end your turn'), mine ? 'win-note' : theirs ? 'lose-note' : 'you');
       info.textContent = t('Glowing tricks can be used now. A trick resolves before the check for three in a row.');
       coach('trick');
       renderActions([undo, h('button.btn.primary', { onclick: endTurnPass }, t('End turn'))]);
@@ -532,6 +534,7 @@ export function mountDuel(root, opts) {
 
   function tapSquare(i) {
     const s = preview ? preview.state : state;
+    if (myMove() && state.phase === 'select' && !s.board[i] && cells[i].classList.contains('nogo')) { toast(whyNot(i), 'bad'); return; }
     if (!myMove() || state.phase === 'select' || (state.phase === 'trick' && !trickName)) {
       if (s.board[i]) infoStone(s.board[i], s.board[i].player, s.board[i].stuck ? t('This stone is stuck: nothing will move it.') : '');
       return;
@@ -577,7 +580,7 @@ export function mountDuel(root, opts) {
     if (i === 4 && state.conds.includes('nocentre')) return t('{rule}: nobody may place on the centre.', { rule: CONDS.nocentre.name });
     if (i === 4 && state.rules.includes('reserved')) return t('{rule}: the centre is the boss\'s.', { rule: RULES.reserved.name });
     if (state.dictate?.kind === 'column' && col(i) === state.dictate.value) return t('{rule}: that column is closed this turn.', { rule: RULES.column.name });
-    if (state.rules.includes('clinch') && !state.board.some((c, j) => c?.player === 'O' && Math.abs(row(i) - row(j)) + Math.abs(col(i) - col(j)) === 1)) {
+    if (state.rules.includes('clinch') && !state.board.some((c, j) => c?.player === 'O' && j !== i && Math.abs(row(i) - row(j)) <= 1 && Math.abs(col(i) - col(j)) <= 1)) {
       return t('{rule}: you must place next to one of its stones.', { rule: RULES.clinch.name });
     }
     return t('Not there — the enemy\'s restrictions point elsewhere.');
@@ -671,6 +674,7 @@ export function mountDuel(root, opts) {
     busy = true;
     show();
     await sleep(pace(SPEED.enemyPause));
+    let stones = 0;   // placed so far this time round
     while (!ended && !state.over && state.player === 'O') {
       const acts = legalActions(state);
       const t0 = performance.now();
@@ -680,8 +684,9 @@ export function mountDuel(root, opts) {
       if (action.type === 'select') {
         state.log = [];
         applyAction(state, action);
-        // Double Time's second stone keeps the first one in the caption.
-        if (!state.half) caption = [t('played {stone}', { stone: stoneName(state.selected) })];
+        // A second stone in one go (Head Start, Double Time) keeps the first in the caption.
+        if (!stones) caption = [];
+        if (action.from === 'X') caption.push(t('took your {stone}', { stone: stoneName(state.selected) }));
         info.textContent = caption.filter(Boolean).join(', ');
         // Show which stone it took.
         renderHands(state);
@@ -693,7 +698,7 @@ export function mountDuel(root, opts) {
         continue;
       }
       state.log = [];
-      const second = state.half && action.type === 'place';   // Double Time: the turn's second stone
+      const second = stones > 0 && action.type === 'place';
       // The board before Gravity pulls, so the fall can be shown as a step.
       let beforeFall = null;
       if (state.conds.includes('gravity')) {
@@ -725,7 +730,8 @@ export function mountDuel(root, opts) {
       if (action.type === 'place') {
         lastEnemyId = state.placedId;
         const said = t('played {stone} on the {square}', { stone: stoneName(state.lastPlaced.O), square: sq(action.pos) });
-        caption = second ? [...caption, t('then {what}', { what: said })] : [said];
+        caption = second ? [...caption, t('then {what}', { what: said })] : [...caption, said];
+        stones++;
       } else if (action.type !== 'trick' || action.use !== 'pass') caption.push(describe(action));
       info.textContent = caption.filter(Boolean).join(', ');
       if (action.type === 'place') {

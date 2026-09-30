@@ -483,9 +483,9 @@ export const RULES = {
   headstart: { name: 'Head Start', text: 'The boss plays twice on its first turn.' },
   double: { name: 'Double Time', text: 'Every turn is two stones in a row, for both sides. The boss starts.' },
   elko: { name: 'Elbow', text: 'Rows do not count: whoever makes an L of three — a 2×2 block missing one square — wins.' },
-  clinch: { name: 'Clinch', text: 'You must place next to one of the boss\'s stones, if you can.' },
+  clinch: { name: 'Clinch', text: 'You must place next to one of the boss\'s stones, corners included, if you can.' },
   column: { name: 'Column', text: 'Before each of your turns, the boss closes a column: you may not place in it.', dictate: true },
-  spy: { name: 'Spy', text: 'Before each of your turns, the boss picks the direction your stones must move.', dictate: true },
+  spy: { name: 'Spy', text: 'Before each of your turns, the boss picks the direction your stones must move — those that move up, down, left or right.', dictate: true },
   patient: { name: 'Patience', text: 'A full board goes to the boss.' },
   reserved: { name: 'Reserved', text: 'You may not place on the centre square. The boss may.' },
 };
@@ -538,7 +538,8 @@ export function allowedSquares(s) {
   if (s.conds.includes('nocentre')) narrow((i) => i !== 4);
   if (p === 'X') {
     if (s.rules.includes('reserved')) narrow((i) => i !== 4);
-    if (s.rules.includes('clinch')) narrow((i) => s.board.some((c, j) => c && c.player === 'O' && adjacent(i, j)));
+    // Corners count, so a threat of the boss's can always be blocked.
+    if (s.rules.includes('clinch')) narrow((i) => s.board.some((c, j) => c && c.player === 'O' && touching(i, j)));
     if (s.dictate?.kind === 'column') narrow((i) => col(i) !== s.dictate.value);
   }
   if (s.mods[p].freeFirst && s.placements[p] === 0) return pool;

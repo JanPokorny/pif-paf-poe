@@ -34,7 +34,7 @@ duel, and a rule for who wins when someone runs out. The second version slows it
   rule; others roll one (25% in act 1, 35% in act 2, 40% in act 3, more for elites).
 - **Bosses bring no stones.** Only Pebbles, and rules in their favour: **Tactics** (it names the
   stone you play), **Head Start** (it plays twice on its first turn), **Elbow** (rows do not
-  count: an L of three wins), **Clinch** (you must place next to one of its stones), **Column**
+  count: an L of three wins), **Clinch** (you must place next to one of its stones, corners included — so a threat can always be blocked), **Column**
   (it closes a column to you each turn), **Spy** (it names the direction your stones move),
   **Reserved** (the centre is its alone), **Patience** (a full board is its), **Double Time**
   (every turn is two stones in a row, for both sides, the boss first). The dictating rules

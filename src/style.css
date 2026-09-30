@@ -684,3 +684,6 @@ b { font-weight: 400; background: linear-gradient(transparent 55%, var(--hi) 55%
 .facts-card .fact.rule-fact::before { display: none; }
 .codex-row.evolved { margin-left: 22px; }
 .map-cell.gift .doodle { color: var(--rare); }
+/* In a duel the notes go up top, clear of the hand and the info line. */
+body:has(.duel) #toast { bottom: auto; top: calc(10px + var(--safe-t)); transform: translate(-50%, -30px) rotate(-2deg); }
+body:has(.duel) #toast.show { transform: translate(-50%, 0) rotate(-1deg); }

@@ -354,11 +354,6 @@ function mapScreen() {
           : tp(R.PAGE - map.visited, 'Three Xs in a row open the door. {n} square left on this page.', 'Three Xs in a row open the door. {n} squares left on this page.')),
       threats.size ? h('div.map-help.red', {}, t('Dashed red circle: the boss would finish a line of Os there.')) : null));
   // Keep the newest marks in view.
-  requestAnimationFrame(() => {
-    const focus = (freshX && scroller.querySelector(`[data-k="${freshX}"]`)) || scroller.querySelector('.map-cell.X, .map-cell.reach');
-    const target = (lastO && scroller.querySelector(`[data-k="${lastO}"]`)) || focus;
-    target?.scrollIntoView({ block: 'center', inline: 'center', behavior: 'instant' });
-  });
 }
 
 function actIntro() {
@@ -532,7 +527,7 @@ function rewardScreen() {
   const rw = run.pending;
   const done = () => { R.leaveNode(run); route(); };
   const parts = [h('h1.reward-title', {}, rw.gift ? t('A gift!') : rw.tier === 'boss' ? t('Boss defeated!') : t('Victory!'))];
-  if (rw.gift) parts.push(h('p.dim', {}, t('Someone left a pouch by the path. Take one of these, free.')));
+  if (rw.gift && !rw.taken.stone) parts.push(h('p.dim', {}, t('Someone left a pouch by the path. Take one of these, free.')));
   if (rw.gold) parts.push(h('div.reward-gold', {}, h('span', { html: icon('coin') }), t('+{n} gold', { n: rw.gold })));
   if (rw.relic && !rw.taken.relic) {
     R.gainRelic(run, rw.relic);
@@ -551,6 +546,7 @@ function rewardScreen() {
       onclick: () => takeTrick(rw.trick, (ok) => { if (ok) { rw.taken.trick = true; sfx('coin'); save(); rewardScreen(); } }),
     })));
   }
+  if (rw.taken.stone && rw.taken.stone !== true) parts.push(h('div.section-label', {}, t('You took the {stone}.', { stone: STONES[rw.taken.stone].name })), h('div.cards.one', {}, stoneCard({ type: rw.taken.stone }, {})));
   if (rw.stones.length && !rw.taken.stone) {
     parts.push(h('div.section-label', {}, t('Take a stone')),
       h('div.cards', {}, rw.stones.map((s) => stoneCard(s, {
@@ -558,7 +554,7 @@ function rewardScreen() {
           const card = e.currentTarget;
           takeStone(s, (ok) => {
             if (!ok) return;
-            rw.taken.stone = true;
+            rw.taken.stone = s.type;
             save();
             card.classList.add('taken');
             setTimeout(() => { if (run?.pending === rw) rewardScreen(); }, 420);
@@ -784,12 +780,12 @@ function endScreen(victory) {
       ? t(run.heat ? '{boss} bows. You are the champion at heat {n}.' : '{boss} bows. You are the champion.', { boss: ENEMIES[run.map.boss].name, n: run.heat })
       : t('Fallen in act {n}, {act}.', { n: run.act, act: ACTS[run.act - 1].name })),
     h('div.stats', {},
-      h('div', {}, h('b', {}, st.won), t(' duels won', { n: st.won })),
-      h('div', {}, h('b', {}, st.lost), t(' duels lost', { n: st.lost })),
-      h('div', {}, h('b', {}, st.elites), t(' elites beaten', { n: st.elites })),
-      h('div', {}, h('b', {}, st.bosses), t(' bosses beaten', { n: st.bosses })),
+      h('div', {}, h('b', {}, st.won), tp(st.won, ' duel won', ' duels won')),
+      h('div', {}, h('b', {}, st.lost), tp(st.lost, ' duel lost', ' duels lost')),
+      h('div', {}, h('b', {}, st.elites), tp(st.elites, ' elite beaten', ' elites beaten')),
+      h('div', {}, h('b', {}, st.bosses), tp(st.bosses, ' boss beaten', ' bosses beaten')),
       h('div', {}, h('b', {}, st.gold), t(' gold earned', { n: st.gold })),
-      h('div', {}, h('b', {}, mins), t(' minutes', { n: mins }))),
+      h('div', {}, h('b', {}, mins), tp(mins, ' minute', ' minutes'))),
     h('div.section-label', {}, t('Final pouch')),
     h('div.hand.show', {}, run.pouch.map((s) => stoneEl(s, 'X', { mini: true }))),
     relicStrip(),
@@ -882,6 +878,8 @@ function showCodex() {
         e.rules2 && e.rules2.join() !== e.rules.join() ? h('div.dim', {}, t('Once beaten, it rises again with: {rules}.', { rules: e.rules2.map((r) => RULES[r].name).join(', ') })) : null)));
     }
     body.replaceChildren(tabs, h('div.codex-list', {}, list), h('button.btn.wide', { onclick: () => close() }, t('Close')));
+    // A new tab starts at its top.
+    for (let el = body; el; el = el.parentElement) el.scrollTop = 0;
   };
   draw();
   const close = modal(body, { cls: 'tall' });
