@@ -120,6 +120,14 @@ export function mountDuel(root, opts) {
         setTimeout(() => e.classList.remove('pop'), 300);
       }
       updateStone(e, c, c.player, { stuck: !!c.stuck || guarded({ ...s, player: other(c.player) }, i), dead: !active(s, c) });
+      const was = e.dataset.at === undefined ? i : +e.dataset.at;
+      if (!fresh && Math.abs(row(was) - row(i)) + Math.abs(col(was) - col(i)) >= 2) {
+        // A long move (a wrap, a leap, a mirror) is a hop, not a slide.
+        e.classList.remove('hop');
+        void e.offsetWidth;
+        e.classList.add('hop');
+        setTimeout(() => e.classList.remove('hop'), 450);
+      }
       e.dataset.at = i;
       e.classList.toggle('last', c.id === lastEnemyId);
       e.style.setProperty('--r', row(i));
