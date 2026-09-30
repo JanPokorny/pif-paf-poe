@@ -1,0 +1,9 @@
+{
+  "name": "Pif·Paf·Poe",
+  "short_name": "Pif·Paf·Poe",
+  "start_url": "./",
+  "display": "standalone",
+  "background_color": "#141925",
+  "theme_color": "#141925",
+  "icons": [{ "src": "favicon.svg", "sizes": "any", "type": "image/svg+xml" }]
+}
