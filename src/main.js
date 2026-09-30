@@ -196,13 +196,13 @@ function startDaily() {
 
 const UNLOCK_TEXT = {
   win: 'Locked — win a run to unlock',
-  summit: 'Locked — reach the Summit to unlock',
+  quarry: 'Locked — reach the Quarry to unlock',
   heat: 'Locked — win at heat 1 or more to unlock',
 };
 function kitOpen(k) {
   if (!k.unlock) return true;
   if (k.unlock === 'win') return meta.wins > 0;
-  if (k.unlock === 'summit') return (meta.bestAct ?? 0) >= 3 || meta.wins > 0;
+  if (k.unlock === 'quarry') return (meta.bestAct ?? 0) >= 2 || meta.wins > 0;
   if (k.unlock === 'heat') return meta.bestHeatWon >= 1;
   return false;
 }
@@ -667,7 +667,7 @@ function restScreen() {
   screen(topBar(), h('div.page.rest', {},
     h('div.campfire', { html: icon('fire') }),
     h('h2', {}, t('A quiet campfire')),
-    h('p.dim', {}, t('Rest a while, or sharpen your stones.')),
+    h('p.dim', {}, run.hearts >= run.maxHearts && !R.upgradeable(run).length ? t('Nothing to mend and nothing left to sharpen: you are at full hearts and every stone is upgraded.') : t('Rest a while, or sharpen your stones.')),
     h('button.btn.wide.big', {
       disabled: run.hearts >= run.maxHearts || undefined,
       onclick: () => { run.hearts = Math.min(run.maxHearts, run.hearts + heal); sfx('heal'); toast(`+${heal} ❤`, 'good'); flash = 'heal'; leave(); },

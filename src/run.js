@@ -55,9 +55,9 @@ export const KITS = {
     relics: ['lucky-coin'], unlock: 'win',
   },
   trickster: {
-    name: 'The Trickster', emoji: '🃏', text: 'Plain stones, a sleeve full of tricks. Unlocked by reaching the Summit.',
+    name: 'The Trickster', emoji: '🃏', text: 'Plain stones, a sleeve full of tricks. Unlocked by reaching the Quarry.',
     pouch: ['pebble', 'pebble', 'pebble', 'shift', 'hush', 'rotate'], tricks: ['mirror', 'relocate', 'muffle'], hearts: 5, gold: 30,
-    relics: ['gloves'], unlock: 'summit',
+    relics: ['gloves'], unlock: 'quarry',
   },
   mason: {
     name: 'The Mason', emoji: '🧱', text: 'Walls and glue, and a thick skin. Unlocked by winning at heat 1 or more.',

@@ -486,6 +486,7 @@ export function mountDuel(root, opts) {
       const allowed = allowedSquares(state);
       if (!allowed.includes(i)) {
         if (s.board[i] && !preview) infoStone(s.board[i], s.board[i].player);
+        else if (!s.board[i] && i === 4 && state.turns === 0 && state.board.every((c) => !c)) toast(t('Nobody opens a duel in the centre.'), 'bad');
         else if (!s.board[i]) toast(t('Not there — the enemy\'s restrictions point elsewhere.'), 'bad');
         return;
       }
