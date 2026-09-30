@@ -364,6 +364,7 @@ export function duelWon(run) {
   if (duel.tier === 'elite') gold += 20;
   if (duel.tier === 'boss') gold += 60;
   if (duel.event === 'thief') gold += 45;
+  if (duel.event === 'nightowl') gold += 30;
   if (has(run, 'lucky-coin')) gold += 8;
   run.gold += gold;
   run.stats.gold += gold;
@@ -371,7 +372,7 @@ export function duelWon(run) {
   if (duel.event !== 'thief') reward.stones = stoneChoices(run, duel.tier);
   const trickChance = duel.tier === 'normal' ? 0.3 : duel.tier === 'event' ? 0 : 0.7;
   if (rand(run) < trickChance) reward.trick = randomTrick(run);
-  if (duel.tier === 'elite' || duel.event === 'hermit') reward.relic = randomRelic(run);
+  if (duel.tier === 'elite' || duel.event === 'hermit' || duel.event === 'nightowl') reward.relic = randomRelic(run);
   if (duel.tier === 'elite') run.stats.elites++;
   if (duel.tier === 'boss') {
     run.stats.bosses++;

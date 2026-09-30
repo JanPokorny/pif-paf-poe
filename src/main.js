@@ -132,6 +132,7 @@ function title() {
         saved?.run && !saved.run.over ? h('button.btn.primary.wide.big', { onclick: () => { run = saved.run; duelState = saved.duel; route(); } }, 'Continue run') : null,
         h('button.btn.wide.big' + (saved?.run ? '' : '.primary'), { onclick: () => { if (saved?.run && !saved.run.over && !confirm('Start over? Your run in progress will be lost.')) return; chooseKit(); } }, 'New run'),
         h('button.btn.wide', { onclick: startDaily }, `Daily climb${meta.daily?.[today()] ? ' ✓' : ''}`),
+        h('button.btn.wide', { onclick: practiceMenu }, 'Practice duel'),
         h('button.btn.wide', { onclick: () => showHelp() }, 'How to play'),
         h('button.btn.wide', { onclick: showCodex }, 'Codex'),
         h('button.btn.wide.ghost', { onclick: () => { setSound(!soundOn()); title(); } }, soundOn() ? '🔊 Sound on' : '🔇 Sound off')),
@@ -197,6 +198,40 @@ function chooseKit() {
         h('div.kit-stats', {}, `❤ ${k.hearts - (heat >= 3 ? 1 : 0)}  ·  ${k.gold} gold${k.relics ? '  ·  ' + k.relics.map((r) => RELICS[r].emoji).join('') : ''}`),
         locked ? h('div.kit-lock', {}, '🔒 Win a run to unlock') : null);
       }))));
+}
+
+// ── Practice: one duel, nothing at stake ────────────────────────────────────
+
+function practiceMenu() {
+  const body = h('div.menu', {}, h('h2', {}, 'Practice duel'),
+    h('p', {}, 'One duel with a random hand, against an enemy from the act you pick. Nothing is at stake.'),
+    ACTS.map((a) => h('button.btn.wide', { onclick: () => { close(); practice(a.n); } }, `${a.name} — ${['gentle', 'tricky', 'tough'][a.n - 1]}`)),
+    h('button.btn.ghost.wide', { onclick: () => close() }, 'Back'));
+  const close = modal(body);
+}
+
+function practice(act) {
+  duelView?.destroy();
+  const fake = R.newRun({ seed: (Math.random() * 2 ** 31) | 0 });
+  fake.act = act;
+  const pool = Object.keys(ENEMIES).filter((k) => ENEMIES[k].act === act && ENEMIES[k].tier === 'normal');
+  const id = pool[(R.rand(fake) * pool.length) | 0];
+  const duel = R.prepareDuel(fake, id);
+  const handX = Array.from({ length: 5 }, () => R.randomStone(fake));
+  const state = createGame({ ...R.gameConfig(fake, duel, []), handX, tricksX: [R.randomTrick(fake)] });
+  const enemy = { ...ENEMIES[id], iters: duel.iters, blunder: duel.blunder, tier: 'normal' };
+  const holder = screen(h('div.duel-host'));
+  const extra = h('div.duel-side', {},
+    h('button.icon-btn.small', { onclick: () => { duelView?.destroy(); title(); }, 'aria-label': 'Quit' }, h('span', { html: icon('close') })),
+    h('div.small.dim', {}, 'practice'));
+  duelView = mountDuel(holder.querySelector('.duel-host'), {
+    state, enemy, extra,
+    onEnd: () => {
+      const close = modal(h('div.menu', {}, h('h2', {}, 'Another one?'),
+        h('button.btn.primary.wide', { onclick: () => { close(); practice(act); } }, 'Again'),
+        h('button.btn.wide', { onclick: () => { close(); title(); } }, 'Title')), { dismissable: false });
+    },
+  });
 }
 
 // ── Router ──────────────────────────────────────────────────────────────────

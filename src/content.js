@@ -305,12 +305,58 @@ export const EVENTS = [
       { label: 'No thanks', act: () => 'He vanishes in a puff of smoke.' },
     ],
   },
+  {
+    id: 'library', title: 'The Rulebook Library', emoji: '📚',
+    text: 'Shelves of dog-eared rulebooks. Someone has scribbled strategies in every margin.',
+    choices: [
+      { label: 'Study', detail: 'Upgrade a random stone.', can: (r) => r.pouch.some((s) => !s.plus),
+        act: (r, api) => {
+          const plain = r.pouch.filter((s) => !s.plus);
+          const s = plain[(api.rng() * plain.length) | 0];
+          s.plus = true;
+          return `You read up on the ${STONES[s.type].name}. It is now upgraded.`;
+        } },
+      { label: 'Borrow a book', detail: 'Gain a random uncommon trick.', can: (r, api) => api.trickRoom(),
+        act: (r, api) => api.gainRandomTrick('uncommon') },
+    ],
+  },
+  {
+    id: 'bridge', title: 'The Rickety Bridge', emoji: '🌉',
+    text: 'A rope bridge sways over a gorge. On the far side, something glints.',
+    choices: [
+      { label: 'Cross it', detail: 'Lose 1 heart, gain 50 gold.', can: (r) => r.hearts > 1,
+        act: (r) => { r.hearts--; r.gold += 50; return 'A plank snaps under you — but you make it, and pocket 50 gold.'; } },
+      { label: 'Go around', act: () => 'The long way round. Nothing lost, nothing found.' },
+    ],
+  },
+  {
+    id: 'nightowl', title: 'The Night Owl', emoji: '🦉',
+    text: '"Hoo. A late game, traveller? I play only the best — and I pay the best."',
+    choices: [
+      { label: 'Play the Owl', detail: 'A hard duel. Win: a relic and gold. Lose: −1 heart.', act: (r, api) => api.fight('nightowl') },
+      { label: 'Get some sleep', detail: 'Heal 1 heart.', act: (r) => { r.hearts = Math.min(r.maxHearts, r.hearts + 1); return 'You sleep soundly.'; } },
+    ],
+  },
+  {
+    id: 'storyteller', title: 'The Storyteller', emoji: '🧓',
+    text: 'An old camper tells of the summer the stones first learned to move.',
+    choices: [
+      { label: 'Listen', detail: 'Heal 1 heart and gain a random trick.', act: (r, api) => {
+        r.hearts = Math.min(r.maxHearts, r.hearts + 1);
+        return api.trickRoom() ? `You feel better. ${api.gainRandomTrick()}` : 'You feel better.';
+      } },
+      { label: 'Tell your own', detail: 'Gain 20 gold for a good yarn.', act: (r) => { r.gold += 20; return 'They toss you 20 gold. Not bad!'; } },
+    ],
+  },
 ];
 
 // Event duels.
 ENEMIES.hermit = { name: 'The Hermit', emoji: '🧙', act: 0, tier: 'event',
   core: ['swap', 'frog', 'mountain'], pool: ['shift', 'rotate', 'magnet', 'stinky'], iters: 300, blunder: 0.1,
   quote: 'Show me what you have learned.' };
+ENEMIES.nightowl = { name: 'The Night Owl', emoji: '🦉', act: 0, tier: 'event',
+  core: ['magnet', 'stinky', 'swap'], pool: ['shift', 'rotate', 'beacon', 'bumper'], iters: 700, blunder: 0,
+  quote: 'Hoo. Your move.' };
 ENEMIES.thief = { name: 'The Pickpocket', emoji: '🥷', act: 0, tier: 'event',
   core: ['firecracker', 'swap'], pool: ['shift', 'pebble', 'stinky'], iters: 150, blunder: 0.2,
   quote: 'Catch me if you can!' };
