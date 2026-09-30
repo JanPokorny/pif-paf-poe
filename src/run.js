@@ -148,7 +148,7 @@ export function makeMap(run) {
   });
   return {
     cells,
-    boss: ACTS[run.act - 1].boss,
+    boss: pick(run, ACTS[run.act - 1].bosses),
     at: null,          // the square being visited right now
     lastO: null,       // the boss's latest mark, for the page to draw in
     open: false,       // the boss's door

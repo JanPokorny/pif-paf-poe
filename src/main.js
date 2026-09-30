@@ -367,7 +367,7 @@ function actIntro() {
     h('div.act-n', {}, t('Act {n}', { n: act.n })),
     h('h1', {}, act.name),
     h('p', {}, t(['A summer camp. A field of stones that will not stay still.', 'The meadow is behind you. The ground turns to stone.', 'The air thins. Only the best players make it this far.'][act.n - 1])),
-    h('div.rules-note', {}, t('This act is a game of tic-tac-toe against {boss} {emoji}. Each square is an encounter: clear it and mark your X. After each of your steps, the boss marks an O. Draw three in a row to open its door.', { boss: ENEMIES[act.boss].name, emoji: ENEMIES[act.boss].emoji })),
+    h('div.rules-note', {}, t('This act is a game of tic-tac-toe against {boss} {emoji}. Each square is an encounter: clear it and mark your X. After each of your steps, the boss marks an O. Draw three in a row to open its door.', { boss: ENEMIES[run.map.boss].name, emoji: '' })),
     h('button.btn.primary.wide.big', { onclick: () => { run.screen = 'map'; route(); } }, t('Onward'))));
 }
 
@@ -780,7 +780,7 @@ function endScreen(victory) {
     h('div.end-emoji', {}, victory ? art('x', 'trophy', '🏆') : art('x', 'tombstone', '🪦')),
     h('h1', {}, victory ? t('You conquered the Summit!') : t('Your climb ends here')),
     h('p', {}, victory
-      ? t(run.heat ? 'The Grandmaster bows. {kit} is the champion at heat {n}.' : 'The Grandmaster bows. {kit} is the champion.', { kit: kit.name, n: run.heat })
+      ? t(run.heat ? '{boss} bows. {kit} is the champion at heat {n}.' : '{boss} bows. {kit} is the champion.', { boss: ENEMIES[run.map.boss].name, kit: kit.name, n: run.heat })
       : t('Fallen in act {n}, {act}.', { n: run.act, act: ACTS[run.act - 1].name })),
     h('div.stats', {},
       h('div', {}, h('b', {}, st.won), t(' duels won', { n: st.won })),

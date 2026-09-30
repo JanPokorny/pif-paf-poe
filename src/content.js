@@ -115,6 +115,10 @@ export const ENEMIES = {
     core: ['mountain', 'magnet', 'shift'], pool: ['pebble', 'rotate', 'bumper', 'stinky'], iters: 320, blunder: 0.06,
     field: 'gravity', quote: 'All things fall, little one.' },
 
+  scarecrow: { name: 'The Scarecrow', emoji: '🌾', act: 1, tier: 'boss',
+    core: ['stinky', 'stinky', 'rotate'], pool: ['pebble', 'shift', 'magnet', 'bumper'], iters: 320, blunder: 0.06,
+    field: 'tide', quote: 'Nothing grows where I stand.' },
+
   // Act 2 — the Quarry
   bee: { name: 'Bumper Bee', emoji: '🐝', act: 2, tier: 'normal',
     core: ['bumper', 'bumper'], pool: ['bumper', 'magnet', 'shift', 'rotate'], iters: 150, blunder: 0.2,
@@ -149,6 +153,10 @@ export const ENEMIES = {
     core: ['whirl', 'mountain', 'magnet'], pool: ['whirl', 'rotate', 'beacon', 'swap', 'shift'], iters: 560, blunder: 0.03,
     field: 'carousel', tricks: ['nudge'], quote: 'TICK. TOCK. YOUR TURN IS WOUND.' },
 
+  mirrorknight: { name: 'The Mirror Knight', emoji: '🛡️', act: 2, tier: 'boss',
+    core: ['flip', 'mountain', 'magnet'], pool: ['swap', 'flip', 'beacon', 'shift', 'glue'], iters: 560, blunder: 0.03,
+    field: 'quake', tricks: ['mirror'], quote: 'Your left is my right.' },
+
   // Act 3 — the Summit
   fay: { name: 'Firecracker Fay', emoji: '🎆', act: 3, tier: 'normal',
     core: ['firecracker', 'firecracker'], pool: ['magnet', 'shift', 'rotate', 'bumper'], iters: 450, blunder: 0.06,
@@ -182,10 +190,15 @@ export const ENEMIES = {
     quote: 'Every stone you own, I have mastered.' },
 };
 
+// The final pair of kings.
+ENEMIES.twinkings = { name: 'The Twin Kings', emoji: '🎭', act: 3, tier: 'boss',
+  core: ['twin', 'twin', 'pebble', 'pebble', 'turncoat'], pool: ['magnet', 'stinky', 'swap'], iters: 420, blunder: 0.04,
+  field: 'carousel', field2: 'gravity', tricks: ['nudge'], quote: 'Two crowns, one board.' };
+
 export const ACTS = [
-  { n: 1, name: 'The Meadow', boss: 'oak', plus: 0.0, bossPlus: 0.2, gold: [14, 22] },
-  { n: 2, name: 'The Quarry', boss: 'colossus', plus: 0.2, bossPlus: 0.35, gold: [18, 28] },
-  { n: 3, name: 'The Summit', boss: 'grandmaster', plus: 0.4, bossPlus: 0.5, gold: [22, 34] },
+  { n: 1, name: 'The Meadow', bosses: ['oak', 'scarecrow'], plus: 0.0, bossPlus: 0.2, gold: [14, 22] },
+  { n: 2, name: 'The Quarry', bosses: ['colossus', 'mirrorknight'], plus: 0.2, bossPlus: 0.35, gold: [18, 28] },
+  { n: 3, name: 'The Summit', bosses: ['grandmaster', 'twinkings'], plus: 0.4, bossPlus: 0.5, gold: [22, 34] },
 ];
 
 export const enemiesOf = (act, tier) => Object.keys(ENEMIES)
