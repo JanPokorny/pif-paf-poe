@@ -30,7 +30,10 @@ npx http-server -c-1 .
 | `src/content.js` | relics, enemies, acts, events |
 | `src/run.js` | a run: the act maps, duel setup, rewards, shops. Pure, JSON-serialisable |
 | `src/main.js`, `src/ui/` | the screens |
-| `tools/` | headless playtests and balance measurements (`node tools/balance.mjs`) |
+| `tools/` | engine tests (`node tools/test-engine.mjs`), headless runs and balance measurements |
+
+Design notes and the measurements behind the numbers: [`DESIGN.md`](DESIGN.md). The game is in
+English and Czech.
 
 Fonts are self-hosted in `fonts/`: Patrick Hand and Caveat Brush (SIL OFL) and Permanent Marker (Apache 2.0).
 The first, glossy look is kept in `old/style-glossy.css` as a record of what not to do.
