@@ -60,8 +60,9 @@ export const REWARD_STONES = BASE_STONES;
 // `blunder` are its brain. A `cond` is its
 // home rule, for both sides; others may roll one.
 //
-// A boss brings no special stones at all: it has `rules` that favour it, and
-// once beaten it rises with `rules2`.
+// A mini-boss brings no special stones at all: it has `rules` that favour it,
+// and on an act's later maps, `rules2`. The act's rival -- the one the map is
+// played against -- is one of them too.
 
 export const ENEMIES = {
   // Act 1 — the Meadow
@@ -97,10 +98,10 @@ export const ENEMIES = {
     core: ['stinky', 'stinky', 'magnet'], pool: ['shift', 'rotate', 'mountain'], iters: 140, blunder: 0.18,
     tricks: ['muffle'], quote: 'You will stand where I let you.' },
   // bosses
-  oak: { name: 'The Old Oak', emoji: '🌳', act: 1, tier: 'boss',
+  oak: { name: 'The Old Oak', emoji: '🌳', act: 1, tier: 'miniboss',
     rules: ['clinch'], rules2: ['clinch', 'headstart'], iters: 450, blunder: 0.08,
     quote: 'Stay close to me, little one.' },
-  scarecrow: { name: 'The Scarecrow', emoji: '🌾', act: 1, tier: 'boss',
+  scarecrow: { name: 'The Scarecrow', emoji: '🌾', act: 1, tier: 'miniboss',
     rules: ['reserved'], rules2: ['reserved', 'headstart'], iters: 450, blunder: 0.08,
     quote: 'The middle of the field is mine.' },
 
@@ -134,13 +135,13 @@ export const ENEMIES = {
     core: ['mountain', 'mountain', 'magnet'], pool: ['2048', 'shift', 'magnet'], iters: 350, blunder: 0.08,
     tricks: ['nudge'], quote: 'I. DO. NOT. MOVE.' },
   // bosses
-  colossus: { name: 'Clockwork Colossus', emoji: '⚙️', act: 2, tier: 'boss',
+  colossus: { name: 'Clockwork Colossus', emoji: '⚙️', act: 2, tier: 'miniboss',
     rules: ['column'], rules2: ['column'], iters: 200, blunder: 0.04,
     quote: 'TICK. TOCK. THAT COLUMN, PLEASE.' },
-  mirrorknight: { name: 'The Mirror Knight', emoji: '🛡️', act: 2, tier: 'boss',
+  mirrorknight: { name: 'The Mirror Knight', emoji: '🛡️', act: 2, tier: 'miniboss',
     rules: ['spy'], rules2: ['spy', 'headstart'], iters: 500, blunder: 0.04,
     quote: 'Your left is my right.' },
-  carpenter: { name: 'The Carpenter', emoji: '🪚', act: 2, tier: 'boss',
+  carpenter: { name: 'The Carpenter', emoji: '🪚', act: 2, tier: 'miniboss',
     rules: ['elko'], rules2: ['elko', 'patient'], iters: 500, blunder: 0.04,
     quote: 'Straight lines are for amateurs.' },
 
@@ -171,12 +172,12 @@ export const ENEMIES = {
     core: ['whirl', 'flip', 'magnet'], pool: ['2048', 'bumper', 'shift'], iters: 300, blunder: 0.06,
     quote: 'The wind takes everything.' },
   // bosses
-  grandmaster: { name: 'The Grandmaster', emoji: '👑', act: 3, tier: 'boss',
+  grandmaster: { name: 'The Grandmaster', emoji: '👑', act: 3, tier: 'miniboss',
     rules: ['tactics'], rules2: ['tactics', 'reserved'], iters: 400, blunder: 0.03,
     quote: 'You will play what I tell you to play.' },
   // Double Time: plain stones cannot hold out. It wants restrictions — and
   // once it holds the centre too, restrictions and something that moves.
-  twinkings: { name: 'The Twin Kings', emoji: '🎭', act: 3, tier: 'boss',
+  twinkings: { name: 'The Twin Kings', emoji: '🎭', act: 3, tier: 'miniboss',
     rules: ['double'], rules2: ['double', 'reserved'], iters: 600, blunder: 0.03,
     quote: 'Two crowns, two moves.' },
 };

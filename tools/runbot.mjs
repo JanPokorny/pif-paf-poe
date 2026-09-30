@@ -76,7 +76,7 @@ function playRun(spec) {
         let opts = R.reachable(run);
         // A page lost or drawn turns; a page won opens the boss's door.
         if (run.map.result === 'lost' || run.map.result === 'draw') { log.push(run.map.result === 'lost' ? '[O]' : '[=]'); R.nextPage(run); break; }
-        if (opts.includes('boss')) { log.push(`[X p${run.map.page}]`); R.enterNode(run, 'boss'); break; }
+        if (run.map.result === 'won') { log.push(`[X p${run.map.page}]`); R.winAct(run); break; }
         if (!opts.length) throw new Error('nowhere to step');
         // Tic-tac-toe first: win, block, fork; then corners; then what the
         // hearts want.

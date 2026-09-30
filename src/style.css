@@ -721,3 +721,17 @@ body:has(.duel) #toast.show { transform: translate(-50%, 0) rotate(-1deg); }
 .clearing-title { text-align: center; font-size: 1rem; color: var(--pencil); margin-top: 2px; }
 .map-sheet { --cell: max(80px, min(110px, calc((min(100vw, 520px) - 60px) / 3))); }
 .map-sheet.elsewhere { opacity: 0.55; }
+.tier.miniboss { background: var(--sticky); outline: 1.5px solid var(--ink); }
+.map-cell.miniboss { color: var(--red); }
+.map-cell.miniboss .doodle.foe { outline: 2.5px solid var(--red); outline-offset: 3px; border-radius: 50%; }
+.mini-sq.miniboss { color: var(--red); } .mini-sq.miniboss i { width: 52%; height: 52%; opacity: 1; }
+/* The title: PIF / PAF / POE as a game of tic-tac-toe, a letter a turn. */
+.logo-board { position: relative; width: min(230px, 62vw); aspect-ratio: 1; margin: 0 auto 4px; transform: rotate(-2deg); font-size: 1rem; }
+.logo-board .board-lines { position: absolute; inset: 0; }
+.logo-board .letter { position: absolute; width: 33.3%; height: 33.3%; display: flex; align-items: center; justify-content: center;
+  font-family: var(--marker); font-size: min(3.6rem, 15vw); line-height: 1; transform: rotate(var(--tilt)) scale(0); opacity: 0;
+  animation: letter-in 0.34s cubic-bezier(.3, 1.6, .6, 1) forwards; }
+.logo-board .letter.x { color: var(--blue); }
+.logo-board .letter.o { color: var(--red); }
+@keyframes letter-in { to { transform: rotate(var(--tilt)) scale(1); opacity: 1; } }
+@media (prefers-reduced-motion: reduce) { .logo-board .letter { animation: none; transform: rotate(var(--tilt)); opacity: 1; } }

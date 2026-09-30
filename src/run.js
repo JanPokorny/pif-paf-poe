@@ -116,7 +116,6 @@ export function craft(run, uidA, uidB, result) {
 // one more and a fresh map, as does a map where nobody can win any more.
 // Every new map in an act is less friendly than the last.
 
-export const BOSS_LIVES = 2;              // duels a boss must lose
 const BOSS_SEES = [0.3, 0.4, 0.5, 0.6];   // the chance it blocks your two in a row, by map
 export const CLEARING_GOLD = 15;          // for each clearing you take
 export const LINES = [[0, 1, 2], [3, 4, 5], [6, 7, 8], [0, 3, 6], [1, 4, 7], [2, 5, 8], [0, 4, 8], [2, 4, 6]];
@@ -192,8 +191,16 @@ export function makeMap(run, prev = null) {
       else map.cells[c].push(fillCell(run, c, i));
     }
   }
+  // Mini-bosses hold the middles of a few clearings: the squares that matter
+  // most. Two on an act's first map, three after.
+  const minis = minibossesOf(run.act).filter((id) => id !== map.boss);
+  const pool = minis.length ? minis : minibossesOf(run.act);
+  for (const c of shuffle(run, [0, 1, 2, 3, 5, 6, 7, 8]).slice(0, map.page > 1 ? 3 : 2)) {
+    map.cells[c][4] = { kind: 'miniboss', mark: null, duel: prepareDuel(run, pick(run, pool)) };
+  }
   return map;
 }
+const minibossesOf = (act) => enemiesOf(act, 'miniboss');
 
 // What a square is. Squares on more lines -- corners and middles, of the
 // clearing and of the map -- hide harder things; each new map of an act is
@@ -224,7 +231,6 @@ export const xCount = (run) => (run.map?.cells ?? []).flat().filter((x) => x.mar
 // the boss once its door is open.
 export function reachable(run) {
   const map = run.map;
-  if (map.result === 'won') return ['boss'];
   if (map.result) return [];
   const out = [];
   for (const c of clearingsFor(map, 'X', map.next)) map.cells[c].forEach((x, i) => { if (!x.mark) out.push(keyOf(c, i)); });
@@ -308,7 +314,7 @@ function bossTurn(run, target) {
   const where = clearingsFor(map, 'O', target);
   if (!where.length) return;
   const sees = rand(run) < BOSS_SEES[Math.min(BOSS_SEES.length - 1, map.page - 1)];
-  const value = { treasure: 8, gift: 6, shop: 4, rest: 4, craft: 4, event: 2, elite: 0, fight: 1 };
+  const value = { treasure: 8, gift: 6, shop: 4, rest: 4, craft: 4, event: 2, elite: 0, miniboss: 0, fight: 1 };
   let best = null, bestScore = -Infinity;
   for (const c of where) {
     map.cells[c].forEach((x, i) => {
@@ -368,7 +374,7 @@ export function hurt(run, n) {
 // ── Duels ───────────────────────────────────────────────────────────────────
 
 function rollEnemyHand(run, enemy, tier, context) {
-  if (tier === 'boss') return [];
+  if (tier === 'miniboss') return [];
   const act = ACTS[Math.max(0, (enemy.act || run.act) - 1)];
   let size = enemy.size ?? act.size;
   if (run.heat >= 4 && tier === 'elite') size++;
@@ -386,13 +392,14 @@ export function prepareDuel(run, enemyId, context = {}) {
   const handO = rollEnemyHand(run, enemy, tier, context);
   // Heat makes everyone think harder. Later acts' rank and file already think
   // hard by nature; they are eased a little, as an act is several pages of them.
-  let heatIters = (tier === 'boss' ? 1 : [1, 0.8, 0.6][Math.max(0, run.act - 1)]) * (run.heat >= 1 ? 1.5 : 1);
+  let heatIters = (tier === 'miniboss' ? 1 : [1, 0.8, 0.6][Math.max(0, run.act - 1)]) * (run.heat >= 1 ? 1.5 : 1);
   const enemyTricks = [...(enemy.tricks ?? [])];
   const usesO = 1;
   const modsO = { ...(enemy.mods ?? {}) };
   let conds = [], rules = [];
-  if (tier === 'boss') {
-    rules = [...(((context.bossWins ?? 0) > 0 && enemy.rules2) || enemy.rules || [])];
+  if (tier === 'miniboss') {
+    // From the second map of an act on, a mini-boss brings its harder rules.
+    rules = [...(((run.map?.page ?? 1) > 1 && enemy.rules2) || enemy.rules || [])];
     if (run.heat >= 4) enemyTricks.push(randomTrick(run));
   } else {
     // A home rule, or sometimes one rolled for the day.
@@ -414,7 +421,6 @@ export function prepareDuel(run, enemyId, context = {}) {
     tricksO: enemyTricks, usesO,
     modsO,
     iters: Math.round(enemy.iters * heatIters), blunder: run.heat >= 5 ? 0 : enemy.blunder * 0.7,
-    bossRound: context.bossRound ?? 0, bossWins: context.bossWins ?? 0,
     event: context.event ?? null,
   };
 }
@@ -458,17 +464,12 @@ export function defaultHand(run) {
 // ── Entering nodes ──────────────────────────────────────────────────────────
 
 export function enterNode(run, key) {
-  if (key === 'boss') {
-    run.atBoss = true;
-    run.pending = { kind: 'duel', duel: prepareDuel(run, run.map.boss, { bossRound: 0, bossWins: 0 }) };
-    run.screen = 'predual';
-    return;
-  }
   run.map.at = key;
   const node = cellAt(run.map, key);
   switch (node.kind) {
     case 'fight':
     case 'elite':
+    case 'miniboss':
       node.duel ??= prepareDuel(run, pick(run, enemiesOf(run.act, node.kind === 'elite' ? 'elite' : 'normal')));
       run.pending = { kind: 'duel', duel: JSON.parse(JSON.stringify(node.duel)) };
       run.screen = 'predual';
@@ -512,16 +513,10 @@ export function enterNode(run, key) {
 export function duelWon(run) {
   const duel = run.pending.duel;
   run.stats.won++;
-  if (duel.tier === 'boss' && duel.bossWins + 1 < BOSS_LIVES) {
-    // A boss is beaten twice. The next round swaps who opens.
-    run.pending = { kind: 'duel', duel: prepareDuel(run, duel.enemyId, { bossRound: duel.bossRound + 1, bossWins: duel.bossWins + 1 }) };
-    run.screen = 'predual';
-    return { kind: 'boss-continue' };
-  }
   const act = ACTS[run.act - 1];
   let gold = int(run, ...act.gold);
   if (duel.tier === 'elite') gold += 20;
-  if (duel.tier === 'boss') gold += 60;
+  if (duel.tier === 'miniboss') gold += 35;
   if (duel.event === 'thief') gold += 45;
   if (duel.event === 'nightowl') gold += 30;
   if (has(run, 'lucky-coin')) gold += 8;
@@ -531,22 +526,35 @@ export function duelWon(run) {
   if (duel.event !== 'thief') reward.stones = stoneChoices(run, duel.tier);
   const trickChance = duel.tier === 'normal' ? 0.3 : duel.tier === 'event' ? 0 : 0.7;
   if (rand(run) < trickChance) reward.trick = randomTrick(run);
-  if (duel.tier === 'elite' || duel.event === 'hermit' || duel.event === 'nightowl') reward.relic = randomRelic(run);
+  const big = duel.tier === 'elite' || duel.tier === 'miniboss';
+  if (big || duel.event === 'hermit' || duel.event === 'nightowl') reward.relic = randomRelic(run);
   if (duel.tier === 'elite') run.stats.elites++;
-  if (duel.tier === 'boss') {
-    run.stats.bosses++;
-    reward.relicChoice = shuffle(run, BOSS_RELICS.filter((r) => !has(run, r))).slice(0, 3);
-    run.hearts = Math.min(run.maxHearts, run.hearts + 3);
-  }
-  if ((duel.tier === 'elite' || duel.tier === 'boss') && has(run, 'herbs')) run.hearts = Math.min(run.maxHearts, run.hearts + 1);
-  if ((duel.tier === 'elite' || duel.tier === 'boss') && has(run, 'bell') && !reward.trick) reward.trick = randomTrick(run);
+  if (duel.tier === 'miniboss') run.stats.bosses++;
+  if (big && has(run, 'herbs')) run.hearts = Math.min(run.maxHearts, run.hearts + 1);
+  if (big && has(run, 'bell') && !reward.trick) reward.trick = randomTrick(run);
   run.pending = reward;
   run.screen = 'reward';
   return reward;
 }
 
 export function heartsLost(duel) {
-  return duel.tier === 'elite' ? 2 : 1;
+  return duel.tier === 'elite' || duel.tier === 'miniboss' ? 2 : 1;
+}
+
+// Three clearings in a row: the act's rival is beaten. A boss relic, gold,
+// hearts and a stone, and then the next act.
+export function winAct(run) {
+  run.atBoss = true;
+  run.stats.acts = (run.stats.acts ?? 0) + 1;
+  const gold = 60 + (has(run, 'lucky-coin') ? 8 : 0);
+  run.gold += gold;
+  run.stats.gold += gold;
+  run.hearts = Math.min(run.maxHearts, run.hearts + 3);
+  run.pending = {
+    kind: 'reward', tier: 'act', gold, stones: stoneChoices(run, 'elite'), trick: null, relic: null, taken: {},
+    relicChoice: run.act < ACTS.length ? shuffle(run, BOSS_RELICS.filter((r) => !has(run, r))).slice(0, 3) : [],
+  };
+  run.screen = 'reward';
 }
 
 export function duelLost(run) {
@@ -554,16 +562,11 @@ export function duelLost(run) {
   run.stats.lost++;
   if (has(run, 'rematch') && !run.rematchUsed[run.act]) {
     run.rematchUsed[run.act] = true;
-    run.pending = { kind: 'duel', duel: prepareDuel(run, duel.enemyId, { tier: duel.tier, bossRound: duel.bossRound + (duel.tier === 'boss' ? 1 : 0), bossWins: duel.bossWins, event: duel.event }) };
+    run.pending = { kind: 'duel', duel: prepareDuel(run, duel.enemyId, { tier: duel.tier, event: duel.event }) };
     run.screen = 'predual';
     return { kind: 'rematch' };
   }
   if (hurt(run, heartsLost(duel))) return { kind: 'dead' };
-  if (duel.tier === 'boss') {
-    run.pending = { kind: 'duel', duel: prepareDuel(run, duel.enemyId, { bossRound: duel.bossRound + 1, bossWins: duel.bossWins }) };
-    run.screen = 'predual';
-    return { kind: 'boss-retry' };
-  }
   run.pending = null;
   settleCell(run, 'O');
   if (!run.over) run.screen = 'map';
@@ -599,7 +602,7 @@ function rarityTable(run, tier) {
     { common: 36, uncommon: 42, rare: 22 },
   ][run.act - 1];
   const out = { ...t };
-  if (tier === 'elite' || tier === 'boss') { out.rare += 12; out.common -= 12; }
+  if (tier !== 'normal') { out.rare += 12; out.common -= 12; }
   if (has(run, 'clover')) { out.rare += 8; out.common -= 8; }
   return out;
 }

@@ -35,14 +35,14 @@ duel, and a rule for who wins when someone runs out. The second version slows it
   stone falls as far as it can), **Hollow** (nobody plays the centre), **Open Hands** (either side
   may play a special stone from the other's hand, as its own). Some enemies have one as a home
   rule; others roll one (25% in act 1, 35% in act 2, 40% in act 3, more for elites).
-- **Bosses bring no stones.** Only Pebbles, and rules in their favour: **Tactics** (it names the
+- **Mini-bosses bring no stones.** Only Pebbles, and rules in their favour: **Tactics** (it names the
   stone you play), **Head Start** (it plays twice on its first turn), **Elbow** (rows do not
   count: an L of three wins), **Clinch** (you must place next to one of its stones, corners included — so a threat can always be blocked), **Column**
   (it closes a column to you each turn), **Spy** (it names the direction your stones move),
   **Reserved** (the centre is its alone), **Patience** (a full board is its), **Double Time**
   (every turn is two stones in a row, for both sides, the boss first). The dictating rules
   are a phase of their own after the boss's turn, searched by the same AI as every other choice.
-  A boss has two lives; once beaten it rises again, often with a second rule.
+  They are mini-bosses on the map now (below), one duel each.
   Double Time is the hard one, and it wants a particular loadout. Bot duels, 20 each: Pebbles
   only or two Mountains win 0%, movers (Shift and Rotate, Rail/Pivot/Teleport, 2048/4096)
   20–40%, restrictions (Magnet and Stinky, and their evolved forms of the time)
@@ -73,7 +73,12 @@ middle.
 - **Scorching.** A lost duel costs its hearts and scorches the square: you may not step there
   again, but the boss may. You choose again at once — the boss answers only a real X.
 - **Clearings.** Three in a row takes a clearing (+15 gold for you, −1 ❤ if it is the boss's).
-  Three clearings in a row open the boss's door. The boss's three in a row costs another heart
+  Three clearings in a row beat the act's rival outright — there is no final duel — for a boss
+  relic, gold, three hearts and a stone.
+- **Mini-bosses.** The stoneless rule-bearers (Tactics, Head Start, Elbow, Clinch, Column, Spy,
+  Reserved, Patience, Double Time) are mini-bosses now, holding the middle square of two
+  clearings on an act's first map and three after; on later maps they bring their harder rule
+  sets. One duel each, two hearts if lost, a relic if won. The boss's three in a row costs another heart
   and starts a fresh map; so does a map nobody can win any more. Each new map of an act is less
   friendly than the last.
 - The boss judges a square by what it takes, what it blocks (when it notices: more often map by
