@@ -317,15 +317,16 @@ function mapScreen() {
   h('div.door-text', {},
     h('div.door-name', {}, boss.name),
     map.open ? h('div', {}, 'The door is open. Tap to face the boss — or keep exploring.') : h('div', {}, 'Draw three in a row to open the door.'),
-    map.power ? h('div.power', {}, `Power +${map.power}`) : null));
+    map.power ? h('div.power', {}, `Power +${map.power}: ${map.power > 1 ? `${map.power} of its stones are` : 'one of its stones is'} upgraded, and it thinks harder.`) : null));
   const el = screen(topBar(), relicStrip(),
     h('div.map-page', {},
       door,
       h('div.map-grid' + (R.xCount(run) ? '' : '.first'), {}, h('div.board-lines', { html: lines }), h('div.map-cells', {}, cells)),
       h('div.map-news', {}, news),
       h('div.map-help', {}, !R.xCount(run)
-        ? 'Pick any square to start. You mark X where you go; after each step the boss marks an O.'
-        : 'Go to a highlighted square next to one of your Xs.')));
+        ? 'Pick any square to start. You mark X where you go; after each step the boss marks an O. Next time, go beside one of your Xs — diagonals count.'
+        : reach.size > (map.open ? 1 : 0) ? 'Go to a highlighted square next to one of your Xs — diagonals count.'
+          : 'No open squares left beside your Xs. Face the boss!')));
   void el;
 }
 
@@ -368,6 +369,7 @@ function preDuel() {
     const need = Math.min(size, run.pouch.length);
     count.textContent = `${chosen.length}/${size}`;
     fight.disabled = chosen.length < need;
+    fight.textContent = chosen.length < need ? `Pick ${need - chosen.length} more` : 'Fight!';
   };
   draw();
 
@@ -396,6 +398,7 @@ function preDuel() {
       h('div.section-label', {}, 'Bring your stones ', count),
       grid,
       run.tricks.length ? h('div.dim.small', {}, 'Tricks: ' + run.tricks.map((t) => TRICKS[t].name).join(', ')) : null,
+      h('div.pre-spacer'),
       h('div.sticky-bottom', {}, fight)));
 
   function begin() {
@@ -575,7 +578,14 @@ function restScreen() {
   const heal = Math.max(2, Math.ceil(run.maxHearts * 0.4));
   const leave = () => { R.leaveNode(run); route(); };
   if (run.pending.done) {
+    const more = (run.pending.upgrades ?? 1) < n && R.upgradeable(run).length;
     screen(topBar(), h('div.page.rest', {}, h('div.campfire', {}, '🔥'), h('h2', {}, 'The fire burns low'),
+      more ? h('button.btn.wide.big', {
+        onclick: () => pickFromPouch('Upgrade which stone?', (s) => {
+          if (!s) return;
+          s.plus = true; run.pending.upgrades = (run.pending.upgrades ?? 1) + 1; sfx('coin'); leave();
+        }, { filter: (s) => !s.plus }),
+      }, 'Sharpen one more') : null,
       h('button.btn.primary.wide.big', { onclick: leave }, 'Move on')));
     return;
   }
@@ -594,7 +604,7 @@ function restScreen() {
         const one = () => pickFromPouch(left > 1 ? `Upgrade a stone (${left} left)` : 'Upgrade which stone?', (s) => {
           if (!s) { if (left < n) leave(); return; }
           s.plus = true; left--; sfx('coin');
-          run.pending.done = true; save();
+          run.pending.done = true; run.pending.upgrades = n - left; save();
           if (left > 0 && R.upgradeable(run).length) one(); else leave();
         }, { filter: (s) => !s.plus, cancel: left < n ? 'Done' : 'Cancel' });
         one();

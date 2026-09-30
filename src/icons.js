@@ -121,7 +121,7 @@ const RAW = {
     P('M -3 2.6 C -4.8 -0.2 -1.2 -2 -3 -4.8 M 0 2.6 C -1.8 -0.2 1.8 -2 0 -4.8 M 3 2.6 C 1.2 -0.2 4.8 -2 3 -4.8', SW(1.3)) +
     P('M -4.8 6 A 4.8 3.6 0 0 1 4.8 6 Z', ' fill="currentColor"'),
 
-  mountain: P('M -7 5 L -2 -5 L 1.2 0.8 L 3 -1.6 L 7 5 Z'),
+  mountain: P('M -7.6 5.4 L -2.4 -5.2 L 1.2 1.2 L 3.6 -2.2 L 7.6 5.4') + P('M -8 5.4 H 8') + P('M -4.6 -0.7 L -3.4 0.3 L -2.4 -0.9 L -1.4 0.3 L -0.3 -0.8', SW(1.1)),
 
   '2048': '<text x="0" y="2.3" font-family="system-ui, sans-serif" font-size="6.4" font-weight="bold" text-anchor="middle" fill="currentColor" stroke="none" letter-spacing="-0.1">2048</text>',
 

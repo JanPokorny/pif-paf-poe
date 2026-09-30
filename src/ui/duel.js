@@ -161,15 +161,15 @@ export function mountDuel(root, opts) {
     // Tricks.
     const usable = s.player === 'X' && s.phase === 'trick' && !busy
       ? new Set(legalActions(s).map((a) => a.use)) : new Set();
+    trickRow.classList.toggle('spent', s.uses.X <= 0);
     trickRow.replaceChildren(
-      h('span.uses', {}, s.uses.X > 0 ? `Tricks ×${s.uses.X}` : 'No trick uses left'),
+      s.tricks.X.length ? h('span.uses', { title: 'trick uses left this duel' }, s.uses.X > 0 ? `×${s.uses.X}` : 'used up:') : h('span.no-tricks', {}, 'No tricks'),
       ...s.tricks.X.map((t) => {
         const b = h('button.trick-btn', { onclick: () => tapTrick(t) }, h('span.trick-ico', { html: icon(t) }), TRICKS[t].name);
         if (usable.has(t)) b.classList.add('usable');
         if (trickName === t) b.classList.add('aiming');
         return b;
       }));
-    if (!s.tricks.X.length) trickRow.append(h('span.no-tricks', {}, 'none'));
   }
 
   function renderChips(s) {
@@ -236,8 +236,8 @@ export function mountDuel(root, opts) {
       for (const [k, group] of stage.groups) {
         const [dir, index] = k.split('|');
         let x, y;
-        if (index === '') { x = { left: -0.3, right: 3.3, up: 1.5, down: 1.5 }[dir]; y = { up: -0.3, down: 3.3, left: 1.5, right: 1.5 }[dir]; }
-        else if (dir === 'left' || dir === 'right') { x = dir === 'left' ? -0.3 : 3.3; y = +index + 0.5; }
+        if (index === '') { x = { left: -0.33, right: 3.33, up: 1.5, down: 1.5 }[dir]; y = { up: -0.3, down: 3.3, left: 1.5, right: 1.5 }[dir]; }
+        else if (dir === 'left' || dir === 'right') { x = dir === 'left' ? -0.33 : 3.33; y = +index + 0.5; }
         else { y = dir === 'up' ? -0.3 : 3.3; x = +index + 0.5; }
         const b = h('button.arrow' + (isChosen(group) ? '.chosen' : ''), { html: icon(DIR_ARROW[dir]), onclick: pickGroup(group), 'aria-label': dir });
         place(x, y, b);
@@ -256,21 +256,30 @@ export function mountDuel(root, opts) {
       // Show the block the chosen option turns.
       if (chosen?.block) for (const i of { TL: [0, 1, 3, 4], TR: [1, 2, 4, 5], BL: [3, 4, 6, 7], BR: [4, 5, 7, 8] }[chosen.block]) cells[i].classList.add('chosen');
     } else if (stage.kind === 'turn') {
+      // Around the board's corners: clockwise on the right, anticlockwise on the left.
+      const spot = { 1: [3.25, -0.25], [-1]: [-0.25, -0.25], 2: [3.25, 3.25], [-2]: [-0.25, 3.25] };
       for (const [k, group] of stage.groups) {
         const t = +k;
-        btns.push(h('button.btn.opt.glyph-opt' + (isChosen(group) ? '.chosen' : ''), { onclick: pickGroup(group) },
-          h('span', { html: icon(t > 0 ? 'rotate-cw' : 'rotate-ccw') }), `${Math.abs(t)}`));
+        const b = h('button.rot.turn' + (isChosen(group) ? '.chosen' : ''), { onclick: pickGroup(group), 'aria-label': `turn ${t}` },
+          h('span', { html: icon(t > 0 ? 'rotate-cw' : 'rotate-ccw') }), Math.abs(t) > 1 ? h('span.times', {}, '×2') : null);
+        place(...spot[t], b);
       }
     } else if (stage.kind === 'axis') {
+      // Each mirror is a note beside the board, pointing along its axis.
+      const spot = { h: [1.5, 3.3], v: [3.3, 1.5], d: [-0.25, -0.25], a: [3.25, -0.25] };
       const label = { h: '↔', v: '↕', d: '⤡', a: '⤢' };
       for (const [k, group] of stage.groups) {
-        btns.push(h('button.btn.opt.glyph-opt' + (isChosen(group) ? '.chosen' : ''), { onclick: pickGroup(group), 'aria-label': `mirror ${k}` }, label[k]));
+        place(...spot[k], h('button.rot.axis' + (isChosen(group) ? '.chosen' : ''), { onclick: pickGroup(group), 'aria-label': `mirror ${k}` }, label[k]));
       }
     } else if (stage.kind === 'stone') {
       for (const [k, group] of stage.groups) {
-        btns.push(h('button.btn.opt' + (isChosen(group) ? '.chosen' : ''), { onclick: pickGroup(group) },
-          h('span.opt-ico', { html: icon(k) }), STONES[k].name));
+        btns.push(h('button.btn.opt.glyph-opt' + (isChosen(group) ? '.chosen' : ''), { onclick: pickGroup(group), 'aria-label': STONES[k].name },
+          h('span.opt-ico', { html: icon(k) })));
       }
+    }
+    // Show which stone a two-step choice has already picked.
+    if (stageCands.length && stageCands[0].from !== undefined && stageCands.every((c) => c.from === stageCands[0].from)) {
+      cells[stageCands[0].from].classList.add('chosen');
     }
     return btns;
   }
@@ -588,7 +597,7 @@ export function mountDuel(root, opts) {
     stageCands = cands = effectCands;
   }
   show();
-  if (state.turns === 0 && state.phase === 'select' && enemy.quote) toast(`${enemy.emoji} “${enemy.quote}”`);
+  if (state.turns <= 1 && state.phase === 'select' && enemy.quote && !caption.length) info.textContent = `${enemy.name}: “${enemy.quote}”`;
   if (state.over) finish();
   else if (state.player === 'O') enemyTurn();
 

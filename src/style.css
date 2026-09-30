@@ -8,8 +8,8 @@
   --grid: #d7e3ee;
   --margin: #e7a3a3;
   --ink: #2b2a33;
-  --pencil: #5b5a60;
-  --faint: #8c8a86;
+  --pencil: #4f4e54;
+  --faint: #6f6c66;
   --blue: #1f4fb0;
   --blue-wash: #dbe6fa;
   --red: #c8372d;
@@ -196,7 +196,7 @@ b { font-weight: 400; background: linear-gradient(transparent 55%, var(--hi) 55%
 /* ── The duel ────────────────────────────────────────────────────────────── */
 .duel-host { flex: 1; display: flex; }
 .duel {
-  --cell: min(calc((100vw - 32px) / 3.9), calc((100dvh - 345px) / 4.04), 112px);
+  --cell: min(calc((100vw - 32px) / 3.9), calc((100dvh - 362px) / 4.04), 112px);
   flex: 1; display: flex; flex-direction: column; align-items: stretch; gap: 6px;
   padding: 8px 12px calc(8px + var(--safe-b)); width: 100%; position: relative;
 }
@@ -352,7 +352,7 @@ b { font-weight: 400; background: linear-gradient(transparent 55%, var(--hi) 55%
 .map-cell.rest { color: #c0621a; }
 .map-cell.event { color: #6a4bb0; }
 .map-cell.reach::before { content: ''; position: absolute; inset: 8%; background: var(--hi); border-radius: 42% 35% 46% 38%; animation: breathe 1.6s ease-in-out infinite; }
-.map-cell.marked .doodle, .map-cell.marked .label { opacity: 0.28; }
+.map-cell.marked .doodle, .map-cell.marked .label { opacity: 0.5; }
 .map-cell .scribble { position: absolute; inset: 6%; width: 88%; height: 88%; pointer-events: none; overflow: visible; }
 .scribble path { fill: none; stroke-width: 9; stroke-linecap: round; filter: url(#pencil); }
 .scribble.x path { stroke: var(--blue); }
@@ -440,7 +440,7 @@ b { font-weight: 400; background: linear-gradient(transparent 55%, var(--hi) 55%
 .end { text-align: center; align-items: center; min-height: 100dvh; justify-content: center; }
 .stats { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; width: 100%; }
 .stats > div { padding: 8px; color: var(--pencil); }
-.stats b { color: var(--ink); font-size: 1.4rem; font-family: var(--marker); background: none; }
+.stats b { color: var(--ink); font-size: 1.5rem; background: none; }
 .end .hand { justify-content: center; }
 
 /* ── Sheets that slide up: index cards ───────────────────────────────────── */
@@ -491,10 +491,10 @@ b { font-weight: 400; background: linear-gradient(transparent 55%, var(--hi) 55%
 
 /* A sticky note slapped at the top of the page. */
 #toast {
-  position: fixed; left: 50%; top: calc(22% + var(--safe-t)); z-index: 100; max-width: 90vw; text-align: center;
+  position: fixed; left: 50%; bottom: calc(14px + var(--safe-b)); z-index: 100; max-width: 90vw; text-align: center;
   background: var(--sticky); padding: 10px 16px; font-size: 1.05rem;
   box-shadow: 2px 8px 14px -6px rgba(80, 60, 0, 0.55);
-  opacity: 0; transform: translate(-50%, -30px) rotate(-2deg); transition: opacity 0.2s, transform 0.2s; pointer-events: none;
+  opacity: 0; transform: translate(-50%, 30px) rotate(-2deg); transition: opacity 0.2s, transform 0.2s; pointer-events: none;
 }
 #toast.show { opacity: 1; transform: translate(-50%, 0) rotate(-1deg); }
 #toast.good { background: var(--mint); }
@@ -515,3 +515,16 @@ b { font-weight: 400; background: linear-gradient(transparent 55%, var(--hi) 55%
 .page { padding-bottom: calc(40px + var(--safe-b)); }
 .hand.enemy-hand { gap: 4px; }
 .enemy-hand .stone.mini { --size: 28px; }
+
+.rot.turn { flex-direction: column; gap: 0; padding: 4px; }
+.rot.turn .times { font-size: 0.8rem; line-height: 1; }
+.rot.turn span:first-child { width: 70%; height: 70%; }
+.rot.axis { font-size: 1.6rem; }
+.trick-row { flex-wrap: wrap; justify-content: center; overflow: visible; }
+.trick-row.spent .trick-btn { opacity: 0.45; }
+.btn.primary:disabled { background: #e8e2cf; color: var(--faint); box-shadow: none; }
+.pre-spacer { height: 70px; }
+.enemy-hand { flex-wrap: nowrap; }
+.trick-row { gap: 5px; }
+.trick-row .trick-btn { padding: 2px 6px; font-size: 0.92rem; gap: 3px; }
+.trick-row .uses { color: var(--blue); font-size: 1rem; }
