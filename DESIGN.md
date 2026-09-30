@@ -63,7 +63,8 @@ duel, and a rule for who wins when someone runs out. The second version slows it
 ## The map
 
 Each act is tic-tac-toe with its boss, a 3×3 page at a time, every square on view from the
-start. The boss opens each page in the middle. Wherever you go you mark an X and the boss
+start. The boss makes the first mark on each page, anywhere but the middle: from the middle every O
+it adds threatens a line, and a careful player could only ever draw. Wherever you go you mark an X and the boss
 answers with an O, anywhere: a shop, campfire or gift it takes is gone, and it likes taking them.
 A lost duel scorches its square: no line runs through it, for either side.
 

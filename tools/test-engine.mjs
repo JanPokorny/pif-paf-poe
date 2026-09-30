@@ -299,12 +299,18 @@ test('4096 may hold its own square while everything else slides', () => {
   eff(s, { dir: 'right', hold: true });
   expectAt(s, { 1: id, 2: 100 });
 });
-test('Bumper pushes each enemy stone beside it one step away; off the board goes back to hand', () => {
+test('Bumper pushes each enemy stone beside it one step away, into an empty square', () => {
   const s = G();
-  lay(s, { 1: 'O shift', 3: 'O pebble', 5: 'X pebble' });
+  lay(s, { 4: 'O shift', 0: 'O pebble', 2: 'X pebble' });
+  play(s, 'bumper', 1);
+  expectAt(s, { 7: 104, 4: 0, 0: 100, 2: 102 });
+});
+test('Bumper never pushes a stone off the board', () => {
+  const s = G();
+  lay(s, { 1: 'O shift', 3: 'O pebble' });
   play(s, 'bumper', 4);
-  expectAt(s, { 1: 0, 3: 0, 5: 105 });
-  assert.equal(count(s, 'O', 'shift'), 1, 'the Shift goes back to hand');
+  expectAt(s, { 1: 101, 3: 103 });
+  assert.equal(s.hands.O.length, 0);
 });
 test('Bumper does not push a Mountain', () => {
   const s = G();
@@ -314,10 +320,10 @@ test('Bumper does not push a Mountain', () => {
 });
 test('Blast pushes the straight neighbours, or the diagonal ones', () => {
   const s = G();
-  lay(s, { 0: 'O pebble', 1: 'O pebble' });
-  play(s, 'blast', 4);
+  lay(s, { 4: 'O pebble', 1: 'O pebble' });
+  play(s, 'blast', 0);
   eff(s, { ring: 'diag' });
-  expectAt(s, { 0: 0, 1: 101 });
+  expectAt(s, { 8: 104, 4: 0, 1: 101 });
 });
 test('Lasso pulls a stone two squares away one step closer — or all of them', () => {
   const s = G();
@@ -486,7 +492,8 @@ test('Magpie steals a special stone from the enemy\'s hand', () => {
 test('A Pebble sent back to hand is simply gone', () => {
   const s = G();
   lay(s, { 1: 'O pebble' });
-  play(s, 'bumper', 4);
+  play(s, 'firecracker', 4);   // one target: it goes off on its own
+  assert.equal(s.board[1], null);
   assert.equal(s.hands.O.length, 0);
 });
 

@@ -79,7 +79,8 @@ export function evolve(s) { s.type = STONES[s.type].evolvesTo ?? s.type; return 
 // ── The map ─────────────────────────────────────────────────────────────────
 //
 // Each act is played against its boss as tic-tac-toe on pages of graph paper,
-// 3x3 and fully on view. The boss opens every page with an O in the middle.
+// 3x3 and fully on view. The boss opens every page with an O anywhere but the
+// middle, which would make it all but unbeatable.
 // Wherever you go you mark an X; after each step the boss marks an O, on any
 // open square -- a shop or a campfire it takes is gone. A duel lost scorches
 // its square, for both sides. Three Xs in a row open the boss's door. Three Os in a row cost
@@ -87,6 +88,7 @@ export function evolve(s) { s.type = STONES[s.type].evolvesTo ?? s.type; return 
 // new page hides less friendly squares than the last.
 
 export const BOSS_LIVES = 2;              // duels a boss must lose
+const BOSS_LOSES = { fight: 0.3, elite: 0.5 };   // the chance it loses the duel on a square it takes
 const BOSS_SEES = [0.5, 0.6, 0.7, 0.8];   // the chance it blocks your two in a row, by page
 export const SIZE = 3;
 export const LINE = 3;
@@ -150,22 +152,23 @@ export function retreat(run) {
 
 // A fresh page: the act's boss, and how many pages it has taken so far.
 export function makeMap(run, prev = null) {
-  const mid = keyOf(MID, MID);
+  const all = [];
+  for (let y = 0; y < SIZE; y++) for (let x = 0; x < SIZE; x++) all.push(keyOf(x, y));
+  const open = pick(run, all.filter((k) => k !== keyOf(MID, MID)));
   const map = {
     v: 4,
     cells: {},         // "x,y" -> {kind, mark, duel?}
     boss: prev?.boss ?? pick(run, ACTS[run.act - 1].bosses),
     page: (prev?.page ?? 0) + 1,
     at: null,          // the square being visited right now
-    lastO: mid,        // the boss's latest mark, for the page to draw in
+    lastO: open,       // the boss's latest mark, for the page to draw in
     result: null,      // 'won' (the door is open), 'lost' or 'draw' (the page turns)
     line: null,        // the squares of the line that ended the page
     fights: prev?.fights ?? 0,   // duels so far this act, for the gentle first few
   };
-  map.cells[mid] = { kind: 'boss-mark', mark: 'O' };
+  map.cells[open] = { kind: 'boss-mark', mark: 'O' };
   run.map = map;
-  const squares = [];
-  for (let y = 0; y < SIZE; y++) for (let x = 0; x < SIZE; x++) if (keyOf(x, y) !== mid) squares.push(keyOf(x, y));
+  const squares = all.filter((k) => k !== open);
   // The very first page of the climb hides a gift: a special stone, free.
   const gift = run.act === 1 && map.page === 1 ? pick(run, squares) : null;
   for (const k of shuffle(run, squares)) {
@@ -180,7 +183,8 @@ export function makeMap(run, prev = null) {
 function fillCell(run, k) {
   const map = run.map;
   const [x, y] = coords(k);
-  const corner = x !== MID && y !== MID;
+  // Corners and the middle sit on three lines or more.
+  const corner = (x !== MID && y !== MID) || (x === MID && y === MID);
   const p = map.page - 1;
   const soft = (n) => Math.max(2, n - 3 * p);
   const table = { fight: 42 + 4 * p, elite: 3 + 8 * p + (corner ? 6 : 0), event: 16, treasure: soft(10), rest: soft(14), shop: soft(14) };
@@ -252,7 +256,11 @@ function bossMark(run) {
     if (threatsAfter(map, k) >= 2) score += 300;
     if (score > bestScore) { bestScore = score; best = k; }
   }
-  map.cells[best].mark = 'O';
+  // A square with an enemy on it is a duel for the boss too, and it may lose:
+  // then the square is scorched instead.
+  const cell = map.cells[best];
+  map.bossLost = rand(run) < (BOSS_LOSES[cell.kind] ?? 0) ? best : null;
+  cell.mark = map.bossLost ? 'S' : 'O';
   return best;
 }
 

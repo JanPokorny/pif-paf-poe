@@ -146,7 +146,7 @@ evolved('4096', '2048', { name: '4096', rarity: 'rare', text: 'Every stone slide
 
 def('bumper', {
   name: 'Bumper', rarity: 'uncommon', kind: 'move',
-  text: 'Pushes each enemy stone beside it one step directly away. One pushed off the board goes back to their hand.',
+  text: 'Pushes each enemy stone beside it one step directly away, if there is an empty square to push it to.',
   // Blast: the straight neighbours, or the diagonal ones.
   options: (s, pos, cell) => (big(cell) ? [{ ring: 'ortho' }, { ring: 'diag' }] : [{}]),
   apply(s, pos, a, cell) {
@@ -154,12 +154,13 @@ def('bumper', {
     for (const dir of a.ring === 'diag' ? DIAG : ORTHO) {
       const n = step(pos, dir), beyond = step(pos, dir, 2);
       if (n < 0 || !s.board[n] || s.board[n].player === cell.player || isStuck(s, n)) continue;
-      if (beyond < 0) moves.push([n, -1]); else if (!s.board[beyond]) moves.push([n, beyond]);
+      // Only onto the board: a stone at the edge stays put.
+      if (beyond >= 0 && !s.board[beyond]) moves.push([n, beyond]);
     }
-    for (const [from, to] of moves) if (to < 0) returnToHand(s, from); else move(s, from, to);
+    for (const [from, to] of moves) move(s, from, to);
   },
 });
-evolved('blast', 'bumper', { name: 'Blast', rarity: 'rare', text: 'Pushes each enemy stone beside it one step away — or each one diagonally off its corners. Off the board means back to hand.' });
+evolved('blast', 'bumper', { name: 'Blast', rarity: 'rare', text: 'Pushes each enemy stone beside it one step away — or each one diagonally off its corners — into an empty square.' });
 
 def('lasso', {
   name: 'Lasso', rarity: 'common', kind: 'move',

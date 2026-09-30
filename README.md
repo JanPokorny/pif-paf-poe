@@ -10,7 +10,7 @@ evolve into stronger, named stones along the way. Some duels carry a condition f
 favour.
 
 Each of the three acts is itself tic-tac-toe against its boss, a 3×3 page of encounters at a
-time: the boss opens in the middle, you mark an X wherever you go and it answers with an O.
+time: the boss makes the first mark, you mark an X wherever you go and it answers with an O.
 Three Xs in a row open the boss's door; three Os cost a heart, and a full page is a draw — either
 way a fresh, less friendly page follows.
 
