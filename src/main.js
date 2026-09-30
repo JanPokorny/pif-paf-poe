@@ -328,7 +328,7 @@ function mapScreen() {
       'aria-label': NODE_NAME[c.kind],
       onclick: () => {
         if (!can) {
-          const why = c.mark === 'X' ? t('You have been here.') : c.mark === 'O' ? t('{boss} took this square.', { boss: boss.name }) : t('Too far: go next to one of your Xs.');
+          const why = c.mark === 'X' ? t('You have been here.') : c.mark === 'O' ? t('{boss} took this square.', { boss: boss.name }) : c.mark === 'S' ? t('You lost the duel here: the square is scorched.') : t('Too far: go next to one of your Xs.');
           const what = c.duel ? `${ENEMIES[c.duel.enemyId].name}${c.kind === 'elite' ? ` (${t('elite')}${c.duel.quirk ? ', ' + R.QUIRKS[c.duel.quirk].name.toLowerCase() : ''})` : ''}${c.duel.disabled ? t(', no {stone}', { stone: STONES[c.duel.disabled].name }) : ''}` : NODE_NAME[c.kind];
           toast(`${what} — ${c.mark ? why : NODE_TEXT[c.kind] + ' ' + why}`);
           return;
@@ -346,6 +346,7 @@ function mapScreen() {
     if (!c.mark && R.MAP_LINES.some((l) => l.includes(i) && l.filter((j) => map.cells[j].mark === 'O').length === 2 && l.every((j) => j === i || map.cells[j].mark === 'O'))) el.classList.add('boss-threat');
     if (c.mark === 'X') el.insertAdjacentHTML('beforeend', scribbleX(freshX === i));
     if (c.mark === 'O') el.insertAdjacentHTML('beforeend', scribbleO(map.lastO === i));
+    if (c.mark === 'S') el.classList.add('scorched');
     return el;
   });
   if (freshX !== null && freshX !== undefined) sfx('scribbleX');
@@ -357,7 +358,10 @@ function mapScreen() {
   const news = map.news === 'oline' ? t('{boss} drew three in a row — it grows stronger!', { boss: boss.name })
     : map.news === 'boxed' ? t('Boxed in! The door opens, but {boss} grows stronger.', { boss: boss.name })
     : lastO !== null && lastO !== undefined ? t('{boss} marks the {node} square.', { boss: boss.name, node: NODE_NAME[map.cells[lastO].kind].toLowerCase() }) : '';
+  const bonus = map.bonus;
+  map.bonus = 0;
   map.news = null;
+  if (bonus) setTimeout(() => toast(t('+{n} gold for pressing on past the open door.', { n: bonus }), 'good'), 50);
   const door = h('button.boss-door' + (map.open ? '.open' : ''), {
     onclick: () => {
       if (!map.open) { toast(t('Draw three Xs in a row — across, down or diagonal — to open the door.')); return; }
@@ -428,7 +432,7 @@ function preDuel() {
   const tierLabel = { normal: '', elite: t('Elite'), boss: t('Boss'), event: t('Challenge') }[duel.tier];
   const stakes = duel.tier === 'boss'
     ? t('Beat it twice to pass ({n}/2). Each loss costs 1 ❤.', { n: duel.bossWins })
-    : t(duel.event ? 'Lose and it costs {n} ❤.' : 'Lose and it costs {n} ❤ — and the boss takes this square.', { n: R.heartsLost(duel) });
+    : t(duel.event ? 'Lose and it costs {n} ❤.' : 'Lose and it costs {n} ❤ — and the square is scorched.', { n: R.heartsLost(duel) });
   const canBack = (duel.tier === 'normal' || duel.tier === 'elite') && !duel.event;
   screen(topBar(),
     h('div.page', {},
@@ -590,8 +594,12 @@ function treasureScreen() {
   screen(topBar(), h('div.page.reward', {},
     h('h1.reward-title', {}, t('Treasure!')),
     h('div.reward-gold', {}, h('span', { html: icon('coin') }), t('+{n} gold', { n: tr.gold })),
-    tr.relic ? [h('div.section-label', {}, t('Inside the chest')), relicCard(tr.relic, { onclick: () => infoRelic(tr.relic) })] : h('p', {}, t('The chest is otherwise empty.')),
-    h('button.btn.primary.wide.big', { onclick: () => { R.leaveNode(run); route(); } }, t('Continue'))));
+    tr.relic ? [h('div.section-label', {}, t('Inside the chest')), relicCard(tr.relic, { onclick: () => infoRelic(tr.relic) })]
+      : tr.choices?.length ? [h('div.section-label', {}, t('Take one')), h('div.cards', {}, tr.choices.map((id) => relicCard(id, {
+        onclick: () => { R.gainRelic(run, id); tr.relic = id; sfx('coin'); save(); treasureScreen(); },
+      })))]
+        : h('p', {}, t('The chest is otherwise empty.')),
+    h('div.sticky-bottom', {}, h('button.btn.wide.big' + (tr.relic || !tr.choices?.length ? '.primary' : ''), { onclick: () => { R.leaveNode(run); route(); } }, tr.relic || !tr.choices?.length ? t('Continue') : t('Skip')))));
 }
 
 // ── Shop ────────────────────────────────────────────────────────────────────
@@ -783,7 +791,7 @@ function eventScreen() {
 // A result to paste to friends: the last act's map as Xs and Os.
 function shareResult(victory) {
   const cells = run.map?.cells ?? [];
-  const grid = [0, 1, 2, 3].map((r) => cells.slice(r * 4, r * 4 + 4).map((c) => (c.mark === 'X' ? '❌' : c.mark === 'O' ? '⭕' : '⬜')).join('')).join('\n');
+  const grid = [0, 1, 2, 3].map((r) => cells.slice(r * 4, r * 4 + 4).map((c) => (c.mark === 'X' ? '❌' : c.mark === 'O' ? '⭕' : c.mark === 'S' ? '⬛' : '⬜')).join('')).join('\n');
   const head = `Pif·Paf·Poe${run.daily ? t(' daily {d}', { d: run.daily }) : ''}${run.heat ? t(' · heat {n}', { n: run.heat }) : ''}`;
   const line = victory ? t('Conquered the Summit as {kit} 🏆', { kit: R.KITS[run.kit].name }) : t('Fell in act {n} ({act})', { n: run.act, act: ACTS[run.act - 1].name });
   const text = `${head}\n${line}\n${t('{won} duels won, {lost} lost', { won: run.stats.won, lost: run.stats.lost })}\n${grid}\n${location.href.split('#')[0]}`;
@@ -843,11 +851,12 @@ function showHelp(after) {
     h('div', {}, h('h2', {}, t('The rules that decide')),
       h('p', {}, h('b', {}, t('A full board goes to whoever moved second')), t(' — and so does a game where the player to move has no stones left. Opening is an advantage; the tiebreak is the second player\'s consolation.')),
       h('p', {}, t('Each duel is fought on a '), h('b', {}, t('space')), t(' that may switch one stone type off, for both sides. Switched-off stones still count for lines, they just do nothing.')),
-      h('p', {}, t('Several Magnets and Stinkies all pull at once: you must place where you satisfy as many as any square can.'))),
+      h('p', {}, t('Several Magnets and Stinkies all pull at once: you must place where you satisfy as many as any square can.')),
+      h('p', {}, t('Nobody opens a duel in the centre: the very first stone must go elsewhere.'))),
     h('div', {}, h('h2', {}, t('The climb')),
       h('p', {}, t('Three acts. Each act is itself a game of tic-tac-toe against its boss, on a 4×4 grid of encounters: duels ⚔, elites 💀, shops, campfires, treasure and the unknown.')),
-      h('p', {}, t('Wherever you go you mark an '), h('b.blue', {}, 'X'), t(' — next to one you already have. After each step the boss marks an '), h('b.red', {}, 'O'), t(', taking that square away. Lose a duel and the boss takes that square — that is its move.')),
-      h('p', {}, h('b', {}, t('Three Xs in a row open the boss\'s door.')), t(' If the boss draws its own line first, or boxes you in, it grows stronger.')),
+      h('p', {}, t('Wherever you go you mark an '), h('b.blue', {}, 'X'), t(' — next to one you already have. After each step the boss marks an '), h('b.red', {}, 'O'), t(', taking that square away — but never a shop or a campfire. Lose a duel and its square is scorched.')),
+      h('p', {}, h('b', {}, t('Three Xs in a row open the boss\'s door.')), t(' Every line of three Os the boss draws, and being boxed in, makes it stronger (up to +3). Squares cleared after the door opens pay 10 gold.')),
       h('p', {}, t('Before each duel you see the enemy\'s stones and the space, and choose which 5 of your pouch to bring. Lose and it costs hearts; run out and the climb is over. Bosses must be beaten twice.'))),
   ];
   let k = 0;

@@ -116,13 +116,13 @@ test('select takes the stone from hand; place puts it down with a fresh id', () 
   const s = G();
   applyAction(s, { type: 'select', stone: 'pebble', plus: false });
   assert.equal(s.phase, 'place'); assert.equal(s.hands.X.length, 5);
-  sameSet(legalActions(s).map((a) => a.pos), [0, 1, 2, 3, 4, 5, 6, 7, 8]);
-  applyAction(s, { type: 'place', pos: 4 });
-  assert.deepEqual({ ...s.board[4] }, { player: 'X', type: 'pebble', plus: false, id: 1 });
+  sameSet(legalActions(s).map((a) => a.pos), [0, 1, 2, 3, 5, 6, 7, 8], 'nobody opens in the centre');
+  applyAction(s, { type: 'place', pos: 0 });
+  assert.deepEqual({ ...s.board[0] }, { player: 'X', type: 'pebble', plus: false, id: 1 });
   turnPassedTo(s, 'O');
   assert.equal(s.placements.X, 1);
   applyAction(s, { type: 'select', stone: 'pebble', plus: false });
-  sameSet(legalActions(s).map((a) => a.pos), [0, 1, 2, 3, 5, 6, 7, 8], 'occupied squares are not placeable');
+  sameSet(legalActions(s).map((a) => a.pos), [1, 2, 3, 4, 5, 6, 7, 8], 'the reply may take the centre; occupied squares are not placeable');
 });
 
 test('selecting a stone you do not hold throws; acting after the end throws', () => {

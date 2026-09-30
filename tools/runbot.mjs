@@ -103,7 +103,7 @@ function playRun(spec) {
         R.leaveNode(run);
         break;
       }
-      case 'treasure': R.leaveNode(run); break;
+      case 'treasure': if (run.pending.choices?.[0]) R.gainRelic(run, run.pending.choices[0]); R.leaveNode(run); break;
       case 'event': {
         const ev = EVENTS.find((e) => e.id === run.pending.id);
         const a = api(run);

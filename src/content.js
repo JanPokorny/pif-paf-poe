@@ -69,7 +69,7 @@ export const RELIC_TYPES = Object.keys(RELICS);
 // ── Stone and trick economy ─────────────────────────────────────────────────
 
 export const STONE_PRICE = { starter: 25, common: 45, uncommon: 70, rare: 100 };
-export const TRICK_PRICE = { common: 35, uncommon: 50, rare: 75 };
+export const TRICK_PRICE = { common: 45, uncommon: 65, rare: 95 };
 export const RELIC_PRICE = { common: 110, uncommon: 140, rare: 170 };
 
 export const REWARD_STONES = STONE_TYPES.filter((t) => STONES[t].rarity !== 'starter');
@@ -121,25 +121,25 @@ export const ENEMIES = {
 
   // Act 2 — the Quarry
   bee: { name: 'Bumper Bee', emoji: '🐝', act: 2, tier: 'normal',
-    core: ['bumper', 'bumper'], pool: ['bumper', 'magnet', 'shift', 'rotate'], iters: 150, blunder: 0.2,
+    core: ['bumper', 'bumper'], pool: ['bumper', 'magnet', 'shift', 'rotate'], iters: 130, blunder: 0.2,
     quote: 'Bzz! Out of my way!' },
   cowboy: { name: 'Lasso Lou', emoji: '🤠', act: 2, tier: 'normal',
-    core: ['lasso', 'lasso', 'magnet'], pool: ['shift', 'mountain', 'pebble'], iters: 150, blunder: 0.2,
+    core: ['lasso', 'lasso', 'magnet'], pool: ['shift', 'mountain', 'pebble'], iters: 130, blunder: 0.2,
     quote: 'Yeehaw, git over here.' },
   frog: { name: 'Leapin\' Frog', emoji: '🐸', act: 2, tier: 'normal',
-    core: ['frog', 'frog'], pool: ['frog', 'stinky', 'rotate', 'pebble'], iters: 150, blunder: 0.2,
+    core: ['frog', 'frog'], pool: ['frog', 'stinky', 'rotate', 'pebble'], iters: 130, blunder: 0.2,
     quote: 'Ribbit. Hop. Ribbit.' },
   keeper: { name: 'Lighthouse Keeper', emoji: '🗼', act: 2, tier: 'normal',
-    core: ['beacon', 'beacon'], pool: ['beacon', 'shift', 'mountain', 'bumper'], iters: 180, blunder: 0.15,
+    core: ['beacon', 'beacon'], pool: ['beacon', 'shift', 'mountain', 'bumper'], iters: 130, blunder: 0.15,
     quote: 'Stay in the light.' },
   dolphin: { name: 'Flip Flop', emoji: '🐬', act: 2, tier: 'normal',
-    core: ['flip', 'flip'], pool: ['flip', 'swap', 'magnet', 'pebble'], iters: 180, blunder: 0.15,
+    core: ['flip', 'flip'], pool: ['flip', 'swap', 'magnet', 'pebble'], iters: 130, blunder: 0.15,
     quote: 'Everything is backwards!' },
   miner: { name: 'Quarry Miner', emoji: '⛏️', act: 2, tier: 'normal',
-    core: ['2048', 'mountain'], pool: ['2048', 'mountain', 'shift', 'stinky'], iters: 180, blunder: 0.15,
+    core: ['2048', 'mountain'], pool: ['2048', 'mountain', 'shift', 'stinky'], iters: 130, blunder: 0.15,
     quote: 'Dig, slide, dig.' },
   magpie: { name: 'Magpie Meg', emoji: '🐦', act: 2, tier: 'normal',
-    core: ['magpie', 'magpie'], pool: ['shift', 'rotate', 'magnet', 'pebble'], iters: 180, blunder: 0.15,
+    core: ['magpie', 'magpie'], pool: ['shift', 'rotate', 'magnet', 'pebble'], iters: 130, blunder: 0.15,
     quote: 'Ooh, shiny. That one\'s mine now.' },
   // elites
   witch: { name: 'Snare Witch', emoji: '🕷️', act: 2, tier: 'elite',
@@ -197,7 +197,7 @@ ENEMIES.twinkings = { name: 'The Twin Kings', emoji: '🎭', act: 3, tier: 'boss
 
 export const ACTS = [
   { n: 1, name: 'The Meadow', bosses: ['oak', 'scarecrow'], plus: 0.0, bossPlus: 0.2, gold: [14, 22] },
-  { n: 2, name: 'The Quarry', bosses: ['colossus', 'mirrorknight'], plus: 0.2, bossPlus: 0.35, gold: [18, 28] },
+  { n: 2, name: 'The Quarry', bosses: ['colossus', 'mirrorknight'], plus: 0.12, bossPlus: 0.35, gold: [18, 28] },
   { n: 3, name: 'The Summit', bosses: ['grandmaster', 'twinkings'], plus: 0.4, bossPlus: 0.5, gold: [22, 34] },
 ];
 

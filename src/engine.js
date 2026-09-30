@@ -587,6 +587,8 @@ export function allowedSquares(s, stone = s.selected) {
   const rs = restrictionsOn(s, p);
   let pool = free;
   // Velvet Rope: the first enemy stone of a duel may not take the centre.
+  // Nobody opens a duel in the centre: it is the square that decides too much.
+  if (s.turns === 0 && s.board.every((c) => !c) && pool.length > 1) pool = pool.filter((i) => i !== 4);
   if (s.mods[other(p)].velvetRope && s.placements[p] === 0 && pool.length > 1) {
     pool = pool.filter((i) => i !== 4);
   }

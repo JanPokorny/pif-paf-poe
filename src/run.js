@@ -96,7 +96,7 @@ export function newRun({ kit = 'apprentice', seed = (Math.random() * 2 ** 31) | 
 }
 
 export const has = (run, relic) => run.relics.includes(relic);
-export const pouchCap = (run) => 8 + (has(run, 'satchel') ? 2 : 0);
+export const pouchCap = (run) => 7 + (has(run, 'satchel') ? 2 : 0);
 export const trickCap = (run) => 3 + (has(run, 'satchel') ? 1 : 0);
 export const handSize = (run) => 5 + (has(run, 'deep-pockets') ? 1 : 0);
 export const trickUses = (run) => 1 + (has(run, 'gloves') ? 1 : 0);
@@ -107,8 +107,9 @@ export const stoneName = (s) => STONES[s.type].name + (s.plus ? '+' : '');
 // Each act is itself a game of tic-tac-toe, drawn on the page: a 4x4 grid of
 // encounters. Every square you clear gets your X; after each of your steps the
 // act's boss marks an O somewhere, taking that square off the table. Three Xs
-// in a row open the boss's door. The boss's first line of three Os, and being
-// boxed in with no line of your own, each make the boss stronger.
+// in a row open the boss's door. Each line of three Os the boss draws, and
+// being boxed in with no line of your own, make the boss stronger. A duel
+// lost scorches its square; shops and campfires the boss never takes.
 
 export const SIZE = 4;
 export const MAP_LINES = (() => {
@@ -193,7 +194,9 @@ function bossMark(run) {
   if (!free.length) return null;
   const value = { treasure: 14, rest: 8, shop: 9, elite: 4, event: 5, fight: 2 };
   let best = null, bestScore = -Infinity;
-  for (const i of free) {
+  // Shops and campfires are neutral ground: the boss never marks them.
+  const open = free.filter((i) => cells[i].kind !== 'shop' && cells[i].kind !== 'rest');
+  for (const i of open.length ? open : free) {
     let score = value[cells[i].kind] + rand(run) * 14;
     for (const l of MAP_LINES) {
       if (!l.includes(i)) continue;
@@ -212,24 +215,33 @@ function bossMark(run) {
 
 // A square is done with: yours if you came through it, the boss's if you lost
 // the duel there. Then the boss marks, and the lines are counted.
+export const MAX_POWER = 3;
+
 export function settleCell(run, mark) {
   const map = run.map;
   if (map.at === null) return;
-  map.cells[map.at].mark = mark;
+  // A square you lose is scorched: nobody's, and no use to either line.
+  const wasOpen = map.open;
+  map.cells[map.at].mark = mark === 'O' ? 'S' : mark;
   map.freshX = mark === 'X' ? map.at : null;
   map.at = null;
   map.visited++;
   map.lastO = null;
+  map.bonus = 0;
   if (lineOf(map.cells, 'X').length) map.open = true;
-  // A square the boss won from you is its move this time.
-  if (mark === 'X' && !map.cells.every((c) => c.mark)) map.lastO = bossMark(run);
-  // The boss's first line of three makes it stronger; later ones add nothing.
+  // Squares cleared past an open door pay a little extra: a reason to press on.
+  if (mark === 'X' && wasOpen) { map.bonus = 10; run.gold += 10; }
+  if (!map.cells.every((c) => c.mark)) map.lastO = bossMark(run);
+  // Every new line of three Os makes the boss stronger, up to a point.
   const oLines = lineOf(map.cells, 'O').length;
-  if (oLines && !map.oLines) { map.power++; map.news = 'oline'; }
+  if (oLines > (map.oLines ?? 0) && map.power < MAX_POWER) {
+    map.power = Math.min(MAX_POWER, map.power + oLines - (map.oLines ?? 0));
+    map.news = 'oline';
+  }
   map.oLines = oLines;
   if (!map.open && !reachable(run).length) {
     map.open = true;
-    map.power++;
+    map.power = Math.min(MAX_POWER, map.power + 1);
     map.news = 'boxed';
   }
 }
@@ -258,8 +270,11 @@ export function prepareDuel(run, enemyId, context = {}) {
   else if (tier === 'elite' && run.heat >= 5) first = 'O';
   else if (has(run, 'opening-book') && tier !== 'elite') first = 'X';
   else first = rand(run) < 0.5 ? 'X' : 'O';
-  const types = [...new Set([...CLASSIC_SPACES, ...handO.map((h) => h.type).filter((t) => t !== 'pebble')])];
-  const disabled = rand(run) < 0.3 ? null : pick(run, types);
+  // The space switches off a classic stone or one of yours -- never more than
+  // one of the enemy's own stones, so it does not gut their whole plan.
+  const theirs = (t) => handO.filter((h) => h.type === t).length;
+  const types = [...new Set([...CLASSIC_SPACES, ...run.pouch.map((h) => h.type)])].filter((t) => t !== 'pebble' && theirs(t) <= 1);
+  const disabled = rand(run) < 0.3 || !types.length ? null : pick(run, types);
   let heatIters = run.heat >= 1 ? 1.5 : 1;
   // A boss the map has fed grows: upgraded stones first, then extra ones.
   if (tier === 'boss' && run.map?.power) {
@@ -275,7 +290,7 @@ export function prepareDuel(run, enemyId, context = {}) {
   // Elites past the first act carry a quirk, so the same face is not the same fight.
   let quirk = null;
   if (tier === 'elite' && run.act >= 2) {
-    quirk = pick(run, Object.keys(QUIRKS));
+    quirk = pick(run, Object.keys(QUIRKS).filter((q) => q !== 'swift' || run.act >= 3));
     if (quirk === 'swift') first = 'O';
     if (quirk === 'armored') handO.forEach((h) => { if (h.type !== 'pebble') h.plus = true; });
     if (quirk === 'tricky') enemyTricks.push(randomTrick(run));
@@ -369,11 +384,14 @@ export function enterNode(run, key) {
     case 'shop': run.pending = { kind: 'shop', shop: makeShop(run) }; run.screen = 'shop'; break;
     case 'rest': run.pending = { kind: 'rest' }; run.screen = 'rest'; break;
     case 'treasure': {
-      const relic = randomRelic(run);
+      // Two relics to choose from.
+      const first = randomRelic(run);
+      let second = null;
+      for (let g = 0; g < 10 && first; g++) { second = randomRelic(run); if (second !== first) break; }
+      const choices = [first, second !== first ? second : null].filter(Boolean);
       const gold = int(run, 15, 30);
       run.gold += gold;
-      if (relic) gainRelic(run, relic);
-      run.pending = { kind: 'treasure', relic, gold };
+      run.pending = { kind: 'treasure', choices, relic: null, gold };
       run.screen = 'treasure';
       break;
     }

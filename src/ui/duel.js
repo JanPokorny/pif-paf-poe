@@ -404,10 +404,14 @@ export function mountDuel(root, opts) {
   function markDangers() {
     const ok = new Set(allowedSquares(state, { type: 'shift', plus: false }));
     state.board.forEach((c, i) => { if (!c && !ok.has(i)) cells[i].classList.add('nogo'); });
+    // Only where they could actually put a stone, restrictions and all.
+    const theirTurn = cloneState(state);
+    theirTurn.player = 'O';
+    const theyMay = new Set(allowedSquares(theirTurn, { type: 'shift', plus: false }));
     for (const line of LINES) {
       const os = line.filter((i) => state.board[i]?.player === 'O').length;
       const empty = line.filter((i) => !state.board[i]);
-      if (os === 2 && empty.length === 1) cells[empty[0]].classList.add('threat');
+      if (os === 2 && empty.length === 1 && theyMay.has(empty[0])) cells[empty[0]].classList.add('threat');
     }
   }
 
