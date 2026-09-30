@@ -23,6 +23,8 @@ duel, and a rule for who wins when someone runs out. The second version slows it
 - **Pebbles never run out.** Both sides may always place another Pebble; it is not in the hand
   and needs no slot. A Pebble sent back to hand simply leaves the board. There is no rule for
   running out any more: a full board (or forty turns) goes to whoever moved second.
+- **No stones to start with.** A run begins with an empty pouch: the first duels are Pebbles
+  against an enemy with a single special stone, and everything else is found along the way.
 - **Two slots.** You bring two special stones into a duel at first. Shops sell more slots (up to
   five; Deep Pockets adds one). The pouch holds six.
 - **The enemy always opens**, so a full board is always yours: hold out and you win. Plain
@@ -117,9 +119,9 @@ At heat 0 (six hearts), bots that play the map sensibly, pick their stones by st
 
 | player bot | runs won |
 |---|---|
-| 80 iterations, 20% blunders | about 20% |
-| 150 iterations, 10% blunders | about 27% |
-| 300 iterations, no blunders | about 37% |
+| 80 iterations, 20% blunders | about 12% |
+| 150 iterations, 10% blunders | about 13% |
+| 300 iterations, no blunders | about 34% |
 
 Heat 1–5 raises it after each win: deeper search, more evolved enemy stones, a heart fewer,
 bigger elite hands and boss tricks, no blunders.

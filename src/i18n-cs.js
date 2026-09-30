@@ -387,7 +387,7 @@ export default {
   'Pebbles never run out.': 'Oblázky nikdy nedojdou.',
   ' Both sides may always place another. Besides them you bring a few ': ' Obě strany smějí vždycky položit další. Kromě nich si neseš pár ',
   'special stones': 'speciálních kamenů',
-  ' — two at first — which do something when placed: mostly move stones already on the board, yours and theirs alike.': ' — zpočátku dva — které po položení něco udělají: většinou pohnou kameny, co už na desce leží, tvými i soupeřovými.',
+  ' that do something when placed — mostly move stones already on the board, yours and theirs alike. You start with none: you find them along the way, and bring two into a duel at first.': ', které po položení něco udělají — většinou pohnou kameny, co už na desce leží, tvými i soupeřovými. Na začátku nemáš žádný: najdeš je cestou a do duelu si zpočátku bereš dva.',
   ' is never moved: moving stones step over it.': ' se nikdy nehne: pohyblivé kameny ji přeskočí.',
   'Tap any stone, anywhere, to read what it does. Most stones can ': 'Ťukni na kterýkoli kámen, kdekoli, a přečteš si, co dělá. Většina kamenů se umí ',
   'evolve': 'vyvinout',
@@ -467,6 +467,7 @@ export default {
   'Three acts. Each act is tic-tac-toe with its boss, on pages of nine squares: duels, elites, shops, campfires, treasure and the unknown. The boss opens every page in the middle.': 'Tři dějství. Každé jsou piškvorky s jeho bossem na stránkách o devíti políčkách: duely, elity, obchody, táboráky, poklady a neznámo. Boss začíná každou stránku uprostřed.',
   ' — never on a shop, a campfire or a gift. A lost duel scorches its square.': ' — nikdy na obchod, táborák ani dárek. Prohraný duel políčko spálí.',
   ' Three Os cost you a heart, and a full page is a draw; either way the boss opens a fresh page, each less friendly than the last.': ' Tři O tě stojí srdce a plná stránka je remíza; v obou případech boss začne novou stránku, a každá je nepřátelštější než ta předchozí.',
+  'Your pouch is empty: this one is Pebbles only. Win duels to find special stones.': 'Váček máš prázdný: tenhle duel jen s Oblázky. Speciální kameny najdeš za vyhrané duely.',
 };
 
 // ── Data tables, by id (arrays by position) ─────────────────────────────────

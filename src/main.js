@@ -429,7 +429,7 @@ function preDuel() {
         h('div.fact.dim', {}, stakes)),
       h('div.section-label', {}, t('Bring your special stones '), count),
       h('div.dim.small', {}, t('Pebbles are always with you, as many as you like.')),
-      grid,
+      run.pouch.length ? grid : h('p.dim', {}, t('Your pouch is empty: this one is Pebbles only. Win duels to find special stones.')),
       run.tricks.length ? h('div.dim.small', {}, t('Tricks: ') + run.tricks.map((x) => TRICKS[x].name).join(', ')) : null,
       h('div.pre-spacer'),
       h('div.sticky-bottom', {}, fight)));
@@ -805,7 +805,7 @@ function showHelp(after) {
     h('div', {}, h('h2', {}, t('The duel')),
       h('p', {}, t('Tic-tac-toe on a 3×3 board: three of your stones in a row — across, down or diagonal — wins.')),
       h('p', {}, t('You are '), h('b.blue', {}, t('blue squares')), t(', the enemy is '), h('b.red', {}, t('red circles')), t('. The enemy always opens; then you take turns placing one stone each.')),
-      h('p', {}, s('pebble'), ' ', h('b', {}, t('Pebbles never run out.')), t(' Both sides may always place another. Besides them you bring a few '), h('b', {}, t('special stones')), t(' — two at first — which do something when placed: mostly move stones already on the board, yours and theirs alike.'))),
+      h('p', {}, s('pebble'), ' ', h('b', {}, t('Pebbles never run out.')), t(' Both sides may always place another. Besides them you bring a few '), h('b', {}, t('special stones')), t(' that do something when placed — mostly move stones already on the board, yours and theirs alike. You start with none: you find them along the way, and bring two into a duel at first.'))),
     h('div', {}, h('h2', {}, t('A turn')),
       h('p', {}, t('1. Tap a stone in your hand. Glowing squares show where it may go.')),
       h('p', {}, t('2. Tap a square. If the stone does something, you will see what — tap again or ✓ to confirm. If it can do it several ways, arrows and targets appear: tap one to preview it.')),

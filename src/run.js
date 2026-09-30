@@ -43,7 +43,7 @@ export const HEAT = [
   { n: 5, text: 'Enemies never blunder.' },
 ];
 
-export const START = { pouch: ['shift', 'rotate', 'magnet'], tricks: ['overtake'], hearts: 6, gold: 30, slots: 2 };
+export const START = { pouch: [], tricks: ['overtake'], hearts: 6, gold: 30, slots: 2 };
 export const MAX_SLOTS = 5;
 
 const stone = (run, type) => ({ type, uid: run.nextUid++ });
