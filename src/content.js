@@ -1,7 +1,7 @@
 // Everything a run is made of that is not the duel itself: relics, enemies,
 // acts, events. Numbers here are the balance; tools/balance.mjs measures them.
 
-import { STONES, STONE_TYPES, TRICKS, TRICK_TYPES } from './engine.js';
+import { STONES, BASE_STONES, TRICKS, TRICK_TYPES } from './engine.js';
 import { t } from './i18n.js';
 
 // ── Relics ──────────────────────────────────────────────────────────────────
@@ -10,28 +10,20 @@ import { t } from './i18n.js';
 // knows about them); the rest are read by the run.
 
 export const RELICS = {
-  'home-turf': { name: 'Home Turf', emoji: '🏡', rarity: 'uncommon', mod: 'homeTurf',
-    text: 'The space never switches your stones off. Only the enemy\'s.' },
-  hourglass: { name: 'Hourglass', emoji: '⏳', rarity: 'uncommon', mod: 'hourglass',
-    text: 'A full board, or a player out of stones, goes to you — whoever opened.' },
   wings: { name: 'Wings', emoji: '🪽', rarity: 'common', mod: 'freeFirst',
     text: 'Your first stone each duel ignores the enemy\'s restrictions.' },
   echo: { name: 'Echo Chamber', emoji: '🔔', rarity: 'rare', mod: 'echo',
     text: 'The first stone each duel that does something does it twice.' },
-  'velvet-rope': { name: 'Velvet Rope', emoji: '🎗️', rarity: 'common', mod: 'velvetRope',
-    text: 'The enemy\'s first stone each duel may not take the centre.' },
   'iron-heart': { name: 'Iron Heart', emoji: '🫀', rarity: 'common',
     text: '+2 max hearts, and heal 2 now.' },
   'deep-pockets': { name: 'Deep Pockets', emoji: '👖', rarity: 'rare',
-    text: 'Bring 6 stones into every duel instead of 5.' },
+    text: 'One more stone slot: bring one more special stone into every duel.' },
   satchel: { name: 'Satchel', emoji: '🎒', rarity: 'common',
     text: 'Your pouch holds 2 more stones, and you can carry 1 more trick.' },
   gloves: { name: 'Juggler\'s Gloves', emoji: '🧤', rarity: 'rare',
     text: 'You may spend 2 tricks per duel instead of 1.' },
   'lucky-coin': { name: 'Lucky Coin', emoji: '🪙', rarity: 'common',
     text: '+8 gold for every duel you win.' },
-  hammer: { name: 'Forge Hammer', emoji: '🔨', rarity: 'rare',
-    text: 'Every stone you gain from now on comes upgraded.' },
   herbs: { name: 'Herbal Pouch', emoji: '🌿', rarity: 'common',
     text: 'Heal 1 heart whenever you beat an elite or a boss.' },
   badge: { name: 'Merchant\'s Badge', emoji: '🏷️', rarity: 'common',
@@ -40,122 +32,121 @@ export const RELICS = {
     text: 'Stone rewards offer 4 choices instead of 3, and rares turn up more.' },
   bell: { name: 'Hand Bell', emoji: '🛎️', rarity: 'common',
     text: 'Gain a random trick after every elite or boss you beat.' },
-  'opening-book': { name: 'Opening Book', emoji: '📖', rarity: 'uncommon',
-    text: 'You always open in ordinary duels.' },
   phoenix: { name: 'Phoenix Feather', emoji: '🪶', rarity: 'rare',
     text: 'Once, when you would run out of hearts, rise again with 3.' },
   anvil: { name: 'Tiny Anvil', emoji: '⚒️', rarity: 'uncommon',
-    text: 'Resting upgrades two stones instead of one.' },
+    text: 'At a campfire, you may evolve a stone and still rest.' },
   rematch: { name: 'Rematch Token', emoji: '🎟️', rarity: 'uncommon',
     text: 'The first duel you lose in each act is replayed instead of costing hearts.' },
-  polisher: { name: 'Pebble Polisher', emoji: '✨', rarity: 'common',
-    text: 'Your Pebbles are always Pebbles+ in a duel.' },
-  lodestone: { name: 'Lodestone', emoji: '🧲', rarity: 'uncommon', upgrades: ['magnet', 'stinky', 'beacon'],
-    text: 'Your Magnets, Stinkies and Beacons are always upgraded in a duel.' },
-  bedrock: { name: 'Bedrock', emoji: '⛰️', rarity: 'uncommon', upgrades: ['mountain', 'glue', 'guardian'],
-    text: 'Your Mountains, Glues and Guardians are always upgraded in a duel.' },
-  pinwheel: { name: 'Pinwheel', emoji: '🎡', rarity: 'uncommon', upgrades: ['rotate', 'whirl', 'flip'],
-    text: 'Your Rotates, Whirls and Flips are always upgraded in a duel.' },
-  soap: { name: 'Slippery Soap', emoji: '🧼', rarity: 'uncommon', upgrades: ['shift', '2048', 'swap'],
-    text: 'Your Shifts, 2048s and Swaps are always upgraded in a duel.' },
-  slingshot: { name: 'Slingshot', emoji: '🪃', rarity: 'uncommon', upgrades: ['bumper', 'lasso', 'frog', 'firecracker'],
-    text: 'Your Bumpers, Lassos, Frogs and Firecrackers are always upgraded in a duel.' },
   piggy: { name: 'Piggy Bank', emoji: '🐷', rarity: 'common',
     text: 'Gain 60 gold now.' },
+  'war-chest': { name: 'War Chest', emoji: '💰', rarity: 'rare',
+    text: 'Gain 150 gold now.' },
+  whetstone: { name: 'Whetstone', emoji: '🪨', rarity: 'uncommon',
+    text: 'Evolving a stone costs half as much in shops.' },
 };
-export const BOSS_RELICS = ['deep-pockets', 'gloves', 'echo', 'hourglass', 'home-turf', 'hammer', 'phoenix'];
+export const BOSS_RELICS = ['deep-pockets', 'gloves', 'echo', 'phoenix', 'war-chest'];
 export const RELIC_TYPES = Object.keys(RELICS);
 
 // ── Stone and trick economy ─────────────────────────────────────────────────
 
-export const STONE_PRICE = { starter: 25, common: 45, uncommon: 70, rare: 100 };
+export const STONE_PRICE = { common: 45, uncommon: 70, rare: 100 };
 export const TRICK_PRICE = { common: 45, uncommon: 65, rare: 95 };
 export const RELIC_PRICE = { common: 110, uncommon: 140, rare: 170 };
 
-export const REWARD_STONES = STONE_TYPES.filter((t) => STONES[t].rarity !== 'starter');
-export const SHOP_STONES = STONE_TYPES;
+// Stones you can find: everything but the Pebble and the evolved forms.
+export const REWARD_STONES = BASE_STONES;
 
 // ── Enemies ─────────────────────────────────────────────────────────────────
 //
-// An enemy's hand is its `core` plus draws from its `pool` up to `size`; each
-// stone is upgraded with chance `plus`. `iters` and `blunder` are its brain.
+// Everyone plays Pebbles as they like. An enemy's special stones are its
+// `core` plus draws from its `pool` up to its act's hand size; later acts
+// evolve some of them. `iters` and `blunder` are its brain. A `cond` is its
+// home rule, for both sides; others may roll one.
+//
+// A boss brings no special stones at all: it has `rules` that favour it, and
+// once beaten it rises with `rules2`.
 
 export const ENEMIES = {
   // Act 1 — the Meadow
   pip: { name: 'Pip the Novice', emoji: '🐣', act: 1, tier: 'normal',
-    core: ['pebble', 'pebble'], pool: ['pebble', 'shift', 'rotate'], iters: 40, blunder: 0.45,
+    core: ['shift'], pool: ['shift', 'rotate'], size: 1, iters: 40, blunder: 0.45,
     quote: 'I just learned the rules!' },
   otter: { name: 'Slidey Otter', emoji: '🦦', act: 1, tier: 'normal',
-    core: ['shift', 'shift'], pool: ['shift', 'pebble', 'rotate'], iters: 60, blunder: 0.35,
+    core: ['shift', 'shift'], pool: ['shift', 'rotate'], iters: 60, blunder: 0.35,
     quote: 'Wheee! Everything slides!' },
   clinger: { name: 'Clingy Crab', emoji: '🦀', act: 1, tier: 'normal',
-    core: ['magnet', 'magnet'], pool: ['pebble', 'shift', 'magnet', 'mountain'], iters: 60, blunder: 0.35,
+    core: ['magnet', 'magnet'], pool: ['shift', 'magnet', 'mountain'], iters: 60, blunder: 0.35,
     quote: 'Come closer. Closer!' },
   rock: { name: 'Grumbling Rock', emoji: '🪨', act: 1, tier: 'normal',
-    core: ['mountain', 'mountain'], pool: ['mountain', 'pebble', 'rotate', 'shift'], iters: 60, blunder: 0.3,
+    core: ['mountain'], pool: ['mountain', 'rotate', 'shift'], iters: 60, blunder: 0.3,
     quote: 'Hrmph. Not moving.' },
   top: { name: 'Spinning Top', emoji: '🌀', act: 1, tier: 'normal',
-    core: ['rotate', 'rotate'], pool: ['rotate', 'pebble', 'stinky'], iters: 70, blunder: 0.3,
+    core: ['rotate', 'rotate'], pool: ['rotate', 'stinky'], iters: 70, blunder: 0.3,
     quote: 'Round and round and round.' },
   skunk: { name: 'Stinky Skunk', emoji: '🦨', act: 1, tier: 'normal',
-    core: ['stinky', 'stinky'], pool: ['stinky', 'pebble', 'shift', 'lasso'], iters: 70, blunder: 0.3,
+    core: ['stinky', 'stinky'], pool: ['stinky', 'shift', 'lasso'], iters: 70, blunder: 0.3,
     quote: 'Keep your distance.' },
   mole: { name: 'Bumbling Mole', emoji: '🐹', act: 1, tier: 'normal',
-    core: ['bumper', 'lasso'], pool: ['bumper', 'lasso', 'pebble'], iters: 70, blunder: 0.3,
+    core: ['bumper', 'lasso'], pool: ['bumper', 'lasso'], iters: 70, blunder: 0.3,
     quote: 'Push, pull, push, pull!' },
+  apple: { name: 'Falling Apple', emoji: '🍎', act: 1, tier: 'normal', cond: 'gravity',
+    core: ['shift'], pool: ['shift', 'rotate', 'mountain'], iters: 70, blunder: 0.3,
+    quote: 'What goes up…' },
   // elites
   twins: { name: 'The Twins', emoji: '👯', act: 1, tier: 'elite',
-    core: ['twin', 'twin', 'pebble', 'pebble'], pool: ['shift', 'magnet'], iters: 110, blunder: 0.22,
+    core: ['twin', 'twin'], pool: ['shift', 'magnet'], iters: 110, blunder: 0.22,
     quote: 'Two for the price of one!' },
   stenchlord: { name: 'Lord of Stench', emoji: '🧅', act: 1, tier: 'elite',
     core: ['stinky', 'stinky', 'magnet'], pool: ['shift', 'rotate', 'mountain'], iters: 140, blunder: 0.18,
     tricks: ['muffle'], quote: 'You will stand where I let you.' },
-  // boss
+  // bosses
   oak: { name: 'The Old Oak', emoji: '🌳', act: 1, tier: 'boss',
-    core: ['mountain', 'magnet', 'shift'], pool: ['pebble', 'rotate', 'bumper', 'stinky'], iters: 320, blunder: 0.06,
-    field: 'gravity', quote: 'All things fall, little one.' },
-
+    rules: ['clinch'], rules2: ['clinch'], iters: 320, blunder: 0.08,
+    quote: 'Stay close to me, little one.' },
   scarecrow: { name: 'The Scarecrow', emoji: '🌾', act: 1, tier: 'boss',
-    core: ['stinky', 'stinky', 'rotate'], pool: ['pebble', 'shift', 'magnet', 'bumper'], iters: 320, blunder: 0.06,
-    field: 'tide', quote: 'Nothing grows where I stand.' },
+    rules: ['reserved'], rules2: ['reserved', 'headstart'], iters: 320, blunder: 0.08,
+    quote: 'The middle of the field is mine.' },
 
   // Act 2 — the Quarry
   bee: { name: 'Bumper Bee', emoji: '🐝', act: 2, tier: 'normal',
     core: ['bumper', 'bumper'], pool: ['bumper', 'magnet', 'shift', 'rotate'], iters: 130, blunder: 0.2,
     quote: 'Bzz! Out of my way!' },
   cowboy: { name: 'Lasso Lou', emoji: '🤠', act: 2, tier: 'normal',
-    core: ['lasso', 'lasso', 'magnet'], pool: ['shift', 'mountain', 'pebble'], iters: 130, blunder: 0.2,
+    core: ['lasso', 'lasso'], pool: ['shift', 'mountain', 'magnet'], iters: 130, blunder: 0.2,
     quote: 'Yeehaw, git over here.' },
   frog: { name: 'Leapin\' Frog', emoji: '🐸', act: 2, tier: 'normal',
-    core: ['frog', 'frog'], pool: ['frog', 'stinky', 'rotate', 'pebble'], iters: 130, blunder: 0.2,
+    core: ['frog', 'frog'], pool: ['frog', 'stinky', 'rotate'], iters: 130, blunder: 0.2,
     quote: 'Ribbit. Hop. Ribbit.' },
   keeper: { name: 'Lighthouse Keeper', emoji: '🗼', act: 2, tier: 'normal',
     core: ['beacon', 'beacon'], pool: ['beacon', 'shift', 'mountain', 'bumper'], iters: 130, blunder: 0.15,
     quote: 'Stay in the light.' },
   dolphin: { name: 'Flip Flop', emoji: '🐬', act: 2, tier: 'normal',
-    core: ['flip', 'flip'], pool: ['flip', 'swap', 'magnet', 'pebble'], iters: 130, blunder: 0.15,
+    core: ['flip', 'flip'], pool: ['flip', 'swap', 'magnet'], iters: 130, blunder: 0.15,
     quote: 'Everything is backwards!' },
-  miner: { name: 'Quarry Miner', emoji: '⛏️', act: 2, tier: 'normal',
+  miner: { name: 'Quarry Miner', emoji: '⛏️', act: 2, tier: 'normal', cond: 'gravity',
     core: ['2048', 'mountain'], pool: ['2048', 'mountain', 'shift', 'stinky'], iters: 130, blunder: 0.15,
     quote: 'Dig, slide, dig.' },
   magpie: { name: 'Magpie Meg', emoji: '🐦', act: 2, tier: 'normal',
-    core: ['magpie', 'magpie'], pool: ['shift', 'rotate', 'magnet', 'pebble'], iters: 130, blunder: 0.15,
+    core: ['magpie', 'magpie'], pool: ['shift', 'rotate', 'magnet'], iters: 130, blunder: 0.15,
     quote: 'Ooh, shiny. That one\'s mine now.' },
   // elites
-  witch: { name: 'Snare Witch', emoji: '🕷️', act: 2, tier: 'elite',
-    core: ['snare', 'snare', 'hush'], pool: ['magnet', 'shift', 'rotate'], iters: 600, blunder: 0.05,
-    tricks: ['muffle'], quote: 'Tread carefully, dear.' },
-  golem: { name: 'Glue Golem', emoji: '🗿', act: 2, tier: 'elite',
-    core: ['glue', 'glue', 'mountain'], pool: ['2048', 'shift', 'magnet'], iters: 600, blunder: 0.05,
-    tricks: ['anchor'], quote: 'STUCK. FOREVER.' },
-  // boss
+  witch: { name: 'Hollow Witch', emoji: '🕷️', act: 2, tier: 'elite', cond: 'nocentre',
+    core: ['magnet', 'stinky', 'swap'], pool: ['magnet', 'shift', 'rotate'], iters: 350, blunder: 0.08,
+    tricks: ['muffle'], quote: 'Nobody sits in the middle, dear.' },
+  golem: { name: 'Stone Golem', emoji: '🗿', act: 2, tier: 'elite',
+    core: ['mountain', 'mountain', 'electromagnet'], pool: ['2048', 'shift', 'magnet'], iters: 350, blunder: 0.08,
+    tricks: ['anchor'], quote: 'I. DO. NOT. MOVE.' },
+  // bosses
   colossus: { name: 'Clockwork Colossus', emoji: '⚙️', act: 2, tier: 'boss',
-    core: ['whirl', 'mountain', 'magnet'], pool: ['whirl', 'rotate', 'beacon', 'swap', 'shift'], iters: 560, blunder: 0.03,
-    field: 'carousel', tricks: ['nudge'], quote: 'TICK. TOCK. YOUR TURN IS WOUND.' },
-
+    rules: ['column'], rules2: ['column'], iters: 250, blunder: 0.04,
+    quote: 'TICK. TOCK. THAT COLUMN, PLEASE.' },
   mirrorknight: { name: 'The Mirror Knight', emoji: '🛡️', act: 2, tier: 'boss',
-    core: ['flip', 'mountain', 'magnet'], pool: ['swap', 'flip', 'beacon', 'shift', 'glue'], iters: 560, blunder: 0.03,
-    field: 'quake', tricks: ['mirror'], quote: 'Your left is my right.' },
+    rules: ['spy'], rules2: ['spy', 'headstart'], iters: 350, blunder: 0.04,
+    quote: 'Your left is my right.' },
+  carpenter: { name: 'The Carpenter', emoji: '🪚', act: 2, tier: 'boss',
+    rules: ['elko'], rules2: ['elko', 'patient'], iters: 350, blunder: 0.04,
+    quote: 'Straight lines are for amateurs.' },
 
   // Act 3 — the Summit
   fay: { name: 'Firecracker Fay', emoji: '🎆', act: 3, tier: 'normal',
@@ -164,41 +155,38 @@ export const ENEMIES = {
   fox: { name: 'Turncoat Fox', emoji: '🦊', act: 3, tier: 'normal',
     core: ['turncoat', 'turncoat'], pool: ['magnet', 'stinky', 'shift', 'mountain'], iters: 400, blunder: 0.08,
     quote: 'Loyalty is for pebbles.' },
-  parrot: { name: 'Captain Polly', emoji: '🦜', act: 3, tier: 'normal',
+  parrot: { name: 'Captain Polly', emoji: '🦜', act: 3, tier: 'normal', cond: 'shared',
     core: ['parrot', 'parrot'], pool: ['magnet', 'shift', '2048', 'swap'], iters: 400, blunder: 0.08,
-    quote: 'Squawk! Anything you can do!' },
+    quote: 'Squawk! What\'s yours is mine!' },
   jester: { name: 'The Jester', emoji: '🃏', act: 3, tier: 'normal',
-    core: ['hush', 'swap', 'guardian'], pool: ['shift', 'swap', 'pebble', 'magnet', 'flip'], iters: 220, blunder: 0.14,
-    quote: 'Try and touch my friends. Go on!' },
-  robot: { name: 'Tile Bot 2048', emoji: '🤖', act: 3, tier: 'normal',
-    core: ['2048', '2048'], pool: ['mountain', 'glue', 'magnet', 'stinky'], iters: 450, blunder: 0.05,
+    core: ['swap', 'flip'], pool: ['shift', 'swap', 'magnet', 'whirl'], iters: 220, blunder: 0.14,
+    quote: 'Now you see it, now you don\'t!' },
+  robot: { name: 'Tile Bot 4096', emoji: '🤖', act: 3, tier: 'normal',
+    core: ['4096', '2048'], pool: ['mountain', 'magnet', 'stinky'], iters: 450, blunder: 0.05,
     quote: 'CALCULATING OPTIMAL SLIDE.' },
-  yeti: { name: 'Summit Yeti', emoji: '🦍', act: 3, tier: 'normal',
-    core: ['mountain', 'bumper', 'magnet'], pool: ['lasso', 'frog', 'whirl', 'mountain'], iters: 450, blunder: 0.05,
-    quote: 'ROAR. Mine mountain.' },
+  yeti: { name: 'Summit Yeti', emoji: '🦍', act: 3, tier: 'normal', cond: 'gravity',
+    core: ['mountain', 'bumper'], pool: ['lasso', 'frog', 'whirl', 'mountain'], iters: 450, blunder: 0.05,
+    quote: 'ROAR. Everything falls down mountain.' },
   // elites
   owl: { name: 'Grand Tactician', emoji: '🦉', act: 3, tier: 'elite',
-    core: ['magnet', 'stinky', 'shift'], pool: ['rotate', 'swap', 'beacon', 'firecracker'], iters: 900, blunder: 0,
+    core: ['electromagnet', 'rail', 'swap'], pool: ['rotate', 'swap', 'beacon', 'firecracker'], iters: 300, blunder: 0.06,
     tricks: ['mirror'], quote: 'I have seen this position before.' },
   storm: { name: 'Storm Caller', emoji: '⛈️', act: 3, tier: 'elite',
-    core: ['whirl', 'flip', 'magnet'], pool: ['2048', 'bumper', 'shift', 'hush'], iters: 1100, blunder: 0,
-    field: 'tide', quote: 'The tide takes everything.' },
+    core: ['cyclone', 'flip', 'magnet'], pool: ['2048', 'bumper', 'shift'], iters: 300, blunder: 0.06,
+    quote: 'The wind takes everything.' },
   // bosses
   grandmaster: { name: 'The Grandmaster', emoji: '👑', act: 3, tier: 'boss',
-    core: ['magnet', 'stinky', 'shift', 'rotate'], pool: ['firecracker', 'turncoat', 'swap', 'mountain', 'beacon'],
-    iters: 420, blunder: 0.04, tricks: ['mirror'], mods: { homeTurf: true }, field2: 'quake',
-    quote: 'Every stone you own, I have mastered.' },
+    rules: ['tactics'], rules2: ['tactics', 'reserved'], iters: 400, blunder: 0.03,
+    quote: 'You will play what I tell you to play.' },
+  twinkings: { name: 'The Twin Kings', emoji: '🎭', act: 3, tier: 'boss',
+    rules: ['headstart'], rules2: ['headstart', 'reserved'], tricks: ['nudge'], iters: 450, blunder: 0.03,
+    quote: 'Two crowns, two moves.' },
 };
 
-// The final pair of kings.
-ENEMIES.twinkings = { name: 'The Twin Kings', emoji: '🎭', act: 3, tier: 'boss',
-  core: ['twin', 'twin', 'pebble', 'pebble', 'turncoat'], pool: ['magnet', 'stinky', 'swap'], iters: 420, blunder: 0.04,
-  field: 'carousel', field2: 'gravity', tricks: ['nudge'], quote: 'Two crowns, one board.' };
-
 export const ACTS = [
-  { n: 1, name: 'The Meadow', bosses: ['oak', 'scarecrow'], plus: 0.0, bossPlus: 0.2, gold: [14, 22] },
-  { n: 2, name: 'The Quarry', bosses: ['colossus', 'mirrorknight'], plus: 0.12, bossPlus: 0.35, gold: [18, 28] },
-  { n: 3, name: 'The Summit', bosses: ['grandmaster', 'twinkings'], plus: 0.4, bossPlus: 0.5, gold: [22, 34] },
+  { n: 1, name: 'The Meadow', bosses: ['oak', 'scarecrow'], size: 2, evolve: 0.0, cond: 0.25, gold: [14, 22] },
+  { n: 2, name: 'The Quarry', bosses: ['colossus', 'mirrorknight', 'carpenter'], size: 3, evolve: 0.15, cond: 0.35, gold: [18, 28] },
+  { n: 3, name: 'The Summit', bosses: ['grandmaster', 'twinkings'], size: 3, evolve: 0.4, cond: 0.4, gold: [22, 34] },
 ];
 
 export const enemiesOf = (act, tier) => Object.keys(ENEMIES)
@@ -212,14 +200,17 @@ export const EASY_OPENERS = ['pip', 'otter', 'rock'];
 // Each choice is { label, detail?, can?(run), run(run, api) -> text }. The api
 // (from run.js) offers the helpers a choice needs: gain stone, pick a stone, etc.
 
+// Stones in a pouch that have an evolved form.
+export const evolvable = (run) => run.pouch.filter((s) => STONES[s.type].evolvesTo);
+
 export const EVENTS = [
   {
     id: 'stonemason', title: 'The Wandering Stonemason', emoji: '🧑‍🔧',
-    text: 'A dusty stonemason sets down her chisel. "Fine stones you carry. I could make one finer — for a price."',
+    text: 'A dusty stonemason sets down her chisel. "Fine stones you carry. I could make one into something else entirely — for a price."',
     choices: [
-      { label: 'Pay 35 gold', detail: 'Upgrade a stone.', can: (r) => r.gold >= 35 && r.pouch.some((s) => !s.plus),
+      { label: 'Pay 35 gold', detail: 'Evolve a stone.', can: (r) => r.gold >= 35 && evolvable(r).length > 0,
         act: (r, api) => api.upgradeStone(t('The stonemason gets to work.'), 1, () => { r.gold -= 35; }) },
-      { label: 'Pay 2 hearts', detail: 'Upgrade two stones.', can: (r) => r.hearts > 2 && r.pouch.filter((s) => !s.plus).length >= 2,
+      { label: 'Pay 2 hearts', detail: 'Evolve two stones.', can: (r) => r.hearts > 2 && evolvable(r).length >= 2,
         act: (r, api) => api.upgradeStone(t('Blood and granite.'), 2, () => { r.hearts -= 2; }) },
       { label: 'Leave', act: () => t('You nod politely and move on.') },
     ],
@@ -301,13 +292,14 @@ export const EVENTS = [
     id: 'fountain', title: 'The Wishing Fountain', emoji: '⛲',
     text: 'Coins glint under the water. A sign reads: "One wish per traveller."',
     choices: [
-      { label: 'Wish for strength', detail: 'Upgrade a random stone. Lose 1 heart.', can: (r) => r.hearts > 1 && r.pouch.some((s) => !s.plus),
+      { label: 'Wish for strength', detail: 'Evolve a random stone. Lose 1 heart.', can: (r) => r.hearts > 1 && evolvable(r).length > 0,
         act: (r, api) => {
-          const plain = r.pouch.filter((s) => !s.plus);
+          const plain = evolvable(r);
           const s = plain[(api.rng() * plain.length) | 0];
-          s.plus = true;
+          const was = STONES[s.type].name;
+          s.type = STONES[s.type].evolvesTo;
           r.hearts--;
-          return t('The water boils for a moment. Your {stone} comes out upgraded.', { stone: STONES[s.type].name });
+          return t('The water boils for a moment. Your {stone} comes out a {evolved}.', { stone: was, evolved: STONES[s.type].name });
         } },
       { label: 'Wish for health', detail: 'Pay 20 gold, heal 2 hearts.', can: (r) => r.gold >= 20,
         act: (r) => { r.gold -= 20; r.hearts = Math.min(r.maxHearts, r.hearts + 2); return t('You feel much better.'); } },
@@ -334,12 +326,13 @@ export const EVENTS = [
     id: 'library', title: 'The Rulebook Library', emoji: '📚',
     text: 'Shelves of dog-eared rulebooks. Someone has scribbled strategies in every margin.',
     choices: [
-      { label: 'Study', detail: 'Upgrade a random stone.', can: (r) => r.pouch.some((s) => !s.plus),
+      { label: 'Study', detail: 'Evolve a random stone.', can: (r) => evolvable(r).length > 0,
         act: (r, api) => {
-          const plain = r.pouch.filter((s) => !s.plus);
+          const plain = evolvable(r);
           const s = plain[(api.rng() * plain.length) | 0];
-          s.plus = true;
-          return t('You read up on the {stone}. It is now upgraded.', { stone: STONES[s.type].name });
+          const was = STONES[s.type].name;
+          s.type = STONES[s.type].evolvesTo;
+          return t('You read up on the {stone}. It is now a {evolved}.', { stone: was, evolved: STONES[s.type].name });
         } },
       { label: 'Borrow a book', detail: 'Gain a random uncommon trick.', can: (r, api) => api.trickRoom(),
         act: (r, api) => api.gainRandomTrick('uncommon') },

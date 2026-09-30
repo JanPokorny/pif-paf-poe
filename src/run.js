@@ -4,13 +4,11 @@
 // The run is one JSON-serialisable object. Its random stream is part of it, so
 // a saved run resumes exactly.
 
-import { STONES, STONE_TYPES, TRICKS, TRICK_TYPES } from './engine.js';
+import { STONES, TRICKS, TRICK_TYPES, CONDS } from './engine.js';
 import {
   RELICS, RELIC_TYPES, BOSS_RELICS, ENEMIES, ACTS, EVENTS, enemiesOf, EASY_OPENERS,
   STONE_PRICE, TRICK_PRICE, RELIC_PRICE, REWARD_STONES,
 } from './content.js';
-
-export const CLASSIC_SPACES = ['shift', '2048', 'rotate', 'mountain', 'magnet', 'stinky'];
 
 // ── Randomness that saves with the run ──────────────────────────────────────
 
@@ -34,102 +32,81 @@ function shuffle(run, list) {
   return a;
 }
 
-// ── Starting kits and heat ──────────────────────────────────────────────────
-
-export const KITS = {
-  apprentice: {
-    name: 'The Apprentice', emoji: '🧒', text: 'A bit of everything. The way the game was taught.',
-    pouch: ['pebble', 'pebble', 'shift', 'rotate', 'magnet', 'mountain'], tricks: ['overtake'], hearts: 6, gold: 40,
-  },
-  tinkerer: {
-    name: 'The Tinkerer', emoji: '🧑‍🔧', text: 'Moves stones around. Lots of them.',
-    pouch: ['pebble', 'shift', 'shift', 'rotate', 'bumper', 'lasso'], tricks: ['nudge', 'relocate'], hearts: 5, gold: 30,
-  },
-  warden: {
-    name: 'The Warden', emoji: '💂', text: 'Tells the enemy where they may stand.',
-    pouch: ['pebble', 'pebble', 'magnet', 'stinky', 'mountain', 'beacon'], tricks: ['muffle'], hearts: 6, gold: 30,
-  },
-  gambler: {
-    name: 'The Gambler', emoji: '🎰', text: 'Rare stones, few hearts. Unlocked by winning once.',
-    pouch: ['pebble', 'pebble', 'guardian', 'firecracker', 'shift', 'rotate'], tricks: ['pluck'], hearts: 4, gold: 80,
-    relics: ['lucky-coin'], unlock: 'win',
-  },
-  trickster: {
-    name: 'The Trickster', emoji: '🃏', text: 'Plain stones, a sleeve full of tricks. Unlocked by reaching the Quarry.',
-    pouch: ['pebble', 'pebble', 'pebble', 'shift', 'hush', 'rotate'], tricks: ['mirror', 'relocate', 'muffle'], hearts: 5, gold: 30,
-    relics: ['gloves'], unlock: 'quarry',
-  },
-  mason: {
-    name: 'The Mason', emoji: '🧱', text: 'Walls and glue, and a thick skin. Unlocked by winning at heat 1 or more.',
-    pouch: ['pebble', 'mountain', 'mountain', 'glue', 'magnet', 'rotate'], tricks: ['anchor'], hearts: 7, gold: 20,
-    unlock: 'heat',
-  },
-};
+// ── Heat ─────────────────────────────────────────────────────────────────────
 
 export const HEAT = [
   { n: 0, text: 'The standard climb.' },
   { n: 1, text: 'Enemies think harder.' },
-  { n: 2, text: 'Enemy stones are upgraded more often.' },
+  { n: 2, text: 'Enemy stones are evolved more often.' },
   { n: 3, text: 'Start with 1 fewer heart.' },
-  { n: 4, text: 'Elites and bosses bring an extra stone.' },
-  { n: 5, text: 'Enemies never blunder, and elites always open.' },
+  { n: 4, text: 'Elites bring an extra stone, bosses an extra trick.' },
+  { n: 5, text: 'Enemies never blunder.' },
 ];
 
-let uidCounter = 1;
-const stone = (run, type, plus = false) => ({ type, plus, uid: run.nextUid++ });
+export const START = { pouch: ['shift', 'rotate', 'magnet'], tricks: ['overtake'], hearts: 5, gold: 30, slots: 2 };
+export const MAX_SLOTS = 5;
 
-export function newRun({ kit = 'apprentice', seed = (Math.random() * 2 ** 31) | 0, heat = 0 } = {}) {
-  const k = KITS[kit];
+const stone = (run, type) => ({ type, uid: run.nextUid++ });
+
+export function newRun({ seed = (Math.random() * 2 ** 31) | 0, heat = 0 } = {}) {
+  const hearts = START.hearts - (heat >= 3 ? 1 : 0);
   const run = {
-    v: 1, seed, rs: seed, kit, heat,
+    v: 2, seed, rs: seed, heat,
     act: 1, atBoss: false, map: null,
-    hearts: k.hearts - (heat >= 3 ? 1 : 0), maxHearts: k.hearts - (heat >= 3 ? 1 : 0),
-    gold: k.gold, pouch: [], tricks: [...k.tricks], relics: [...(k.relics ?? [])],
+    hearts, maxHearts: hearts,
+    gold: START.gold, pouch: [], tricks: [...START.tricks], relics: [],
+    slots: START.slots,
     lastHand: null, nextUid: 1,
     rematchUsed: {}, phoenixUsed: false,
     stats: { won: 0, lost: 0, elites: 0, bosses: 0, gold: 0, started: Date.now() },
     screen: 'actintro', pending: null, over: false, victory: false,
   };
-  run.pouch = k.pouch.map((t) => stone(run, t));
+  run.pouch = START.pouch.map((t) => stone(run, t));
   run.map = makeMap(run);
   return run;
 }
 
 export const has = (run, relic) => run.relics.includes(relic);
-export const pouchCap = (run) => 7 + (has(run, 'satchel') ? 2 : 0);
+export const pouchCap = (run) => 6 + (has(run, 'satchel') ? 2 : 0);
 export const trickCap = (run) => 3 + (has(run, 'satchel') ? 1 : 0);
-export const handSize = (run) => 5 + (has(run, 'deep-pockets') ? 1 : 0);
+// How many special stones you bring into a duel. Pebbles are always there.
+export const handSize = (run) => Math.min(MAX_SLOTS + 1, (run.slots ?? 2) + (has(run, 'deep-pockets') ? 1 : 0));
 export const trickUses = (run) => 1 + (has(run, 'gloves') ? 1 : 0);
-export const stoneName = (s) => STONES[s.type].name + (s.plus ? '+' : '');
+export const stoneName = (s) => STONES[s.type].name;
+export const evolvable = (run) => run.pouch.filter((s) => STONES[s.type].evolvesTo);
+export function evolve(s) { s.type = STONES[s.type].evolvesTo ?? s.type; return s; }
 
 // ── The map ─────────────────────────────────────────────────────────────────
 //
-// Each act is a game of tic-tac-toe with its boss on an endless sheet of
-// graph paper. At first there is only the boss's opening O. Every mark, yours
-// or the boss's, reveals the squares around it -- and a square is decided the
-// moment it is revealed, by how much it matters: a square that would extend
-// your line, or break the boss's, turns up as a hard duel; one off to the side
-// is a campfire, a shop or treasure. Four Xs in a row open the boss's door.
-// Each line of four Os the boss draws makes it stronger. A duel lost scorches
-// its square, and the boss never marks shops or campfires.
+// Each act is a game of tic-tac-toe with its boss on a 5x5 sheet of graph
+// paper. At first there is only the boss's opening O in the middle. Every
+// mark, yours or the boss's, reveals the squares around it -- and a square is
+// decided the moment it is revealed, by how much it matters: a square that
+// would extend your line, or break the boss's, turns up as a hard duel; one
+// off to the side is a campfire, a shop or treasure. Three Xs in a row open
+// the boss's door. Each line of three Os the boss draws makes it stronger. A
+// duel lost scorches its square, and the boss never marks shops or campfires.
 
 export const BOSS_LIVES = 2;              // duels a boss must lose
-export const LINE = 4;                     // marks in a row that count
-export const MAX_POWER = 3;
-export const PAGE = 14;                   // squares an act allows before the boss will wait no longer
+export const SIZE = 5;
+export const LINE = 3;                     // marks in a row that count
+export const MAX_POWER = 1;
+export const PAGE = 10;                   // squares an act allows before the boss will wait no longer
+const MID = (SIZE - 1) / 2;
 const DIRS4 = [[1, 0], [0, 1], [1, 1], [1, -1]];
 export const keyOf = (x, y) => `${x},${y}`;
 export const coords = (k) => k.split(',').map(Number);
-const markAt = (map, x, y) => map.cells[keyOf(x, y)]?.mark ?? null;
+const inside = (x, y) => x >= 0 && y >= 0 && x < SIZE && y < SIZE;
+const markAt = (map, x, y) => (inside(x, y) ? map.cells[keyOf(x, y)]?.mark ?? null : '#');
 
-// Every window of LINE squares through (x, y): lists of [x, y].
+// Every window of LINE squares through (x, y) that fits on the page.
 function windowsThrough(x, y) {
   const out = [];
   for (const [dx, dy] of DIRS4) {
     for (let k = 0; k < LINE; k++) {
       const w = [];
       for (let j = 0; j < LINE; j++) w.push([x + (j - k) * dx, y + (j - k) * dy]);
-      out.push(w);
+      if (w.every(([wx, wy]) => inside(wx, wy))) out.push(w);
     }
   }
   return out;
@@ -151,28 +128,18 @@ function reach(map, x, y, mark) {
   return best;
 }
 
-function hasLine(map, mark) {
-  for (const [k, c] of Object.entries(map.cells)) {
-    if (c.mark !== mark) continue;
-    const [x, y] = coords(k);
-    for (const [dx, dy] of DIRS4) {
-      let n = 1;
-      while (n < LINE && markAt(map, x + n * dx, y + n * dy) === mark) n++;
-      if (n >= LINE) return true;
-    }
-  }
-  return false;
-}
+function hasLine(map, mark) { return countLines(map, mark) > 0; }
 function countLines(map, mark) {
   let lines = 0;
-  for (const [k, c] of Object.entries(map.cells)) {
-    if (c.mark !== mark) continue;
-    const [x, y] = coords(k);
-    for (const [dx, dy] of DIRS4) {
-      if (markAt(map, x - dx, y - dy) === mark) continue;   // count each run once, from its start
-      let n = 1;
-      while (markAt(map, x + n * dx, y + n * dy) === mark) n++;
-      if (n >= LINE) lines++;
+  for (let y = 0; y < SIZE; y++) {
+    for (let x = 0; x < SIZE; x++) {
+      if (markAt(map, x, y) !== mark) continue;
+      for (const [dx, dy] of DIRS4) {
+        if (markAt(map, x - dx, y - dy) === mark) continue;   // count each run once, from its start
+        let n = 1;
+        while (markAt(map, x + n * dx, y + n * dy) === mark) n++;
+        if (n >= LINE) lines++;
+      }
     }
   }
   return lines;
@@ -186,21 +153,28 @@ export function retreat(run) {
 }
 
 export function makeMap(run) {
+  const mid = keyOf(MID, MID);
   const map = {
-    v: 2,
+    v: 3,
     cells: {},         // "x,y" -> {kind, mark, duel?}; only revealed squares exist
     boss: pick(run, ACTS[run.act - 1].bosses),
     at: null,          // the square being visited right now
-    lastO: '0,0',      // the boss's latest mark, for the page to draw in
+    lastO: mid,        // the boss's latest mark, for the page to draw in
     open: false,       // the boss's door
     power: 0,          // how much stronger the boss has grown
     oLines: 0,
     visited: 0,
     fights: 0,         // duels revealed so far, for the gentle first few
   };
-  map.cells['0,0'] = { kind: 'boss-mark', mark: 'O' };
+  map.cells[mid] = { kind: 'boss-mark', mark: 'O' };
   run.map = map;
-  reveal(run, 0, 0);
+  reveal(run, MID, MID);
+  // The very first page hides a gift: a special stone, free.
+  if (run.act === 1) {
+    const ring = Object.entries(map.cells).filter(([, c]) => !c.mark && c.kind !== 'elite');
+    const [k] = pick(run, ring);
+    map.cells[k] = { kind: 'gift', mark: null };
+  }
   return map;
 }
 
@@ -208,24 +182,22 @@ export function makeMap(run) {
 function revealCell(run, x, y) {
   const map = run.map;
   const k = keyOf(x, y);
-  if (map.cells[k]) return;
+  if (!inside(x, y) || map.cells[k]) return;
   const mine = reach(map, x, y, 'X');     // how much it would do for your lines
   const theirs = reach(map, x, y, 'O');   // how much it would break the boss's
   const stake = Math.max(mine, theirs);
-  const table = stake >= 3 ? { elite: 55, fight: 40, event: 5 }
-    : stake === 2 ? { elite: 28, fight: 52, event: 12, treasure: 3, rest: 3, shop: 2 }
-      : stake === 1 ? { elite: 6, fight: 50, event: 20, treasure: 8, rest: 8, shop: 8 }
-        : { fight: 30, event: 22, treasure: 16, rest: 16, shop: 16 };
-  // The first ring round the boss's opening mark: gentle, and somewhere to shop.
-  if (map.visited === 0 && !Object.values(map.cells).some((c) => c.kind === 'shop') && Object.keys(map.cells).length >= 7) {
-    table.shop = 60;
-  }
+  const table = stake >= 2 ? { elite: 40, fight: 50, event: 10 }
+    : stake === 1 ? { elite: 5, fight: 50, event: 18, treasure: 8, rest: 10, shop: 9 }
+      : { fight: 36, event: 20, treasure: 14, rest: 15, shop: 15 };
+  if (run.act === 1 && map.visited < 2) delete table.elite;
+  // One unopened chest on view at a time.
+  if (Object.values(map.cells).some((c) => c.kind === 'treasure' && !c.mark)) delete table.treasure;
   const kind = weighted(run, table);
   const cell = { kind, mark: null };
   if (kind === 'fight') {
     const easy = run.act === 1 && map.fights < 3;
     const pool = easy ? EASY_OPENERS : enemiesOf(run.act, 'normal');
-    cell.duel = prepareDuel(run, pick(run, pool));
+    cell.duel = prepareDuel(run, pick(run, pool), { easy });
     map.fights++;
   } else if (kind === 'elite') {
     cell.duel = prepareDuel(run, pick(run, enemiesOf(run.act, 'elite')));
@@ -239,14 +211,9 @@ function reveal(run, x, y) {
 
 export const xCount = (run) => Object.values(run.map?.cells ?? {}).filter((c) => c.mark === 'X').length;
 
-// The squares on view, as a box: {x0, y0, x1, y1}.
-export function mapBounds(map) {
-  let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;
-  for (const k of Object.keys(map.cells)) {
-    const [x, y] = coords(k);
-    x0 = Math.min(x0, x); y0 = Math.min(y0, y); x1 = Math.max(x1, x); y1 = Math.max(y1, y);
-  }
-  return { x0, y0, x1, y1 };
+// The page, as a box: {x0, y0, x1, y1}.
+export function mapBounds() {
+  return { x0: 0, y0: 0, x1: SIZE - 1, y1: SIZE - 1 };
 }
 
 // Where the boss would finish a line with its next mark.
@@ -261,13 +228,14 @@ export function bossThreats(map) {
 }
 
 export const lineReach = (map, k, mark = 'X') => reach(map, ...coords(k), mark);
-export const pageFull = (map) => map.visited >= PAGE;
+const openSquares = (map) => Object.entries(map.cells).filter(([, c]) => !c.mark).map(([k]) => k);
+export const pageFull = (map) => map.visited >= PAGE || !openSquares(map).length;
 
 // Where you may go next: any open square on view, and the boss once its door
 // is open. When the page is full, only the boss.
 export function reachable(run) {
   if (pageFull(run.map)) return ['boss'];
-  const out = Object.entries(run.map.cells).filter(([, c]) => !c.mark).map(([k]) => k);
+  const out = openSquares(run.map);
   if (run.map.open) out.push('boss');
   return out;
 }
@@ -276,7 +244,7 @@ export function reachable(run) {
 // otherwise build its own and spoil yours, with a little noise.
 function bossMark(run) {
   const map = run.map;
-  const free = Object.entries(map.cells).filter(([, c]) => !c.mark && c.kind !== 'shop' && c.kind !== 'rest');
+  const free = Object.entries(map.cells).filter(([, c]) => !c.mark && c.kind !== 'shop' && c.kind !== 'rest' && c.kind !== 'gift');
   if (!free.length) return null;
   const value = { treasure: 6, elite: 1, event: 2, fight: 1 };
   let best = null, bestScore = -Infinity;
@@ -286,7 +254,7 @@ function bossMark(run) {
     let score = (value[c.kind] ?? 0) + rand(run) * 6;
     if (mine >= LINE - 1) score += 1000;
     if (yours >= LINE - 1) score += 500;
-    score += [0, 6, 20, 60][Math.min(3, yours)] + [0, 5, 16, 40][Math.min(3, mine)];
+    score += [0, 8, 20][Math.min(2, yours)] + [0, 6, 16][Math.min(2, mine)];
     if (score > bestScore) { bestScore = score; best = k; }
   }
   map.cells[best].mark = 'O';
@@ -313,7 +281,7 @@ export function settleCell(run, mark) {
   if (mark === 'X' && wasOpen) { map.bonus = 10; run.gold += 10; }
   map.lastO = bossMark(run);
   if (map.lastO) reveal(run, ...coords(map.lastO));
-  // Every new line of four Os makes the boss stronger, up to a point.
+  // Every new line of Os makes the boss stronger, up to a point.
   const oLines = countLines(map, 'O');
   if (oLines > (map.oLines ?? 0) && map.power < MAX_POWER) {
     map.power = Math.min(MAX_POWER, map.power + oLines - (map.oLines ?? 0));
@@ -330,59 +298,56 @@ export function settleCell(run, mark) {
 
 // ── Duels ───────────────────────────────────────────────────────────────────
 
-function rollEnemyHand(run, enemy, tier) {
+function rollEnemyHand(run, enemy, tier, context) {
+  if (tier === 'boss') return [];
   const act = ACTS[Math.max(0, (enemy.act || run.act) - 1)];
-  let size = enemy.size ?? 5;
-  if (run.heat >= 4 && (tier === 'elite' || tier === 'boss')) size++;
+  let size = enemy.size ?? act.size;
+  if (run.heat >= 4 && tier === 'elite') size++;
+  if (context.easy) size = Math.min(size, 1);
   const hand = enemy.core.slice(0, size);
   while (hand.length < size) hand.push(pick(run, enemy.pool));
-  let plus = tier === 'boss' ? act.bossPlus : act.plus + (tier === 'elite' ? 0.15 : 0);
-  if (run.heat >= 2) plus += 0.15;
-  if (enemy.act === 0) plus = ACTS[run.act - 1].plus;
-  return hand.map((type) => ({ type, plus: type !== 'pebble' && rand(run) < plus }));
+  let evolveChance = act.evolve + (tier === 'elite' ? 0.15 : 0);
+  if (run.heat >= 2) evolveChance += 0.15;
+  if (enemy.act === 0) evolveChance = ACTS[run.act - 1].evolve;
+  return hand.map((type) => ({ type: STONES[type].evolvesTo && rand(run) < evolveChance ? STONES[type].evolvesTo : type }));
 }
+
 
 // Build everything a duel needs except the player's chosen hand.
 export function prepareDuel(run, enemyId, context = {}) {
   const enemy = ENEMIES[enemyId];
   const tier = context.tier ?? enemy.tier;
-  const handO = rollEnemyHand(run, enemy, tier);
-  let first;
-  if (tier === 'boss') first = (context.bossRound ?? 0) % 2 === 0 ? 'O' : 'X';
-  else if (tier === 'elite' && run.heat >= 5) first = 'O';
-  else if (has(run, 'opening-book') && tier !== 'elite') first = 'X';
-  else first = rand(run) < 0.5 ? 'X' : 'O';
-  // The space switches off a classic stone or one of yours -- never more than
-  // one of the enemy's own stones, so it does not gut their whole plan.
-  const theirs = (t) => handO.filter((h) => h.type === t).length;
-  const types = [...new Set([...CLASSIC_SPACES, ...run.pouch.map((h) => h.type)])].filter((t) => t !== 'pebble' && theirs(t) <= 1);
-  const disabled = rand(run) < 0.3 || !types.length ? null : pick(run, types);
+  const handO = rollEnemyHand(run, enemy, tier, context);
   let heatIters = run.heat >= 1 ? 1.5 : 1;
-  // A boss the map has fed grows: upgraded stones first, then extra ones.
-  if (tier === 'boss' && run.map?.power) {
-    for (let k = 0; k < run.map.power; k++) {
-      const plain = handO.find((h) => !h.plus && h.type !== 'pebble');
-      if (plain) plain.plus = true;
-      else if (handO.length < 7) handO.push({ type: pick(run, enemy.pool), plus: true });
-    }
-    heatIters *= 1 + 0.15 * run.map.power;
-  }
   const enemyTricks = [...(enemy.tricks ?? [])];
+  const usesO = 1;
   const modsO = { ...(enemy.mods ?? {}) };
+  let conds = [], rules = [];
+  if (tier === 'boss') {
+    rules = [...(((context.bossWins ?? 0) > 0 && enemy.rules2) || enemy.rules || [])];
+    const power = run.map?.power ?? 0;
+    if (run.heat >= 4) enemyTricks.push(randomTrick(run));
+    heatIters *= 1 + 0.5 * power;   // a boss with power thinks harder
+  } else {
+    // A home rule, or sometimes one rolled for the day.
+    const act = ACTS[run.act - 1];
+    const chance = context.easy ? 0 : act.cond + (tier === 'elite' ? 0.25 : 0);
+    if (enemy.cond) conds = [enemy.cond];
+    else if (rand(run) < chance) conds = [pick(run, Object.keys(CONDS))];
+  }
   // Elites past the first act carry a quirk, so the same face is not the same fight.
   let quirk = null;
   if (tier === 'elite' && run.act >= 2) {
-    quirk = pick(run, Object.keys(QUIRKS).filter((q) => q !== 'swift' || run.act >= 3));
-    if (quirk === 'swift') first = 'O';
-    if (quirk === 'armored') handO.forEach((h) => { if (h.type !== 'pebble') h.plus = true; });
+    quirk = pick(run, Object.keys(QUIRKS));
+    if (quirk === 'armored') handO.forEach((h) => { h.type = STONES[h.type].evolvesTo ?? h.type; });
     if (quirk === 'tricky') enemyTricks.push(randomTrick(run));
-    if (quirk === 'rooted') modsO.homeTurf = true;
-    if (quirk === 'patient') modsO.hourglass = true;
+    if (quirk === 'stocked') handO.push({ type: pick(run, enemy.pool) });
+    if (quirk === 'keen') heatIters *= 1.5;
   }
   return {
-    enemyId, tier, handO, first, disabled, quirk,
-    tricksO: enemyTricks, usesO: 1,
-    modsO, field: (tier === 'boss' && (context.bossWins ?? 0) > 0 && enemy.field2) || enemy.field || null,
+    enemyId, tier, handO, first: 'O', quirk, conds, rules,
+    tricksO: enemyTricks, usesO,
+    modsO,
     iters: Math.round(enemy.iters * heatIters), blunder: run.heat >= 5 ? 0 : enemy.blunder,
     bossRound: context.bossRound ?? 0, bossWins: context.bossWins ?? 0,
     event: context.event ?? null,
@@ -390,21 +355,15 @@ export function prepareDuel(run, enemyId, context = {}) {
 }
 
 export const QUIRKS = {
-  swift: { name: 'Swift', text: 'It always opens.' },
-  armored: { name: 'Armoured', text: 'Every stone it brings is upgraded.' },
+  armored: { name: 'Seasoned', text: 'Every stone it brings is evolved.' },
   tricky: { name: 'Tricky', text: 'It carries an extra trick.' },
-  rooted: { name: 'Rooted', text: 'The space never switches its stones off.' },
-  patient: { name: 'Patient', text: 'A full board goes to it, whoever opened.' },
+  stocked: { name: 'Stocked', text: 'It brings an extra stone.' },
+  keen: { name: 'Keen', text: 'It thinks harder.' },
 };
 
 // What the player brings: the chosen stones (by uid) as a duel hand.
 export function playerHand(run, uids) {
-  return uids.map((u) => run.pouch.find((s) => s.uid === u)).filter(Boolean)
-    .map((s) => ({ type: s.type, plus: s.plus || (s.type === 'pebble' && has(run, 'polisher')) || autoUpgraded(run, s.type) }));
-}
-
-export function autoUpgraded(run, type) {
-  return run.relics.some((r) => RELICS[r]?.upgrades?.includes(type));
+  return uids.map((u) => run.pouch.find((s) => s.uid === u)).filter(Boolean).map((s) => ({ type: s.type }));
 }
 
 export function playerMods(run) {
@@ -415,29 +374,18 @@ export function playerMods(run) {
 
 export function gameConfig(run, duel, uids) {
   return {
-    handX: playerHand(run, uids), handO: duel.handO, first: duel.first, disabled: duel.disabled,
+    handX: playerHand(run, uids), handO: duel.handO, first: 'O',
     tricksX: [...run.tricks], tricksO: duel.tricksO, usesX: trickUses(run), usesO: duel.usesO,
-    modsX: playerMods(run), modsO: duel.modsO, field: duel.field,
+    modsX: playerMods(run), modsO: duel.modsO, conds: duel.conds ?? [], rules: duel.rules ?? [],
   };
 }
 
 // The default loadout: last time's stones if still owned, topped up.
-export function defaultHand(run, disabled = null) {
+export function defaultHand(run) {
   const size = handSize(run);
   const owned = new Set(run.pouch.map((s) => s.uid));
-  const works = (s) => s.type !== disabled || has(run, 'home-turf');
-  const rank = (s) => (works(s) ? 0 : -5) + (s.type === 'pebble' ? 0 : 1) + (s.plus ? 0.5 : 0)
-    + ({ common: 0, uncommon: 0.2, rare: 0.4 }[STONES[s.type].rarity] ?? 0);
-  // Last time's stones, if still owned -- but not ones this space switches off
-  // while something else in the pouch would work.
-  const spare = run.pouch.filter((s) => works(s) && !(run.lastHand ?? []).includes(s.uid)).length;
-  let dropped = 0;
-  const chosen = (run.lastHand ?? []).filter((u) => {
-    if (!owned.has(u)) return false;
-    const s = run.pouch.find((p) => p.uid === u);
-    if (!works(s) && dropped < spare) { dropped++; return false; }
-    return true;
-  }).slice(0, size);
+  const rank = (s) => ({ common: 0, uncommon: 0.2, rare: 0.4 }[STONES[s.type].rarity] ?? 0) + (STONES[s.type].evolvesFrom ? 0.5 : 0);
+  const chosen = (run.lastHand ?? []).filter((u) => owned.has(u)).slice(0, size);
   const rest = run.pouch.filter((s) => !chosen.includes(s.uid)).sort((a, b) => rank(b) - rank(a));
   while (chosen.length < Math.min(size, run.pouch.length)) chosen.push(rest.shift().uid);
   return chosen;
@@ -464,6 +412,13 @@ export function enterNode(run, key) {
       break;
     case 'shop': run.pending = { kind: 'shop', shop: makeShop(run) }; run.screen = 'shop'; break;
     case 'rest': run.pending = { kind: 'rest' }; run.screen = 'rest'; break;
+    case 'gift': {
+      // A special stone, free: one of two.
+      const stones = stoneChoices(run, 'normal', null, 2);
+      run.pending = { kind: 'reward', gift: true, gold: 0, stones, trick: null, relic: null, relicChoice: null, tier: 'gift', taken: {} };
+      run.screen = 'reward';
+      break;
+    }
     case 'treasure': {
       // Two relics to choose from.
       const first = randomRelic(run);
@@ -600,13 +555,11 @@ function rarityTable(run, tier) {
 export function randomStone(run, rarity = null, tier = 'normal') {
   const r = rarity ?? weighted(run, rarityTable(run, tier));
   const pool = REWARD_STONES.filter((t) => STONES[t].rarity === r);
-  const type = pick(run, pool);
-  const upChance = [0, 0.1, 0.22][run.act - 1] + (tier === 'elite' ? 0.1 : 0);
-  return { type, plus: has(run, 'hammer') || rand(run) < upChance };
+  return { type: pick(run, pool) };
 }
 
-export function stoneChoices(run, tier = 'normal', rarity = null) {
-  const n = 3 + (has(run, 'clover') ? 1 : 0);
+export function stoneChoices(run, tier = 'normal', rarity = null, count = 3) {
+  const n = count + (has(run, 'clover') ? 1 : 0);
   const out = [];
   for (let guard = 0; out.length < n && guard < 50; guard++) {
     const s = randomStone(run, rarity, tier);
@@ -627,9 +580,6 @@ export function randomRelic(run, rarity = null) {
   let pool = RELIC_TYPES.filter((r) => !has(run, r) && !BOSS_RELICS.includes(r));
   if (rarity) pool = pool.filter((r) => RELICS[r].rarity === rarity);
   if (!pool.length) pool = RELIC_TYPES.filter((r) => !has(run, r));
-  // A relic that upgrades stones you do not carry is no find at all.
-  const useful = pool.filter((r) => !RELICS[r].upgrades || RELICS[r].upgrades.some((ty) => run.pouch.some((p) => p.type === ty)));
-  if (useful.length) pool = useful;
   if (!pool.length) return null;
   const table = { common: 55, uncommon: 32, rare: 13 };
   const byR = weighted(run, table);
@@ -643,11 +593,11 @@ export function gainRelic(run, id) {
   run.relics.push(id);
   if (id === 'iron-heart') { run.maxHearts += 2; run.hearts = Math.min(run.maxHearts, run.hearts + 2); }
   if (id === 'piggy') run.gold += 60;
+  if (id === 'war-chest') run.gold += 150;
 }
 
 export function gainStone(run, s) {
-  const plus = s.plus || has(run, 'hammer');
-  const st = stone(run, s.type, plus);
+  const st = stone(run, s.type);
   run.pouch.push(st);
   return st;
 }
@@ -667,7 +617,7 @@ export function makeShop(run) {
   for (const r of rarities) {
     let s;
     for (let g = 0; g < 20; g++) { s = randomStone(run, r); if (!stones.some((o) => o.type === s.type)) break; }
-    stones.push({ ...s, price: price(run, STONE_PRICE[r] + (s.plus ? 25 : 0)), sold: false });
+    stones.push({ ...s, price: price(run, STONE_PRICE[r]), sold: false });
   }
   const tricks = [];
   for (const r of ['common', 'common', 'uncommon', 'rare']) {
@@ -681,9 +631,11 @@ export function makeShop(run) {
   }
   return {
     stones, tricks, relics,
-    upgradePrice: price(run, 70), healPrice: price(run, 30),
-    upgraded: false, healed: 0,
+    upgradePrice: price(run, has(run, 'whetstone') ? 35 : 70), healPrice: price(run, 30),
+    slotPrice: price(run, 60 + 40 * (run.slots - START.slots)),
+    upgraded: false, healed: 0, slotted: false,
   };
 }
 
-export function upgradeable(run) { return run.pouch.filter((s) => !s.plus); }
+export const upgradeable = evolvable;
+export const canAddSlot = (run) => run.slots < MAX_SLOTS;

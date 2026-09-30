@@ -1,7 +1,7 @@
-// How strong is each stone? A hand holding two of it plays a fixed standard
-// hand, both seats, same search budget.
+// How strong is each stone? A hand of it plus a Shift plays a hand of Shift
+// and Rotate, the enemy opening, same search budget.
 //
-//   node tools/stones.mjs --games 60 --iters 200 [--plus]
+//   node tools/stones.mjs --games 60 --iters 200
 
 import { Worker, isMainThread, parentPort, workerData } from 'node:worker_threads';
 import { cpus } from 'node:os';
@@ -9,13 +9,11 @@ import { createGame, applyAction, STONE_TYPES } from '../src/engine.js';
 import { chooseAction, makeRng } from '../src/ai.js';
 
 const arg = (k, d) => { const i = process.argv.indexOf('--' + k); return i > 0 ? process.argv[i + 1] : d; };
-const BASE = ['shift', 'rotate', 'magnet', 'mountain', 'pebble'];
+const BASE = ['shift', 'rotate'];
 
-function play({ type, seed, iters, plus }) {
-  const test = [type, type, 'shift', 'rotate', 'pebble'].map((t, i) => ({ type: t, plus: plus && i < 2 && t !== 'pebble' }));
-  if (type === 'twin') test[4] = { type: 'pebble', plus: false }, test.push({ type: 'pebble', plus: false });
+function play({ type, seed, iters }) {
   const first = seed % 2 ? 'X' : 'O';
-  const s = createGame({ handX: test, handO: BASE, first, log: false });
+  const s = createGame({ handX: [type, 'shift'], handO: BASE, first, log: false });
   const rng = makeRng(seed);
   while (!s.over) applyAction(s, chooseAction(s, { iterations: iters, rng }));
   return { type, won: s.winner === 'X' ? 1 : 0, first };
@@ -23,9 +21,9 @@ function play({ type, seed, iters, plus }) {
 
 if (!isMainThread) parentPort.postMessage(workerData.map(play));
 else {
-  const games = +arg('games', 60), iters = +arg('iters', 200), plus = process.argv.includes('--plus');
+  const games = +arg('games', 60), iters = +arg('iters', 200);
   const specs = [];
-  for (const type of STONE_TYPES) for (let g = 0; g < games; g++) specs.push({ type, seed: g + 1, iters, plus });
+  for (const type of STONE_TYPES) for (let g = 0; g < games; g++) specs.push({ type, seed: g + 1, iters });
   const W = cpus().length, chunks = Array.from({ length: W }, () => []);
   specs.forEach((s, i) => chunks[i % W].push(s));
   const res = (await Promise.all(chunks.map((c) => new Promise((ok) => { const w = new Worker(new URL(import.meta.url), { workerData: c }); w.on('message', ok); })))).flat();
