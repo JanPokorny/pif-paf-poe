@@ -640,3 +640,18 @@ b { font-weight: 400; background: linear-gradient(transparent 55%, var(--hi) 55%
 .hand-slot .badge-plus { top: -6px; right: -6px; }
 .slot-plain { padding: 3px 5px; }
 .slot-name { max-width: none; overflow: visible; font-size: 0.68rem; } .hand-slot { padding: 5px 2px; min-width: 0; }
+/* The endless sheet */
+.map-scroll { overflow: auto; max-height: calc(100dvh - 300px); min-height: 240px; margin: 0 -16px; padding: 8px 16px; scrollbar-width: thin; }
+.map-sheet { --cell: max(68px, min(96px, calc((min(100vw, 520px) - 32px) / var(--cols)))); position: relative; width: calc(var(--cell) * var(--cols)); height: calc(var(--cell) * var(--rows)); margin: 0 auto; }
+.map-sheet .map-cells { position: absolute; inset: 0; display: grid; grid-template-columns: repeat(var(--cols), var(--cell)); grid-template-rows: repeat(var(--rows), var(--cell)); }
+.map-sheet .board-lines path { stroke-width: 3; opacity: 0.6; }
+.map-fog { background: radial-gradient(circle, rgba(246, 241, 228, 0.9) 40%, transparent 72%); }
+.map-cell.boss-mark .scribble { inset: 4%; width: 92%; height: 92%; }
+.boss-lives { display: flex; gap: 1px; }
+.boss-lives span { width: 15px; height: 15px; color: var(--red); opacity: 0.3; }
+.boss-lives span.alive { opacity: 1; }
+.boss-lives span.alive .icon path { fill: rgba(200, 55, 45, 0.5); }
+.boss-lives .icon { width: 15px; height: 15px; }
+/* On the endless sheet every open square can be taken: no highlight needed. */
+.map-sheet .map-cell.reach::before { display: none; }
+.map-sheet .map-cell:not(.marked):active { background: var(--hi); }

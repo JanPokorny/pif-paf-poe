@@ -16,7 +16,7 @@ import { RELICS } from '../content.js';
 import { think } from '../brain.js';
 import { sfx } from '../sound.js';
 
-const FIELD_ORDER = ['pos', 'from', 'a', 'to', 'target', 'dir', 'block', 'turn', 'axis', 'stone'];
+const FIELD_ORDER = ['pos', 'from', 'a', 'to', 'target', 'dir', 'block', 'turn', 'axis', 'stone', 'hold', 'only'];
 const DIR_ARROW = { up: 'arrow-up', down: 'arrow-down', left: 'arrow-left', right: 'arrow-right' };
 
 // The next choice that tells these candidates apart.
@@ -314,6 +314,14 @@ export function mountDuel(root, opts) {
       const label = { h: '↔', v: '↕', d: '⤡', a: '⤢' };
       for (const [k, group] of stage.groups) {
         place(...spot[k], h('button.rot.axis' + (isChosen(group) ? '.chosen' : ''), { onclick: pickGroup(group), 'aria-label': `mirror ${k}` }, label[k]));
+      }
+    } else if (stage.kind === 'hold' || stage.kind === 'only') {
+      const label = stage.kind === 'hold'
+        ? { true: t('It holds its square'), false: t('It slides too') }
+        : state.board[state.placedAt]?.type === 'glue' ? { true: t('Only yours, corners too'), false: t('Everything beside it') }
+          : { true: t('Only their stones'), false: t('All stones') };
+      for (const [k, group] of stage.groups) {
+        btns.push(h('button.btn.opt' + (isChosen(group) ? '.chosen' : ''), { onclick: pickGroup(group) }, label[k]));
       }
     } else if (stage.kind === 'stone') {
       // Aim at the enemy's hand itself.

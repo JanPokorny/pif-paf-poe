@@ -325,9 +325,9 @@ function route() {
 // ── Map ─────────────────────────────────────────────────────────────────────
 
 const NODE_ICON = { fight: 'sword', elite: 'skull', shop: 'shop', rest: 'fire', event: 'question', treasure: 'chest', boss: 'crown' };
-const NODE_NAME = { fight: t('Duel'), elite: t('Elite'), shop: t('Shop'), rest: t('Campfire'), event: t('Unknown'), treasure: t('Treasure'), boss: t('Boss') };
+const NODE_NAME = { 'boss-mark': t('Boss'), fight: t('Duel'), elite: t('Elite'), shop: t('Shop'), rest: t('Campfire'), event: t('Unknown'), treasure: t('Treasure'), boss: t('Boss') };
 const NODE_TEXT = {
-  fight: t('A duel. Win for gold and a new stone; lose and it costs a heart — and the boss takes the square.'),
+  fight: t('A duel. Win for gold and a new stone; lose and it costs a heart, and the square is scorched.'),
   elite: t('A tough duel. Win for a relic; lose and it costs 2 hearts.'),
   shop: t('Stones, tricks, relics and services, for gold.'),
   rest: t('Heal, or upgrade a stone.'),
@@ -335,77 +335,98 @@ const NODE_TEXT = {
   treasure: t('A relic and some gold, free.'),
 };
 
-// The act's map is a game of tic-tac-toe against its boss, on a 4x4 grid.
+// The act's map: tic-tac-toe against its boss on an endless sheet, revealed
+// a mark at a time.
 function mapScreen() {
+  if (Array.isArray(run.map?.cells)) run.map = R.makeMap(run);   // a save from the 4x4 days
   const map = run.map;
   const reach = new Set(R.reachable(run));
   const boss = ENEMIES[map.boss];
-  const lines = `<svg viewBox="0 0 400 400" preserveAspectRatio="none" aria-hidden="true">
-    <path d="M101 6 C 98 120, 104 260, 99 394"/><path d="M200 4 C 203 130, 197 270, 201 396"/><path d="M300 7 C 297 140, 303 250, 299 393"/>
-    <path d="M5 100 C 130 97, 260 104, 395 99"/><path d="M4 201 C 140 204, 260 197, 396 202"/><path d="M6 299 C 120 302, 270 296, 394 301"/></svg>`;
+  const { x0, y0, x1, y1 } = R.mapBounds(map);
+  const cols = x1 - x0 + 1, rows = y1 - y0 + 1;
+  const threats = new Set(R.bossThreats(map));
   const freshX = map.freshX;
-  const cells = map.cells.map((c, i) => {
-    const can = reach.has(String(i));
-    const el = h(`button.map-cell.${c.kind}` + (can ? '.reach' : '') + (c.mark ? '.marked' : ''), {
-      'aria-label': NODE_NAME[c.kind],
-      onclick: () => {
-        if (!can) {
-          const why = c.mark === 'X' ? t('You have been here.') : c.mark === 'O' ? t('{boss} took this square.', { boss: boss.name }) : c.mark === 'S' ? t('You lost the duel here: the square is scorched.') : t('Too far: go next to one of your Xs.');
-          const what = c.duel ? `${ENEMIES[c.duel.enemyId].name}${c.kind === 'elite' ? ` (${t('elite')}${c.duel.quirk ? ', ' + R.QUIRKS[c.duel.quirk].name.toLowerCase() : ''})` : ''}${c.duel.disabled ? t(', no {stone}', { stone: STONES[c.duel.disabled].name }) : ''}` : NODE_NAME[c.kind];
-          toast(`${what} — ${c.mark ? why : NODE_TEXT[c.kind] + ' ' + why}`);
-          return;
-        }
-        sfx('click');
-        R.enterNode(run, String(i));
-        duelState = null;
-        route();
-      },
-    }, c.duel
-      ? h('span.doodle.foe', {}, h('span.photo', {}, ENEMIES[c.duel.enemyId].emoji),
-        c.duel.disabled ? h('span.cell-space', { html: icon(c.duel.disabled) }) : null)
-      : h('span.doodle', { html: icon(NODE_ICON[c.kind]) }),
-    h('span.label', {}, c.duel ? shortName(ENEMIES[c.duel.enemyId]) : NODE_NAME[c.kind]));
-    if (!c.mark && R.MAP_LINES.some((l) => l.includes(i) && l.filter((j) => map.cells[j].mark === 'O').length === 2 && l.every((j) => j === i || map.cells[j].mark === 'O'))) el.classList.add('boss-threat');
-    if (c.mark === 'X') el.insertAdjacentHTML('beforeend', scribbleX(freshX === i));
-    if (c.mark === 'O') el.insertAdjacentHTML('beforeend', scribbleO(map.lastO === i));
-    if (c.mark === 'S') el.classList.add('scorched');
-    return el;
-  });
-  if (freshX !== null && freshX !== undefined) sfx('scribbleX');
-  if (map.lastO !== null && map.lastO !== undefined) sfx('scribbleO');
-  const threatened = cells.some((c) => c.classList.contains('boss-threat'));
-  map.freshX = null;
   const lastO = map.lastO;
+  const grid = [];
+  for (let y = y0; y <= y1; y++) {
+    for (let x = x0; x <= x1; x++) {
+      const k = R.keyOf(x, y);
+      const c = map.cells[k];
+      if (!c) { grid.push(h('div.map-fog')); continue; }
+      const can = reach.has(k);
+      const kind = c.kind === 'boss-mark' ? 'boss-mark' : c.kind;
+      const el = h(`button.map-cell.${kind}` + (can ? '.reach' : '') + (c.mark ? '.marked' : ''), {
+        'aria-label': NODE_NAME[kind] ?? boss.name, dataset: { k },
+        onclick: () => {
+          if (!can) {
+            const why = c.mark === 'X' ? t('You have been here.') : c.mark === 'O' ? t('{boss} took this square.', { boss: boss.name }) : t('You lost the duel here: the square is scorched.');
+            toast(why);
+            return;
+          }
+          sfx('click');
+          R.enterNode(run, k);
+          duelState = null;
+          route();
+        },
+      }, kind === 'boss-mark' ? null : c.duel
+        ? h('span.doodle.foe', {}, h('span.photo', {}, ENEMIES[c.duel.enemyId].emoji),
+          c.duel.disabled ? h('span.cell-space', { html: icon(c.duel.disabled) }) : null)
+        : h('span.doodle', { html: icon(NODE_ICON[kind]) }),
+      kind === 'boss-mark' ? null : h('span.label', {}, c.duel ? shortName(ENEMIES[c.duel.enemyId]) : NODE_NAME[kind]));
+      if (!c.mark && threats.has(k)) el.classList.add('boss-threat');
+      if (c.mark === 'X') el.insertAdjacentHTML('beforeend', scribbleX(freshX === k));
+      if (c.mark === 'O') el.insertAdjacentHTML('beforeend', scribbleO(lastO === k));
+      if (c.mark === 'S') el.classList.add('scorched');
+      grid.push(el);
+    }
+  }
+  if (freshX) sfx('scribbleX');
+  if (lastO && freshX) sfx('scribbleO');
+  map.freshX = null;
   map.lastO = null;
-  const news = map.news === 'oline' ? t('{boss} drew three in a row — it grows stronger!', { boss: boss.name })
-    : map.news === 'boxed' ? t('Boxed in! The door opens, but {boss} grows stronger.', { boss: boss.name })
-    : lastO !== null && lastO !== undefined ? t('{boss} marks the {node} square.', { boss: boss.name, node: NODE_NAME[map.cells[lastO].kind].toLowerCase() }) : '';
+  const news = map.news === 'oline' ? t('{boss} drew four in a row — it grows stronger!', { boss: boss.name })
+    : map.news === 'full' ? t('The page is full. {boss} will wait no longer — and it has grown stronger.', { boss: boss.name })
+    : lastO && map.cells[lastO] && map.cells[lastO].kind !== 'boss-mark' ? t('{boss} marks the {node} square.', { boss: boss.name, node: NODE_NAME[map.cells[lastO].kind].toLowerCase() }) : '';
   const bonus = map.bonus;
   map.bonus = 0;
   map.news = null;
   if (bonus) setTimeout(() => toast(t('+{n} gold for pressing on past the open door.', { n: bonus }), 'good'), 50);
   const door = h('button.boss-door' + (map.open ? '.open' : ''), {
     onclick: () => {
-      if (!map.open) { toast(t('Draw three Xs in a row — across, down or diagonal — to open the door.')); return; }
+      if (!map.open) { toast(t('Draw four Xs in a row — across, down or diagonal — to open the door.')); return; }
       R.enterNode(run, 'boss'); duelState = null; route();
     },
   },
   h('div.portrait', {}, h('div.photo', {}, boss.emoji)),
   h('div.door-text', {},
     h('div.door-name', {}, boss.name),
-    map.open ? h('div', {}, t('The door is open. Tap to face the boss — or keep exploring.')) : h('div', {}, t('Draw three in a row to open the door.')),
+    map.open ? h('div', {}, t('The door is open. Tap to face the boss — or keep exploring.')) : h('div', {}, t('Draw four in a row to open the door.')),
     map.power ? h('div.power', {}, tp(map.power, 'Power +{n}: one of its stones is upgraded, and it thinks harder.', 'Power +{n}: {n} of its stones are upgraded, and it thinks harder.')) : null));
-  const el = screen(topBar(), relicStrip(),
+  // Lines of pencil between the squares on view, each a little crooked.
+  const W = cols * 100, H = rows * 100;
+  let paths = '';
+  for (let i = 1; i < cols; i++) { const x = i * 100, w = ((i * 37) % 7) - 3; paths += `<path d="M${x + w} 4 C ${x - w} ${H * 0.33}, ${x + w} ${H * 0.66}, ${x - w / 2} ${H - 4}"/>`; }
+  for (let j = 1; j < rows; j++) { const y = j * 100, w = ((j * 53) % 7) - 3; paths += `<path d="M4 ${y + w} C ${W * 0.33} ${y - w}, ${W * 0.66} ${y + w}, ${W - 4} ${y - w / 2}"/>`; }
+  const sheet = h('div.map-sheet', { style: `--cols: ${cols}; --rows: ${rows}` },
+    h('div.board-lines', { html: `<svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" aria-hidden="true">${paths}</svg>` }),
+    h('div.map-cells', {}, grid));
+  const scroller = h('div.map-scroll', {}, sheet);
+  screen(topBar(), relicStrip(),
     h('div.map-page', {},
       door,
-      h('div.map-grid' + (R.xCount(run) ? '' : '.first'), {}, h('div.board-lines', { html: lines }), h('div.map-cells', {}, cells)),
+      scroller,
       h('div.map-news', {}, news),
       h('div.map-help', {}, !R.xCount(run)
-        ? t('Pick any square to start. You mark X where you go; after each step the boss marks an O. Next time, go beside one of your Xs — diagonals count.')
-        : reach.size > (map.open ? 1 : 0) ? t('Go to a highlighted square next to one of your Xs — diagonals count.')
-          : t('No open squares left beside your Xs. Face the boss!')),
-      threatened ? h('div.map-help.red', {}, t('Dashed red circle: the boss would finish a line of Os there.')) : null));
-  void el;
+        ? t('The boss has made its first mark. Pick any square beside it; every mark reveals the paper around it. Squares that would help your line hide harder duels.')
+        : R.pageFull(map) ? t('The page is full: only the boss is left.')
+          : t('Pick any open square. Four Xs in a row open the door; the squares that matter most are the hardest. {n} squares left on this page.', { n: R.PAGE - map.visited })),
+      threats.size ? h('div.map-help.red', {}, t('Dashed red circle: the boss would finish a line of Os there.')) : null));
+  // Keep the newest marks in view.
+  requestAnimationFrame(() => {
+    const focus = (freshX && scroller.querySelector(`[data-k="${freshX}"]`)) || scroller.querySelector('.map-cell.X, .map-cell.reach');
+    const target = (lastO && scroller.querySelector(`[data-k="${lastO}"]`)) || focus;
+    target?.scrollIntoView({ block: 'center', inline: 'center', behavior: 'instant' });
+  });
 }
 
 function actIntro() {
@@ -414,7 +435,7 @@ function actIntro() {
     h('div.act-n', {}, t('Act {n}', { n: act.n })),
     h('h1', {}, act.name),
     h('p', {}, t(['A summer camp. A field of stones that will not stay still.', 'The meadow is behind you. The ground turns to stone.', 'The air thins. Only the best players make it this far.'][act.n - 1])),
-    h('div.rules-note', {}, t('This act is a game of tic-tac-toe against {boss} {emoji}. Each square is an encounter: clear it and mark your X. After each of your steps, the boss marks an O. Draw three in a row to open its door.', { boss: ENEMIES[run.map.boss].name, emoji: '' })),
+    h('div.rules-note', {}, t('This act is tic-tac-toe with {boss} on an endless page. It has made the first mark. Wherever you go you mark an X, and it answers with an O; every mark reveals the squares around it. Four Xs in a row open its door — but the squares that matter most hide the hardest duels.', { boss: ENEMIES[run.map.boss].name })),
     h('button.btn.primary.wide.big', { onclick: () => { run.screen = 'map'; route(); } }, t('Onward'))));
 }
 
@@ -453,7 +474,7 @@ function preDuel() {
 
   const tierLabel = { normal: '', elite: t('Elite'), boss: t('Boss'), event: t('Challenge') }[duel.tier];
   const stakes = duel.tier === 'boss'
-    ? t('Beat it twice to pass ({n}/2). Each loss costs 1 ❤.', { n: duel.bossWins })
+    ? tp(R.BOSS_LIVES - duel.bossWins, 'It has {n} life left: each duel you win takes one, each you lose costs you 1 ❤.', 'It has {n} lives left: each duel you win takes one, each you lose costs you 1 ❤.')
     : t(duel.event ? 'Lose and it costs {n} ❤.' : 'Lose and it costs {n} ❤ — and the square is scorched.', { n: R.heartsLost(duel) });
   const canBack = (duel.tier === 'normal' || duel.tier === 'elite') && !duel.event;
   screen(topBar(),
@@ -499,7 +520,7 @@ function duelScreen() {
   const extra = h('div.duel-side', {},
     h('button.icon-btn.small', { onclick: showDuelMenu, 'aria-label': t('Menu') }, h('span', { html: icon('gear') })),
     h('div.hearts.small', {}, h('span', { html: icon('heart') }), `${run.hearts}`),
-    duel.tier === 'boss' ? h('div.boss-score', {}, `${duel.bossWins}/2`) : null);
+    duel.tier === 'boss' ? h('div.boss-lives', { title: t('Boss lives') }, Array.from({ length: R.BOSS_LIVES }, (_, k) => h('span' + (k < R.BOSS_LIVES - duel.bossWins ? '.alive' : ''), { html: icon('heart') }))) : null);
   duelView = mountDuel(holder.querySelector('.duel-host'), {
     state: duelState, enemy, extra,
     onSave: (s) => { duelState = s; save(); },
@@ -816,8 +837,18 @@ function eventScreen() {
 
 // A result to paste to friends: the last act's map as Xs and Os.
 function shareResult(victory) {
-  const cells = run.map?.cells ?? [];
-  const grid = [0, 1, 2, 3].map((r) => cells.slice(r * 4, r * 4 + 4).map((c) => (c.mark === 'X' ? '❌' : c.mark === 'O' ? '⭕' : c.mark === 'S' ? '⬛' : '⬜')).join('')).join('\n');
+  let grid = '';
+  if (run.map && !Array.isArray(run.map.cells)) {
+    const { x0, y0, x1, y1 } = R.mapBounds(run.map);
+    for (let y = y0; y <= y1; y++) {
+      for (let x = x0; x <= x1; x++) {
+        const m = run.map.cells[R.keyOf(x, y)]?.mark;
+        grid += m === 'X' ? '❌' : m === 'O' ? '⭕' : m === 'S' ? '⬛' : '⬜';
+      }
+      grid += '\n';
+    }
+    grid = grid.trimEnd();
+  }
   const head = `Pif·Paf·Poe${run.daily ? t(' daily {d}', { d: run.daily }) : ''}${run.heat ? t(' · heat {n}', { n: run.heat }) : ''}`;
   const line = victory ? t('Conquered the Summit as {kit} 🏆', { kit: R.KITS[run.kit].name }) : t('Fell in act {n} ({act})', { n: run.act, act: ACTS[run.act - 1].name });
   const text = `${head}\n${line}\n${t('{won} duels won, {lost} lost', { won: run.stats.won, lost: run.stats.lost })}\n${grid}\n${location.href.split('#')[0]}`;
@@ -880,10 +911,10 @@ function showHelp(after) {
       h('p', {}, t('Several Magnets and Stinkies all pull at once: you must place where you satisfy as many as any square can.')),
       h('p', {}, t('Nobody opens a duel in the centre: the very first stone must go elsewhere.'))),
     h('div', {}, h('h2', {}, t('The climb')),
-      h('p', {}, t('Three acts. Each act is itself a game of tic-tac-toe against its boss, on a 4×4 grid of encounters: duels ⚔, elites 💀, shops, campfires, treasure and the unknown.')),
-      h('p', {}, t('Wherever you go you mark an '), h('b.blue', {}, 'X'), t(' — next to one you already have. After each step the boss marks an '), h('b.red', {}, 'O'), t(', taking that square away — but never a shop or a campfire. Lose a duel and its square is scorched.')),
-      h('p', {}, h('b', {}, t('Three Xs in a row open the boss\'s door.')), t(' Every line of three Os the boss draws, and being boxed in, makes it stronger (up to +3). Squares cleared after the door opens pay 10 gold.')),
-      h('p', {}, t('Before each duel you see the enemy\'s stones and the space, and choose which 5 of your pouch to bring. Lose and it costs hearts; run out and the climb is over. Bosses must be beaten twice.'))),
+      h('p', {}, t('Three acts. Each act is a game of tic-tac-toe with its boss on an endless sheet of paper. It starts with a single O — the boss\'s first mark.')),
+      h('p', {}, t('Wherever you go you mark an '), h('b.blue', {}, 'X'), t('; after each step the boss marks an '), h('b.red', {}, 'O'), t('. Every mark reveals the squares around it: duels, elites, shops, campfires, treasure and the unknown.')),
+      h('p', {}, h('b', {}, t('Four Xs in a row open the boss\'s door.')), t(' The squares that would help your line — or break the boss\'s — tend to hide the hardest duels. A lost duel scorches its square. Each line of four Os makes the boss stronger, and so does filling the page.')),
+      h('p', {}, t('Before each duel you choose which 5 stones of your pouch to bring. Lose and it costs hearts; run out and the climb is over. A boss has lives: each duel you win takes one.'))),
   ];
   let k = 0;
   const holder = h('div.help-page');

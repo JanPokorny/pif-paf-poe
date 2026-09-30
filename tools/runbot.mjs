@@ -64,8 +64,13 @@ function playRun(spec) {
         // Take the boss once the door is open and the pouch has had a few squares.
         if (opts.includes('boss') && (run.map.visited >= 6 || opts.length === 1)) { log.push('[p' + run.map.power + ' v' + run.map.visited + ']'); R.enterNode(run, 'boss'); break; }
         opts = opts.filter((k) => k !== 'boss');
-        // Prefer rests when hurt, elites when healthy.
+        // Build the line when healthy; otherwise heal and shop.
         const kinds = opts.map((k) => run.map.cells[k].kind);
+        if (run.hearts > 2 && opts.length) {
+          const best = opts.map((k) => [k, R.lineReach(run.map, k) * 3 + R.lineReach(run.map, k, 'O') * 2 + R.rand(run)]).sort((a, b) => b[1] - a[1])[0][0];
+          R.enterNode(run, best);
+          break;
+        }
         let pickI = (R.rand(run) * opts.length) | 0;
         const want = run.hearts <= 2 ? ['rest', 'shop', 'event'] : run.hearts >= run.maxHearts - 1 ? ['elite', 'treasure', 'fight'] : ['treasure', 'fight', 'event'];
         for (const w of want) { const i = kinds.indexOf(w); if (i >= 0) { pickI = i; break; } }

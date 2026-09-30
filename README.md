@@ -6,9 +6,9 @@ Tic-tac-toe where the pieces move, as a mobile-friendly browser roguelike drawn 
 page. Duel a cast of enemies on a 3×3 board where every stone *does something* when placed, and
 grow your pouch of stones, tricks and relics along the way.
 
-Each of the three acts is itself a game of tic-tac-toe against its boss: a 4×4 grid of
-encounters where you mark an X wherever you go and the boss answers with an O. Three Xs in a row
-open the boss's door.
+Each of the three acts is itself a game of tic-tac-toe against its boss, on an endless sheet: it
+starts with the boss's single O, every mark reveals the encounters around it, and four Xs in a
+row open the boss's door — but the squares that matter most hide the hardest duels.
 
 It grew out of a physical summer-camp game; the original rules, simulations and print-and-play
 sheets live in [`old/`](old/).

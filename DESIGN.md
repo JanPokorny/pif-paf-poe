@@ -19,18 +19,24 @@ numbers. The camp game's own reasoning is in `old/adr/`.
 
 ## Changed for a single player
 
-- **The arena is gone.** It is a team game. In its place each act's map is itself a game of
-  tic-tac-toe against the act's boss, on a 4×4 grid of encounters: you mark X where you go, the
-  boss answers with an O, three Xs in a row open the boss's door. A lost duel scorches its
-  square; the boss never takes shops or campfires; each line of Os it draws, and boxing you in,
-  make it stronger (up to +3: upgraded stones and deeper search). Squares cleared after the door
-  opens pay gold, so pressing on is a real gamble.
+- **The arena is gone.** It is a team game. In its place each act is a game of tic-tac-toe with
+  the act's boss on an endless sheet of graph paper. It starts with one O, the boss's first
+  mark; every mark reveals the squares around it, and a square is decided the moment it comes
+  into view, by how much it matters: one that would extend your line or break the boss's turns
+  up as an elite or a duel, one off to the side as a campfire, shop or treasure. Four Xs in a
+  row open the boss's door. A lost duel scorches its square; the boss never marks shops or
+  campfires; each line of four Os it draws makes it stronger (up to +3), and after 14 squares the
+  page is full and the boss comes for you, stronger for the wait. Squares cleared after the door
+  opens pay gold, so pressing on is a gamble.
+- **A boss has lives** — two — and each duel you win takes one.
 - **Nobody opens in the centre.** With the space and the Counterattack gone as balancers, the
   measured dominant opening was a Mountain or a Magnet in the centre, for both sides. The first
   stone of a duel must go elsewhere.
 - **A hand is chosen per duel** from a pouch of up to 7, after seeing the enemy's stones, the
   space and who opens.
-- **Upgrades.** Every stone has a + version that does a little more.
+- **Upgrades.** Every stone has a + version that does a little more — never less: where the
+  first + versions measured weaker (Magnet+, Beacon+, 2048+, Flip+, Firecracker+, Glue+) they
+  became supersets of the plain stone, or, for the restrictions, count twice and cannot be moved.
 
 ## The stones
 

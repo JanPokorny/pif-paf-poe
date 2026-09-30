@@ -606,11 +606,12 @@ test('2048 packs up against a Mountain and on the far side of it', () => {
   eff(t, { dir: 'left' });    // row0: stops at 1; row1: X from 5 packs to 4 against mountain at 3
   expectAt(t, { 0: 100, 1: 102, 2: 0, 3: 103, 4: 105, 5: 0 });
 });
-test('2048+ holds its own square; everything else slides', () => {
+test('2048+ may hold its own square while everything else slides', () => {
   const s = G();
   lay(s, { 3: 'O pebble', 0: 'X pebble' });
   const id = play(s, '2048+', 4);
-  eff(s, { dir: 'right' });
+  assert.equal(effectOpts(s).length, 8, 'four ways, each with or without holding');
+  eff(s, { dir: 'right', hold: true });
   expectAt(s, { 4: id, 3: 103, 5: 0, 0: 0, 2: 100 });
   const t = G();
   lay(t, { 3: 'O pebble' });
@@ -881,8 +882,8 @@ test('Flip+ mirrors only the enemy\'s stones; yours hold still', () => {
   const s = G();
   lay(s, { 0: 'O pebble', 1: 'X pebble', 3: 'O pebble', 5: 'X pebble', 6: 'X pebble' });
   const id = play(s, 'flip+', 4);
-  assert.equal(effectOpts(s).length, 4);
-  eff(s, { axis: 'h' });
+  assert.equal(effectOpts(s).length, 8, 'four axes, all stones or only theirs');
+  eff(s, { axis: 'h', only: true });
   expectAt(s, { 4: id, 0: 0, 2: 100, 1: 101, 3: 103, 5: 105, 6: 106, 8: 0 });
 });
 test('Flip leaves stuck stones (and their mirror square) where they are', () => {
@@ -903,14 +904,25 @@ function allowedFor(spec, stone = 'pebble', o = {}) {
   return allowedSquares(s);
 }
 test('Magnet: must place next to it', () => sameSet(allowedFor({ 0: 'O magnet' }), [1, 3]));
-test('Magnet+: corners included', () => sameSet(allowedFor({ 0: 'O magnet+' }), [1, 3, 4]));
+test('Magnet+: next to it, and it outweighs another restriction', () => {
+  sameSet(allowedFor({ 0: 'O magnet+' }), [1, 3]);
+  // A Magnet+ in one corner against a plain Magnet in the other: the heavy one wins.
+  sameSet(allowedFor({ 0: 'O magnet+', 8: 'O magnet' }), [1, 3]);
+});
+test('Magnet+ is not moved by effects', () => {
+  const s = G();
+  lay(s, { 0: 'O magnet+' });
+  play(s, 'shift', 1);
+  eff(s, { dir: 'left', index: 0 });
+  assert.equal(s.board[0]?.type, 'magnet');
+});
 test('Stinky: must not place next to it', () => sameSet(allowedFor({ 4: 'O stinky' }), [0, 2, 6, 8]));
 test('Stinky+: corners included', () => sameSet(allowedFor({ 0: 'O stinky+' }), [2, 5, 6, 7, 8]));
 test('Stinky+ in the centre leaves nothing to satisfy: anywhere goes', () => sameSet(allowedFor({ 4: 'O stinky+' }), [0, 1, 2, 3, 5, 6, 7, 8]));
 test('Beacon: its row or column', () => sameSet(allowedFor({ 0: 'O beacon' }), [1, 2, 3, 6]));
-test('Beacon+: row, column or diagonal', () => sameSet(allowedFor({ 0: 'O beacon+' }), [1, 2, 3, 6, 4, 8]));
+test('Beacon+: row or column, and it outweighs another restriction', () => sameSet(allowedFor({ 0: 'O beacon+', 8: 'O magnet' }), [1, 2, 3, 6]));
 test('Beacon+ off the diagonals: only row and column', () => sameSet(allowedFor({ 1: 'O beacon+' }), [0, 2, 4, 7]));
-test('Beacon+ in the centre: everything is in some line with it', () => sameSet(allowedFor({ 4: 'O beacon+' }), [0, 1, 2, 3, 5, 6, 7, 8]));
+test('Beacon+ in the centre: its row and column', () => sameSet(allowedFor({ 4: 'O beacon+' }), [1, 3, 5, 7]));
 test('Restrictions compose: a square satisfying both wins', () => sameSet(allowedFor({ 0: 'O magnet', 2: 'O beacon' }), [1]));
 test('Restrictions compose: if none satisfies all, satisfy as many as any square can', () =>
   sameSet(allowedFor({ 0: 'O magnet', 8: 'O beacon' }), [1, 2, 3, 5, 6, 7]));
@@ -1056,11 +1068,14 @@ test('Glue sticks itself and the stones beside it, not diagonals', () => {
   assert.ok(!s.board[1].stuck, '1 is not beside 5');
   assert.ok(isStuck(s, 4));
 });
-test('Glue+ sticks diagonal neighbours too', () => {
+test('Glue+ may stick only your own stones, corners included', () => {
   const s = G();
-  lay(s, { 0: 'O pebble', 1: 'O pebble', 8: 'O pebble' });
+  lay(s, { 0: 'X pebble', 1: 'O pebble', 8: 'X pebble' });
   play(s, 'glue+', 4);
-  assert.ok(s.board[0].stuck && s.board[1].stuck && s.board[8].stuck && s.board[4].stuck);
+  assert.equal(effectOpts(s).length, 2);
+  eff(s, { only: true });
+  assert.ok(s.board[0].stuck && s.board[8].stuck && s.board[4].stuck);
+  assert.ok(!s.board[1].stuck, 'the enemy stone beside it stays free');
 });
 test('Glued stones are not moved again', () => {
   const s = G();
@@ -1109,7 +1124,10 @@ test('Firecracker+ blows every enemy stone beside it back, leaves yours and corn
   const s = G();
   lay(s, { 1: 'O pebble', 3: 'O pebble+', 5: 'X pebble', 0: 'O pebble' });
   const n = s.hands.O.length;
-  play(s, 'firecracker+', 4);   // one outcome: resolves on its own
+  play(s, 'firecracker+', 4);
+  assert.ok(effectOpts(s).some((o) => o.target === undefined), 'offers the volley');
+  assert.ok(effectOpts(s).some((o) => o.target === 0), 'or any single stone around it');
+  applyAction(s, effectOpts(s).find((o) => o.target === undefined));
   turnPassedTo(s, 'O');
   expectAt(s, { 1: 0, 3: 0, 4: 0, 5: 105, 0: 100 });
   assert.equal(s.hands.O.length, n + 2); assert.ok(handHas(s, 'O', 'pebble', true));
@@ -1172,7 +1190,7 @@ test('Parrot copies a plus stone as plus', () => {
   lay(s, { 1: 'O pebble', 4: 'O pebble' });
   play(s, 'parrot', 0);
   assert.equal(s.board[0].type, 'glue'); assert.equal(s.board[0].plus, true);
-  assert.ok(s.board[4].stuck, 'Glue+ sticks the corner neighbour');
+  assert.equal(effectOpts(s).length, 2, 'the copy offers Glue+\'s choice');
 });
 test('Parrot copies restriction stones too', () => {
   const s = afterOPlays('magnet', 8);

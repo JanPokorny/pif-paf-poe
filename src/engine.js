@@ -104,8 +104,9 @@ def('rotate', {
 def('magnet', {
   name: 'Magnet', rarity: 'common', kind: 'restrict',
   text: 'The enemy must place next to it.',
-  plusText: 'The enemy must place next to it, corners included.',
-  restrict: (sq, m, plus) => near(plus)(sq, m),
+  plusText: 'The enemy must place next to it; it counts twice against other restrictions, and nothing moves it.',
+  heavy: true,
+  restrict: (sq, m) => adjacent(sq, m),
 });
 
 def('stinky', {
@@ -124,9 +125,9 @@ def('mountain', {
 def('2048', {
   name: '2048', rarity: 'uncommon', kind: 'move',
   text: 'Every stone slides one way as far as it goes, as in the tile game.',
-  plusText: 'Every other stone slides one way as far as it goes; this one holds its square.',
-  options: () => DIRS.map((dir) => ({ dir })),
-  apply(s, pos, a, cell) { slideAll(s, a.dir, cell.plus ? cell.id : null); },
+  plusText: 'Every stone slides one way as far as it goes — or every other stone, while this one holds its square.',
+  options: (s, pos, cell) => DIRS.flatMap((dir) => (cell.plus ? [{ dir, hold: false }, { dir, hold: true }] : [{ dir }])),
+  apply(s, pos, a, cell) { slideAll(s, a.dir, a.hold ? cell.id : null); },
 });
 
 def('bumper', {
@@ -231,22 +232,22 @@ def('frog', {
 def('beacon', {
   name: 'Beacon', rarity: 'uncommon', kind: 'restrict',
   text: 'The enemy must place in its row or column.',
-  plusText: 'The enemy must place in its row, column or diagonal.',
-  restrict: (sq, m, plus) => row(sq) === row(m) || col(sq) === col(m)
-    || (plus && LINES.slice(6).some((l) => l.includes(sq) && l.includes(m))),
+  plusText: 'The enemy must place in its row or column; it counts twice against other restrictions, and nothing moves it.',
+  heavy: true,
+  restrict: (sq, m) => row(sq) === row(m) || col(sq) === col(m),
 });
 
 def('flip', {
   name: 'Flip', rarity: 'uncommon', kind: 'move',
   text: 'Mirror the board across an axis or diagonal. This stone holds its square.',
-  plusText: 'Mirror only the enemy\'s stones across an axis or diagonal. Yours hold still.',
-  options: () => [{ axis: 'h' }, { axis: 'v' }, { axis: 'd' }, { axis: 'a' }],
+  plusText: 'Mirror the board across an axis or diagonal — all of it, or only the enemy\'s stones while yours hold still.',
+  options: (s, pos, cell) => ['h', 'v', 'd', 'a'].flatMap((axis) => (cell.plus ? [{ axis, only: false }, { axis, only: true }] : [{ axis }])),
   apply(s, pos, a, cell) {
     const pairs = {
       h: [[0, 2], [3, 5], [6, 8]], v: [[0, 6], [1, 7], [2, 8]],
       d: [[1, 3], [2, 6], [5, 7]], a: [[0, 8], [1, 5], [3, 7]],
     }[a.axis];
-    const holds = (i) => isStuck(s, i) || (cell && (i === pos || (cell.plus && s.board[i]?.player === cell.player)));
+    const holds = (i) => isStuck(s, i) || (cell && (i === pos || (a.only && s.board[i]?.player === cell.player)));
     for (const [x, y] of pairs) {
       if (holds(x) || holds(y)) continue;
       const held = s.board[x];
@@ -276,22 +277,28 @@ def('hush', {
 def('glue', {
   name: 'Glue', rarity: 'uncommon', kind: 'static',
   text: 'This stone and the stones beside it are stuck: nothing will move them again.',
-  plusText: 'This stone and every stone around it, corners included, are stuck.',
-  options: () => [{}],
+  plusText: 'This stone and the stones beside it are stuck — or, if you like, only yours, corners included.',
+  options: (s, pos, cell) => (cell.plus ? [{ only: false }, { only: true }] : [{}]),
   apply(s, pos, a, cell) {
     s.board[pos].stuck = true;
-    for (const j of neighbours(pos, cell.plus)) if (s.board[j] && !guarded(s, j) && !isSealed(s, j)) s.board[j].stuck = true;
+    for (const j of neighbours(pos, !!a.only)) {
+      const c = s.board[j];
+      if (!c || guarded(s, j) || isSealed(s, j)) continue;
+      if (a.only && c.player !== cell.player) continue;
+      c.stuck = true;
+    }
   },
 });
 
 def('firecracker', {
   name: 'Firecracker', rarity: 'rare', kind: 'move',
   text: 'Blows a stone around it, corners included, back into its owner\'s hand — and burns itself up.',
-  plusText: 'Blows every enemy stone beside it back into their hand — and burns itself up.',
+  plusText: 'Blows a stone around it back into its owner\'s hand — or every enemy stone beside it at once — and burns itself up.',
   options(s, pos, cell) {
-    const hit = neighbours(pos, !cell.plus).filter((j) => s.board[j] && !isSealed(s, j));
-    if (cell.plus) return hit.some((j) => s.board[j].player !== cell.player) ? [{}] : [];
-    return hit.map((target) => ({ target }));
+    const out = neighbours(pos, true).filter((j) => s.board[j] && !isSealed(s, j)).map((target) => ({ target }));
+    const volley = neighbours(pos, false).filter((j) => s.board[j] && s.board[j].player !== cell.player && !isSealed(s, j));
+    if (cell.plus && volley.length > 1) out.push({});
+    return out;
   },
   apply(s, pos, a, cell) {
     if (a.target !== undefined) returnToHand(s, a.target);
@@ -537,7 +544,7 @@ export function isStuck(s, i) {
   if (c.stuck) return true;
   if (guarded(s, i)) return true;
   if (!active(s, c)) return false;
-  return !!STONES[c.type].immovable;
+  return !!STONES[c.type].immovable || (c.plus && !!STONES[c.type].heavy);
 }
 
 // Is this stone under a Guardian of its owner's, against whoever is moving?
@@ -578,7 +585,7 @@ export function restrictionsOn(s, player) {
   for (let i = 0; i < 9; i++) {
     const c = s.board[i];
     if (!c || c.player === player || !active(s, c)) continue;
-    if (STONES[c.type].restrict) out.push({ pos: i, st: STONES[c.type], plus: c.plus });
+    if (STONES[c.type].restrict) out.push({ pos: i, st: STONES[c.type], plus: c.plus, w: c.plus && STONES[c.type].heavy ? 2 : 1 });
   }
   return out;
 }
@@ -597,7 +604,7 @@ export function allowedSquares(s, stone = s.selected) {
     pool = pool.filter((i) => i !== 4);
   }
   if (!rs.length) return pool;
-  const scores = pool.map((i) => rs.reduce((n, r) => n + (r.st.restrict(i, r.pos, r.plus) ? 1 : 0), 0));
+  const scores = pool.map((i) => rs.reduce((n, r) => n + (r.st.restrict(i, r.pos, r.plus) ? r.w : 0), 0));
   const best = Math.max(...scores);
   return pool.filter((_, k) => scores[k] === best);
 }
