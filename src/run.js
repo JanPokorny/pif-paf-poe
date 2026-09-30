@@ -11,8 +11,6 @@ import {
 } from './content.js';
 
 export const CLASSIC_SPACES = ['shift', '2048', 'rotate', 'mountain', 'magnet', 'stinky'];
-export const ROWS = 7;   // map rows per act, before the boss
-export const COLS = 4;
 
 // ── Randomness that saves with the run ──────────────────────────────────────
 
@@ -74,7 +72,7 @@ export function newRun({ kit = 'apprentice', seed = (Math.random() * 2 ** 31) | 
   const k = KITS[kit];
   const run = {
     v: 1, seed, rs: seed, kit, heat,
-    act: 1, row: -1, col: null, map: null,
+    act: 1, atBoss: false, map: null,
     hearts: k.hearts - (heat >= 3 ? 1 : 0), maxHearts: k.hearts - (heat >= 3 ? 1 : 0),
     gold: k.gold, pouch: [], tricks: [...k.tricks], relics: [...(k.relics ?? [])],
     lastHand: null, nextUid: 1,
@@ -96,61 +94,110 @@ export const stoneName = (s) => STONES[s.type].name + (s.plus ? '+' : '');
 
 // ── The map ─────────────────────────────────────────────────────────────────
 //
-// Four columns, ROWS rows, then the boss. A handful of paths walk upwards one
-// column at a time; the nodes are the cells they visit and the edges their
-// steps, with diagonal steps that would cross another path refused.
+// Each act is itself a game of tic-tac-toe, drawn on the page: a 4x4 grid of
+// encounters. Every square you clear gets your X; after each of your steps the
+// act's boss marks an O somewhere, taking that square off the table. Three Xs
+// in a row open the boss's door. The boss's first line of three Os, and being
+// boxed in with no line of your own, each make the boss stronger.
+
+export const SIZE = 4;
+export const MAP_LINES = (() => {
+  const out = [];
+  const idx = (r, c) => r * SIZE + c;
+  for (let r = 0; r < SIZE; r++) {
+    for (let c = 0; c < SIZE; c++) {
+      for (const [dr, dc] of [[0, 1], [1, 0], [1, 1], [1, -1]]) {
+        const r2 = r + 2 * dr, c2 = c + 2 * dc;
+        if (r2 < 0 || r2 >= SIZE || c2 < 0 || c2 >= SIZE) continue;
+        out.push([idx(r, c), idx(r + dr, c + dc), idx(r2, c2)]);
+      }
+    }
+  }
+  return out;
+})();
+const mapNear = (a, b) => a !== b && Math.abs(((a / SIZE) | 0) - ((b / SIZE) | 0)) <= 1 && Math.abs((a % SIZE) - (b % SIZE)) <= 1;
 
 export function makeMap(run) {
-  const nodes = {};   // key "r,c" -> {r, c, kind, next: [c...]}
-  const key = (r, c) => `${r},${c}`;
-  const starts = shuffle(run, [0, 1, 2, 3]);
-  const paths = [starts[0], starts[1], starts[2], starts[3], int(run, 0, COLS - 1)];
-  const crossing = new Set();   // "r,c1,c2" of diagonal steps taken
-  for (const start of paths) {
-    let c = start;
-    for (let r = 0; r < ROWS; r++) {
-      nodes[key(r, c)] ??= { r, c, kind: null, next: [] };
-      if (r === ROWS - 1) break;
-      let options = [c - 1, c, c + 1].filter((x) => x >= 0 && x < COLS);
-      options = options.filter((x) => x === c || !crossing.has(`${r},${x},${c}`));
-      const nc = pick(run, options);
-      if (nc !== c) crossing.add(`${r},${c},${nc}`);
-      const n = nodes[key(r, c)];
-      if (!n.next.includes(nc)) n.next.push(nc);
-      c = nc;
-    }
-  }
-  // Kinds, row by row.
-  for (const n of Object.values(nodes)) {
-    if (n.r === 0) n.kind = 'fight';
-    else if (n.r === 3) n.kind = 'treasure';
-    else if (n.r === ROWS - 1) n.kind = 'rest';
-    else {
-      const table = { fight: 46, event: 22, shop: 11, rest: 7, elite: n.r >= 2 ? 16 : 0 };
-      if (n.r === ROWS - 2) table.rest = 0;
-      n.kind = weighted(run, table);
-    }
-  }
-  // Somewhere to spend money, every act.
-  const all = Object.values(nodes);
-  if (!all.some((n) => n.kind === 'shop')) {
-    const cand = all.filter((n) => n.r >= 2 && n.r <= 5 && n.kind !== 'elite');
-    if (cand.length) pick(run, cand).kind = 'shop';
-  }
-  if (!all.some((n) => n.kind === 'elite')) {
-    const cand = all.filter((n) => n.r >= 3 && n.r <= 5 && n.kind === 'fight');
-    if (cand.length) pick(run, cand).kind = 'elite';
-  }
-  for (const n of all) n.next.sort((a, b) => a - b);
-  return { nodes, boss: ACTS[run.act - 1].boss, visited: [] };
+  const kinds = shuffle(run, [
+    'fight', 'fight', 'fight', 'fight', 'fight', 'fight',
+    'elite', 'elite', 'event', 'event', 'event',
+    'rest', 'rest', 'shop', 'treasure', 'treasure',
+  ]);
+  return {
+    cells: kinds.map((kind) => ({ kind, mark: null })),
+    boss: ACTS[run.act - 1].boss,
+    at: null,          // the square being visited right now
+    lastO: null,       // the boss's latest mark, for the page to draw in
+    open: false,       // the boss's door
+    power: 0,          // how much stronger the boss has grown
+    oLines: 0,
+    visited: 0,
+  };
 }
 
+export const xCount = (run) => run.map.cells.filter((c) => c.mark === 'X').length;
+const lineOf = (cells, mark) => MAP_LINES.filter((l) => l.every((i) => cells[i].mark === mark));
+
+// Where you may go next: any open square beside one of your Xs (anywhere at
+// all for your first step), and the boss once its door is open.
 export function reachable(run) {
-  const { nodes } = run.map;
-  if (run.row === -1) return Object.values(nodes).filter((n) => n.r === 0).map((n) => `${n.r},${n.c}`);
-  if (run.row === ROWS - 1) return ['boss'];
-  const here = nodes[`${run.row},${run.col}`];
-  return here.next.map((c) => `${run.row + 1},${c}`);
+  const { cells } = run.map;
+  const mine = cells.map((c, i) => (c.mark === 'X' ? i : -1)).filter((i) => i >= 0);
+  const out = [];
+  cells.forEach((c, i) => {
+    if (c.mark) return;
+    if (!mine.length || mine.some((m) => mapNear(m, i))) out.push(String(i));
+  });
+  if (run.map.open) out.push('boss');
+  return out;
+}
+
+// The boss's reply: win a line if it can, block yours if it must, otherwise
+// spoil what it can, with a little noise so it is not the same every time.
+function bossMark(run) {
+  const { cells } = run.map;
+  const free = cells.map((c, i) => (c.mark ? -1 : i)).filter((i) => i >= 0);
+  if (!free.length) return null;
+  const value = { treasure: 14, rest: 8, shop: 9, elite: 4, event: 5, fight: 2 };
+  let best = null, bestScore = -Infinity;
+  for (const i of free) {
+    let score = value[cells[i].kind] + rand(run) * 14;
+    for (const l of MAP_LINES) {
+      if (!l.includes(i)) continue;
+      const xs = l.filter((j) => cells[j].mark === 'X').length;
+      const os = l.filter((j) => cells[j].mark === 'O').length;
+      if (os === 2 && xs === 0) score += 1000;
+      if (xs === 2 && os === 0) score += 400;
+      if (xs === 1 && os === 0) score += 12;
+      if (os === 1 && xs === 0) score += 7;
+    }
+    if (score > bestScore) { bestScore = score; best = i; }
+  }
+  cells[best].mark = 'O';
+  return best;
+}
+
+// A square is done with: yours if you came through it, the boss's if you lost
+// the duel there. Then the boss marks, and the lines are counted.
+export function settleCell(run, mark) {
+  const map = run.map;
+  if (map.at === null) return;
+  map.cells[map.at].mark = mark;
+  map.freshX = mark === 'X' ? map.at : null;
+  map.at = null;
+  map.visited++;
+  map.lastO = null;
+  if (lineOf(map.cells, 'X').length) map.open = true;
+  if (!map.cells.every((c) => c.mark)) map.lastO = bossMark(run);
+  // The boss's first line of three makes it stronger; later ones add nothing.
+  const oLines = lineOf(map.cells, 'O').length;
+  if (oLines && !map.oLines) { map.power++; map.news = 'oline'; }
+  map.oLines = oLines;
+  if (!map.open && !reachable(run).length) {
+    map.open = true;
+    map.power++;
+    map.news = 'boxed';
+  }
 }
 
 // ── Duels ───────────────────────────────────────────────────────────────────
@@ -179,7 +226,16 @@ export function prepareDuel(run, enemyId, context = {}) {
   else first = rand(run) < 0.5 ? 'X' : 'O';
   const types = [...new Set([...CLASSIC_SPACES, ...handO.map((h) => h.type).filter((t) => t !== 'pebble')])];
   const disabled = rand(run) < 0.3 ? null : pick(run, types);
-  const heatIters = run.heat >= 1 ? 1.5 : 1;
+  let heatIters = run.heat >= 1 ? 1.5 : 1;
+  // A boss the map has fed grows: upgraded stones first, then extra ones.
+  if (tier === 'boss' && run.map?.power) {
+    for (let k = 0; k < run.map.power; k++) {
+      const plain = handO.find((h) => !h.plus && h.type !== 'pebble');
+      if (plain) plain.plus = true;
+      else if (handO.length < 7) handO.push({ type: pick(run, enemy.pool), plus: true });
+    }
+    heatIters *= 1 + 0.15 * run.map.power;
+  }
   const enemyTricks = [...(enemy.tricks ?? [])];
   return {
     enemyId, tier, handO, first, disabled,
@@ -230,19 +286,18 @@ export function defaultHand(run) {
 
 export function enterNode(run, key) {
   if (key === 'boss') {
-    run.row = ROWS;
+    run.atBoss = true;
     run.pending = { kind: 'duel', duel: prepareDuel(run, run.map.boss, { bossRound: 0, bossWins: 0 }) };
     run.screen = 'predual';
     return;
   }
-  const [r, c] = key.split(',').map(Number);
-  run.row = r;
-  run.col = c;
-  run.map.visited.push(key);
-  const node = run.map.nodes[key];
+  const i = Number(key);
+  run.map.at = i;
+  run.map.news = null;
+  const node = run.map.cells[i];
   switch (node.kind) {
     case 'fight': {
-      const fought = run.map.visited.length;
+      const fought = run.map.visited + 1;
       let pool = enemiesOf(run.act, 'normal');
       if (run.act === 1 && fought <= 2) pool = EASY_OPENERS;
       const recent = run.recent ?? [];
@@ -351,6 +406,7 @@ export function duelLost(run) {
     return { kind: 'boss-retry' };
   }
   run.pending = null;
+  settleCell(run, 'O');
   run.screen = 'map';
   return { kind: 'lost' };
 }
@@ -358,7 +414,7 @@ export function duelLost(run) {
 // After the reward screen (and after a boss's relic), onward.
 export function leaveNode(run) {
   run.pending = null;
-  if (run.row === ROWS) {
+  if (run.atBoss) {
     if (run.act === ACTS.length) {
       run.over = true;
       run.victory = true;
@@ -366,12 +422,12 @@ export function leaveNode(run) {
       return;
     }
     run.act++;
-    run.row = -1;
-    run.col = null;
+    run.atBoss = false;
     run.map = makeMap(run);
     run.screen = 'actintro';
     return;
   }
+  settleCell(run, 'X');
   run.screen = 'map';
 }
 

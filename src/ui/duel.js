@@ -84,14 +84,17 @@ export function mountDuel(root, opts) {
   const stonesLayer = h('div.stones');
   const overlay = h('div.overlay');
   const lineLayer = h('div.winline');
-  const board = h('div.board', {}, h('div.cells', {}, cells), stonesLayer, lineLayer, overlay);
+  const gridLines = h('div.board-lines', { html: `<svg viewBox="0 0 300 300" preserveAspectRatio="none" aria-hidden="true">
+    <path d="M101 8 C 98 90, 104 190, 99 292"/><path d="M200 6 C 203 100, 197 200, 202 293"/>
+    <path d="M7 100 C 90 97, 200 104, 294 99"/><path d="M8 201 C 100 204, 190 197, 293 202"/></svg>` });
+  const board = h('div.board', {}, gridLines, h('div.cells', {}, cells), stonesLayer, lineLayer, overlay);
   const actions = h('div.actions');
   const hand = h('div.hand.player-hand');
   const trickRow = h('div.trick-row');
   const info = h('div.info-line');
 
   const header = h('div.enemy-bar', {},
-    h('div.portrait', { onclick: () => toast(`“${enemy.quote ?? '…'}”`) }, enemy.emoji),
+    h('div.portrait', { onclick: () => toast(`“${enemy.quote ?? '…'}”`) }, h('div.photo', {}, enemy.emoji)),
     h('div.enemy-meta', {}, h('div.enemy-name', {}, enemy.name,
       enemy.tier && enemy.tier !== 'normal' ? h('span.tier.' + enemy.tier, {}, enemy.tier) : null),
     h('div.enemy-row', {}, enemyHand, enemyTricks)), extra);
@@ -122,6 +125,7 @@ export function mountDuel(root, opts) {
       e.classList.toggle('last', c.id === lastEnemyId);
       e.style.setProperty('--r', row(i));
       e.style.setProperty('--c', col(i));
+      e.style.setProperty('--tilt', `${((c.id * 37) % 9) - 4}deg`);
     });
     for (const [id, e] of stoneEls) {
       if (seen.has(id)) continue;
@@ -255,13 +259,13 @@ export function mountDuel(root, opts) {
     } else if (stage.kind === 'turn') {
       for (const [k, group] of stage.groups) {
         const t = +k;
-        btns.push(h('button.btn.opt' + (isChosen(group) ? '.chosen' : ''), { onclick: pickGroup(group) },
-          h('span', { html: icon(t > 0 ? 'rotate-cw' : 'rotate-ccw') }), `${Math.abs(t)} step${Math.abs(t) > 1 ? 's' : ''}`));
+        btns.push(h('button.btn.opt.glyph-opt' + (isChosen(group) ? '.chosen' : ''), { onclick: pickGroup(group) },
+          h('span', { html: icon(t > 0 ? 'rotate-cw' : 'rotate-ccw') }), `${Math.abs(t)}`));
       }
     } else if (stage.kind === 'axis') {
-      const label = { h: '↔ left–right', v: '↕ top–bottom', d: '⤡ diagonal', a: '⤢ diagonal' };
+      const label = { h: '↔', v: '↕', d: '⤡', a: '⤢' };
       for (const [k, group] of stage.groups) {
-        btns.push(h('button.btn.opt' + (isChosen(group) ? '.chosen' : ''), { onclick: pickGroup(group) }, label[k]));
+        btns.push(h('button.btn.opt.glyph-opt' + (isChosen(group) ? '.chosen' : ''), { onclick: pickGroup(group), 'aria-label': `mirror ${k}` }, label[k]));
       }
     } else if (stage.kind === 'stone') {
       for (const [k, group] of stage.groups) {
@@ -547,6 +551,10 @@ export function mountDuel(root, opts) {
     show();
     const line = state.reason === 'line' ? winningLine(state, state.winner) : null;
     if (line) {
+      const cx = (i) => (col(i) + 0.5) * 100, cy = (i) => (row(i) + 0.5) * 100;
+      const [a, , b] = line;
+      const dx = (cx(b) - cx(a)) * 0.18, dy = (cy(b) - cy(a)) * 0.18;
+      lineLayer.innerHTML = `<svg viewBox="0 0 300 300" aria-hidden="true"><path class="${state.winner}" pathLength="100" d="M${cx(a) - dx} ${cy(a) - dy} L${cx(b) + dx} ${cy(b) + dy}"/></svg>`;
       for (const i of line) cells[i].classList.add('win-' + state.winner);
       for (const e of stoneEls.values()) if (line.includes(+e.dataset.at)) e.classList.add('in-line');
     }

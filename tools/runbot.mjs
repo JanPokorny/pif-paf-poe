@@ -59,9 +59,12 @@ function playRun(spec) {
     switch (run.screen) {
       case 'map': case 'actintro': {
         run.screen = 'map';
-        const opts = R.reachable(run);
+        let opts = R.reachable(run);
+        // Take the boss once the door is open and the pouch has had a few squares.
+        if (opts.includes('boss') && (run.map.visited >= 6 || opts.length === 1)) { log.push('[p' + run.map.power + ' v' + run.map.visited + ']'); R.enterNode(run, 'boss'); break; }
+        opts = opts.filter((k) => k !== 'boss');
         // Prefer rests when hurt, elites when healthy.
-        const kinds = opts.map((k) => (k === 'boss' ? 'boss' : run.map.nodes[k].kind));
+        const kinds = opts.map((k) => run.map.cells[k].kind);
         let pickI = (R.rand(run) * opts.length) | 0;
         const want = run.hearts <= 2 ? ['rest', 'shop', 'event'] : run.hearts >= run.maxHearts - 1 ? ['elite', 'treasure', 'fight'] : ['treasure', 'fight', 'event'];
         for (const w of want) { const i = kinds.indexOf(w); if (i >= 0) { pickI = i; break; } }
@@ -115,7 +118,7 @@ function playRun(spec) {
   if (!run.over) throw new Error('run did not end: ' + run.screen);
   // JSON round trip must survive (the save format).
   JSON.parse(JSON.stringify(run));
-  return { seed: spec.seed, victory: run.victory, act: run.act, row: run.row, hearts: run.hearts, log: log.join(' '), relics: run.relics.join(','), pouch: run.pouch.map((s) => s.type + (s.plus ? '+' : '')).join(',') };
+  return { seed: spec.seed, victory: run.victory, act: run.act, row: run.map.visited, hearts: run.hearts, log: log.join(' '), relics: run.relics.join(','), pouch: run.pouch.map((s) => s.type + (s.plus ? '+' : '')).join(',') };
 }
 
 if (!isMainThread) {
@@ -132,7 +135,7 @@ if (!isMainThread) {
   const res = (await Promise.all(chunks.map((c) => new Promise((ok, bad) => { const w = new Worker(new URL(import.meta.url), { workerData: c }); w.on('message', ok); w.on('error', bad); })))).flat();
   for (const r of res) {
     if (r.error) { console.log(`seed ${r.seed}: ERROR ${r.error}`); continue; }
-    console.log(`seed ${r.seed}: ${r.victory ? 'VICTORY' : `died act ${r.act} row ${r.row}`}  | ${r.log}\n    relics ${r.relics}\n    pouch ${r.pouch}`);
+    console.log(`seed ${r.seed}: ${r.victory ? 'VICTORY' : `died act ${r.act} after ${r.row} squares`}  | ${r.log}\n    relics ${r.relics}\n    pouch ${r.pouch}`);
   }
   const ok = res.filter((r) => !r.error);
   console.log(`\n${ok.filter((r) => r.victory).length}/${ok.length} victories; mean act reached ${(ok.reduce((a, r) => a + r.act, 0) / ok.length).toFixed(2)}; ${((Date.now() - t0) / 1000).toFixed(0)}s`);

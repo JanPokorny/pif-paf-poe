@@ -4,7 +4,7 @@
 import { STONES, TRICKS, STONE_TYPES, TRICK_TYPES, createGame, FIELDS } from './engine.js';
 import { RELICS, RELIC_TYPES, ENEMIES, ACTS, EVENTS } from './content.js';
 import * as R from './run.js';
-import { h, stoneEl, iconEl, toast, modal, infoStone, infoTrick, infoRelic, infoSpace, infoField, stoneCard, trickCard, relicCard, stoneName } from './ui/common.js';
+import { h, scribbleX, scribbleO, stoneEl, iconEl, toast, modal, infoStone, infoTrick, infoRelic, infoSpace, infoField, stoneCard, trickCard, relicCard, stoneName } from './ui/common.js';
 import { icon } from './icons.js';
 import { mountDuel } from './ui/duel.js';
 import { sfx, soundOn, setSound } from './sound.js';
@@ -35,12 +35,12 @@ function recordEnd() {
   if (run.recorded) return;
   run.recorded = true;
   meta.runs++;
-  const reached = { act: run.act, row: run.row, victory: run.victory };
+  const reached = { act: run.act, row: run.map ? R.xCount(run) : 0, victory: run.victory };
   const score = (r) => (r ? (r.victory ? 100 : 0) + r.act * 10 + r.row : -1);
   if (score(reached) > score(meta.best)) meta.best = reached;
   if (run.daily) {
     meta.daily = { ...(meta.daily ?? {}) };
-    meta.daily[run.daily] = run.victory ? 'conquered the Summit' : `fell in act ${run.act}, floor ${Math.max(1, run.row + 1)}`;
+    meta.daily[run.daily] = run.victory ? 'conquered the Summit' : `fell in act ${run.act}`;
   }
   if (run.victory) {
     meta.wins++;
@@ -114,14 +114,19 @@ function title() {
   duelView = null;
   const saved = loadJSON(SAVE);
   const best = meta.best
-    ? (meta.best.victory ? `Best: conquered the Summit${meta.bestHeatWon > 0 ? ` at heat ${meta.bestHeatWon}` : ''}` : `Best: act ${meta.best.act}, floor ${Math.max(1, meta.best.row + 1)}`)
+    ? (meta.best.victory ? `Best: conquered the Summit${meta.bestHeatWon > 0 ? ` at heat ${meta.bestHeatWon}` : ''}` : `Best: reached act ${meta.best.act}`)
     : 'Tic-tac-toe where the pieces move.';
   screen(
     h('div.title', {},
       h('div.logo', {},
-        h('div.logo-board', {}, Array.from({ length: 9 }, (_, i) => h('div.logo-cell', {},
-          [0, 4, 8].includes(i) ? h('span.lx', { html: icon('x-mark') }) : [2, 6].includes(i) ? h('span.lo', { html: icon('o-mark') }) : null))),
-        h('h1', {}, 'Pif·Paf·Poe'),
+        h('div.doodle-board', {},
+          h('div.board-lines', { html: '<svg viewBox="0 0 300 300" aria-hidden="true"><path d="M101 8 C 98 90, 104 190, 99 292"/><path d="M200 6 C 203 100, 197 200, 202 293"/><path d="M7 100 C 90 97, 200 104, 294 99"/><path d="M8 201 C 100 204, 190 197, 293 202"/></svg>' }),
+          [[0, 'x'], [4, 'x'], [2, 'o'], [6, 'o'], [8, 'x']].map(([i, m], k) => {
+            const el = h('div.mark', { style: { left: `${(i % 3) * 33.3}%`, top: `${((i / 3) | 0) * 33.3}%` }, html: m === 'x' ? scribbleX(true) : scribbleO(true) });
+            el.querySelectorAll('path').forEach((p) => { p.style.animationDelay = `${0.2 + k * 0.45 + (p.classList.contains('second') ? 0.2 : 0)}s`; });
+            return el;
+          })),
+        h('h1', {}, h('span.x', {}, 'Pif'), '·Paf·', h('span.o', {}, 'Poe')),
         h('div.subtitle', {}, 'a roguelike of moving stones')),
       h('div.title-buttons', {},
         saved?.run && !saved.run.over ? h('button.btn.primary.wide.big', { onclick: () => { run = saved.run; duelState = saved.duel; route(); } }, 'Continue run') : null,
@@ -217,55 +222,72 @@ function route() {
 // ── Map ─────────────────────────────────────────────────────────────────────
 
 const NODE_ICON = { fight: 'sword', elite: 'skull', shop: 'shop', rest: 'fire', event: 'question', treasure: 'chest', boss: 'crown' };
-const NODE_NAME = { fight: 'Duel', elite: 'Elite duel', shop: 'Shop', rest: 'Campfire', event: 'Unknown', treasure: 'Treasure', boss: 'Boss' };
+const NODE_NAME = { fight: 'Duel', elite: 'Elite', shop: 'Shop', rest: 'Campfire', event: 'Unknown', treasure: 'Treasure', boss: 'Boss' };
+const NODE_TEXT = {
+  fight: 'A duel. Win for gold and a new stone; lose and it costs a heart — and the boss takes the square.',
+  elite: 'A tough duel. Win for a relic; lose and it costs 2 hearts.',
+  shop: 'Stones, tricks, relics and services, for gold.',
+  rest: 'Heal, or upgrade a stone.',
+  event: 'Something happens. Who knows what.',
+  treasure: 'A relic and some gold, free.',
+};
 
+// The act's map is a game of tic-tac-toe against its boss, on a 4x4 grid.
 function mapScreen() {
-  const { nodes, visited } = run.map;
+  const map = run.map;
   const reach = new Set(R.reachable(run));
-  const W = 340, rowH = 78, top = 110, H = top + R.ROWS * rowH + 30;
-  const X = (c) => 50 + c * ((W - 100) / (R.COLS - 1));
-  const Y = (r) => H - 40 - r * rowH;
-  const bossY = 50;
-  let lines = '';
-  for (const n of Object.values(nodes)) {
-    for (const c of n.next) {
-      const done = visited.includes(`${n.r},${n.c}`) && visited.includes(`${n.r + 1},${c}`);
-      lines += `<line x1="${X(n.c)}" y1="${Y(n.r)}" x2="${X(c)}" y2="${Y(n.r + 1)}" class="edge${done ? ' done' : ''}"/>`;
-    }
-    if (n.r === R.ROWS - 1) lines += `<line x1="${X(n.c)}" y1="${Y(n.r)}" x2="${W / 2}" y2="${bossY}" class="edge"/>`;
-  }
-  const svg = h('div.map-svg', { html: `<svg viewBox="0 0 ${W} ${H}" width="100%">${lines}</svg>` });
-  const layer = h('div.map-nodes');
-  const place = (x, y, el) => { el.style.left = `${(x / W) * 100}%`; el.style.top = `${(y / H) * 100}%`; layer.append(el); };
-  for (const n of Object.values(nodes)) {
-    const key = `${n.r},${n.c}`;
-    const cls = [visited.includes(key) ? 'visited' : '', reach.has(key) ? 'reach' : '', run.row === n.r && run.col === n.c ? 'here' : ''].join(' ');
-    place(X(n.c), Y(n.r), h(`button.map-node.${n.kind}`, {
-      class: cls, 'aria-label': NODE_NAME[n.kind],
+  const boss = ENEMIES[map.boss];
+  const lines = `<svg viewBox="0 0 400 400" preserveAspectRatio="none" aria-hidden="true">
+    <path d="M101 6 C 98 120, 104 260, 99 394"/><path d="M200 4 C 203 130, 197 270, 201 396"/><path d="M300 7 C 297 140, 303 250, 299 393"/>
+    <path d="M5 100 C 130 97, 260 104, 395 99"/><path d="M4 201 C 140 204, 260 197, 396 202"/><path d="M6 299 C 120 302, 270 296, 394 301"/></svg>`;
+  const freshX = map.freshX;
+  const cells = map.cells.map((c, i) => {
+    const can = reach.has(String(i));
+    const el = h(`button.map-cell.${c.kind}` + (can ? '.reach' : '') + (c.mark ? '.marked' : ''), {
+      'aria-label': NODE_NAME[c.kind],
       onclick: () => {
-        if (!reach.has(key)) { toast(NODE_NAME[n.kind]); return; }
+        if (!can) {
+          const why = c.mark === 'X' ? 'You have been here.' : c.mark === 'O' ? `${boss.name} took this square.` : 'Too far: go next to one of your Xs.';
+          toast(`${NODE_NAME[c.kind]} — ${c.mark ? why : NODE_TEXT[c.kind] + ' ' + why}`);
+          return;
+        }
         sfx('click');
-        R.enterNode(run, key);
+        R.enterNode(run, String(i));
         duelState = null;
         route();
       },
-    }, h('span', { html: icon(NODE_ICON[n.kind]) })));
-  }
-  const boss = ENEMIES[run.map.boss];
-  place(W / 2, bossY, h('button.map-node.boss' + (reach.has('boss') ? '.reach' : ''), {
+    }, h('span.doodle', { html: icon(NODE_ICON[c.kind]) }), h('span.label', {}, NODE_NAME[c.kind]));
+    if (c.mark === 'X') el.insertAdjacentHTML('beforeend', scribbleX(freshX === i));
+    if (c.mark === 'O') el.insertAdjacentHTML('beforeend', scribbleO(map.lastO === i));
+    return el;
+  });
+  map.freshX = null;
+  const lastO = map.lastO;
+  map.lastO = null;
+  const news = map.news === 'oline' ? `${boss.name} drew three in a row — it grows stronger!`
+    : map.news === 'boxed' ? `Boxed in! The door opens, but ${boss.name} grows stronger.`
+    : lastO !== null && lastO !== undefined ? `${boss.name} marks the ${NODE_NAME[map.cells[lastO].kind].toLowerCase()} square.` : '';
+  map.news = null;
+  const door = h('button.boss-door' + (map.open ? '.open' : ''), {
     onclick: () => {
-      if (!reach.has('boss')) { toast(`${boss.name} awaits at the top.`); return; }
+      if (!map.open) { toast('Draw three Xs in a row — across, down or diagonal — to open the door.'); return; }
       R.enterNode(run, 'boss'); duelState = null; route();
     },
-  }, h('span.boss-emoji', {}, boss.emoji)));
-
-  const legend = h('div.legend', {}, Object.entries(NODE_NAME).filter(([k]) => k !== 'boss').map(([k, v]) => h('span', {}, h('span.leg-ico.' + k, { html: icon(NODE_ICON[k]) }), v)));
-  const el = screen(topBar(), relicStrip(), h('div.map-wrap', {}, h('div.map', {}, svg, layer)), legend);
-  // Scroll the next choice into view.
-  requestAnimationFrame(() => {
-    const target = el.querySelector('.map-node.reach');
-    target?.scrollIntoView({ block: 'center', behavior: 'instant' });
-  });
+  },
+  h('div.portrait', {}, h('div.photo', {}, boss.emoji)),
+  h('div.door-text', {},
+    h('div.door-name', {}, boss.name),
+    map.open ? h('div', {}, 'The door is open. Tap to face the boss — or keep exploring.') : h('div', {}, 'Draw three in a row to open the door.'),
+    map.power ? h('div.power', {}, `Power +${map.power}`) : null));
+  const el = screen(topBar(), relicStrip(),
+    h('div.map-page', {},
+      door,
+      h('div.map-grid' + (R.xCount(run) ? '' : '.first'), {}, h('div.board-lines', { html: lines }), h('div.map-cells', {}, cells)),
+      h('div.map-news', {}, news),
+      h('div.map-help', {}, !R.xCount(run)
+        ? 'Pick any square to start. You mark X where you go; after each step the boss marks an O.'
+        : 'Go to a highlighted square next to one of your Xs.')));
+  void el;
 }
 
 function actIntro() {
@@ -274,7 +296,7 @@ function actIntro() {
     h('div.act-n', {}, `Act ${act.n}`),
     h('h1', {}, act.name),
     h('p', {}, ['', 'The meadow is behind you. The ground turns to stone.', 'The air thins. Only the best players make it this far.'][act.n - 1]),
-    h('p.dim', {}, `At the top waits ${ENEMIES[act.boss].name} ${ENEMIES[act.boss].emoji}.`),
+    h('div.rules-note', {}, `This act is a game of tic-tac-toe against ${ENEMIES[act.boss].name} ${ENEMIES[act.boss].emoji}. Each square is an encounter: clear it and mark your X. After each of your steps, the boss marks an O. Draw three in a row to open its door.`),
     h('button.btn.primary.wide.big', { onclick: () => { run.screen = 'map'; route(); } }, 'Onward')));
 }
 
@@ -317,7 +339,7 @@ function preDuel() {
   screen(topBar(),
     h('div.page', {},
       h('div.enemy-card.' + duel.tier, {},
-        h('div.portrait.big', {}, enemy.emoji),
+        h('div.portrait.big', {}, h('div.photo', {}, enemy.emoji)),
         h('div', {},
           tierLabel ? h('div.tier.' + duel.tier, {}, tierLabel) : null,
           h('div.enemy-name.big', {}, enemy.name),

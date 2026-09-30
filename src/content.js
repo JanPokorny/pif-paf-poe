@@ -111,7 +111,7 @@ export const ENEMIES = {
     tricks: ['muffle'], quote: 'You will stand where I let you.' },
   // boss
   oak: { name: 'The Old Oak', emoji: '🌳', act: 1, tier: 'boss',
-    core: ['mountain', 'magnet', 'shift'], pool: ['pebble', 'rotate', 'bumper', 'stinky'], iters: 400, blunder: 0.05,
+    core: ['mountain', 'magnet', 'shift'], pool: ['pebble', 'rotate', 'bumper', 'stinky'], iters: 320, blunder: 0.06,
     field: 'gravity', quote: 'All things fall, little one.' },
 
   // Act 2 — the Quarry
@@ -142,7 +142,7 @@ export const ENEMIES = {
     tricks: ['anchor'], quote: 'STUCK. FOREVER.' },
   // boss
   colossus: { name: 'Clockwork Colossus', emoji: '⚙️', act: 2, tier: 'boss',
-    core: ['whirl', 'mountain', 'magnet'], pool: ['whirl', 'rotate', 'beacon', 'swap', 'shift'], iters: 700, blunder: 0.02,
+    core: ['whirl', 'mountain', 'magnet'], pool: ['whirl', 'rotate', 'beacon', 'swap', 'shift'], iters: 560, blunder: 0.03,
     field: 'carousel', tricks: ['nudge'], quote: 'TICK. TOCK. YOUR TURN IS WOUND.' },
 
   // Act 3 — the Summit
@@ -174,7 +174,7 @@ export const ENEMIES = {
   // bosses
   grandmaster: { name: 'The Grandmaster', emoji: '👑', act: 3, tier: 'boss',
     core: ['magnet', 'stinky', 'shift', 'rotate'], pool: ['firecracker', 'turncoat', 'swap', 'mountain', 'beacon'],
-    iters: 500, blunder: 0.03, tricks: ['mirror'], mods: { homeTurf: true },
+    iters: 420, blunder: 0.04, tricks: ['mirror'], mods: { homeTurf: true },
     quote: 'Every stone you own, I have mastered.' },
 };
 

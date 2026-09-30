@@ -24,6 +24,18 @@ export function h(tag, attrs = {}, ...children) {
   return el;
 }
 
+// A hand-drawn star sticker for upgraded stones.
+const STAR = '<svg class="badge-plus" viewBox="-10 -10 20 20" aria-hidden="true"><path d="M0 -8.5 L2.4 -2.7 L8.6 -2.4 L3.8 1.5 L5.4 7.6 L0 4.2 L-5.4 7.6 L-3.8 1.5 L-8.6 -2.4 L-2.4 -2.7 Z"/></svg>';
+
+// Pen marks, as SVG strings in a 0..100 box: an X in two strokes, an O in one
+// loop that overshoots where it closes. `fresh` draws them in.
+export function scribbleX(fresh = false) {
+  return `<svg class="scribble x${fresh ? ' fresh' : ''}" viewBox="0 0 100 100" aria-hidden="true"><path pathLength="100" d="M22 20 C 40 38, 58 60, 80 82"/><path pathLength="100" class="second" d="M79 19 C 60 40, 42 58, 20 81"/></svg>`;
+}
+export function scribbleO(fresh = false) {
+  return `<svg class="scribble o${fresh ? ' fresh' : ''}" viewBox="0 0 100 100" aria-hidden="true"><path pathLength="100" d="M56 16 C 30 12, 14 34, 18 56 C 22 80, 48 90, 68 80 C 88 70, 88 40, 74 26 C 66 18, 52 14, 42 20"/></svg>`;
+}
+
 export const iconEl = (name, cls = '') => h('span.icon-wrap', { html: icon(name, cls) });
 
 // A stone token. `player` is X (you, a rounded square) or O (the enemy, a circle).
@@ -45,8 +57,7 @@ export function updateStone(el, s, player, opts = {}) {
   el.classList.toggle('mini', !!opts.mini);
   if (el.dataset.type !== s.type || !el.firstChild) {
     el.dataset.type = s.type;
-    el.innerHTML = icon(s.type, 'glyph') + '<span class="badge-plus">+</span><span class="badge-lock">'
-      + icon('lock') + '</span>';
+    el.innerHTML = icon(s.type, 'glyph') + STAR + '<span class="tape"></span>';
   }
 }
 
