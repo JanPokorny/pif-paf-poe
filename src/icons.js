@@ -595,6 +595,7 @@ Object.assign(RAW, {
   'cond-nocentre': MINI_GRID + P('M -1.6 -1.6 L 1.6 1.6 M 1.6 -1.6 L -1.6 1.6', SW(1.6)),
   'cond-shared': arcArrow(0, 0, 5.4, 200, 340, 2.8, 1.9) + arcArrow(0, 0, 5.4, 20, 160, 2.8, 1.9),
   'rule-tactics': P('M -1 6.6 V -2.6 A 1.4 1.4 0 0 1 1.8 -2.6 V 1.8 L 5 2.6 Q 6.6 3.2 6 5 L 5.2 6.6') + P('M -1 1 L -3.6 -0.2 Q -5.4 0.4 -4.4 2.2 L -1 6.6') + P('M -3.4 -6.2 L -2.2 -4.6 M 0.4 -7.2 V -5.4 M 4 -6.2 L 2.8 -4.6', SW(1)),
+  'rule-double': P('M -6.6 -1 h 5.6 v 5.6 h -5.6 Z M 1 -4.6 h 5.6 v 5.6 h -5.6 Z') + P('M -3.8 -3.4 V -6.4 M 3.8 3.4 V 6.4', SW(1)),
   'rule-headstart': P('M -6 -5 L -1 0 L -6 5 M 0 -5 L 5 0 L 0 5', SW(1.8)),
   'rule-elko': P('M -5.6 -5.6 H -0.4 V -0.4 H 5.6 V 5.6 H -5.6 Z') + P('M -0.4 -0.4 V 5.6 M -5.6 -0.4 H -0.4', FAINT),
   'rule-clinch': C(-2.6, 0, 3.6) + C(3.4, 0, 3.6, ' stroke-dasharray="1.6 1.2"'),

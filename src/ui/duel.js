@@ -408,7 +408,7 @@ export function mountDuel(root, opts) {
 
     if (state.phase === 'select') {
       markDangers();
-      setStatus(t('Your turn — pick a stone'), 'you');
+      setStatus(state.half ? t('Your second stone — pick one') : t('Your turn — pick a stone'), 'you');
       info.textContent = caption.length ? `${enemy.name}: ${caption.filter(Boolean).join(', ')}.`
         : state.conds.includes('shared') && state.hands.O.length ? t('Open Hands: you may also tap one of their stones, up top, and play it as yours.')
           : t('Tap a stone in your hand. Tap any stone on the board to read it.');
@@ -659,6 +659,7 @@ export function mountDuel(root, opts) {
       else if (l.startsWith('parrot:')) toast(t('The {parrot} copies {stone}!', { parrot: STONES.parrot.name, stone: STONES[l.slice(7)].name }));
       else if (l.startsWith('trick:')) { toast(t(me ? 'You used {trick}!' : '{enemy} used {trick}!', { ...v, trick: TRICKS[l.slice(6)].name }), me ? 'good' : 'bad'); sfx('trick'); }
       else if (l === 'cond:gravity') { /* shown as a step of its own */ }
+      else if (l === 'rule:double' && !me) { /* the caption says it */ }
       else if (l === 'rule:headstart') toast(t('{rule}: {enemy} goes again!', { ...v, rule: RULES.headstart.name }), 'bad');
     }
   }
@@ -679,7 +680,8 @@ export function mountDuel(root, opts) {
       if (action.type === 'select') {
         state.log = [];
         applyAction(state, action);
-        caption = [t('played {stone}', { stone: stoneName(state.selected) })];
+        // Double Time's second stone keeps the first one in the caption.
+        if (!state.half) caption = [t('played {stone}', { stone: stoneName(state.selected) })];
         info.textContent = caption.filter(Boolean).join(', ');
         // Show which stone it took.
         renderHands(state);
@@ -691,6 +693,7 @@ export function mountDuel(root, opts) {
         continue;
       }
       state.log = [];
+      const second = state.half && action.type === 'place';   // Double Time: the turn's second stone
       // The board before Gravity pulls, so the fall can be shown as a step.
       let beforeFall = null;
       if (state.conds.includes('gravity')) {
@@ -721,7 +724,8 @@ export function mountDuel(root, opts) {
       renderChips(state);
       if (action.type === 'place') {
         lastEnemyId = state.placedId;
-        caption = [t('played {stone} on the {square}', { stone: stoneName(state.lastPlaced.O), square: sq(action.pos) })];
+        const said = t('played {stone} on the {square}', { stone: stoneName(state.lastPlaced.O), square: sq(action.pos) });
+        caption = second ? [...caption, t('then {what}', { what: said })] : [said];
       } else if (action.type !== 'trick' || action.use !== 'pass') caption.push(describe(action));
       info.textContent = caption.filter(Boolean).join(', ');
       if (action.type === 'place') {

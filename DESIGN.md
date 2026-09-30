@@ -36,12 +36,18 @@ duel, and a rule for who wins when someone runs out. The second version slows it
   stone you play), **Head Start** (it plays twice on its first turn), **Elbow** (rows do not
   count: an L of three wins), **Clinch** (you must place next to one of its stones), **Column**
   (it closes a column to you each turn), **Spy** (it names the direction your stones move),
-  **Reserved** (the centre is its alone), **Patience** (a full board is its). The dictating rules
+  **Reserved** (the centre is its alone), **Patience** (a full board is its), **Double Time**
+  (every turn is two stones in a row, for both sides, the boss first). The dictating rules
   are a phase of their own after the boss's turn, searched by the same AI as every other choice.
   A boss has two lives; once beaten it rises again, often with a second rule.
+  Double Time is the hard one, and it wants a particular loadout. Bot duels, 20 each: Pebbles
+  only or two Mountains win 0%, movers (Shift and Rotate, Rail/Pivot/Teleport, 2048/4096)
+  20–40%, restrictions (Magnet and Stinky, Electromagnet and Stench, Beacon and Lighthouse)
+  95–100%. The Twin Kings' second life adds Reserved, and then restrictions alone drop to
+  0–15%: it takes a restriction *and* a mover (Magnet and Shift: 95%).
   The sheet's Sloup had the boss choose the column you *must* play in; measured against the bot
   that won 96% for the boss, so here the boss closes a column instead. OOTB (playing outside
-  the board) is left out.
+  the board) is left out for now: the engine's board is a fixed 3×3.
 - **Mountain is the only wall.** The protective and disabling stones (Snare, Hush, Glue,
   Guardian) were confusing and are gone. Moving stones — shifts, rotations, whirls, 2048, and
   Gravity — step over a Mountain: it holds its square and the rest go round.

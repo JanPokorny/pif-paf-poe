@@ -178,8 +178,10 @@ export const ENEMIES = {
   grandmaster: { name: 'The Grandmaster', emoji: '👑', act: 3, tier: 'boss',
     rules: ['tactics'], rules2: ['tactics', 'reserved'], iters: 400, blunder: 0.03,
     quote: 'You will play what I tell you to play.' },
+  // Double Time: plain stones cannot hold out. It wants restrictions — and
+  // once it holds the centre too, restrictions and something that moves.
   twinkings: { name: 'The Twin Kings', emoji: '🎭', act: 3, tier: 'boss',
-    rules: ['headstart'], rules2: ['headstart', 'reserved'], tricks: ['nudge'], iters: 650, blunder: 0.03,
+    rules: ['double'], rules2: ['double', 'reserved'], iters: 600, blunder: 0.03,
     quote: 'Two crowns, two moves.' },
 };
 

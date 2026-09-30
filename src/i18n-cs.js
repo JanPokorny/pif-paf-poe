@@ -461,6 +461,8 @@ export default {
   'Moves go down': 'Tahy jen dolů',
   'Moves go left': 'Tahy jen doleva',
   'Moves go right': 'Tahy jen doprava',
+  'Your second stone — pick one': 'Tvůj druhý kámen — vyber si',
+  'then {what}': 'pak {what}',
 };
 
 // ── Data tables, by id (arrays by position) ─────────────────────────────────
@@ -522,6 +524,7 @@ export const CS_DATA = {
 
   rules: {
     tactics: { name: 'Taktika', text: 'Před každým tvým tahem boss určí, který kámen musíš zahrát.' },
+    double: { name: 'Dvojtah', text: 'Každý tah jsou dva kameny za sebou, pro obě strany. Boss začíná.' },
     headstart: { name: 'Náskok', text: 'Boss hraje svůj první tah dvakrát.' },
     elko: { name: 'Elko', text: 'Řady neplatí: vyhrává, kdo postaví L ze tří — čtverec 2×2 bez jednoho pole.' },
     clinch: { name: 'Lep', text: 'Musíš hrát vedle některého bossova kamene, pokud to jde.' },

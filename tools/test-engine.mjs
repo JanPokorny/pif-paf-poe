@@ -705,6 +705,33 @@ test('Elbow: an L of three wins, and rows do not', () => {
   play(u, 'pebble', 4);
   assert.equal(u.winner, 'X', 'you win with an L too');
 });
+test('Double Time: two stones a turn, for both sides, the boss first', () => {
+  const s = B(['double']);
+  play(s, 'pebble', 0);
+  turnPassedTo(s, 'O');
+  play(s, 'pebble', 8);
+  turnPassedTo(s, 'X');
+  play(s, 'pebble', 4);
+  turnPassedTo(s, 'X');
+  play(s, 'pebble', 2);
+  turnPassedTo(s, 'O');
+});
+test('Double Time: a line on the first stone ends it at once', () => {
+  const s = B(['double']);
+  lay(s, { 0: 'O pebble', 1: 'O pebble' });
+  play(s, 'pebble', 2);
+  assert.equal(s.winner, 'O');
+});
+test('Double Time: the boss\'s word lasts both of your stones', () => {
+  const s = B(['double', 'column']);
+  play(s, 'pebble', 4);
+  play(s, 'pebble', 8);
+  act(s, { type: 'dictate', value: 0 });
+  play(s, 'pebble', 1);
+  assert.equal(s.dictate?.value, 0);
+  applyAction(s, { type: 'select', stone: 'pebble' });
+  assert.ok(allowedSquares(s).every((i) => i % 3 !== 0));
+});
 test('Clinch: you must place next to a boss stone', () => {
   sameSet(allowedFor({ 0: 'O pebble' }, { rules: ['clinch'] }), [1, 3]);
   sameSet(allowedFor({}, { rules: ['clinch'] }), [0, 1, 2, 3, 4, 5, 6, 7, 8], 'no boss stone: anywhere');

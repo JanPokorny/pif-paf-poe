@@ -481,6 +481,7 @@ export const CONDS = {
 export const RULES = {
   tactics: { name: 'Tactics', text: 'Before each of your turns, the boss picks which stone you must play.', dictate: true },
   headstart: { name: 'Head Start', text: 'The boss plays twice on its first turn.' },
+  double: { name: 'Double Time', text: 'Every turn is two stones in a row, for both sides. The boss starts.' },
   elko: { name: 'Elbow', text: 'Rows do not count: whoever makes an L of three — a 2×2 block missing one square — wins.' },
   clinch: { name: 'Clinch', text: 'You must place next to one of the boss\'s stones, if you can.' },
   column: { name: 'Column', text: 'Before each of your turns, the boss closes a column: you may not place in it.', dictate: true },
@@ -620,6 +621,7 @@ export function createGame({
     forced: null,                   // {player, stone}: what must be played next
     dictate: null,                  // {kind, value}: the boss's word for your next turn
     extra: rules.includes('headstart') ? 1 : 0,   // turns the boss still plays twice
+    half: false,                    // Double Time: the first of the turn's two stones is down
     selected: null, from: null,     // the stone taken, and whose hand it came from
     placedAt: null, placedId: null,
     repeat: false,                  // the effect phase runs again (Echo)
@@ -645,7 +647,7 @@ export function cloneState(s) {
     echo: { ...s.echo },
     forced: s.forced ? { ...s.forced } : null,
     dictate: s.dictate ? { ...s.dictate } : null,
-    extra: s.extra,
+    extra: s.extra, half: s.half,
     selected: s.selected ? { ...s.selected } : null, from: s.from,
     placedAt: s.placedAt, placedId: s.placedId,
     repeat: s.repeat,
@@ -750,7 +752,6 @@ function finish(s, winner, reason) {
 function endTurn(s) {
   const p = s.player;
   if (s.forced?.player === p) s.forced = null;
-  if (p === 'X') s.dictate = null;
   if (s.conds.includes('gravity')) { slideAll(s, 'down', null); note(s, 'cond:gravity'); }
 
   if (hasLine(s, p)) return finish(s, p, 'line');
@@ -766,8 +767,13 @@ function endTurn(s) {
   // could in principle go round forever: forty turns counts as a full board.
   if (s.board.every(Boolean) || s.turns >= 40) return finish(s, s.rules.includes('patient') ? 'O' : other(s.first), 'full');
 
+  // Double Time: every turn is two stones.
+  if (s.rules.includes('double') && !s.half) { s.half = true; s.turns++; note(s, 'rule:double'); return; }
+  s.half = false;
   // The Head Start: the boss's first turn is two.
   if (p === 'O' && s.extra > 0) { s.extra--; s.turns++; note(s, 'rule:headstart'); return; }
+  // The boss's word lasts one whole turn of yours.
+  if (p === 'X') s.dictate = null;
 
   // A word only when there is a choice to make.
   if (p === 'O' && dictateOptions(s).length > 1) { s.phase = 'dictate'; return; }
