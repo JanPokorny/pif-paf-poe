@@ -188,7 +188,6 @@ function chooseKit() {
             run = R.newRun({ kit: id, heat });
             duelState = null;
             save();
-            if (!meta.seenHelp) { meta.seenHelp = true; saveMeta(); showHelp(() => route()); }
             route();
           },
         },
@@ -298,7 +297,7 @@ function mapScreen() {
       ? h('span.doodle.foe', {}, h('span.photo', {}, ENEMIES[c.duel.enemyId].emoji),
         c.duel.disabled ? h('span.cell-space', { html: icon(c.duel.disabled) }) : null)
       : h('span.doodle', { html: icon(NODE_ICON[c.kind]) }),
-    h('span.label', {}, c.duel ? ENEMIES[c.duel.enemyId].name.replace(/^(The|Captain|Lord of) /, '').split(' ')[0] : NODE_NAME[c.kind]));
+    h('span.label', {}, c.duel ? ENEMIES[c.duel.enemyId].name.replace(/^(The|Captain) /, '') : NODE_NAME[c.kind]));
     if (c.mark === 'X') el.insertAdjacentHTML('beforeend', scribbleX(freshX === i));
     if (c.mark === 'O') el.insertAdjacentHTML('beforeend', scribbleO(map.lastO === i));
     return el;
@@ -340,7 +339,7 @@ function actIntro() {
   screen(h('div.act-intro', {},
     h('div.act-n', {}, `Act ${act.n}`),
     h('h1', {}, act.name),
-    h('p', {}, ['', 'The meadow is behind you. The ground turns to stone.', 'The air thins. Only the best players make it this far.'][act.n - 1]),
+    h('p', {}, ['A summer camp. A field of stones that will not stay still.', 'The meadow is behind you. The ground turns to stone.', 'The air thins. Only the best players make it this far.'][act.n - 1]),
     h('div.rules-note', {}, `This act is a game of tic-tac-toe against ${ENEMIES[act.boss].name} ${ENEMIES[act.boss].emoji}. Each square is an encounter: clear it and mark your X. After each of your steps, the boss marks an O. Draw three in a row to open its door.`),
     h('button.btn.primary.wide.big', { onclick: () => { run.screen = 'map'; route(); } }, 'Onward')));
 }
@@ -395,7 +394,7 @@ function preDuel() {
       h('div.section-label', {}, 'Their stones'),
       h('div.hand.enemy-hand.show', {}, duel.handO.map((s) => h('button.slot-plain', { onclick: () => infoStone(s, 'O') }, stoneEl(s, 'O', { dead: duel.disabled === s.type && !duel.modsO.homeTurf })))),
       duel.tricksO.length ? h('div.enemy-tricks-pre', {}, 'Tricks: ', duel.tricksO.map((t) => h('button.link', { onclick: () => infoTrick(t) }, TRICKS[t].name))) : null,
-      h('div.duel-facts', {},
+      h('div.duel-facts.facts-card', {},
         h('button.fact', { onclick: () => infoSpace(duel.disabled) },
           duel.disabled ? h('span.chip-ico.crossed', { html: icon(duel.disabled) }) : '◻',
           duel.disabled ? ` No ${STONES[duel.disabled].name} here` : ' Neutral space'),
@@ -484,7 +483,8 @@ function takeTrick(t, done) {
 function pickFromPouch(prompt, cb, { filter = () => true, cancel = 'Cancel' } = {}) {
   const list = run.pouch.filter(filter);
   const body = h('div.pouch-view', {}, h('h2', {}, prompt),
-    list.length ? h('div.stone-grid', {}, list.map((s) => h('button.pouch-slot', { onclick: () => { close(); cb(s); } }, stoneEl(s, 'X'), h('span', {}, stoneName(s)))))
+    list.length ? h('div.stone-grid' + (/upgrade/i.test(prompt) ? '.upgrades' : ''), {}, list.map((s) => h('button.pouch-slot', { onclick: () => { close(); cb(s); } }, stoneEl(s, 'X'), h('span', {}, stoneName(s)),
+      /upgrade/i.test(prompt) ? h('span.plus-note', {}, '+ ' + STONES[s.type].plusText) : null)))
       : h('p.dim', {}, 'Nothing to choose.'),
     h('button.btn.wide.ghost', { onclick: () => { close(); cb(null); } }, cancel));
   const close = modal(body, { dismissable: false, cls: 'tall' });
@@ -543,7 +543,7 @@ function shopScreen() {
     fn(() => { run.gold -= cost; sfx('coin'); save(); shopScreen(); });
   };
   screen(topBar(), h('div.page.shop', {},
-    h('div.shop-head', {}, h('span.shop-emoji', {}, '🧑‍🌾'), h('div', {}, h('h2', {}, 'The Travelling Merchant'), h('div.dim', {}, '“Stones, tricks, trinkets. Gold only.”'))),
+    h('div.shop-head', {}, h('span.shop-emoji', { html: icon('shop') }), h('div', {}, h('h2', {}, 'The Travelling Merchant'), h('div.dim', {}, '“Stones, tricks, trinkets. Gold only.”'))),
     h('div.section-label', {}, 'Stones'),
     h('div.cards.scroll', {}, shop.stones.map((s) => stoneCard(s, {
       price: s.price, sold: s.sold,
@@ -586,7 +586,7 @@ function restScreen() {
   const leave = () => { R.leaveNode(run); route(); };
   if (run.pending.done) {
     const more = (run.pending.upgrades ?? 1) < n && R.upgradeable(run).length;
-    screen(topBar(), h('div.page.rest', {}, h('div.campfire', {}, '🔥'), h('h2', {}, 'The fire burns low'),
+    screen(topBar(), h('div.page.rest', {}, h('div.campfire', { html: icon('fire') }), h('h2', {}, 'The fire burns low'),
       more ? h('button.btn.wide.big', {
         onclick: () => pickFromPouch('Upgrade which stone?', (s) => {
           if (!s) return;
@@ -597,7 +597,7 @@ function restScreen() {
     return;
   }
   screen(topBar(), h('div.page.rest', {},
-    h('div.campfire', {}, '🔥'),
+    h('div.campfire', { html: icon('fire') }),
     h('h2', {}, 'A quiet campfire'),
     h('p.dim', {}, 'Rest a while, or sharpen your stones.'),
     h('button.btn.wide.big', {

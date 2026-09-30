@@ -46,6 +46,7 @@ function scratch(at = 0, dur = 0.18) {
 }
 
 const SOUNDS = {
+  thud: () => { tone(90, 0.25, { gain: 0.25, slide: 0.5 }); scratch(0, 0.12); },
   scribbleX: () => { scratch(0, 0.16); scratch(0.3, 0.16); },
   scribbleO: () => scratch(0.9, 0.45),
   select: () => tone(660, 0.06, { type: 'triangle', gain: 0.06 }),

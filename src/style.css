@@ -535,3 +535,40 @@ b { font-weight: 400; background: linear-gradient(transparent 55%, var(--hi) 55%
 .map-cell .cell-space .icon { width: 16px; height: 16px; }
 .map-cell .cell-space::after { content: ''; position: absolute; left: -2px; right: -2px; top: 50%; height: 2px; background: var(--red); transform: rotate(-35deg); }
 .back-map { align-self: flex-start; min-height: 36px; }
+
+/* Critique pass */
+.result-banner { top: auto; bottom: calc(8px + var(--safe-b)); left: 14px; right: 14px; padding: 16px 16px 12px; }
+.result-title { font-size: 2rem; }
+.cell.chosen::after { background: none; border: 3px solid var(--red); border-radius: 48% 52% 45% 55%; filter: url(#pencil); inset: 5%; }
+.arrow.chosen, .rot.chosen { background: var(--pink); }
+.btn.opt.chosen { background: var(--pink); }
+.hand-slot { display: flex; flex-direction: column; align-items: center; gap: 1px; }
+.slot-name { font-size: 0.72rem; line-height: 1; color: var(--pencil); white-space: nowrap; max-width: 60px; overflow: hidden; text-overflow: ellipsis; }
+.turn-status.win-note { color: var(--good); background: var(--mint); padding: 0 8px; transform: rotate(-1deg); }
+.turn-status.lose-note { color: var(--red); background: var(--pink); padding: 0 8px; transform: rotate(1deg); }
+.turn-status { align-self: center; }
+.winline path.dashed { stroke-dasharray: 6 5; animation: none; stroke-dashoffset: 0; opacity: 0.7; }
+.board.shake { animation: shake 0.35s; }
+@keyframes shake { 20% { transform: translate(-3px, 2px) rotate(-0.6deg); } 50% { transform: translate(3px, -1px) rotate(0.5deg); } 80% { transform: translate(-1px, 1px); } }
+.cell.nogo::before { content: ''; position: absolute; inset: 18%; background: repeating-linear-gradient(-45deg, transparent 0 6px, rgba(200, 55, 45, 0.28) 6px 8px); border-radius: 30%; pointer-events: none; }
+.cell.threat::before { content: '!'; position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-family: var(--marker); font-size: calc(var(--cell) * 0.42); color: rgba(200, 55, 45, 0.5); pointer-events: none; }
+
+/* Emoji are stamped onto the page in ink, like the enemy photos. */
+.relic-mini, .relic-token, .kit-emoji, .event-emoji, .end-emoji {
+  filter: grayscale(1) contrast(1.35) sepia(0.35) !important; mix-blend-mode: multiply; opacity: 0.85;
+}
+.relic-token { border: 2px solid rgba(43, 42, 51, 0.55); border-radius: 50%; }
+.relic-token.small { border-width: 1.5px; }
+.campfire { width: 110px; height: 110px; color: #c0621a; filter: url(#ink) !important; }
+.campfire .icon { width: 100%; height: 100%; }
+.shop-emoji { width: 58px; height: 58px; color: #2f7a4a; filter: url(#ink) !important; flex: none; }
+.shop-emoji .icon { width: 100%; height: 100%; }
+.map-cell .label { max-width: 96%; text-align: center; font-size: 0.8rem; line-height: 0.95; }
+.map-cell .cell-space { right: -14px; top: -6px; bottom: auto; }
+.facts-card { background: var(--card); padding: 10px 12px 8px 16px; border-radius: 2px; box-shadow: 1px 3px 6px rgba(0,0,0,0.14); background-image: repeating-linear-gradient(transparent 0 25px, var(--grid) 25px 26px); line-height: 26px; }
+.facts-card .fact { border: 0; background: none; box-shadow: none; padding: 0 0 0 4px; line-height: 26px; }
+.facts-card .fact::before { content: '–'; color: var(--pencil); margin-right: 4px; }
+.facts-card .fact.warn { background: var(--hi); }
+.plus-note { font-size: 0.72rem; color: var(--pencil); line-height: 1.05; }
+.stone-grid.upgrades { grid-template-columns: repeat(2, 1fr); }
+.coach { color: var(--ink); background: var(--sticky); padding: 2px 6px; box-shadow: 1px 3px 5px -3px rgba(80,60,0,.5); display: inline-block; transform: rotate(-0.5deg); }

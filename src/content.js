@@ -33,7 +33,7 @@ export const RELICS = {
     text: 'Every stone you gain from now on comes upgraded.' },
   herbs: { name: 'Herbal Pouch', emoji: '🌿', rarity: 'common',
     text: 'Heal 1 heart whenever you beat an elite or a boss.' },
-  badge: { name: 'Merchant\'s Badge', emoji: '📛', rarity: 'common',
+  badge: { name: 'Merchant\'s Badge', emoji: '🏷️', rarity: 'common',
     text: 'Everything in shops costs 25% less.' },
   clover: { name: 'Four-Leaf Clover', emoji: '🍀', rarity: 'uncommon',
     text: 'Stone rewards offer 4 choices instead of 3, and rares turn up more.' },
@@ -342,8 +342,10 @@ export const EVENTS = [
     text: 'An old camper tells of the summer the stones first learned to move.',
     choices: [
       { label: 'Listen', detail: 'Heal 1 heart and gain a random trick.', act: (r, api) => {
+        const healed = r.hearts < r.maxHearts;
         r.hearts = Math.min(r.maxHearts, r.hearts + 1);
-        return api.trickRoom() ? `You feel better. ${api.gainRandomTrick()}` : 'You feel better.';
+        const t = api.trickRoom() ? ` ${api.gainRandomTrick()}` : '';
+        return `${healed ? 'You feel better.' : 'A fine story.'}${t}`;
       } },
       { label: 'Tell your own', detail: 'Gain 20 gold for a good yarn.', act: (r) => { r.gold += 20; return 'They toss you 20 gold. Not bad!'; } },
     ],

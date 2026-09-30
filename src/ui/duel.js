@@ -7,7 +7,7 @@
 
 import {
   STONES, TRICKS, FIELDS, legalActions, applyAction, cloneState, allowedSquares,
-  winningLine, active, isStuck, guarded, other, row, col,
+  winningLine, active, isStuck, guarded, other, row, col, LINES,
 } from '../engine.js';
 import { h, stoneEl, updateStone, iconEl, toast, infoStone, infoTrick, infoField, infoSpace, stoneName, stoneText, sleep } from './common.js';
 import { icon } from '../icons.js';
@@ -150,7 +150,7 @@ export function mountDuel(root, opts) {
     const inTurn = base !== s;
     hand.replaceChildren(...base.hands.X.map((st, k) => {
       const e = stoneEl(st, 'X', { dead: s.disabled === st.type && !s.mods.X.homeTurf });
-      const b = h('button.hand-slot', { onclick: () => tapHand(k) }, e);
+      const b = h('button.hand-slot', { onclick: () => tapHand(k) }, e, h('span.slot-name', {}, stoneName(st)));
       if (inTurn && k === selIndex) b.classList.add(s.phase === 'place' ? 'selected' : 'placed');
       if (selectable && !selectable.has(st.type + (st.plus ? '+' : ''))) b.classList.add('forbidden');
       if (!selectable && !(inTurn && s.phase === 'place')) b.classList.add('idle');
@@ -178,11 +178,35 @@ export function mountDuel(root, opts) {
       s.disabled ? h('span.chip-ico.crossed', { html: icon(s.disabled) }) : null,
       s.disabled ? `No ${STONES[s.disabled].name}` : 'Neutral space'));
     if (s.field) items.push(h('button.chip.field', { onclick: () => infoField(s.field) }, '⚠ ' + FIELDS[s.field].name));
-    items.push(h('span.chip.opener', {}, s.first === 'X' ? 'You opened' : `${enemy.name.split(' ').slice(-1)[0]} opened`));
+    const hx = !!s.mods.X.hourglass, ho = !!s.mods.O.hourglass;
+    const tie = hx !== ho ? (hx ? 'X' : 'O') : other(s.first);
+    items.push(h('span.chip.opener', { title: 'Who takes a full board, or a player out of stones' }, `Full board → ${tie === 'X' ? 'you' : 'them'}`));
     if (s.silenced.X) items.push(h('span.chip.bad', {}, `Hushed ×${s.silenced.X}`));
     if (s.silenced.O) items.push(h('span.chip.good', {}, `Enemy hushed ×${s.silenced.O}`));
     if (s.forced) items.push(h('span.chip.bad', {}, `${s.forced.player === 'X' ? 'You' : 'They'} must play ${STONES[s.forced.stone].name}`));
     chips.replaceChildren(...items);
+  }
+
+  // A pencil stroke through three squares. Slightly bowed: a dead-straight
+  // path has a zero-size box and the pencil filter would swallow it.
+  function lineSvg(line, who, dashed = false) {
+    const cx = (i) => (col(i) + 0.5) * 100, cy = (i) => (row(i) + 0.5) * 100;
+    const [a, , b] = line;
+    const dx = (cx(b) - cx(a)) * 0.18, dy = (cy(b) - cy(a)) * 0.18;
+    const x1 = cx(a) - dx, y1 = cy(a) - dy, x2 = cx(b) + dx, y2 = cy(b) + dy;
+    const mx = (x1 + x2) / 2 + (y2 - y1) * 0.04 + 1.5, my = (y1 + y2) / 2 - (x2 - x1) * 0.04 + 1.5;
+    return `<svg viewBox="0 0 300 300" aria-hidden="true"><path class="${who}${dashed ? ' dashed' : ''}" pathLength="100" d="M${x1} ${y1} Q${mx} ${my} ${x2} ${y2}"/></svg>`;
+  }
+
+  // What the previewed move would do to the game, said out loud.
+  function verdict() {
+    lineLayer.innerHTML = '';
+    if (!preview) return;
+    const ps = preview.state;
+    if (!ps.over) return;
+    if (ps.reason === 'line') lineLayer.innerHTML = lineSvg(winningLine(ps, ps.winner), ps.winner, true);
+    if (ps.winner === 'X') setStatus('✓ This wins the duel!', 'win-note');
+    else setStatus('✗ This hands them the duel!', 'lose-note');
   }
 
   function setStatus(text, cls = '') { status.textContent = text; status.className = 'turn-status ' + cls; }
@@ -292,6 +316,8 @@ export function mountDuel(root, opts) {
     renderChips(s);
     cells.forEach((c, i) => { c.onclick = () => tapSquare(i); });
     clearOverlay();
+    if (!state.over) lineLayer.innerHTML = '';
+    cells.forEach((c) => c.classList.remove('nogo', 'threat'));
 
     if (state.over) {
       setStatus(state.winner === 'X' ? 'You win!' : `${enemy.name} wins`, state.winner === 'X' ? 'you' : 'enemy-done');
@@ -309,13 +335,16 @@ export function mountDuel(root, opts) {
       ? h('button.btn.ghost', { onclick: undoTurn }, h('span', { html: icon('undo') }), 'Undo') : null;
 
     if (state.phase === 'select') {
+      markDangers();
       setStatus('Your turn — pick a stone', 'you');
       info.textContent = caption.length ? `${enemy.name}: ${caption.filter(Boolean).join(', ')}.`
         : state.hands.X.length ? 'Tap a stone in your hand. Tap any stone on the board to read it.' : '';
+      if (state.turns >= 2 && state.board.some(Boolean) && cells.some((c) => c.classList.contains('threat'))) coach('enemy'); else coach('select');
       renderActions([]);
     } else if (state.phase === 'place' && !preview) {
       setStatus('Place it on a glowing square', 'you');
       describeSelected();
+      coach('place');
       for (const i of allowedSquares(state)) cells[i].classList.add('allowed');
       renderActions([undo]);
     } else if (state.phase === 'place' && preview) {
@@ -323,22 +352,58 @@ export function mountDuel(root, opts) {
       cells[preview.action.pos].classList.add('chosen');
       for (const i of allowedSquares(state)) cells[i].classList.add('allowed');
       renderActions([undo, h('button.btn.primary', { onclick: confirm }, h('span', { html: icon('check') }), 'Confirm')]);
+      verdict();
     } else if (state.phase === 'effect' || (state.phase === 'trick' && trickName)) {
       const btns = renderStage();
       const what = state.phase === 'effect' ? stoneName(state.board[state.placedAt]) : TRICKS[trickName].name;
       setStatus(preview ? 'Tap again or ✓ to confirm' : state.phase === 'trick' ? `Aim your ${what}` : `Choose how your ${what} works`, 'you');
-      if (state.phase === 'effect') describeSelected(); else info.textContent = TRICKS[trickName].text;
+      if (state.phase === 'effect') { describeSelected(); if (!preview) coach('effect'); } else info.textContent = TRICKS[trickName].text;
       const back = state.phase === 'trick'
         ? h('button.btn.ghost', { onclick: () => { trickName = null; preview = null; show(); } }, h('span', { html: icon('back') }), 'Back')
         : (stageCands !== allEffect() ? h('button.btn.ghost', { onclick: () => { stageCands = cands = allEffect(); preview = null; show(); } }, h('span', { html: icon('back') }), 'Back') : null);
       renderActions([state.phase === 'effect' ? undo : back, state.phase === 'trick' ? undo : back,
         ...btns, preview ? h('button.btn.primary', { onclick: confirm }, h('span', { html: icon('check') }), 'Confirm') : null]
         .filter((b, k, arr) => b && arr.indexOf(b) === k));
+      verdict();
     } else if (state.phase === 'trick') {
       setStatus('Spend a trick, or end your turn', 'you');
       info.textContent = 'Glowing tricks can be used now. A trick resolves before the check for three in a row.';
+      coach('trick');
       renderActions([undo, h('button.btn.primary', { onclick: endTurnPass }, 'End turn')]);
     }
+  }
+
+  // Where the enemy's restrictions keep you out, and where one plain stone
+  // of theirs would finish a line: shown before you pick anything.
+  function markDangers() {
+    const ok = new Set(allowedSquares(state, { type: 'shift', plus: false }));
+    state.board.forEach((c, i) => { if (!c && !ok.has(i)) cells[i].classList.add('nogo'); });
+    for (const line of LINES) {
+      const os = line.filter((i) => state.board[i]?.player === 'O').length;
+      const empty = line.filter((i) => !state.board[i]);
+      if (os === 2 && empty.length === 1) cells[empty[0]].classList.add('threat');
+    }
+  }
+
+  // First-time tips, one per kind of moment, shown once ever.
+  const COACH = {
+    select: 'Tip: three of yours in a row wins. Tap a stone in your hand to pick it up — each one does something different.',
+    place: 'Tip: highlighted squares are where it may go. Striped squares are ones the enemy\'s stones keep you out of.',
+    effect: 'Tip: this stone moves things. Tap a yellow note or dashed square to see the result, then tap it again (or ✓) to confirm.',
+    trick: 'Tip: you may spend a trick now, before the check for three in a row — or just end your turn.',
+    enemy: 'Tip: a red ! marks a square where the enemy could finish a line with one plain stone.',
+  };
+  function coach(kind) {
+    let seen;
+    try { seen = JSON.parse(localStorage.getItem('ppp-coach') ?? '{}'); } catch { seen = {}; }
+    if (seen[kind] || !COACH[kind]) return false;
+    if (coach.shown && coach.shown !== kind) {
+      seen[coach.shown] = true;
+      try { localStorage.setItem('ppp-coach', JSON.stringify(seen)); } catch { /* ignore */ }
+    }
+    coach.shown = kind;
+    info.replaceChildren(h('span.coach', {}, COACH[kind]));
+    return true;
   }
 
   function describeSelected() {
@@ -523,16 +588,29 @@ export function mountDuel(root, opts) {
         continue;
       }
       state.log = [];
+      // The board before the boss's field rule, so it can be shown as a step.
+      let beforeField = null;
+      if (state.field) {
+        beforeField = cloneState(state);
+        beforeField.field = null;
+        applyAction(beforeField, action);
+      }
       applyAction(state, action);
       const logs = state.log;
       state.log = [];
+      if (beforeField && logs.some((l) => l.startsWith('field:'))) {
+        renderBoard(beforeField);
+        await sleep(520);
+        board.classList.add('shake');
+        setTimeout(() => board.classList.remove('shake'), 400);
+        sfx('thud');
+      }
       renderBoard(state);
       renderHands(state);
       renderChips(state);
       if (action.type === 'place') {
         lastEnemyId = state.placedId;
-        const c = state.board[action.pos];
-        caption = [`played ${c ? stoneName(c) : stoneName(state.lastPlaced.O)} on the ${SQUARE[action.pos]}`];
+        caption = [`played ${stoneName(state.lastPlaced.O)} on the ${SQUARE[action.pos]}`];
       } else if (action.type !== 'trick' || action.use !== 'pass') caption.push(describe(action));
       info.textContent = caption.filter(Boolean).join(', ');
       if (action.type === 'place') {
@@ -560,10 +638,7 @@ export function mountDuel(root, opts) {
     show();
     const line = state.reason === 'line' ? winningLine(state, state.winner) : null;
     if (line) {
-      const cx = (i) => (col(i) + 0.5) * 100, cy = (i) => (row(i) + 0.5) * 100;
-      const [a, , b] = line;
-      const dx = (cx(b) - cx(a)) * 0.18, dy = (cy(b) - cy(a)) * 0.18;
-      lineLayer.innerHTML = `<svg viewBox="0 0 300 300" aria-hidden="true"><path class="${state.winner}" pathLength="100" d="M${cx(a) - dx} ${cy(a) - dy} L${cx(b) + dx} ${cy(b) + dy}"/></svg>`;
+      lineLayer.innerHTML = lineSvg(line, state.winner);
       for (const i of line) cells[i].classList.add('win-' + state.winner);
       for (const e of stoneEls.values()) if (line.includes(+e.dataset.at)) e.classList.add('in-line');
     }
@@ -578,8 +653,7 @@ export function mountDuel(root, opts) {
     const banner = h('div.result-banner.' + (won ? 'won' : 'lost'), {},
       h('div.result-title', {}, won ? 'Victory!' : 'Defeat'),
       h('div.result-why', {}, why),
-      h('button.btn.primary.wide', { onclick: () => { banner.remove(); onEnd(state.winner); } }, 'Continue'),
-      h('button.btn.ghost.wide', { onclick: (e) => { banner.classList.toggle('peek'); e.currentTarget.textContent = banner.classList.contains('peek') ? 'Show the result' : 'Look at the board'; } }, 'Look at the board'));
+      h('button.btn.primary.wide', { onclick: () => { banner.remove(); onEnd(state.winner); } }, 'Continue'));
     el.append(banner);
   }
 

@@ -78,7 +78,7 @@ export function newRun({ kit = 'apprentice', seed = (Math.random() * 2 ** 31) | 
     lastHand: null, nextUid: 1,
     rematchUsed: {}, phoenixUsed: false, removals: 0,
     stats: { won: 0, lost: 0, elites: 0, bosses: 0, gold: 0, started: Date.now() },
-    screen: 'map', pending: null, over: false, victory: false,
+    screen: 'actintro', pending: null, over: false, victory: false,
   };
   run.pouch = k.pouch.map((t) => stone(run, t));
   run.map = makeMap(run);
@@ -332,6 +332,7 @@ export function enterNode(run, key) {
   switch (node.kind) {
     case 'fight':
     case 'elite':
+      node.duel ??= prepareDuel(run, pick(run, enemiesOf(run.act, node.kind === 'elite' ? 'elite' : 'normal')));
       run.pending = { kind: 'duel', duel: JSON.parse(JSON.stringify(node.duel)) };
       run.screen = 'predual';
       break;
@@ -487,8 +488,10 @@ export function stoneChoices(run, tier = 'normal', rarity = null) {
 
 export function randomTrick(run, rarity = null) {
   const r = rarity ?? weighted(run, { common: 60, uncommon: 28, rare: 12 });
-  const pool = TRICK_TYPES.filter((t) => TRICKS[t].rarity === r);
-  return pick(run, pool.length ? pool : TRICK_TYPES);
+  // Something you do not already carry, if there is anything left.
+  const fresh = TRICK_TYPES.filter((t) => !run.tricks.includes(t));
+  const pool = fresh.filter((t) => TRICKS[t].rarity === r);
+  return pick(run, pool.length ? pool : fresh.length ? fresh : TRICK_TYPES);
 }
 
 export function randomRelic(run, rarity = null) {
