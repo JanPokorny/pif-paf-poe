@@ -1,6 +1,6 @@
 // Small DOM helpers shared by every screen.
 
-import { STONES, TRICKS, FIELDS } from '../engine.js';
+import { STONES, TRICKS, FIELDS, createGame, legalActions, applyAction, cloneState, allowedSquares } from '../engine.js';
 import { RELICS } from '../content.js';
 import { icon, ICONS } from '../icons.js';
 import { t, lang, setLang, LANGS } from '../i18n.js';
@@ -101,6 +101,65 @@ export function modal(content, { onClose, dismissable = true, cls = '' } = {}) {
   return close;
 }
 
+// A worked example of a stone, computed by the engine itself: a small board
+// before and after, or the squares it leaves the enemy.
+const DEMO_BOARD = { 1: 'O', 3: 'O', 8: 'O', 2: 'X', 7: 'X' };
+function demoBoard(board, marks = {}) {
+  const g = h('div.demo-board');
+  for (let i = 0; i < 9; i++) {
+    const c = board[i];
+    const cell = h('div.demo-cell' + (marks[i] ? '.' + marks[i] : ''));
+    if (c) cell.append(stoneEl(c, c.player, { mini: true, stuck: !!c.stuck, dead: !!c.hushed }));
+    g.append(cell);
+  }
+  return g;
+}
+function stoneDemo(s) {
+  const st = STONES[s.type];
+  const fresh = () => {
+    const g = createGame({ handX: [{ type: s.type, plus: s.plus }, { type: 'pebble', plus: false }], handO: ['pebble', 'pebble', 'pebble'], first: 'X', log: false });
+    let id = 50;
+    for (const [i, p] of Object.entries(DEMO_BOARD)) g.board[+i] = { player: p, type: 'pebble', plus: false, id: id++ };
+    g.nextId = 100;
+    return g;
+  };
+  try {
+    if (st.restrict) {
+      const g = fresh();
+      applyAction(g, { type: 'select', stone: s.type, plus: s.plus });
+      applyAction(g, { type: 'place', pos: 4 });
+      if (g.phase === 'trick') applyAction(g, { type: 'trick', use: 'pass' });
+      const ok = new Set(allowedSquares(g, { type: 'shift', plus: false }));
+      const marks = {};
+      for (let i = 0; i < 9; i++) if (!g.board[i]) marks[i] = ok.has(i) ? 'ok' : 'no';
+      return h('div.demo', {}, demoBoard(g.board, marks), h('div.demo-cap', {}, t('Placed in the centre: the enemy may only use the marked squares.')));
+    }
+    if (!st.apply) return null;
+    // The placement and choice that change the board the most.
+    let best = null;
+    for (const pos of [4, 0, 5, 7, 1]) {
+      const g = fresh();
+      if (g.board[pos]) continue;
+      applyAction(g, { type: 'select', stone: s.type, plus: s.plus });
+      // Before: the stone drawn where it lands, nothing done yet.
+      const before = cloneState(g).board;
+      before[pos] = { player: 'X', type: s.type, plus: s.plus, id: 99 };
+      applyAction(g, { type: 'place', pos });
+      const opts = g.phase === 'effect' ? legalActions(g) : [null];
+      for (const o of opts) {
+        const after = cloneState(g);
+        if (o) applyAction(after, o);
+        const same = (a, b) => (!a && !b) || (a && b && a.player === b.player && a.type === b.type);
+        const moved = after.board.reduce((n, c, i) => n + (same(c, before[i]) ? 0 : 1), 0)
+          + (after.hands.X.length !== g.hands.X.length || after.hands.O.length !== g.hands.O.length ? 2 : 0);
+        if (!best || moved > best.moved) best = { moved, before, after: after.board, pos };
+      }
+    }
+    if (!best || !best.moved) return null;
+    return h('div.demo', {}, demoBoard(best.before, { [best.pos]: 'placed' }), h('div.demo-arrow', {}, '→'), demoBoard(best.after));
+  } catch { return null; }
+}
+
 export function infoStone(s, player = 'X', extra = '') {
   const st = STONES[s.type];
   const body = h('div.info-stone', {},
@@ -108,6 +167,7 @@ export function infoStone(s, player = 'X', extra = '') {
       h('div.info-name', {}, stoneName(s)),
       h('div.info-rarity.' + st.rarity, {}, t(st.rarity)))),
     h('p', {}, stoneText(s)),
+    stoneDemo(s),
     !s.plus && st.plusText ? h('p.info-plus', {}, h('b', {}, t('Upgraded: ')), st.plusText) : null,
     extra ? h('p.info-extra', {}, extra) : null,
     h('button.btn.wide', { onclick: () => close() }, t('OK')));

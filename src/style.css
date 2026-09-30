@@ -613,3 +613,14 @@ b { font-weight: 400; background: linear-gradient(transparent 55%, var(--hi) 55%
 :root:lang(cs) { --marker: 'Caveat Brush', 'Patrick Hand', 'Comic Sans MS', system-ui, sans-serif; }
 :lang(cs) h1, :lang(cs) h2, :lang(cs) .turn-status, :lang(cs) .btn.primary, :lang(cs) .enemy-name, :lang(cs) .card-name, :lang(cs) .section-label { letter-spacing: 0.01em; font-size-adjust: 0.52; }
 .slot-plain .stone { --size: 38px; }
+
+.demo { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin: 4px 0; }
+.demo-board { display: grid; grid-template-columns: repeat(3, 36px); grid-template-rows: repeat(3, 36px); background:
+  linear-gradient(90deg, transparent 35px, var(--pencil) 35px, var(--pencil) 37px, transparent 37px, transparent 71px, var(--pencil) 71px, var(--pencil) 73px, transparent 73px),
+  linear-gradient(transparent 35px, var(--pencil) 35px, var(--pencil) 37px, transparent 37px, transparent 71px, var(--pencil) 71px, var(--pencil) 73px, transparent 73px); }
+.demo-cell { display: flex; align-items: center; justify-content: center; }
+.demo-cell.placed { background: var(--hi); border-radius: 30%; }
+.demo-cell.ok { background: var(--hi); border-radius: 30%; }
+.demo-cell.no { background: repeating-linear-gradient(-45deg, transparent 0 5px, rgba(200, 55, 45, 0.3) 5px 7px); border-radius: 30%; }
+.demo-arrow { font-size: 1.6rem; color: var(--pencil); }
+.demo-cap { font-size: 0.9rem; color: var(--pencil); flex: 1; min-width: 120px; }

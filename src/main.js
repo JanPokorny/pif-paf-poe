@@ -853,7 +853,7 @@ function showCodex() {
     const tabs = h('div.tabs', {}, ['stones', 'tricks', 'relics', 'enemies'].map((x) => h('button.tab' + (x === tab ? '.on' : ''), { onclick: () => { tab = x; draw(); } }, t(x))));
     let list;
     if (tab === 'stones') {
-      list = STONE_TYPES.map((x) => h('div.codex-row', {}, stoneEl({ type: x }, 'X'), h('div', {},
+      list = STONE_TYPES.map((x) => h('div.codex-row', { onclick: () => infoStone({ type: x, plus: false }, 'X'), style: { cursor: 'pointer' } }, stoneEl({ type: x }, 'X'), h('div', {},
         h('b', {}, STONES[x].name), h('span.info-rarity.' + STONES[x].rarity, {}, ' ' + t(STONES[x].rarity)),
         h('div', {}, STONES[x].text), h('div.dim', {}, '+ ' + STONES[x].plusText))));
     } else if (tab === 'tricks') {
