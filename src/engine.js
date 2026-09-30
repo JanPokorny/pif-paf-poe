@@ -117,7 +117,7 @@ def('stinky', {
 
 def('mountain', {
   name: 'Mountain', rarity: 'common', kind: 'static', immovable: true,
-  text: 'Nothing ever moves it. Effects still happen around it.',
+  text: 'No stone ever moves it: effects happen around it. Tricks can still move it.',
   plusText: 'Nothing ever moves, returns, converts or swaps it — not even a trick.',
 });
 
@@ -174,6 +174,7 @@ def('swap', {
   text: 'Trade places with a stone around it, corners included.',
   plusText: 'Trade places with any stone in its row, column or diagonal.',
   options(s, pos, cell) {
+    if (isStuck(s, pos)) return [];
     const reach = cell.plus
       ? [...new Set(LINES.filter((l) => l.includes(pos)).flat())].filter((j) => j !== pos)
       : neighbours(pos, true);
@@ -208,6 +209,7 @@ def('frog', {
   plusText: 'Leaps like a Frog, diagonals too. An enemy stone leapt over goes back to their hand.',
   options(s, pos, cell) {
     const out = [];
+    if (isStuck(s, pos)) return out;
     for (const dir of cell.plus ? ALL8 : ORTHO) {
       const n = step(pos, dir), beyond = step(pos, dir, 2);
       if (beyond >= 0 && s.board[n] && !s.board[beyond]) out.push({ target: beyond });
@@ -252,14 +254,14 @@ def('flip', {
 
 def('snare', {
   name: 'Snare', rarity: 'uncommon', kind: 'trap',
-  text: 'An enemy stone placed next to it does nothing.',
-  plusText: 'An enemy stone placed next to it, corners included, does nothing.',
+  text: 'An enemy stone placed next to it does nothing, ever — no effect, no restriction.',
+  plusText: 'An enemy stone placed next to it, corners included, does nothing, ever.',
 });
 
 def('hush', {
   name: 'Hush', rarity: 'uncommon', kind: 'curse',
-  text: 'The enemy\'s next stone does nothing.',
-  plusText: 'The enemy\'s next two stones do nothing.',
+  text: 'The enemy\'s next stone does nothing, ever — no effect, no restriction.',
+  plusText: 'The enemy\'s next two stones do nothing, ever.',
   options: () => [{}],
   apply(s, pos, a, cell) {
     const foe = other(cell.player);
@@ -274,7 +276,7 @@ def('glue', {
   options: () => [{}],
   apply(s, pos, a, cell) {
     s.board[pos].stuck = true;
-    for (const j of neighbours(pos, cell.plus)) if (s.board[j]) s.board[j].stuck = true;
+    for (const j of neighbours(pos, cell.plus)) if (s.board[j] && !guarded(s, j) && !isSealed(s, j)) s.board[j].stuck = true;
   },
 });
 
@@ -368,7 +370,7 @@ export const TRICKS = {
     options(s, p) {
       const out = [];
       for (let i = 0; i < 9; i++) {
-        if (s.board[i]?.player !== p || isSealed(s, i)) continue;
+        if (s.board[i]?.player !== p || isSealed(s, i) || s.board[i].stuck) continue;
         for (let to = 0; to < 9; to++) if (!s.board[to]) out.push({ from: i, to });
       }
       return out;
@@ -379,8 +381,9 @@ export const TRICKS = {
     name: 'Mirror', rarity: 'common',
     text: 'Swap what stands on two squares facing each other through the centre.',
     options(s) {
+      const held = (i) => isSealed(s, i) || !!s.board[i]?.stuck;
       return SYMMETRIC.filter(([a, b]) => (s.board[a] || s.board[b])
-        && !isSealed(s, a) && !isSealed(s, b)).map(([a, b]) => ({ a, b }));
+        && !held(a) && !held(b)).map(([a, b]) => ({ a, b }));
     },
     apply(s, p, t) {
       const held = s.board[t.a];
@@ -496,6 +499,7 @@ function applyField(s, field) {
 // Is this stone's own type working here? A space switches one type off for both
 // players, unless its owner brought Home Turf.
 export function active(s, cell) {
+  if (cell.hushed) return false;
   return cell.type !== s.disabled || !!s.mods[cell.player].homeTurf;
 }
 
@@ -556,7 +560,7 @@ export function restrictionsOn(s, player) {
 export function allowedSquares(s, stone = s.selected) {
   const free = freeSquares(s.board);
   const p = s.player;
-  if (stone && stone.type === 'pebble' && stone.plus) return free;
+  if (stone && stone.type === 'pebble' && stone.plus && active(s, { ...stone, player: p })) return free;
   if (s.mods[p].freeFirst && s.placements[p] === 0) return free;
   const rs = restrictionsOn(s, p);
   let pool = free;
@@ -676,7 +680,7 @@ export function cloneState(s) {
     first: s.first, player: s.player, phase: s.phase,
     silenced: { ...s.silenced },
     placements: { ...s.placements },
-    lastPlaced: { ...s.lastPlaced },
+    lastPlaced: { X: s.lastPlaced.X && { ...s.lastPlaced.X }, O: s.lastPlaced.O && { ...s.lastPlaced.O } },
     echo: { ...s.echo },
     forced: s.forced ? { ...s.forced } : null,
     selected: s.selected ? { ...s.selected } : null,
@@ -773,7 +777,7 @@ function endTurn(s) {
     // second -- unless exactly one side carries the Hourglass.
     const hx = !!s.mods.X.hourglass, ho = !!s.mods.O.hourglass;
     const winner = hx !== ho ? (hx ? 'X' : 'O') : other(s.first);
-    finish(s, winner, full ? 'full' : 'empty');
+    finish(s, winner, full || s.turns >= 40 ? 'full' : 'empty');
   }
 }
 
@@ -807,16 +811,20 @@ function afterPlacement(s) {
   const c = s.board[pos];
   let dud = false;
   if (!active(s, c)) { dud = true; note(s, 'disabled'); }
-  if (!dud && s.silenced[p] > 0 && STONES[c.type].apply) {
+  // Hushed or snared, a stone does nothing at all -- for as long as it stands:
+  // no effect, no restriction, no immovability.
+  if (!dud && s.silenced[p] > 0) {
     s.silenced[p]--;
     dud = true;
+    c.hushed = true;
     note(s, 'silenced');
   }
-  if (!dud && STONES[c.type].apply) {
+  if (!dud && c.type !== 'pebble') {
     for (let j = 0; j < 9; j++) {
       const t = s.board[j];
-      if (t && t.type === 'snare' && t.player !== p && active(s, t) && near(t.plus)(j, pos)) {
+      if (t && t !== c && t.type === 'snare' && t.player !== p && active(s, t) && near(t.plus)(j, pos)) {
         dud = true;
+        c.hushed = true;
         note(s, 'snared');
         break;
       }
@@ -846,7 +854,7 @@ export function applyAction(s, a) {
     case 'place': {
       let stone = s.selected;
       // A Parrot turns into what the enemy placed last, before it does anything.
-      if (stone.type === 'parrot') {
+      if (stone.type === 'parrot' && active(s, { ...stone, player: p })) {
         const last = s.lastPlaced[other(p)];
         if (last && last.type !== 'parrot') {
           stone = { type: last.type, plus: last.plus || stone.plus };

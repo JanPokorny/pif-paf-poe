@@ -121,7 +121,6 @@ test('select takes the stone from hand; place puts it down with a fresh id', () 
   assert.deepEqual({ ...s.board[4] }, { player: 'X', type: 'pebble', plus: false, id: 1 });
   turnPassedTo(s, 'O');
   assert.equal(s.placements.X, 1);
-  sameSet(legalActions(s).length ? [] : [], []);
   applyAction(s, { type: 'select', stone: 'pebble', plus: false });
   sameSet(legalActions(s).map((a) => a.pos), [0, 1, 2, 3, 5, 6, 7, 8], 'occupied squares are not placeable');
 });
@@ -1026,7 +1025,7 @@ test('Hush+: the enemy\'s next two stones do nothing', () => {
   play(s, 'pebble', 6);
   play(s, 'shift', 5);   // O silenced
   turnPassedTo(s, 'X');
-  play(s, 'pebble', 7 - 5);
+  play(s, 'pebble', 2);
   play(s, 'shift', 3);   // works
   assert.equal(s.phase, 'effect');
 });
@@ -1611,6 +1610,18 @@ test('Glue: a glued Frog rehearsed does not leap', () => {
 
 group('notes');
 
+note('Echo: a Firecracker is the first stone that does something, but burns up, and the echo is kept for a later stone', () => {
+  const s = G({ modsX: { echo: true } });
+  lay(s, { 1: 'O pebble' });
+  play(s, 'firecracker', 0);
+  assert.equal(s.echo.X, false, 'echo still unspent after the Firecracker did something');
+});
+note('Guardian (plain) names only enemy stones and tricks, yet a boss field cannot move its charges either', () => {
+  const s = G({ field: 'gravity', first: 'O' });
+  lay(s, { 1: 'X guardian', 4: 'X pebble' });
+  play(s, 'pebble', 8);
+  assert.equal(ids(s)[4], 0, `gravity left the guarded X stone on 4\n${render(s)}`);
+});
 note('Mountain "nothing ever moves it" vs Relocate/Mirror moving a plain Mountain (Mountain+ says "not even a trick")', () => {
   const s = G({ tricksX: ['relocate'] });
   lay(s, { 0: 'X mountain' });
