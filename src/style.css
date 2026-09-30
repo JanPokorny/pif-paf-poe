@@ -625,3 +625,4 @@ b { font-weight: 400; background: linear-gradient(transparent 55%, var(--hi) 55%
 .demo-arrow { font-size: 1.6rem; color: var(--pencil); }
 .demo-cap { font-size: 0.9rem; color: var(--pencil); flex: 1; min-width: 120px; }
 .card-info { position: absolute; top: 4px; right: 8px; color: var(--blue); font-size: 1.2rem; padding: 4px; }
+.btn.continue { flex-direction: column; gap: 0; line-height: 1.1; } .continue-sub { font-family: var(--hand); font-size: 0.9rem; opacity: 0.75; }
