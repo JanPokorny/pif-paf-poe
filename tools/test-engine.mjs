@@ -622,62 +622,88 @@ test('2048+ holds its own square; everything else slides', () => {
 
 group('bumper');
 
-test('Bumper pushes each stone around it, corners included, one step away if there is room', () => {
+test('Bumper pushes each enemy stone beside it one step directly away', () => {
   const s = G();
-  lay(s, { 1: 'O pebble', 3: 'O pebble', 6: 'X pebble', 4: 'X pebble' });
+  lay(s, { 1: 'O pebble', 3: 'O pebble', 6: 'X pebble', 4: 'O pebble' });
   play(s, 'bumper', 0);   // single option: resolves on its own
   turnPassedTo(s, 'O');
-  expectAt(s, { 1: 0, 2: 101, 3: 103, 6: 106, 4: 0, 8: 104 });
+  expectAt(s, { 1: 0, 2: 101, 3: 103, 6: 106, 4: 104, 8: 0 }, '3 is blocked by 6; 4 is a corner neighbour');
 });
-test('Bumper pushes down from an edge square; sideways off the board is no room', () => {
+test('Bumper leaves your own stones be', () => {
   const s = G();
-  lay(s, { 4: 'O pebble', 0: 'O pebble', 3: 'O pebble' });
-  play(s, 'bumper', 1);
-  expectAt(s, { 4: 0, 7: 104, 0: 100, 3: 0, 6: 103 });
-});
-test('Bumper in the centre has nowhere to push', () => {
-  const s = G();
-  lay(s, { 1: 'O pebble', 0: 'O pebble' });
-  play(s, 'bumper', 4);
-  expectAt(s, { 1: 101, 0: 100 });
-});
-test('Bumper+ pushes only enemy stones and leaves yours be', () => {
-  const s = G();
-  lay(s, { 1: 'O pebble', 4: 'X pebble', 3: 'X pebble' });
-  play(s, 'bumper+', 0);
-  expectAt(s, { 1: 0, 2: 101, 4: 104, 8: 0, 3: 103, 6: 0 });
-  const t = G();
-  lay(t, { 4: 'O pebble' });
-  play(t, 'bumper+', 0);
-  expectAt(t, { 4: 0, 8: 104 }, 'corners included');
-});
-test('Bumper does not push stuck stones or Mountains', () => {
-  const s = G();
-  lay(s, { 1: 'O pebble!', 3: 'O mountain' });
+  lay(s, { 1: 'X pebble', 3: 'O pebble' });
   play(s, 'bumper', 0);
-  expectAt(s, { 1: 101, 2: 0, 3: 103, 6: 0 });
+  expectAt(s, { 1: 101, 2: 0, 3: 0, 6: 103 });
+});
+test('Bumper: an enemy stone pushed off the board goes back to their hand', () => {
+  const s = G();
+  lay(s, { 4: 'O pebble', 0: 'O shift+', 2: 'O pebble' });
+  const n = s.hands.O.length;
+  play(s, 'bumper', 1);
+  expectAt(s, { 4: 0, 7: 104, 0: 0, 2: 0 });
+  assert.equal(s.hands.O.length, n + 2); assert.ok(handHas(s, 'O', 'shift', true));
+});
+test('Bumper in the centre pushes every enemy stone beside it off the board', () => {
+  const s = G();
+  lay(s, { 1: 'O pebble', 3: 'O pebble', 5: 'X pebble', 0: 'O pebble' });
+  const n = s.hands.O.length;
+  play(s, 'bumper', 4);
+  expectAt(s, { 1: 0, 3: 0, 5: 105, 0: 100 });
+  assert.equal(s.hands.O.length, n + 2);
+});
+test('Bumper+ pushes enemy stones around it, corners included; yours stay', () => {
+  const s = G();
+  lay(s, { 1: 'O pebble', 4: 'O pebble', 3: 'X pebble' });
+  play(s, 'bumper+', 0);
+  expectAt(s, { 1: 0, 2: 101, 4: 0, 8: 104, 3: 103, 6: 0 });
+  const t = G();
+  lay(t, { 0: 'O pebble', 8: 'O pebble', 3: 'X pebble' });
+  const n = t.hands.O.length;
+  play(t, 'bumper+', 4);
+  expectAt(t, { 0: 0, 8: 0, 3: 103 });
+  assert.equal(t.hands.O.length, n + 2, 'diagonal pushes off the board return too');
+});
+test('Bumper does not push stuck stones or Mountains, not even off the board', () => {
+  const s = G();
+  lay(s, { 1: 'O pebble!', 3: 'O mountain', 5: 'O mountain+' });
+  play(s, 'bumper', 4);
+  expectAt(s, { 1: 101, 3: 103, 5: 105 });
 });
 
 group('lasso');
 
-test('Lasso pulls stones two squares away one step closer', () => {
+test('Lasso pulls every stone two squares away in a straight line, diagonals too, one step closer', () => {
   const s = G();
-  lay(s, { 2: 'O pebble', 6: 'O pebble', 3: 'X pebble', 8: 'O pebble' });
-  play(s, 'lasso', 0);
+  lay(s, { 2: 'O pebble', 6: 'O pebble', 3: 'X pebble', 8: 'X pebble' });
+  play(s, 'lasso', 0);   // single option: resolves on its own
   turnPassedTo(s, 'O');
-  expectAt(s, { 2: 0, 1: 102, 6: 106, 3: 103, 8: 108, 4: 0 });
+  expectAt(s, { 2: 0, 1: 102, 6: 106, 3: 103, 8: 0, 4: 108 });
 });
-test('Lasso+ pulls along diagonals too', () => {
+test('Lasso+ pulls every one, or just one of them', () => {
   const s = G();
   lay(s, { 2: 'O pebble', 8: 'O pebble' });
   play(s, 'lasso+', 0);
-  expectAt(s, { 1: 102, 8: 0, 4: 108 });
+  assert.equal(effectOpts(s).length, 3);
+  eff(s, { target: 8 });
+  expectAt(s, { 2: 102, 1: 0, 8: 0, 4: 108 });
+  const t = G();
+  lay(t, { 2: 'O pebble', 8: 'O pebble' });
+  play(t, 'lasso+', 0);
+  act(t, { type: 'effect', target: undefined });
+  expectAt(t, { 2: 0, 1: 102, 8: 0, 4: 108 });
 });
-test('Lasso does not pull stuck stones', () => {
+test('Lasso+ with a single pull resolves on its own', () => {
   const s = G();
-  lay(s, { 2: 'O mountain', 6: 'O pebble!' });
+  lay(s, { 2: 'O pebble' });
+  play(s, 'lasso+', 0);
+  turnPassedTo(s, 'O');
+  expectAt(s, { 1: 102 });
+});
+test('Lasso does not pull stuck stones, nor through a stone in between', () => {
+  const s = G();
+  lay(s, { 2: 'O mountain', 6: 'O pebble!', 8: 'O pebble', 4: 'X pebble' });
   play(s, 'lasso', 0);
-  expectAt(s, { 2: 102, 1: 0, 6: 106, 3: 0 });
+  expectAt(s, { 2: 102, 1: 0, 6: 106, 3: 0, 8: 108 });
 });
 
 group('swap');
@@ -703,11 +729,11 @@ test('Swap trades with a corner neighbour', () => {
 });
 test('Swap does not reach two squares away; Swap+ reaches its row, column or diagonal', () => {
   const s = G();
-  lay(s, { 2: 'O pebble', 8: 'O pebble', 5: 'O pebble', 7: 'X pebble' });
+  lay(s, { 2: 'O pebble', 8: 'O pebble', 5: 'X pebble' });
   play(s, 'swap', 0);
   turnPassedTo(s, 'O');
   const t = G();
-  lay(t, { 2: 'O pebble', 8: 'O pebble', 5: 'O pebble', 7: 'X pebble' });
+  lay(t, { 2: 'O pebble', 8: 'O pebble', 7: 'X pebble' });
   const id = play(t, 'swap+', 0);
   sameSet(effectOpts(t).map((a) => a.target), [2, 8]);
   eff(t, { target: 8 });
@@ -817,50 +843,45 @@ test('Frog has no leap when nothing is beside it', () => {
 
 group('flip');
 
-test('Flip mirrors the board left-right or top-bottom', () => {
+test('Flip mirrors the board left-right or top-bottom; it holds its own square', () => {
   const s = G();
-  lay(s, { 1: 'O pebble', 3: 'O pebble' });
+  lay(s, { 1: 'O pebble', 3: 'O pebble', 6: 'X pebble' });
   const id = play(s, 'flip', 0);
   assert.equal(effectOpts(s).length, 4);
   eff(s, { axis: 'h' });
-  expectAt(s, { 0: 0, 2: id, 1: 101, 3: 0, 5: 103 });
+  expectAt(s, { 0: id, 2: 0, 1: 101, 3: 0, 5: 103, 6: 0, 8: 106 });
   const t = G();
-  lay(t, { 1: 'O pebble', 3: 'O pebble' });
-  const id2 = play(t, 'flip', 0);
+  lay(t, { 0: 'O pebble', 5: 'O pebble' });
+  const id2 = play(t, 'flip', 1);
   eff(t, { axis: 'v' });
-  expectAt(t, { 0: 0, 6: id2, 1: 0, 7: 101, 3: 103 });
+  expectAt(t, { 1: id2, 7: 0, 0: 0, 6: 100, 5: 105 });
 });
 test('Flip mirrors across either diagonal', () => {
   const s = G();
-  lay(s, { 0: 'O pebble', 2: 'X pebble' });
-  const id = play(s, 'flip', 1);
+  lay(s, { 1: 'O pebble', 2: 'X pebble' });
+  const id = play(s, 'flip', 0);
   eff(s, { axis: 'd' });            // main diagonal 0-4-8: (r,c)->(c,r)
-  expectAt(s, { 0: 100, 1: 0, 3: id, 2: 0, 6: 102 });
+  expectAt(s, { 0: id, 1: 0, 3: 101, 2: 0, 6: 102 });
   const t = G();
-  lay(t, { 0: 'O pebble', 2: 'X pebble' });
-  const id2 = play(t, 'flip', 1);
-  eff(t, { axis: 'a' });            // anti-diagonal 2-4-6: (r,c)->(2-c,2-r)
-  expectAt(t, { 0: 0, 8: 100, 1: 0, 5: id2, 2: 102 });
+  lay(t, { 1: 'O pebble', 8: 'X pebble', 3: 'O pebble' });
+  const id2 = play(t, 'flip', 0);
+  eff(t, { axis: 'a' });            // anti-diagonal 2-4-6: (r,c)->(2-c,2-r); 0<->8 held
+  expectAt(t, { 0: id2, 8: 108, 1: 0, 5: 101, 3: 0, 7: 103 });
 });
-test('Flip+ mirrors the board but holds its own square', () => {
+test('Flip+ mirrors only the enemy\'s stones; yours hold still', () => {
   const s = G();
-  lay(s, { 1: 'O pebble', 3: 'O pebble', 6: 'X pebble' });
-  const id = play(s, 'flip+', 0);
+  lay(s, { 0: 'O pebble', 1: 'X pebble', 3: 'O pebble', 5: 'X pebble', 6: 'X pebble' });
+  const id = play(s, 'flip+', 4);
   assert.equal(effectOpts(s).length, 4);
   eff(s, { axis: 'h' });
-  expectAt(s, { 0: id, 3: 0, 5: 103, 1: 101, 6: 0, 8: 106 });
-  const t = G();
-  lay(t, { 0: 'O pebble', 2: 'X pebble', 5: 'O pebble' });
-  const id2 = play(t, 'flip+', 1);
-  eff(t, { axis: 'd' });
-  expectAt(t, { 1: id2, 0: 100, 2: 0, 6: 102, 5: 0, 7: 105 });
+  expectAt(s, { 4: id, 0: 0, 2: 100, 1: 101, 3: 103, 5: 105, 6: 106, 8: 0 });
 });
 test('Flip leaves stuck stones (and their mirror square) where they are', () => {
   const s = G();
-  lay(s, { 2: 'O pebble!', 3: 'O pebble', 6: 'X mountain', 8: 'O pebble' });
-  const id = play(s, 'flip', 0);
+  lay(s, { 0: 'O pebble!', 2: 'O pebble', 3: 'O pebble', 6: 'X mountain', 8: 'O pebble' });
+  const id = play(s, 'flip', 1);
   eff(s, { axis: 'h' });
-  expectAt(s, { 0: id, 2: 102, 3: 0, 5: 103, 6: 106, 8: 108 });
+  expectAt(s, { 1: id, 0: 100, 2: 102, 3: 0, 5: 103, 6: 106, 8: 108 });
 });
 
 group('restrictions (beacon, magnet, stinky)');
@@ -1001,10 +1022,11 @@ test('Hush+: the enemy\'s next two stones do nothing', () => {
   lay(s, { 1: 'X pebble' });
   play(s, 'shift', 0);   // O silenced
   turnPassedTo(s, 'X');
+  expectAt(s, { 1: 101 });
   play(s, 'pebble', 6);
   play(s, 'shift', 5);   // O silenced
   turnPassedTo(s, 'X');
-  play(s, 'pebble', 7);
+  play(s, 'pebble', 7 - 5);
   play(s, 'shift', 3);   // works
   assert.equal(s.phase, 'effect');
 });
@@ -1044,7 +1066,7 @@ test('Glued stones are not moved again', () => {
 
 group('firecracker');
 
-test('Firecracker blows a stone beside it back into its owner\'s hand and burns itself up', () => {
+test('Firecracker blows a stone around it back into its owner\'s hand and burns itself up', () => {
   const s = G();
   lay(s, { 1: 'O shift+' });
   const n = s.hands.O.length, nx = s.hands.X.length;
@@ -1054,27 +1076,40 @@ test('Firecracker blows a stone beside it back into its owner\'s hand and burns 
   assert.equal(s.board[4], null, 'the Firecracker itself is gone');
   assert.equal(s.hands.O.length, n + 1);
   assert.ok(handHas(s, 'O', 'shift', true), 'returns with its plus');
-  assert.equal(s.hands.X.length, nx - 1, 'burnt, not returned to X\'s hand');
+  assert.equal(s.hands.X.length, nx, 'burnt, not returned to X\'s hand');
   assert.ok(!handHas(s, 'X', 'firecracker', false));
 });
-test('Firecracker can return your own stone; offers every neighbour, not corners', () => {
+test('Firecracker offers every stone around it, corners included, yours too', () => {
   const s = G();
   lay(s, { 1: 'O pebble', 3: 'X swap', 0: 'O pebble' });
   play(s, 'firecracker', 4);
-  sameSet(effectOpts(s).map((a) => a.target), [1, 3]);
+  sameSet(effectOpts(s).map((a) => a.target), [0, 1, 3]);
   eff(s, { target: 3 });
   assert.equal(s.board[3], null); assert.equal(s.board[4], null);
+  expectAt(s, { 0: 100, 1: 101 });
   assert.ok(handHas(s, 'X', 'swap', false));
 });
-test('Firecracker+ reaches corners and burns up too', () => {
+test('Firecracker with nothing around it does nothing and stays', () => {
   const s = G();
-  lay(s, { 0: 'O pebble' });
-  const id = play(s, 'firecracker', 4);
-  expectAt(s, { 0: 100, 4: id }, 'nothing to blow: it stays');
-  const t = G();
-  lay(t, { 0: 'O pebble' });
-  play(t, 'firecracker+', 4);
-  assert.equal(t.board[0], null); assert.equal(t.board[4], null);
+  lay(s, { 8: 'O pebble' });
+  const id = play(s, 'firecracker', 0);
+  turnPassedTo(s, 'O');
+  expectAt(s, { 0: id, 8: 108 });
+});
+test('Firecracker+ blows every enemy stone beside it back, leaves yours and corners, burns up', () => {
+  const s = G();
+  lay(s, { 1: 'O pebble', 3: 'O pebble+', 5: 'X pebble', 0: 'O pebble' });
+  const n = s.hands.O.length;
+  play(s, 'firecracker+', 4);   // one outcome: resolves on its own
+  turnPassedTo(s, 'O');
+  expectAt(s, { 1: 0, 3: 0, 4: 0, 5: 105, 0: 100 });
+  assert.equal(s.hands.O.length, n + 2); assert.ok(handHas(s, 'O', 'pebble', true));
+});
+test('Firecracker+ beside only your own stones does nothing', () => {
+  const s = G();
+  lay(s, { 1: 'X pebble', 0: 'O pebble' });
+  const id = play(s, 'firecracker+', 4);
+  expectAt(s, { 1: 101, 4: id, 0: 100 });
 });
 
 group('turncoat');
@@ -1110,24 +1145,25 @@ function afterOPlays(stone, pos, o = {}) {
   return s;
 }
 test('Parrot becomes a copy of the enemy\'s last stone and does what it does', () => {
-  const s = afterOPlays('bumper', 6);
-  lay(s, { 1: 'O pebble', 4: 'X pebble' });
-  play(s, 'parrot', 0);
-  assert.equal(s.board[0].type, 'bumper'); assert.equal(s.board[0].plus, false);
-  expectAt(s, { 1: 0, 2: 101, 4: 0, 8: 104 });
+  const s = afterOPlays('bumper', 7);
+  lay(s, { 1: 'O pebble', 4: 'O pebble' });
+  play(s, 'parrot', 2);
+  assert.equal(s.board[2].type, 'bumper'); assert.equal(s.board[2].plus, false);
+  expectAt(s, { 1: 0, 0: 101, 4: 104, 6: 0 });
 });
 test('Parrot+ becomes an upgraded copy', () => {
-  const s = afterOPlays('bumper', 6);
-  lay(s, { 1: 'O pebble', 4: 'X pebble' });
-  play(s, 'parrot+', 0);
-  assert.equal(s.board[0].type, 'bumper'); assert.equal(s.board[0].plus, true);
-  expectAt(s, { 1: 0, 2: 101, 4: 104, 8: 0 }, 'Bumper+ leaves X\'s own stone be');
+  const s = afterOPlays('bumper', 7);
+  lay(s, { 1: 'O pebble', 4: 'O pebble' });
+  play(s, 'parrot+', 2);
+  assert.equal(s.board[2].type, 'bumper'); assert.equal(s.board[2].plus, true);
+  expectAt(s, { 1: 0, 0: 101, 4: 0, 6: 104 }, 'Bumper+ reaches the corner neighbour');
 });
 test('Parrot copies a plus stone as plus', () => {
-  const s = afterOPlays('hush+', 6);
+  const s = afterOPlays('glue+', 8);
+  lay(s, { 1: 'O pebble', 4: 'O pebble' });
   play(s, 'parrot', 0);
-  assert.equal(s.board[0].type, 'hush'); assert.equal(s.board[0].plus, true);
-  assert.equal(s.silenced.O, 2);
+  assert.equal(s.board[0].type, 'glue'); assert.equal(s.board[0].plus, true);
+  assert.ok(s.board[4].stuck, 'Glue+ sticks the corner neighbour');
 });
 test('Parrot copies restriction stones too', () => {
   const s = afterOPlays('magnet', 8);
@@ -1214,13 +1250,13 @@ function guardedGame(o = {}, plus = false) {
 }
 test('Guardian: enemy stones cannot return its charges (corners not covered)', () => {
   const s = guardedGame();
-  play(s, 'firecracker+', 3);   // around 3: 0, 1, 4 hold X stones; only 0 is unguarded
+  play(s, 'firecracker', 3);    // around 3: 0, 1, 4 hold X stones; only 0 is unguarded
   assert.equal(s.board[0], null);
   expectAt(s, { 1: 101, 4: 104 });
 });
 test('Guardian+: corners included', () => {
   const s = guardedGame({}, true);
-  play(s, 'firecracker+', 3);
+  play(s, 'firecracker', 3);
   turnPassedTo(s, 'X');
   expectAt(s, { 0: 100, 1: 101, 4: 104 });
 });
@@ -1230,7 +1266,7 @@ test('Guardian: enemy stones cannot move its charges (they are walls)', () => {
   eff(s, { dir: 'down' });
   expectAt(s, { 0: 0, 6: 100, 1: 101, 4: 104, 8: 108, 5: id });
   const t = guardedGame();
-  play(t, 'bumper', 2);             // would push the Guardian 4 -> 6
+  play(t, 'bumper+', 2);            // would push the Guardian 4 -> 6
   expectAt(t, { 1: 101, 4: 104, 6: 0 });
   const v = guardedGame();
   play(v, 'swap', 2);               // around 2: 1 and 4, both guarded
@@ -1704,7 +1740,7 @@ for (let g = 0; g < GAMES; g++) {
     if (n % 3 === 0) {
       const before = snap(s);
       const c = cloneState(s);
-      const shared = sharedRefs(c, s);
+      const shared = sharedRefs(c, s).filter((p) => !p.startsWith('s.lastPlaced.'));
       if (shared.length) fuzzFail('cloneState shares no mutable objects (mods excepted)', `${where()} shared: ${shared.join(', ')}`);
       for (let k = 0; k < 4 && !c.over; k++) {
         const la = legalActions(c);

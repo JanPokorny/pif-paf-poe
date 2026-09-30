@@ -147,7 +147,7 @@ export const ENEMIES = {
 
   // Act 3 — the Summit
   fay: { name: 'Firecracker Fay', emoji: '🎆', act: 3, tier: 'normal',
-    core: ['firecracker', 'firecracker'], pool: ['magnet', 'shift', 'rotate', 'bumper'], iters: 250, blunder: 0.1,
+    core: ['firecracker', 'firecracker'], pool: ['magnet', 'shift', 'rotate', 'bumper'], iters: 450, blunder: 0.06,
     quote: 'Boom! Back you go!' },
   fox: { name: 'Turncoat Fox', emoji: '🦊', act: 3, tier: 'normal',
     core: ['turncoat', 'turncoat'], pool: ['magnet', 'stinky', 'shift', 'mountain'], iters: 400, blunder: 0.08,
@@ -156,8 +156,8 @@ export const ENEMIES = {
     core: ['parrot', 'parrot'], pool: ['magnet', 'shift', '2048', 'swap'], iters: 400, blunder: 0.08,
     quote: 'Squawk! Anything you can do!' },
   jester: { name: 'The Jester', emoji: '🃏', act: 3, tier: 'normal',
-    core: ['hush', 'swap', 'guardian'], pool: ['shift', 'swap', 'hush', 'magnet', 'flip'], iters: 400, blunder: 0.08,
-    quote: 'Heads you lose, tails I win!' },
+    core: ['hush', 'swap', 'guardian'], pool: ['shift', 'swap', 'pebble', 'magnet', 'flip'], iters: 220, blunder: 0.14,
+    quote: 'Try and touch my friends. Go on!' },
   robot: { name: 'Tile Bot 2048', emoji: '🤖', act: 3, tier: 'normal',
     core: ['2048', '2048'], pool: ['mountain', 'glue', 'magnet', 'stinky'], iters: 450, blunder: 0.05,
     quote: 'CALCULATING OPTIMAL SLIDE.' },
