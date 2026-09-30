@@ -261,15 +261,34 @@ export function prepareDuel(run, enemyId, context = {}) {
     heatIters *= 1 + 0.15 * run.map.power;
   }
   const enemyTricks = [...(enemy.tricks ?? [])];
+  const modsO = { ...(enemy.mods ?? {}) };
+  // Elites past the first act carry a quirk, so the same face is not the same fight.
+  let quirk = null;
+  if (tier === 'elite' && run.act >= 2) {
+    quirk = pick(run, Object.keys(QUIRKS));
+    if (quirk === 'swift') first = 'O';
+    if (quirk === 'armored') handO.forEach((h) => { if (h.type !== 'pebble') h.plus = true; });
+    if (quirk === 'tricky') enemyTricks.push(randomTrick(run));
+    if (quirk === 'rooted') modsO.homeTurf = true;
+    if (quirk === 'patient') modsO.hourglass = true;
+  }
   return {
-    enemyId, tier, handO, first, disabled,
+    enemyId, tier, handO, first, disabled, quirk,
     tricksO: enemyTricks, usesO: 1,
-    modsO: { ...(enemy.mods ?? {}) }, field: (tier === 'boss' && (context.bossWins ?? 0) > 0 && enemy.field2) || enemy.field || null,
+    modsO, field: (tier === 'boss' && (context.bossWins ?? 0) > 0 && enemy.field2) || enemy.field || null,
     iters: Math.round(enemy.iters * heatIters), blunder: run.heat >= 5 ? 0 : enemy.blunder,
     bossRound: context.bossRound ?? 0, bossWins: context.bossWins ?? 0,
     event: context.event ?? null,
   };
 }
+
+export const QUIRKS = {
+  swift: { name: 'Swift', text: 'It always opens.' },
+  armored: { name: 'Armoured', text: 'Every stone it brings is upgraded.' },
+  tricky: { name: 'Tricky', text: 'It carries an extra trick.' },
+  rooted: { name: 'Rooted', text: 'The space never switches its stones off.' },
+  patient: { name: 'Patient', text: 'A full board goes to it, whoever opened.' },
+};
 
 // What the player brings: the chosen stones (by uid) as a duel hand.
 export function playerHand(run, uids) {

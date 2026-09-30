@@ -287,7 +287,7 @@ function mapScreen() {
       onclick: () => {
         if (!can) {
           const why = c.mark === 'X' ? 'You have been here.' : c.mark === 'O' ? `${boss.name} took this square.` : 'Too far: go next to one of your Xs.';
-          const what = c.duel ? `${ENEMIES[c.duel.enemyId].name}${c.kind === 'elite' ? ' (elite)' : ''}${c.duel.disabled ? `, no ${STONES[c.duel.disabled].name}` : ''}` : NODE_NAME[c.kind];
+          const what = c.duel ? `${ENEMIES[c.duel.enemyId].name}${c.kind === 'elite' ? ` (elite${c.duel.quirk ? ', ' + R.QUIRKS[c.duel.quirk].name.toLowerCase() : ''})` : ''}${c.duel.disabled ? `, no ${STONES[c.duel.disabled].name}` : ''}` : NODE_NAME[c.kind];
           toast(`${what} — ${c.mark ? why : NODE_TEXT[c.kind] + ' ' + why}`);
           return;
         }
@@ -405,6 +405,7 @@ function preDuel() {
           duel.disabled ? h('span.chip-ico.crossed', { html: icon(duel.disabled) }) : '',
           duel.disabled ? ` No ${STONES[duel.disabled].name} here` : ' Neutral space'),
         h('div.fact', {}, duel.first === 'X' ? 'You open' : `${enemy.name} opens — a full board goes to you`),
+        duel.quirk ? h('div.fact.warn', {}, `${R.QUIRKS[duel.quirk].name}: ${R.QUIRKS[duel.quirk].text}`) : null,
         duel.field ? h('button.fact.warn', { onclick: () => infoField(duel.field) }, `${FIELDS[duel.field].name}: ${FIELDS[duel.field].text}`) : null,
         h('div.fact.dim', {}, stakes)),
       h('div.section-label', {}, 'Bring your stones ', count),
