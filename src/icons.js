@@ -586,6 +586,9 @@ const RAW = {
     P('M -6 6.4 L -6.6 4.8 M -5.6 6.4 L -5.4 5 M 5.8 6.4 L 6.5 4.9 M 5.4 6.4 L 5.3 5.1', SW(1)),
 };
 
+RAW['kit-trickster'] = RAW.trick;
+RAW['kit-mason'] = RAW.mountain;
+
 const G = '<g fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">';
 
 export const ICONS = Object.fromEntries(Object.entries(RAW).map(([k, v]) => [k, `${G}${v}</g>`]));
