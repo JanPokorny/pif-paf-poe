@@ -348,7 +348,8 @@ export function mountDuel(root, opts) {
       for (const i of allowedSquares(state)) cells[i].classList.add('allowed');
       renderActions([undo]);
     } else if (state.phase === 'place' && preview) {
-      setStatus('This is what happens. Confirm?', 'you');
+      const dud = preview.logs?.find((l) => ['silenced', 'snared', 'disabled'].includes(l));
+      setStatus(dud ? `${{ silenced: 'Hushed', snared: 'Snared', disabled: 'Switched off' }[dud]} — it will do nothing. Confirm?` : 'This is what happens. Confirm?', dud ? 'lose-note' : 'you');
       cells[preview.action.pos].classList.add('chosen');
       for (const i of allowedSquares(state)) cells[i].classList.add('allowed');
       renderActions([undo, h('button.btn.primary', { onclick: confirm }, h('span', { html: icon('check') }), 'Confirm')]);
@@ -410,6 +411,7 @@ export function mountDuel(root, opts) {
     const c = state.phase === 'effect' ? state.board[state.placedAt] : state.selected;
     if (!c) return;
     info.replaceChildren(h('b', {}, stoneName(c) + ': '), stoneText(c),
+      state.silenced.X > 0 && state.phase === 'place' ? h('span.red', {}, ' — but you are hushed: it will do nothing.') : '',
       h('button.info-more', { onclick: () => infoStone(c, 'X') }, 'ⓘ'));
   }
 
@@ -469,7 +471,7 @@ export function mountDuel(root, opts) {
         return;
       }
       if (!st.apply && state.selected.type !== 'parrot') { sfx('place'); commitState(test); return; }
-      preview = { state: test, action };
+      preview = { state: test, action, logs: test.log };
       sfx('place');
       show();
       return;

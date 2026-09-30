@@ -572,3 +572,4 @@ b { font-weight: 400; background: linear-gradient(transparent 55%, var(--hi) 55%
 .plus-note { font-size: 0.72rem; color: var(--pencil); line-height: 1.05; }
 .stone-grid.upgrades { grid-template-columns: repeat(2, 1fr); }
 .coach { color: var(--ink); background: var(--sticky); padding: 2px 6px; box-shadow: 1px 3px 5px -3px rgba(80,60,0,.5); display: inline-block; transform: rotate(-0.5deg); }
+.map-cell.boss-threat::after { content: ''; position: absolute; inset: 14%; border: 2.5px dashed rgba(200, 55, 45, 0.6); border-radius: 50%; pointer-events: none; }

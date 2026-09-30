@@ -298,6 +298,7 @@ function mapScreen() {
         c.duel.disabled ? h('span.cell-space', { html: icon(c.duel.disabled) }) : null)
       : h('span.doodle', { html: icon(NODE_ICON[c.kind]) }),
     h('span.label', {}, c.duel ? ENEMIES[c.duel.enemyId].name.replace(/^(The|Captain) /, '') : NODE_NAME[c.kind]));
+    if (!c.mark && R.MAP_LINES.some((l) => l.includes(i) && l.filter((j) => map.cells[j].mark === 'O').length === 2 && l.every((j) => j === i || map.cells[j].mark === 'O'))) el.classList.add('boss-threat');
     if (c.mark === 'X') el.insertAdjacentHTML('beforeend', scribbleX(freshX === i));
     if (c.mark === 'O') el.insertAdjacentHTML('beforeend', scribbleO(map.lastO === i));
     return el;
