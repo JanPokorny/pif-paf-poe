@@ -182,7 +182,7 @@ export function mountDuel(root, opts) {
       ...s.tricks.X.map((x) => {
         const b = h('button.trick-btn', { onclick: () => tapTrick(x) }, h('span.trick-ico', { html: icon(x) }), TRICKS[x].name);
         if (usable.has(x)) b.classList.add('usable');
-        if (trickName === t) b.classList.add('aiming');
+        if (trickName === x) b.classList.add('aiming');
         return b;
       }));
   }
@@ -306,7 +306,7 @@ export function mountDuel(root, opts) {
         const x = +k;
         const b = h('button.rot.turn' + (isChosen(group) ? '.chosen' : ''), { onclick: pickGroup(group), 'aria-label': `turn ${x}` },
           h('span', { html: icon(x > 0 ? 'rotate-cw' : 'rotate-ccw') }), Math.abs(x) > 1 ? h('span.times', {}, '×2') : null);
-        place(...spot[t], b);
+        place(...spot[x], b);
       }
     } else if (stage.kind === 'axis') {
       // Each mirror is a note beside the board, pointing along its axis.
@@ -674,7 +674,7 @@ export function mountDuel(root, opts) {
     sfx(won ? 'win' : 'lose');
     await sleep(900);
     const v = { enemy: enemy.name };
-    const hourglass = state.mods.X.hourglass !== !!state.mods.O.hourglass;
+    const hourglass = !!state.mods.X.hourglass !== !!state.mods.O.hourglass;
     const why = state.reason === 'line'
       ? (won ? t('Three in a row!') : t('{enemy} made three in a row.', v))
       : state.reason === 'full'
