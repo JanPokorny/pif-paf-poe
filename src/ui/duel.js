@@ -569,6 +569,7 @@ export function mountDuel(root, opts) {
   // ── Go ────────────────────────────────────────────────────────────────────
   state.log = [];
   show();
+  if (state.turns === 0 && state.phase === 'select' && enemy.quote) toast(`${enemy.emoji} “${enemy.quote}”`);
   if (state.over) finish();
   else if (state.player === 'O') enemyTurn();
   else if (state.phase !== 'select') {

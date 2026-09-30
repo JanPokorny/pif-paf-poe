@@ -38,8 +38,11 @@ const SOUNDS = {
   heal: () => [440, 554, 659].forEach((f, i) => tone(f, 0.18, { gain: 0.07, at: i * 0.07 })),
 };
 
+const BUZZ = { place: 12, win: [30, 40, 30], lose: 80, trick: 20 };
+
 export function sfx(name) {
   if (!enabled) return;
+  try { if (BUZZ[name] && navigator.vibrate) navigator.vibrate(BUZZ[name]); } catch { /* no haptics */ }
   try {
     ctx ??= new (window.AudioContext || window.webkitAudioContext)();
     if (ctx.state === 'suspended') ctx.resume();
