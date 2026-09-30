@@ -2,9 +2,13 @@
 
 **Play it: https://janpokorny.github.io/pif-paf-poe/**
 
-Tic-tac-toe where the pieces move, as a mobile-friendly browser roguelike. Climb three acts of
-branching maps, duel a cast of enemies on a 3×3 board where every stone *does something* when
-placed, and grow your pouch of stones, tricks and relics along the way.
+Tic-tac-toe where the pieces move, as a mobile-friendly browser roguelike drawn on a notebook
+page. Duel a cast of enemies on a 3×3 board where every stone *does something* when placed, and
+grow your pouch of stones, tricks and relics along the way.
+
+Each of the three acts is itself a game of tic-tac-toe against its boss: a 4×4 grid of
+encounters where you mark an X wherever you go and the boss answers with an O. Three Xs in a row
+open the boss's door.
 
 It grew out of a physical summer-camp game; the original rules, simulations and print-and-play
 sheets live in [`old/`](old/).
@@ -24,6 +28,9 @@ npx http-server -c-1 .
 | `src/engine.js` | the duel rules: stones, tricks, boss field rules. Pure, shared by UI and AI |
 | `src/ai.js` | the enemy: Monte Carlo tree search over the engine (runs in a worker via `src/brain.js`) |
 | `src/content.js` | relics, enemies, acts, events |
-| `src/run.js` | a run: map generation, duel setup, rewards, shops. Pure, JSON-serialisable |
+| `src/run.js` | a run: the act maps, duel setup, rewards, shops. Pure, JSON-serialisable |
 | `src/main.js`, `src/ui/` | the screens |
 | `tools/` | headless playtests and balance measurements (`node tools/balance.mjs`) |
+
+Fonts are self-hosted in `fonts/`: Patrick Hand (SIL OFL) and Permanent Marker (Apache 2.0).
+The first, glossy look is kept in `old/style-glossy.css` as a record of what not to do.

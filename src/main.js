@@ -697,10 +697,10 @@ function showHelp(after) {
       h('p', {}, 'Each duel is fought on a ', h('b', {}, 'space'), ' that may switch one stone type off, for both sides. Switched-off stones still count for lines, they just do nothing.'),
       h('p', {}, 'Several Magnets and Stinkies all pull at once: you must place where you satisfy as many as any square can.')),
     h('div', {}, h('h2', {}, 'The climb'),
-      h('p', {}, 'Three acts, each a branching map ending in a boss. Pick your path: duels ⚔, elites 💀, shops, campfires, treasure and the unknown.'),
-      h('p', {}, 'Before each duel you see the enemy\'s stones and the space, and choose which 5 of your pouch to bring.'),
-      h('p', {}, 'Win to earn gold and new stones. Lose and it costs hearts — run out and the climb is over. Bosses must be beaten twice.'),
-      h('p', {}, 'Good luck!')),
+      h('p', {}, 'Three acts. Each act is itself a game of tic-tac-toe against its boss, on a 4×4 grid of encounters: duels ⚔, elites 💀, shops, campfires, treasure and the unknown.'),
+      h('p', {}, 'Wherever you go you mark an ', h('b.blue', {}, 'X'), ' — next to one you already have. After each step the boss marks an ', h('b.red', {}, 'O'), ', taking that square away. Lose a duel and the boss takes that square too.'),
+      h('p', {}, h('b', {}, 'Three Xs in a row open the boss\'s door.'), ' If the boss draws its own line first, or boxes you in, it grows stronger.'),
+      h('p', {}, 'Before each duel you see the enemy\'s stones and the space, and choose which 5 of your pouch to bring. Lose and it costs hearts; run out and the climb is over. Bosses must be beaten twice.')),
   ];
   let k = 0;
   const holder = h('div.help-page');
