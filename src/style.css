@@ -639,3 +639,4 @@ b { font-weight: 400; background: linear-gradient(transparent 55%, var(--hi) 55%
 .journal-item:nth-child(even) .portrait { transform: rotate(3deg); }
 .hand-slot .badge-plus { top: -6px; right: -6px; }
 .slot-plain { padding: 3px 5px; }
+.slot-name { max-width: none; overflow: visible; font-size: 0.68rem; } .hand-slot { padding: 5px 2px; min-width: 0; }
