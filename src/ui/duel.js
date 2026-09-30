@@ -6,17 +6,16 @@
 // over, ↩ puts the whole turn back.
 
 import {
-  STONES, TRICKS, FIELDS, legalActions, applyAction, cloneState, allowedSquares,
-  winningLine, active, isStuck, guarded, other, row, col, LINES,
+  STONES, TRICKS, CONDS, RULES, legalActions, applyAction, cloneState, allowedSquares,
+  winningLine, active, other, row, col, LINES, ELS,
 } from '../engine.js';
-import { h, stoneEl, updateStone, iconEl, toast, infoStone, infoTrick, infoField, infoSpace, stoneName, stoneText, sleep } from './common.js';
+import { h, stoneEl, updateStone, toast, infoStone, infoTrick, ruleChip, stoneName, stoneText, sleep } from './common.js';
 import { icon } from '../icons.js';
 import { t } from '../i18n.js';
-import { RELICS } from '../content.js';
 import { think } from '../brain.js';
 import { sfx } from '../sound.js';
 
-const FIELD_ORDER = ['pos', 'from', 'a', 'to', 'target', 'dir', 'block', 'turn', 'axis', 'line', 'stone', 'hold', 'only'];
+const FIELD_ORDER = ['pos', 'from', 'a', 'to', 'target', 'dir', 'block', 'turn', 'axis', 'line', 'ring', 'stone', 'hold', 'only'];
 const DIR_ARROW = { up: 'arrow-up', down: 'arrow-down', left: 'arrow-left', right: 'arrow-right' };
 
 // The next choice that tells these candidates apart.
@@ -48,6 +47,12 @@ const BLOCK = { TL: 'top-left', TR: 'top-right', BL: 'bottom-left', BR: 'bottom-
 const sq = (i) => t(SQUARE[i]);
 const turning = (cw) => t(cw ? 'clockwise' : 'anticlockwise');
 function describe(a) {
+  if (a.type === 'dictate') {
+    if (a.kind === 'tactics') return t('you must play {stone}', { stone: STONES[a.value].name });
+    if (a.kind === 'column') return t(['the left column is closed to you', 'the middle column is closed to you', 'the right column is closed to you'][a.value]);
+    if (a.kind === 'spy') return t(`your stones must move ${a.value}`);
+  }
+  if (a.ring) return t(a.ring === 'diag' ? 'pushed the diagonals' : 'pushed the straight neighbours');
   if (a.use && a.use !== 'pass') {
     const trick = TRICKS[a.use].name;
     if (a.from !== undefined) return `${trick}: ${sq(a.from)} → ${sq(a.to)}`;
@@ -71,7 +76,7 @@ export function mountDuel(root, opts) {
   const { enemy, onEnd, onSave, extra = null } = opts;
   let state = opts.state;
   let snapshot = null;          // the state at the start of this turn, for ↩
-  let selIndex = null;          // hand index of the stone taken, for display
+  let selKey = null;            // which hand slot the stone taken came from, for display
   let cands = null;             // the choices still open in effect / trick
   let stageCands = null;        // the set the visible stage was built from
   let preview = null;           // {state, action} awaiting ✓
@@ -126,7 +131,7 @@ export function mountDuel(root, opts) {
         stoneEls.set(c.id, e);
         setTimeout(() => e.classList.remove('pop'), 300);
       }
-      updateStone(e, c, c.player, { stuck: !!c.stuck || guarded({ ...s, player: other(c.player) }, i), dead: !active(s, c) });
+      updateStone(e, c, c.player, { stuck: !!c.stuck, dead: !active(s, c) });
       const was = e.dataset.at === undefined ? i : +e.dataset.at;
       if (!fresh && Math.abs(row(was) - row(i)) + Math.abs(col(was) - col(i)) >= 2) {
         // A long move (a wrap, a leap, a mirror) is a hop, not a slide.
@@ -149,30 +154,51 @@ export function mountDuel(root, opts) {
     }
   }
 
+  // Which select action a hand slot stands for: 'pebble', a hand index, or
+  // 'O:type' for a stone taken from the enemy's hand (Open Hands).
+  const slotAction = (s, key) => {
+    const acts = legalActions(s);
+    if (key === 'pebble') return acts.find((a) => a.stone === 'pebble');
+    if (typeof key === 'string' && key.startsWith('O:')) return acts.find((a) => a.from === 'O' && a.stone === key.slice(2));
+    const st = s.hands.X[key];
+    return st && acts.find((a) => a.stone === st.type && !a.from);
+  };
+
   function renderHands(s, shown = s) {
-    // Enemy hand, as the preview would leave it.
-    enemyHand.classList.toggle('crowded', shown.hands.O.length > 6);
-    enemyHand.replaceChildren(...shown.hands.O.map((st) => {
-      const e = stoneEl(st, 'O', { mini: true, dead: s.disabled === st.type && !s.mods.O.homeTurf });
-      e.addEventListener('click', () => { if (!e.classList.contains('target')) tapEnemyStone(st); });
-      return e;
-    }));
+    const base = snapshot && s.phase !== 'select' && s.player === 'X' && s.turns === snapshot.turns ? snapshot : s;
+    const selecting = s.player === 'X' && s.phase === 'select' && !busy;
+    const inTurn = base !== s;
+    const shared = s.conds.includes('shared');
+
+    // Enemy hand, as the preview would leave it. Pebbles are always there.
+    const theirs = inTurn && typeof selKey === 'string' && selKey.startsWith('O:') ? base.hands.O : shown.hands.O;
+    enemyHand.classList.toggle('crowded', theirs.length > 6);
+    enemyHand.replaceChildren(
+      h('span.pebble-mini', { title: t('Pebbles: as many as they like') }, stoneEl({ type: 'pebble' }, 'O', { mini: true }), h('span.inf', {}, '∞')),
+      ...theirs.map((st, k) => {
+        const e = stoneEl(st, 'O', { mini: true });
+        const key = `O:${st.type}`;
+        const firstOfType = theirs.findIndex((x) => x.type === st.type) === k;
+        if (shared && selecting) { if (slotAction(s, key)) e.classList.add('borrow'); else e.classList.add('forbidden'); }
+        if (shared && inTurn && selKey === key && s.phase === 'place' && firstOfType) e.classList.add('selected');
+        e.addEventListener('click', () => { if (!e.classList.contains('target')) tapEnemyStone(st); });
+        return e;
+      }));
     enemyTricks.replaceChildren(...s.tricks.O.map((x) => h('button.mini-trick', { html: icon(x), onclick: () => infoTrick(x) })));
 
-    // Player hand: during a turn in progress, show the hand as it was.
-    const base = snapshot && s.phase !== 'select' && s.player === 'X' && s.turns === snapshot.turns ? snapshot : s;
-    const selectable = s.player === 'X' && s.phase === 'select' && !busy
-      ? new Set(legalActions(s).map((a) => a.stone + (a.plus ? '+' : ''))) : null;
-    const inTurn = base !== s;
-    hand.replaceChildren(...base.hands.X.map((st, k) => {
-      const e = stoneEl(st, 'X', { dead: s.disabled === st.type && !s.mods.X.homeTurf });
-      const b = h('button.hand-slot', { onclick: () => tapHand(k) }, e, h('span.slot-name', {}, STONES[st.type].name));
-      if (inTurn && k === selIndex) b.classList.add(s.phase === 'place' ? 'selected' : 'placed');
-      if (selectable && !selectable.has(st.type + (st.plus ? '+' : ''))) b.classList.add('forbidden');
-      if (!selectable && !(inTurn && s.phase === 'place')) b.classList.add('idle');
+    // Player hand: the Pebble, then the specials. During a turn in progress,
+    // show the hand as it was.
+    const slot = (key, st, label) => {
+      const e = stoneEl(st, 'X');
+      const b = h('button.hand-slot' + (key === 'pebble' ? '.pebble-slot' : ''), { onclick: () => tapHand(key) }, e,
+        h('span.slot-name', {}, label), key === 'pebble' ? h('span.inf', {}, '∞') : null);
+      if (inTurn && key === selKey) b.classList.add(s.phase === 'place' ? 'selected' : 'placed');
+      if (selecting && !slotAction(s, key)) b.classList.add('forbidden');
+      if (!selecting && !(inTurn && s.phase === 'place')) b.classList.add('idle');
       return b;
-    }));
-    if (!base.hands.X.length) hand.append(h('div.empty-hand', {}, t('No stones left')));
+    };
+    hand.replaceChildren(slot('pebble', { type: 'pebble' }, STONES.pebble.name),
+      ...base.hands.X.map((st, k) => slot(k, st, STONES[st.type].name)));
 
     // Tricks.
     const usable = s.player === 'X' && s.phase === 'trick' && !busy
@@ -190,13 +216,12 @@ export function mountDuel(root, opts) {
 
   function renderChips(s) {
     const items = [];
-    items.push(h('button.chip', { onclick: () => infoSpace(s.disabled) },
-      s.disabled ? h('span.chip-ico.crossed', { html: icon(s.disabled) }) : null,
-      s.disabled ? t('No {stone}', { stone: STONES[s.disabled].name }) : t('Neutral space')));
-    if (s.field) items.push(h('button.chip.field', { onclick: () => infoField(s.field) }, t('Boss rule: ') + FIELDS[s.field].name));
-    const hx = !!s.mods.X.hourglass, ho = !!s.mods.O.hourglass;
-    const tie = hx !== ho ? (hx ? 'X' : 'O') : other(s.first);
-    items.push(h('span.chip.opener', { title: t('Who takes a full board, or a player out of stones') }, t(tie === 'X' ? 'Full board → you' : 'Full board → them')));
+    for (const c of s.conds) items.push(ruleChip('cond', c));
+    for (const r of s.rules) items.push(ruleChip('rule', r));
+    const tie = s.rules.includes('patient') ? 'O' : other(s.first);
+    items.push(h('span.chip.opener', { title: t('Who takes a full board') }, t(tie === 'X' ? 'Full board → you' : 'Full board → them')));
+    if (s.dictate?.kind === 'column') items.push(h('span.chip.bad', {}, t(['Left column closed', 'Middle column closed', 'Right column closed'][s.dictate.value])));
+    if (s.dictate?.kind === 'spy') items.push(h('span.chip.bad', {}, t(`Moves go ${s.dictate.value}`)));
     if (s.silenced.X) items.push(h('span.chip.bad', {}, t('Hushed ×{n}', { n: s.silenced.X })));
     if (s.silenced.O) items.push(h('span.chip.good', {}, t('Enemy hushed ×{n}', { n: s.silenced.O })));
     if (s.forced) items.push(h('span.chip.bad', {}, t(s.forced.player === 'X' ? 'You must play {stone}' : 'They must play {stone}', { stone: STONES[s.forced.stone].name })));
@@ -330,11 +355,13 @@ export function mountDuel(root, opts) {
     } else if (stage.kind === 'hold' || stage.kind === 'only') {
       const label = stage.kind === 'hold'
         ? { true: t('It holds its square'), false: t('It slides too') }
-        : state.board[state.placedAt]?.type === 'glue' ? { true: t('Only yours, corners too'), false: t('Everything beside it') }
-          : { true: t('Only their stones'), false: t('All stones') };
+        : { true: t('Only their stones'), false: t('All stones') };
       for (const [k, group] of stage.groups) {
         btns.push(h('button.btn.opt' + (isChosen(group) ? '.chosen' : ''), { onclick: pickGroup(group) }, label[k]));
       }
+    } else if (stage.kind === 'ring') {
+      const label = { ortho: t('Push the ones beside it'), diag: t('Push the diagonal ones') };
+      for (const [k, group] of stage.groups) btns.push(h('button.btn.opt' + (isChosen(group) ? '.chosen' : ''), { onclick: pickGroup(group) }, label[k]));
     } else if (stage.kind === 'stone') {
       // Aim at the enemy's hand itself.
       for (const [k, group] of stage.groups) {
@@ -383,7 +410,8 @@ export function mountDuel(root, opts) {
       markDangers();
       setStatus(t('Your turn — pick a stone'), 'you');
       info.textContent = caption.length ? `${enemy.name}: ${caption.filter(Boolean).join(', ')}.`
-        : state.hands.X.length ? t('Tap a stone in your hand. Tap any stone on the board to read it.') : '';
+        : state.conds.includes('shared') && state.hands.O.length ? t('Open Hands: you may also tap one of their stones, up top, and play it as yours.')
+          : t('Tap a stone in your hand. Tap any stone on the board to read it.');
       if (state.turns >= 2 && state.board.some(Boolean) && cells.some((c) => c.classList.contains('threat'))) coach('enemy'); else coach('select');
       renderActions([]);
     } else if (state.phase === 'place' && !preview) {
@@ -393,8 +421,8 @@ export function mountDuel(root, opts) {
       for (const i of allowedSquares(state)) cells[i].classList.add('allowed');
       renderActions([undo]);
     } else if (state.phase === 'place' && preview) {
-      const dud = preview.logs?.find((l) => ['silenced', 'snared', 'disabled'].includes(l));
-      setStatus(dud ? t('{why} — it will do nothing. Confirm?', { why: t({ silenced: 'Hushed', snared: 'Snared', disabled: 'Switched off' }[dud]) }) : t('This is what happens. Confirm?'), dud ? 'lose-note' : 'you');
+      const dud = preview.logs?.includes('silenced');
+      setStatus(dud ? t('{why} — it will do nothing. Confirm?', { why: t('Hushed') }) : t('This is what happens. Confirm?'), dud ? 'lose-note' : 'you');
       cells[preview.action.pos].classList.add('chosen');
       for (const i of allowedSquares(state)) cells[i].classList.add('allowed');
       renderActions([undo, h('button.btn.primary', { onclick: confirm }, h('span', { html: icon('check') }), t('Confirm'))]);
@@ -422,13 +450,13 @@ export function mountDuel(root, opts) {
   // Where the enemy's restrictions keep you out, and where one plain stone
   // of theirs would finish a line: shown before you pick anything.
   function markDangers() {
-    const ok = new Set(allowedSquares(state, { type: 'shift', plus: false }));
+    const ok = new Set(allowedSquares(state));
     state.board.forEach((c, i) => { if (!c && !ok.has(i)) cells[i].classList.add('nogo'); });
     // Only where they could actually put a stone, restrictions and all.
     const theirTurn = cloneState(state);
     theirTurn.player = 'O';
-    const theyMay = new Set(allowedSquares(theirTurn, { type: 'shift', plus: false }));
-    for (const line of LINES) {
+    const theyMay = new Set(allowedSquares(theirTurn));
+    for (const line of state.rules.includes('elko') ? ELS : LINES) {
       const os = line.filter((i) => state.board[i]?.player === 'O').length;
       const empty = line.filter((i) => !state.board[i]);
       if (os === 2 && empty.length === 1 && theyMay.has(empty[0])) cells[empty[0]].classList.add('threat');
@@ -470,27 +498,33 @@ export function mountDuel(root, opts) {
   // ── Player input ──────────────────────────────────────────────────────────
   function myMove() { return !busy && !ended && !state.over && state.player === 'X'; }
 
-  function tapHand(k) {
+  const slotStone = (key) => (key === 'pebble' ? { type: 'pebble' }
+    : typeof key === 'string' ? { type: key.slice(2) } : (snapshot ?? state).hands.X[key]);
+
+  function tapHand(key) {
     if (!myMove()) return;
     if (state.phase !== 'select' && state.phase !== 'place') {
-      const st = (snapshot ?? state).hands.X[k];
-      if (st) infoStone(st, 'X');
+      const st = slotStone(key);
+      if (st) infoStone(st, typeof key === 'string' && key.startsWith('O:') ? 'O' : 'X');
       return;
     }
     if (state.phase === 'place') {
-      const same = k === selIndex;
+      const same = key === selKey;
       state = cloneState(snapshot); state.log = [];
       preview = null;
-      selIndex = null;
+      selKey = null;
       if (same) { show(); return; }
     }
-    const st = state.hands.X[k];
-    const ok = legalActions(state).find((a) => a.stone === st.type && !!a.plus === !!st.plus);
-    if (!ok) { toast(t('{trick}: you must play the named stone.', { trick: TRICKS['mind-control'].name }), 'bad'); return; }
+    const ok = slotAction(state, key);
+    if (!ok) {
+      const f = state.forced?.player === 'X' && STONES[state.forced.stone].name;
+      toast(f ? t('You must play {stone} this turn.', { stone: f }) : t('Not that one.'), 'bad');
+      return;
+    }
     sfx('select');
     // Never touch the saved start-of-turn state: work on a copy of it.
     snapshot = state;
-    selIndex = k;
+    selKey = key;
     state = cloneState(snapshot); state.log = [];
     applyAction(state, ok);
     show();
@@ -506,8 +540,7 @@ export function mountDuel(root, opts) {
       const allowed = allowedSquares(state);
       if (!allowed.includes(i)) {
         if (s.board[i] && !preview) infoStone(s.board[i], s.board[i].player);
-        else if (!s.board[i] && i === 4 && state.turns === 0 && state.board.every((c) => !c)) toast(t('Nobody opens a duel in the centre.'), 'bad');
-        else if (!s.board[i]) toast(t('Not there — the enemy\'s restrictions point elsewhere.'), 'bad');
+        else if (!s.board[i]) toast(whyNot(i), 'bad');
         return;
       }
       if (preview && preview.action.pos === i) return confirm();
@@ -529,7 +562,26 @@ export function mountDuel(root, opts) {
     if (s.board[i]) infoStone(s.board[i], s.board[i].player);
   }
 
-  function tapEnemyStone(st) { infoStone(st, 'O'); }
+  // Under Open Hands, their stones are yours to play too.
+  function tapEnemyStone(st) {
+    const key = `O:${st.type}`;
+    if (state.conds.includes('shared') && myMove() && (state.phase === 'select' || state.phase === 'place') && slotAction(snapshot && state.phase === 'place' ? snapshot : state, key)) {
+      tapHand(key);
+      return;
+    }
+    infoStone(st, 'O');
+  }
+
+  // Why a free square is off limits, in the order the engine narrows them.
+  function whyNot(i) {
+    if (i === 4 && state.conds.includes('nocentre')) return t('{rule}: nobody may place on the centre.', { rule: CONDS.nocentre.name });
+    if (i === 4 && state.rules.includes('reserved')) return t('{rule}: the centre is the boss\'s.', { rule: RULES.reserved.name });
+    if (state.dictate?.kind === 'column' && col(i) === state.dictate.value) return t('{rule}: that column is closed this turn.', { rule: RULES.column.name });
+    if (state.rules.includes('clinch') && !state.board.some((c, j) => c?.player === 'O' && Math.abs(row(i) - row(j)) + Math.abs(col(i) - col(j)) === 1)) {
+      return t('{rule}: you must place next to one of its stones.', { rule: RULES.clinch.name });
+    }
+    return t('Not there — the enemy\'s restrictions point elsewhere.');
+  }
 
   function tapTrick(x) {
     if (!myMove() || state.phase !== 'trick') { infoTrick(x); return; }
@@ -560,7 +612,7 @@ export function mountDuel(root, opts) {
   function undoTurn() {
     if (!snapshot) return;
     state = cloneState(snapshot); state.log = [];
-    preview = null; trickName = null; selIndex = null; cands = stageCands = null;
+    preview = null; trickName = null; selKey = null; cands = stageCands = null;
     sfx('undo');
     show();
   }
@@ -589,10 +641,10 @@ export function mountDuel(root, opts) {
         stageCands = cands = effectCands;
       }
       // Only a turn's start is saved: a reload mid-turn starts the turn over.
-      if (state.phase === 'select') { snapshot = null; selIndex = null; save(); }
+      if (state.phase === 'select') { snapshot = null; selKey = null; save(); }
       show();
     } else {
-      snapshot = null; selIndex = null;
+      snapshot = null; selKey = null;
       save();
       enemyTurn();
     }
@@ -602,13 +654,12 @@ export function mountDuel(root, opts) {
     const me = who === 'X';
     const v = { enemy: enemy.name };
     for (const l of logs) {
-      if (l === 'disabled') toast(t(me ? 'Your stone is switched off by the space.' : '{enemy}\'s stone is switched off by the space.', v));
-      else if (l === 'silenced') toast(t(me ? 'Hushed! Your stone does nothing.' : 'Hushed! {enemy}\'s stone does nothing.', v), me ? 'bad' : 'good');
-      else if (l === 'snared') toast(t(me ? 'Snared! Your stone does nothing.' : 'Snared! {enemy}\'s stone does nothing.', v), me ? 'bad' : 'good');
+      if (l === 'silenced') toast(t(me ? 'Hushed! Your stone does nothing.' : 'Hushed! {enemy}\'s stone does nothing.', v), me ? 'bad' : 'good');
       else if (l === 'echo') toast(t('Echo! It goes again.'), 'good');
       else if (l.startsWith('parrot:')) toast(t('The {parrot} copies {stone}!', { parrot: STONES.parrot.name, stone: STONES[l.slice(7)].name }));
       else if (l.startsWith('trick:')) { toast(t(me ? 'You used {trick}!' : '{enemy} used {trick}!', { ...v, trick: TRICKS[l.slice(6)].name }), me ? 'good' : 'bad'); sfx('trick'); }
-      else if (l.startsWith('field:')) toast(`${FIELDS[l.slice(6)].name}!`);
+      else if (l === 'cond:gravity') { /* shown as a step of its own */ }
+      else if (l === 'rule:headstart') toast(t('{rule}: {enemy} goes again!', { ...v, rule: RULES.headstart.name }), 'bad');
     }
   }
 
@@ -632,7 +683,6 @@ export function mountDuel(root, opts) {
         info.textContent = caption.filter(Boolean).join(', ');
         // Show which stone it took.
         renderHands(state);
-        const k = state.hands.O.length;
         const lifted = stoneEl(state.selected, 'O', { mini: true });
         lifted.classList.add('lifted');
         enemyHand.append(lifted);
@@ -641,22 +691,30 @@ export function mountDuel(root, opts) {
         continue;
       }
       state.log = [];
-      // The board before the boss's field rule, so it can be shown as a step.
-      let beforeField = null;
-      if (state.field) {
-        beforeField = cloneState(state);
-        beforeField.field = null;
-        applyAction(beforeField, action);
+      // The board before Gravity pulls, so the fall can be shown as a step.
+      let beforeFall = null;
+      if (state.conds.includes('gravity')) {
+        beforeFall = cloneState(state);
+        beforeFall.conds = state.conds.filter((c) => c !== 'gravity');
+        applyAction(beforeFall, action);
       }
       applyAction(state, action);
       const logs = state.log;
       state.log = [];
-      if (beforeField && logs.some((l) => l.startsWith('field:'))) {
-        renderBoard(beforeField);
+      if (beforeFall && logs.includes('cond:gravity') && beforeFall.board.some((c, i) => (c?.id ?? 0) !== (state.board[i]?.id ?? 0))) {
+        renderBoard(beforeFall);
         await sleep(pace(520));
         board.classList.add('shake');
         setTimeout(() => board.classList.remove('shake'), 400);
         sfx('thud');
+      }
+      if (action.type === 'dictate') {
+        caption.push(describe(action));
+        info.textContent = caption.filter(Boolean).join(', ');
+        toast(`${enemy.name}: ${describe(action)}`, 'bad');
+        renderChips(state);
+        await sleep(pace(700));
+        continue;
       }
       renderBoard(state);
       renderHands(state);
@@ -700,16 +758,12 @@ export function mountDuel(root, opts) {
     sfx(won ? 'win' : 'lose');
     await sleep(900);
     const v = { enemy: enemy.name };
-    const hourglass = !!state.mods.X.hourglass !== !!state.mods.O.hourglass;
+    const elko = state.rules.includes('elko');
     const why = state.reason === 'line'
-      ? (won ? t('Three in a row!') : t('{enemy} made three in a row.', v))
-      : state.reason === 'full'
-        ? (hourglass
-          ? t(won ? 'The board is full — it goes to you ({hourglass}).' : 'The board is full — it goes to {enemy} ({hourglass}).', { ...v, hourglass: RELICS.hourglass.name })
-          : t(won ? 'The board is full — it goes to you, who moved second.' : 'The board is full — it goes to {enemy}, who moved second.', v))
-        : t(state.player === 'X'
-          ? (won ? 'You are out of stones — it goes to you.' : 'You are out of stones — it goes to {enemy}.')
-          : (won ? '{enemy} is out of stones — it goes to you.' : '{enemy} is out of stones — it goes to {enemy}.'), v);
+      ? (won ? t(elko ? 'An L of three!' : 'Three in a row!') : t(elko ? '{enemy} made an L of three.' : '{enemy} made three in a row.', v))
+      : state.rules.includes('patient')
+        ? t('The board is full — it goes to {enemy} ({rule}).', { ...v, rule: RULES.patient.name })
+        : t(won ? 'The board is full — it goes to you, who moved second.' : 'The board is full — it goes to {enemy}, who moved second.', v);
     const banner = h('div.result-banner.' + (won ? 'won' : 'lost'), {},
       h('div.result-title', {}, won ? t('Victory!') : t('Defeat')),
       h('div.result-why', {}, why),
@@ -722,8 +776,9 @@ export function mountDuel(root, opts) {
   // An old save from the middle of a turn: put a chosen stone back in hand,
   // or pick up the choice it was waiting on.
   if (!state.over && state.player === 'X' && state.phase === 'place' && state.selected) {
-    state.hands.X.push(state.selected);
+    if (state.selected.type !== 'pebble') state.hands[state.from ?? 'X'].push(state.selected);
     state.selected = null;
+    state.from = null;
     state.phase = 'select';
   }
   if (!state.over && state.player === 'X' && state.phase === 'effect') {

@@ -586,6 +586,24 @@ const RAW = {
     P('M -6 6.4 L -6.6 4.8 M -5.6 6.4 L -5.4 5 M 5.8 6.4 L 6.5 4.9 M 5.4 6.4 L 5.3 5.1', SW(1)),
 };
 
+// A small 3x3 grid, for the rules that are about squares.
+const MINI_GRID = P('M -2.2 -6.6 V 6.6 M 2.2 -6.6 V 6.6 M -6.6 -2.2 H 6.6 M -6.6 2.2 H 6.6', FAINT);
+
+// Duel conditions and boss rules.
+Object.assign(RAW, {
+  'cond-gravity': arrow(0, -6.4, 0, 3.2, 3.4, 2.4) + P('M -6.6 6.2 H 6.6', SW(1.8)) + P('M -4.4 -5 V -1 M 4.4 -5 V -1', SW(1)),
+  'cond-nocentre': MINI_GRID + P('M -1.6 -1.6 L 1.6 1.6 M 1.6 -1.6 L -1.6 1.6', SW(1.6)),
+  'cond-shared': arcArrow(0, 0, 5.4, 200, 340, 2.8, 1.9) + arcArrow(0, 0, 5.4, 20, 160, 2.8, 1.9),
+  'rule-tactics': P('M -1 6.6 V -2.6 A 1.4 1.4 0 0 1 1.8 -2.6 V 1.8 L 5 2.6 Q 6.6 3.2 6 5 L 5.2 6.6') + P('M -1 1 L -3.6 -0.2 Q -5.4 0.4 -4.4 2.2 L -1 6.6') + P('M -3.4 -6.2 L -2.2 -4.6 M 0.4 -7.2 V -5.4 M 4 -6.2 L 2.8 -4.6', SW(1)),
+  'rule-headstart': P('M -6 -5 L -1 0 L -6 5 M 0 -5 L 5 0 L 0 5', SW(1.8)),
+  'rule-elko': P('M -5.6 -5.6 H -0.4 V -0.4 H 5.6 V 5.6 H -5.6 Z') + P('M -0.4 -0.4 V 5.6 M -5.6 -0.4 H -0.4', FAINT),
+  'rule-clinch': C(-2.6, 0, 3.6) + C(3.4, 0, 3.6, ' stroke-dasharray="1.6 1.2"'),
+  'rule-column': MINI_GRID + P('M -6.6 -6.6 L 6.6 6.6', SW(1.4)) + P('M 2.2 -6.6 H 6.6 V 6.6 H 2.2 Z', ' fill="currentColor" fill-opacity="0.25" stroke="none"'),
+  'rule-spy': P('M -7 0 Q 0 -6.6 7 0 Q 0 6.6 -7 0 Z') + C(0, 0, 2.2) + DOT(0, 0, 0.9),
+  'rule-reserved': MINI_GRID + F(star(0, 0.2, 2.1, 0.9)),
+  'rule-patient': RAW['relic-hourglass'],
+});
+
 RAW['kit-trickster'] = RAW.trick;
 RAW['kit-mason'] = RAW.mountain;
 

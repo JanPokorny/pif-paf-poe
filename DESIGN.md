@@ -6,86 +6,113 @@ numbers. The camp game's own reasoning is in `old/adr/`.
 ## Kept from the camp game
 
 - **The duel.** 3×3, one stone a turn, most stones move stones already on the board. Three in a
-  row wins; a line only your opponent has wins for them; a full board, or a player to move with
-  nothing to play, goes to whoever moved second.
+  row wins; a line only your opponent has wins for them.
 - **Restrictions compose.** Every enemy Magnet, Stinky and Beacon pulls at once and you place
   where you satisfy as many as any square can (`old/adr/2026-08-18-…`).
-- **Spaces.** Each duel is fought on a space that switches one stone type off for both sides.
-  The ADR found this the largest seat-balance lever in the whole project; here it also makes the
-  loadout choice before each duel matter.
 - **Counterattacks → tricks.** Spent at the end of your own turn, before the line check, so any
   of them can finish a line. Overtake, Relocate, Mirror, Mind Control and Rehearse are the five
-  the ADR kept; six more were added (Nudge, Muffle, Anchor, Pluck, Bribe, Reinforce).
+  the ADR kept; six more were added (Nudge, Muffle, Anchor, Pluck, Bribe, Encore).
+- **Boss rules** come from an older iteration's sheet of special rules (Taktika, Náskok, Elko,
+  Lep, Sloup, Špion, Reservé).
 
-## Changed for a single player
+## A slower tempo
 
-- **The arena is gone.** It is a team game. In its place each act is a game of tic-tac-toe with
-  the act's boss on an endless sheet of graph paper. It starts with one O, the boss's first
-  mark; every mark reveals the squares around it, and a square is decided the moment it comes
-  into view, by how much it matters: one that would extend your line or break the boss's turns
-  up as an elite or a duel, one off to the side as a campfire, shop or treasure. Four Xs in a
-  row open the boss's door. A lost duel scorches its square; the boss never marks shops or
-  campfires; each line of four Os it draws makes it stronger (up to +3), and after 14 squares the
-  page is full and the boss comes for you, stronger for the wait. Squares cleared after the door
-  opens pay gold, so pressing on is a gamble.
-- **A boss has lives** — two — and each duel you win takes one.
-- **Nobody opens in the centre.** With the space and the Counterattack gone as balancers, the
-  measured dominant opening was a Mountain or a Magnet in the centre, for both sides. The first
-  stone of a duel must go elsewhere.
-- **A hand is chosen per duel** from a pouch of up to 7, after seeing the enemy's stones, the
-  space and who opens.
-- **Upgrades.** Every stone has a + version that does a little more — never less: where the
-  first + versions measured weaker (Magnet+, Beacon+, 2048+, Flip+, Firecracker+, Glue+) they
-  became supersets of the plain stone, or, for the restrictions, count twice and cannot be moved.
+The first version ran fast: a hand of five or six stones, all of them spent by the end of a
+duel, and a rule for who wins when someone runs out. The second version slows it down.
+
+- **Pebbles never run out.** Both sides may always place another Pebble; it is not in the hand
+  and needs no slot. A Pebble sent back to hand simply leaves the board. There is no rule for
+  running out any more: a full board (or forty turns) goes to whoever moved second.
+- **Two slots.** You bring two special stones into a duel at first. Shops sell more slots (up to
+  five; Deep Pockets adds one). The pouch holds six.
+- **The enemy always opens**, so a full board is always yours: hold out and you win. Plain
+  tic-tac-toe is a draw, so the opener's specials are what make a duel winnable for it.
+- **No spaces, no vetoes.** The spaces that switched a stone type off are gone. Regular enemies
+  bring stones and, sometimes, a *condition* for both sides: **Gravity** (after every turn every
+  stone falls as far as it can), **Hollow** (nobody plays the centre), **Open Hands** (either side
+  may play a special stone from the other's hand, as its own). Some enemies have one as a home
+  rule; others roll one (25% in act 1, 35% in act 2, 40% in act 3, more for elites).
+- **Bosses bring no stones.** Only Pebbles, and rules in their favour: **Tactics** (it names the
+  stone you play), **Head Start** (it plays twice on its first turn), **Elbow** (rows do not
+  count: an L of three wins), **Clinch** (you must place next to one of its stones), **Column**
+  (it closes a column to you each turn), **Spy** (it names the direction your stones move),
+  **Reserved** (the centre is its alone), **Patience** (a full board is its). The dictating rules
+  are a phase of their own after the boss's turn, searched by the same AI as every other choice.
+  A boss has two lives; once beaten it rises again, often with a second rule.
+  The sheet's Sloup had the boss choose the column you *must* play in; measured against the bot
+  that won 96% for the boss, so here the boss closes a column instead. OOTB (playing outside
+  the board) is left out.
+- **Mountain is the only wall.** The protective and disabling stones (Snare, Hush, Glue,
+  Guardian) were confusing and are gone. Moving stones — shifts, rotations, whirls, 2048, and
+  Gravity — step over a Mountain: it holds its square and the rest go round.
+- **Named evolutions instead of +.** Twelve stones evolve into a named stone that can do
+  everything the plain one can and more: Shift → Rail, Rotate → Pivot, Magnet → Electromagnet,
+  Stinky → Stench, 2048 → 4096, Bumper → Blast, Swap → Teleport, Whirl → Cyclone, Frog → Kangaroo,
+  Beacon → Lighthouse, Flip → Kaleidoscope, Firecracker → Bomb. The test suite checks the
+  "never less" part on random boards. Campfires, shops and a few events evolve stones; nothing
+  you find is evolved already, but later enemies' stones often are.
+
+## The map
+
+Each act is a game of tic-tac-toe with its boss on a 5×5 sheet of graph paper. It starts with
+the boss's O in the middle; every mark reveals the squares around it, and a square is decided
+the moment it comes into view, by how much it matters: one that would extend your line or break
+the boss's turns up as an elite or a duel, one off to the side as a campfire, shop or treasure.
+**Three Xs in a row open the boss's door.** A lost duel scorches its square; the boss never marks
+shops or campfires; a line of three Os, or a full page (ten squares), makes the boss stronger —
+it thinks harder. Squares cleared after the door opens pay gold, so pressing on is a gamble.
+In the first act one of the first squares is a **gift**: a special stone of two, free.
 
 ## The stones
 
-23 types. Every stone's card shows an example computed by the engine itself.
+30 types, 12 of them evolved forms. Every stone's card shows an example computed by the engine.
 
-Two hands holding two of a stone (plus Shift, Rotate, Pebble) against a fixed Shift, Rotate,
-Magnet, Mountain, Pebble hand, 60 games, both seats, MCTS at 200 iterations
-(`node tools/stones.mjs`), after the centre rule:
+A hand of one stone plus a Shift against a Shift and a Rotate, both seats, 80 games, MCTS at 200
+iterations (`node tools/stones.mjs`):
 
 | stone | win | | stone | win |
 |---|---|---|---|---|
-| Turncoat | 67% | | Frog | 35% |
-| Twin | 67% | | Beacon | 35% |
-| Hush | 48% | | Whirl | 33% |
-| Bumper | 47% | | Flip | 32% |
-| Parrot | 47% | | Firecracker | 32% |
-| Magpie | 47% | | Guardian | 32% |
-| Magnet | 43% | | Shift | 23% |
-| Snare | 43% | | Mountain | 23% |
-| 2048 | 42% | | Glue | 23% |
-| Stinky | 42% | | Rotate | 20% |
-| Swap | 37% | | Lasso | 15% |
-| | | | Pebble | 8% |
+| Lighthouse | 81% | | Turncoat | 46% |
+| Electromagnet | 80% | | Kaleidoscope | 45% |
+| Stench | 76% | | Flip, Parrot | 44% |
+| Rail | 76% | | Bumper, Cyclone | 43% |
+| Stinky | 74% | | Pivot | 41% |
+| Magnet | 73% | | Rotate, Whirl | 39% |
+| Beacon | 69% | | Kangaroo | 34% |
+| Magpie | 68% | | Frog | 30% |
+| Twin | 64% | | Bomb | 26% |
+| Shift | 57% | | Lasso, Firecracker | 25% |
+| Teleport, 4096 | 55–56% | | Pebble | 14% |
+| 2048, Swap, Mountain, Blast | 49–53% | | | |
 
-What that table changed along the way:
-
-- **Joker** counted towards a line for both sides. It lost every game it was in, and became the
-  **Guardian**, which shields its owner's neighbours from the enemy.
-- **Firecracker** (90%) now burns itself up; **Twin** (88%) now drops its Pebble only on the
-  square facing it through the centre.
-- **Bumper, Flip, Lasso, Frog, Swap** measured at or below a Pebble. Bumper now pushes only enemy
-  stones and knocks them off the edge back into hand; Flip holds its own square (a whole-board
-  mirror maps lines onto lines and changes nothing); Frog sends a leapt-over enemy stone home.
-- **Flytrap** and **Seesaw** were built and measured (92% and 10%) and cut.
+What that table changed along the way: Stench forbade the corners too and so, in the centre,
+forbade everything — which means nothing; it now counts twice instead. Blast pushed diagonal
+neighbours as well, which often helped the enemy; it now chooses the straight or the diagonal
+ones. Lighthouse was also heavy and won 95%; Twin won 93% and now needs the centre empty too.
 
 ## Difficulty
 
 Enemies are the same Monte Carlo search as the camp game's AI (`src/ai.js`), dialled by
 iterations and a blunder rate. `node tools/balance.mjs` duels a bot with a typical pouch against
-every enemy; `node tools/runbot.mjs` plays whole runs headless. At heat 0 a strong bot (300
-iterations) wins about 40% of runs and a weak one (150, occasional blunders) about 10%. A human
-who scouts the map and picks a loadout per duel should sit between the two.
+every enemy (`--power 1 --life 1` for a grown boss's second life); `node tools/runbot.mjs` plays
+whole runs headless; `node tools/stones.mjs` measures the stones.
 
-Heat 1–5 raises it after each win: deeper search, more upgraded enemy stones, a heart fewer,
-bigger elite and boss hands, no blunders and elites that always open.
+At heat 0, bots that pick their stones by strength and keep one that moves things win:
+
+| player bot | runs won |
+|---|---|
+| 80 iterations, 20% blunders | about 30% |
+| 150 iterations, 10% blunders | about 50% |
+| 300 iterations, no blunders | about 65% |
+
+Heat 1–5 raises it after each win: deeper search, more evolved enemy stones, a heart fewer,
+bigger elite hands and boss tricks, no blunders.
 
 ## Tests
 
-- `node tools/test-engine.mjs` — every stone, trick and field rule against its own text, plus a
-  20,000-game fuzz of invariants.
+- `node tools/test-engine.mjs` — every stone, trick, condition and boss rule against its own
+  text, "evolving never takes a choice away" on random boards, plus a 20,000-game fuzz of
+  invariants.
 - `node tools/runbot.mjs` — whole runs, including the save format's JSON round trip.
+- `node tools/smoke.mjs` — random duels with everything switched on, and the AI's timing.
 - `eslint -c eslint.config.mjs src/` — undefined names (a renamed variable once froze the Whirl).

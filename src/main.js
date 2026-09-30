@@ -1,18 +1,18 @@
 // The app: title, run screens, persistence. One screen at a time, chosen by
 // run.screen, rendered into #app.
 
-import { STONES, TRICKS, STONE_TYPES, TRICK_TYPES, createGame, FIELDS } from './engine.js';
+import { STONES, TRICKS, STONE_TYPES, TRICK_TYPES, CONDS, RULES, createGame } from './engine.js';
 import { RELICS, RELIC_TYPES, ENEMIES, ACTS, EVENTS } from './content.js';
 import * as R from './run.js';
-import { h, hideToast, art, relicArt, scribbleX, scribbleO, stoneEl, iconEl, toast, modal, infoStone, infoTrick, infoRelic, infoSpace, infoField, stoneCard, trickCard, relicCard, stoneName, langToggle } from './ui/common.js';
+import { h, hideToast, art, relicArt, scribbleX, scribbleO, stoneEl, iconEl, toast, modal, infoStone, infoTrick, infoRelic, ruleChip, stoneCard, trickCard, relicCard, stoneName, langToggle } from './ui/common.js';
 import { icon } from './icons.js';
 import { mountDuel } from './ui/duel.js';
 import { sfx, soundOn, setSound } from './sound.js';
 import { t, tp, lang, localizeData } from './i18n.js';
 
 localizeData({
-  stones: STONES, tricks: TRICKS, fields: FIELDS, relics: RELICS, enemies: ENEMIES, acts: ACTS, events: EVENTS,
-  kits: R.KITS, heat: R.HEAT, quirks: R.QUIRKS,
+  stones: STONES, tricks: TRICKS, conds: CONDS, rules: RULES, relics: RELICS, enemies: ENEMIES, acts: ACTS, events: EVENTS,
+  heat: R.HEAT, quirks: R.QUIRKS,
 });
 document.documentElement.lang = lang;
 
@@ -20,7 +20,7 @@ document.documentElement.lang = lang;
 const shortName = (e) => e.short ?? e.name.replace(/^(The|Captain) /, '');
 
 const app = document.getElementById('app');
-const SAVE = 'ppp-run-v1';
+const SAVE = 'ppp-run-v2';   // v1 runs were of the faster game, with kits
 const META = 'ppp-meta-v1';
 
 let run = null;
@@ -50,13 +50,8 @@ function recordEnd() {
   const score = (r) => (r ? (r.victory ? 100 : 0) + r.act * 10 + r.row : -1);
   if (score(reached) > score(meta.best)) meta.best = reached;
   meta.bestAct = Math.max(meta.bestAct ?? 0, run.act);
-  if (run.daily) {
-    meta.daily = { ...(meta.daily ?? {}) };
-    meta.daily[run.daily] = run.victory ? 'conquered the Summit' : `fell in act ${run.act}`;
-  }
   meta.duelsWon = (meta.duelsWon ?? 0) + run.stats.won;
   if (run.victory) {
-    meta.kitWins = { ...(meta.kitWins ?? {}), [run.kit]: Math.max(meta.kitWins?.[run.kit] ?? -1, run.heat) };
     meta.wins++;
     meta.bestHeatWon = Math.max(meta.bestHeatWon, run.heat);
     meta.maxHeat = Math.min(R.HEAT.length - 1, Math.max(meta.maxHeat, run.heat + 1));
@@ -100,7 +95,7 @@ function showPouch() {
     run.tricks.length ? h('div.trick-list', {}, run.tricks.map((x) => h('button.trick-btn', { onclick: () => infoTrick(x) }, h('span.trick-ico', { html: icon(x) }), TRICKS[x].name))) : h('p.dim', {}, t('No tricks.')),
     h('h2', {}, t('Relics')),
     run.relics.length ? h('div.relic-list', {}, run.relics.map((r) => h('button.relic-row', { onclick: () => infoRelic(r) }, h('span.relic-token.small', {}, relicArt(r)), h('span', {}, h('b', {}, RELICS[r].name), h('br'), RELICS[r].text)))) : h('p.dim', {}, t('No relics yet.')),
-    h('p.dim', {}, t('You bring {n} stones into each duel and may spend {tricks} per duel.', { n: R.handSize(run), tricks: tp(R.trickUses(run), '{n} trick', '{n} tricks') })),
+    h('p.dim', {}, t('You bring {n} special stones into each duel, besides as many Pebbles as you like, and may spend {tricks} per duel.', { n: R.handSize(run), tricks: tp(R.trickUses(run), '{n} trick', '{n} tricks') })),
     h('button.btn.wide', { onclick: () => close() }, t('Close')));
   const close = modal(body, { cls: 'tall' });
 }
@@ -133,9 +128,6 @@ function soundButton(close) {
   ];
 }
 
-// A daily result is saved in English; say it in the current language.
-const dailyText = (r) => (/^fell in act (\d+)$/.test(r ?? '') ? t('fell in act {n}', { n: RegExp.$1 }) : t(r));
-
 // ── Title ───────────────────────────────────────────────────────────────────
 
 function title() {
@@ -162,9 +154,8 @@ function title() {
       h('div.title-buttons', {},
         saved?.run && !saved.run.over ? h('button.btn.primary.wide.big.continue', { onclick: () => { run = saved.run; duelState = saved.duel; route(); } },
           h('span', {}, t('Continue run')),
-          h('span.continue-sub', {}, `${R.KITS[saved.run.kit]?.name ?? ''} · ${t('Act {n}', { n: saved.run.act })} · ❤ ${saved.run.hearts}`)) : null,
-        h('button.btn.wide.big' + (saved?.run ? '' : '.primary'), { onclick: () => { if (saved?.run && !saved.run.over && !confirm(t('Start over? Your run in progress will be lost.'))) return; chooseKit(); } }, t('New run')),
-        h('button.btn.wide', { onclick: startDaily }, `${t('Daily climb')}${meta.daily?.[today()] ? ' ✓' : ''}`),
+          h('span.continue-sub', {}, `${t('Act {n}', { n: saved.run.act })} · ❤ ${saved.run.hearts}`)) : null,
+        h('button.btn.wide.big' + (saved?.run ? '' : '.primary'), { onclick: () => { if (saved?.run && !saved.run.over && !confirm(t('Start over? Your run in progress will be lost.'))) return; newRunMenu(); } }, t('New run')),
         h('button.btn.wide', { onclick: practiceMenu }, t('Practice duel')),
         meta.runs ? h('button.btn.wide', { onclick: showJournal }, t('Journal')) : null,
         h('button.btn.wide', { onclick: () => showHelp() }, t('How to play')),
@@ -174,82 +165,35 @@ function title() {
       langToggle()));
 }
 
-const today = () => new Date().toISOString().slice(0, 10);
-
-// Everyone gets the same seed and kit on the same day.
-function startDaily() {
-  const d = today();
-  const seed = [...d].reduce((a, ch) => (Math.imul(a, 31) + ch.charCodeAt(0)) | 0, 7);
-  const kits = Object.keys(R.KITS).filter((k) => !R.KITS[k].unlock);
-  const kit = kits[Math.abs(seed) % kits.length];
-  const go = () => {
-    run = R.newRun({ kit, seed: Math.abs(seed), heat: 0 });
-    run.daily = d;
+// A new run: straight in, or first a word on the heat once some is unlocked.
+function newRunMenu() {
+  const go = (heat) => {
+    meta.heat = heat; saveMeta();
+    run = R.newRun({ heat });
     duelState = null;
     save();
     route();
   };
-  const body = h('div.menu', {}, h('h2', {}, `${t('Daily climb')} · ${d}`),
-    h('p', {}, t('Today everyone climbs the same mountain as {kit}. Same maps, same enemies, same loot.', { kit: R.KITS[kit].name })),
-    meta.daily?.[d] ? h('p.dim', {}, t('Your result today: {r}', { r: dailyText(meta.daily[d]) })) : null,
-    h('button.btn.primary.wide', { onclick: () => { const sv = loadJSON(SAVE); if (sv?.run && !sv.run.over && !confirm(t('Start the daily climb? Your run in progress will be lost.'))) return; close(); go(); } }, t('Climb')),
+  if (!meta.maxHeat) { go(0); return; }
+  let heat = Math.min(meta.heat ?? 0, meta.maxHeat);
+  const row = h('div.heat-row');
+  const draw = () => {
+    row.replaceChildren(
+      h('div.heat-label', {}, t('Heat {n}', { n: heat }), h('span.dim', {}, ' — ' + (heat ? R.HEAT.slice(1, heat + 1).map((x) => x.text).join(' ') : R.HEAT[0].text))),
+      h('div.heat-btns', {},
+        h('button.btn.small', { onclick: () => { if (heat > 0) { heat--; draw(); } } }, '−'),
+        h('button.btn.small', { onclick: () => { if (heat < meta.maxHeat) { heat++; draw(); } else toast(t('Win a run to unlock more heat.')); } }, '+')));
+  };
+  draw();
+  const body = h('div.menu', {}, h('h2', {}, t('New run')), row,
+    h('button.btn.primary.wide', { onclick: () => { close(); go(heat); } }, t('Climb')),
     h('button.btn.ghost.wide', { onclick: () => close() }, t('Back')));
   const close = modal(body);
 }
 
-const UNLOCK_TEXT = {
-  win: 'Locked — win a run to unlock',
-  quarry: 'Locked — reach the Quarry to unlock',
-  heat: 'Locked — win at heat 1 or more to unlock',
-};
-function kitOpen(k) {
-  if (!k.unlock) return true;
-  if (k.unlock === 'win') return meta.wins > 0;
-  if (k.unlock === 'quarry') return (meta.bestAct ?? 0) >= 2 || meta.wins > 0;
-  if (k.unlock === 'heat') return meta.bestHeatWon >= 1;
-  return false;
-}
-
-function chooseKit() {
-  let heat = Math.min(meta.heat ?? 0, meta.maxHeat);
-  const heatRow = h('div.heat-row');
-  const drawHeat = () => {
-    heatRow.replaceChildren(
-      h('div.heat-label', {}, t('Heat {n}', { n: heat }), h('span.dim', {}, ' — ' + (heat ? R.HEAT.slice(1, heat + 1).map((x) => x.text).join(' ') : R.HEAT[0].text))),
-      h('div.heat-btns', {},
-        h('button.btn.small', { onclick: () => { if (heat > 0) { heat--; drawHeat(); } } }, '−'),
-        h('button.btn.small', { onclick: () => { if (heat < meta.maxHeat) { heat++; drawHeat(); } else toast(t('Win a run to unlock more heat.')); } }, '+')));
-  };
-  drawHeat();
-  const shownAt = Date.now();
-  screen(
-    h('div.page', {},
-      h('div.page-head', {}, h('button.icon-btn', { onclick: title, html: icon('back'), 'aria-label': t('Back') }), h('h2', {}, t('Choose your kit'))),
-      meta.maxHeat > 0 ? heatRow : null,
-      h('div.kits', {}, Object.entries(R.KITS).map(([id, k]) => {
-        const locked = !kitOpen(k);
-        return h('button.kit' + (locked ? '.locked' : ''), {
-          onclick: () => {
-            if (Date.now() - shownAt < 450) return;   // the tap that opened this screen
-            if (locked) { toast(t(UNLOCK_TEXT[k.unlock])); return; }
-            meta.heat = heat; saveMeta();
-            run = R.newRun({ kit: id, heat });
-            duelState = null;
-            save();
-            route();
-          },
-        },
-        h('div.kit-head', {}, h('span.kit-emoji', {}, art('kit', id, k.emoji)), h('div', {}, h('div.kit-name', {}, k.name), h('div.kit-text', {}, k.text))),
-        h('div.kit-stones', {}, k.pouch.map((x) => stoneEl({ type: x }, 'X', { mini: true })),
-          k.tricks.map((x) => h('span.mini-trick', { html: icon(x) }))),
-        h('div.kit-stats', {}, `❤ ${k.hearts - (heat >= 3 ? 1 : 0)}  ·  ${t('{n} gold', { n: k.gold })}${k.relics ? '  ·  ' + k.relics.map((r) => RELICS[r].name).join(', ') : ''}`),
-        locked ? h('div.kit-lock', {}, t(UNLOCK_TEXT[k.unlock])) : null);
-      }))));
-}
-
 // ── Practice: one duel, nothing at stake ────────────────────────────────────
 
-// What you have done across all runs: bosses beaten, kits won with.
+// What you have done across all runs: bosses beaten, records.
 function showJournal() {
   const bosses = Object.keys(ENEMIES).filter((k) => ENEMIES[k].tier === 'boss');
   const body = h('div.menu.journal', {},
@@ -257,10 +201,6 @@ function showJournal() {
     h('div.section-label', {}, t('Bosses beaten')),
     h('div.journal-grid', {}, bosses.map((id) => h('div.journal-item' + (meta.beaten?.[id] ? '.got' : ''), {},
       h('div.portrait', {}, h('div.photo', {}, ENEMIES[id].emoji)), h('span', {}, meta.beaten?.[id] ? ENEMIES[id].name : '?')))),
-    h('div.section-label', {}, t('Kits that reached the top')),
-    h('div.journal-grid', {}, Object.entries(R.KITS).map(([id, k]) => h('div.journal-item' + (meta.kitWins?.[id] !== undefined ? '.got' : ''), {},
-      h('span.kit-emoji', {}, art('kit', id, k.emoji)), h('span', {}, k.name),
-      meta.kitWins?.[id] !== undefined ? h('span.small.dim', {}, t('best heat {n}', { n: meta.kitWins[id] })) : null))),
     h('div.section-label', {}, t('Records')),
     h('p', {}, t('{runs} runs, {wins} won, {duels} duels won in all.', { runs: meta.runs, wins: meta.wins, duels: meta.duelsWon ?? 0 })
       .replace(/^1 runs/, '1 run').replace(/, 1 duels/, ', 1 duel')),
@@ -283,7 +223,7 @@ function practice(act) {
   const pool = Object.keys(ENEMIES).filter((k) => ENEMIES[k].act === act && ENEMIES[k].tier === 'normal');
   const id = pool[(R.rand(fake) * pool.length) | 0];
   const duel = R.prepareDuel(fake, id);
-  const handX = Array.from({ length: 5 }, () => R.randomStone(fake));
+  const handX = R.stoneChoices(fake, 'normal', null, R.handSize(fake));
   const state = createGame({ ...R.gameConfig(fake, duel, []), handX, tricksX: [R.randomTrick(fake)] });
   const enemy = { ...ENEMIES[id], iters: duel.iters, blunder: duel.blunder, tier: 'normal', lives: 1, livesLeft: 1 };
   const holder = screen(h('div.duel-host'));
@@ -324,21 +264,12 @@ function route() {
 
 // ── Map ─────────────────────────────────────────────────────────────────────
 
-const NODE_ICON = { fight: 'sword', elite: 'skull', shop: 'shop', rest: 'fire', event: 'question', treasure: 'chest', boss: 'crown' };
-const NODE_NAME = { 'boss-mark': t('Boss'), fight: t('Duel'), elite: t('Elite'), shop: t('Shop'), rest: t('Campfire'), event: t('Unknown'), treasure: t('Treasure'), boss: t('Boss') };
-const NODE_TEXT = {
-  fight: t('A duel. Win for gold and a new stone; lose and it costs a heart, and the square is scorched.'),
-  elite: t('A tough duel. Win for a relic; lose and it costs 2 hearts.'),
-  shop: t('Stones, tricks, relics and services, for gold.'),
-  rest: t('Heal, or upgrade a stone.'),
-  event: t('Something happens. Who knows what.'),
-  treasure: t('A relic and some gold, free.'),
-};
+const NODE_ICON = { fight: 'sword', elite: 'skull', shop: 'shop', rest: 'fire', event: 'question', treasure: 'chest', boss: 'crown', gift: 'star' };
+const NODE_NAME = { 'boss-mark': t('Boss'), fight: t('Duel'), elite: t('Elite'), shop: t('Shop'), rest: t('Campfire'), event: t('Unknown'), treasure: t('Treasure'), boss: t('Boss'), gift: t('Gift') };
 
-// The act's map: tic-tac-toe against its boss on an endless sheet, revealed
-// a mark at a time.
+// The act's map: tic-tac-toe against its boss on a 5x5 sheet, revealed a
+// mark at a time.
 function mapScreen() {
-  if (Array.isArray(run.map?.cells)) run.map = R.makeMap(run);   // a save from the 4x4 days
   const map = run.map;
   const reach = new Set(R.reachable(run));
   const boss = ENEMIES[map.boss];
@@ -370,7 +301,7 @@ function mapScreen() {
         },
       }, kind === 'boss-mark' ? null : c.duel
         ? h('span.doodle.foe', {}, h('span.photo', {}, ENEMIES[c.duel.enemyId].emoji),
-          c.duel.disabled ? h('span.cell-space', { html: icon(c.duel.disabled) }) : null)
+          c.duel.conds?.length ? h('span.cell-space', { html: icon(`cond-${c.duel.conds[0]}`) }) : null)
         : h('span.doodle', { html: icon(NODE_ICON[kind]) }),
       kind === 'boss-mark' ? null : h('span.label', {}, c.duel ? shortName(ENEMIES[c.duel.enemyId]) : NODE_NAME[kind]));
       if (!c.mark && threats.has(k)) el.classList.add('boss-threat');
@@ -384,7 +315,7 @@ function mapScreen() {
   if (lastO && freshX) sfx('scribbleO');
   map.freshX = null;
   map.lastO = null;
-  const news = map.news === 'oline' ? t('{boss} drew four in a row — it grows stronger!', { boss: boss.name })
+  const news = map.news === 'oline' ? t('{boss} drew three in a row — it grows stronger!', { boss: boss.name })
     : map.news === 'full' ? t('The page is full. {boss} will wait no longer — and it has grown stronger.', { boss: boss.name })
     : lastO && map.cells[lastO] && map.cells[lastO].kind !== 'boss-mark' ? t('{boss} marks the {node} square.', { boss: boss.name, node: NODE_NAME[map.cells[lastO].kind].toLowerCase() }) : '';
   const bonus = map.bonus;
@@ -393,15 +324,16 @@ function mapScreen() {
   if (bonus) setTimeout(() => toast(t('+{n} gold for pressing on past the open door.', { n: bonus }), 'good'), 50);
   const door = h('button.boss-door' + (map.open ? '.open' : ''), {
     onclick: () => {
-      if (!map.open) { toast(t('Draw four Xs in a row — across, down or diagonal — to open the door.')); return; }
+      if (!map.open) { toast(t('Draw three Xs in a row — across, down or diagonal — to open the door.')); return; }
       R.enterNode(run, 'boss'); duelState = null; route();
     },
   },
   h('div.portrait', {}, h('div.photo', {}, boss.emoji)),
   h('div.door-text', {},
     h('div.door-name', {}, boss.name),
-    map.open ? h('div', {}, t('The door is open. Tap to face the boss — or keep exploring.')) : h('div', {}, t('Draw four in a row to open the door.')),
-    map.power ? h('div.power', {}, tp(map.power, 'Power +{n}: one of its stones is upgraded, and it thinks harder.', 'Power +{n}: {n} of its stones are upgraded, and it thinks harder.')) : null));
+    map.open ? h('div', {}, t('The door is open. Tap to face the boss — or keep exploring.')) : h('div', {}, t('Draw three in a row to open the door.')),
+    h('div.door-rules', {}, (boss.rules ?? []).map((r) => ruleChip('rule', r, '.small'))),
+    map.power ? h('div.power', {}, t('Grown stronger: it thinks harder.')) : null));
   // Lines of pencil between the squares on view, each a little crooked.
   const W = cols * 100, H = rows * 100;
   let paths = '';
@@ -417,9 +349,9 @@ function mapScreen() {
       scroller,
       h('div.map-news', {}, news),
       h('div.map-help', {}, !R.xCount(run)
-        ? t('The boss has made its first mark. Pick any square beside it; every mark reveals the paper around it. Squares that would help your line hide harder duels.')
+        ? t('The boss has made its first mark, in the middle. Pick any square beside it; every mark reveals the paper around it. Squares that would help your line hide harder duels.')
         : R.pageFull(map) ? t('The page is full: only the boss is left.')
-          : tp(R.PAGE - map.visited, 'Four Xs in a row open the door. {n} square left on this page.', 'Four Xs in a row open the door. {n} squares left on this page.')),
+          : tp(R.PAGE - map.visited, 'Three Xs in a row open the door. {n} square left on this page.', 'Three Xs in a row open the door. {n} squares left on this page.')),
       threats.size ? h('div.map-help.red', {}, t('Dashed red circle: the boss would finish a line of Os there.')) : null));
   // Keep the newest marks in view.
   requestAnimationFrame(() => {
@@ -435,7 +367,8 @@ function actIntro() {
     h('div.act-n', {}, t('Act {n}', { n: act.n })),
     h('h1', {}, act.name),
     h('p', {}, t(['A summer camp. A field of stones that will not stay still.', 'The meadow is behind you. The ground turns to stone.', 'The air thins. Only the best players make it this far.'][act.n - 1])),
-    h('div.rules-note', {}, t('This act is tic-tac-toe with {boss} on an endless page. It has made the first mark. Wherever you go you mark an X, and it answers with an O; every mark reveals the squares around it. Four Xs in a row open its door — but the squares that matter most hide the hardest duels.', { boss: ENEMIES[run.map.boss].name })),
+    h('div.rules-note', {}, t('This act is tic-tac-toe with {boss} on a 5×5 page. It has made the first mark, in the middle. Wherever you go you mark an X, and it answers with an O; every mark reveals the squares around it. Three Xs in a row open its door — but the squares that matter most hide the hardest duels.', { boss: ENEMIES[run.map.boss].name })),
+    run.act === 1 ? h('p.dim', {}, t('Somewhere beside it lies a gift: a special stone, free.')) : null,
     h('button.btn.primary.wide.big', { onclick: () => { run.screen = 'map'; route(); } }, t('Onward'))));
 }
 
@@ -445,14 +378,13 @@ function preDuel() {
   const duel = run.pending.duel;
   const enemy = ENEMIES[duel.enemyId];
   const size = R.handSize(run);
-  let chosen = R.defaultHand(run, duel.disabled);
+  let chosen = R.defaultHand(run);
   const grid = h('div.stone-grid.pick');
   const count = h('span.count');
   const fight = h('button.btn.primary.wide.big', { onclick: begin }, t('Fight!'));
   const draw = () => {
     grid.replaceChildren(...run.pouch.map((s) => {
       const on = chosen.includes(s.uid);
-      const dead = duel.disabled === s.type && !R.has(run, 'home-turf');
       return h('button.pouch-slot' + (on ? '.on' : ''), {
         onclick: () => {
           if (on) chosen = chosen.filter((u) => u !== s.uid);
@@ -462,7 +394,7 @@ function preDuel() {
           draw();
         },
         oncontextmenu: (e) => { e.preventDefault(); infoStone(s, 'X'); },
-      }, stoneEl({ ...s, plus: s.plus || R.autoUpgraded(run, s.type) }, 'X', { dead }), h('span', {}, stoneName(s)),
+      }, stoneEl(s, 'X'), h('span', {}, stoneName(s)),
       h('span.slot-info', { onclick: (e) => { e.stopPropagation(); infoStone(s, 'X'); } }, 'ⓘ'));
     }));
     const need = Math.min(size, run.pouch.length);
@@ -486,18 +418,21 @@ function preDuel() {
           tierLabel ? h('div.tier.' + duel.tier, {}, tierLabel) : null,
           h('div.enemy-name.big', {}, enemy.name),
           h('div.quote', {}, t('“{quote}”', { quote: enemy.quote })))),
-      h('div.section-label', {}, t('Their stones')),
-      h('div.hand.enemy-hand.show', {}, duel.handO.map((s) => h('button.slot-plain', { onclick: () => infoStone(s, 'O') }, stoneEl(s, 'O', { dead: duel.disabled === s.type && !duel.modsO.homeTurf })))),
+      h('div.section-label', {}, duel.tier === 'boss' ? t('It brings no special stones — only Pebbles, and its rules') : t('Their stones')),
+      h('div.hand.enemy-hand.show', {},
+        h('button.slot-plain.pebble-mini', { onclick: () => infoStone({ type: 'pebble' }, 'O') }, stoneEl({ type: 'pebble' }, 'O'), h('span.inf', {}, '∞')),
+        duel.handO.map((s) => h('button.slot-plain', { onclick: () => infoStone(s, 'O') }, stoneEl(s, 'O')))),
       duel.tricksO.length ? h('div.enemy-tricks-pre', {}, t('Tricks: '), duel.tricksO.map((x) => h('button.link', { onclick: () => infoTrick(x) }, TRICKS[x].name))) : null,
       h('div.duel-facts.facts-card', {},
-        h('button.fact', { onclick: () => infoSpace(duel.disabled) },
-          duel.disabled ? h('span.chip-ico.crossed', { html: icon(duel.disabled) }) : '',
-          ' ' + (duel.disabled ? t('No {stone} here', { stone: STONES[duel.disabled].name }) : t('Neutral space'))),
-        h('div.fact', {}, duel.first === 'X' ? t('You open') : t('{enemy} opens — a full board goes to you', { enemy: enemy.name })),
+        (duel.rules ?? []).map((r) => h('div.fact.warn.rule-fact', {}, ruleChip('rule', r), h('span', {}, RULES[r].text))),
+        (duel.conds ?? []).map((c) => h('div.fact.rule-fact', {}, ruleChip('cond', c), h('span', {}, CONDS[c].text))),
+        h('div.fact', {}, (duel.rules ?? []).includes('patient') ? t('{enemy} opens', { enemy: enemy.name }) : t('{enemy} opens — a full board goes to you', { enemy: enemy.name })),
         duel.quirk ? h('div.fact.warn', {}, `${R.QUIRKS[duel.quirk].name}: ${R.QUIRKS[duel.quirk].text}`) : null,
-        duel.field ? h('button.fact.warn', { onclick: () => infoField(duel.field) }, `${FIELDS[duel.field].name}: ${FIELDS[duel.field].text}`) : null,
+        duel.tier === 'boss' && duel.bossWins === 0 && enemy.rules2 && enemy.rules2.join() !== enemy.rules.join()
+          ? h('div.fact.dim', {}, t('Once beaten, it rises again with: {rules}.', { rules: enemy.rules2.map((r) => RULES[r].name).join(', ') })) : null,
         h('div.fact.dim', {}, stakes)),
-      h('div.section-label', {}, t('Bring your stones '), count),
+      h('div.section-label', {}, t('Bring your special stones '), count),
+      h('div.dim.small', {}, t('Pebbles are always with you, as many as you like.')),
       grid,
       run.tricks.length ? h('div.dim.small', {}, t('Tricks: ') + run.tricks.map((x) => TRICKS[x].name).join(', ')) : null,
       h('div.pre-spacer'),
@@ -582,12 +517,12 @@ function takeTrick(tr, done) {
   const close = modal(body, { dismissable: false });
 }
 
-// `upgrade` marks a pick for upgrading: each stone shows what its + does.
-function pickFromPouch(prompt, cb, { filter = () => true, cancel = t('Cancel'), upgrade = false } = {}) {
-  const list = run.pouch.filter(filter);
+// `evolve` marks a pick for evolving: each stone shows what it becomes.
+function pickFromPouch(prompt, cb, { filter = () => true, cancel = t('Cancel'), evolve = false } = {}) {
+  const list = run.pouch.filter(evolve ? (x) => filter(x) && STONES[x.type].evolvesTo : filter);
   const body = h('div.pouch-view', {}, h('h2', {}, prompt),
-    list.length ? h('div.stone-grid' + (upgrade ? '.upgrades' : ''), {}, list.map((s) => h('button.pouch-slot', { onclick: () => { close(); cb(s); } }, stoneEl(s, 'X'), h('span', {}, stoneName(s)),
-      upgrade ? h('span.plus-note', {}, '+ ' + STONES[s.type].plusText) : null)))
+    list.length ? h('div.stone-grid' + (evolve ? '.upgrades' : ''), {}, list.map((s) => h('button.pouch-slot', { onclick: () => { close(); cb(s); } }, stoneEl(s, 'X'), h('span', {}, stoneName(s)),
+      evolve ? h('span.plus-note', {}, h('b', {}, `→ ${STONES[STONES[s.type].evolvesTo].name}: `), STONES[STONES[s.type].evolvesTo].text) : null)))
       : h('p.dim', {}, t('Nothing to choose.')),
     h('button.btn.wide.ghost', { onclick: () => { close(); cb(null); } }, cancel));
   const close = modal(body, { dismissable: false, cls: 'tall' });
@@ -596,8 +531,9 @@ function pickFromPouch(prompt, cb, { filter = () => true, cancel = t('Cancel'), 
 function rewardScreen() {
   const rw = run.pending;
   const done = () => { R.leaveNode(run); route(); };
-  const parts = [h('h1.reward-title', {}, rw.tier === 'boss' ? t('Boss defeated!') : t('Victory!'))];
-  parts.push(h('div.reward-gold', {}, h('span', { html: icon('coin') }), t('+{n} gold', { n: rw.gold })));
+  const parts = [h('h1.reward-title', {}, rw.gift ? t('A gift!') : rw.tier === 'boss' ? t('Boss defeated!') : t('Victory!'))];
+  if (rw.gift) parts.push(h('p.dim', {}, t('Someone left a pouch by the path. Take one of these, free.')));
+  if (rw.gold) parts.push(h('div.reward-gold', {}, h('span', { html: icon('coin') }), t('+{n} gold', { n: rw.gold })));
   if (rw.relic && !rw.taken.relic) {
     R.gainRelic(run, rw.relic);
     rw.taken.relic = true;
@@ -678,9 +614,14 @@ function shopScreen() {
     h('div.section-label', {}, t('Services')),
     h('div.services', {},
       h('button.service', {
+        disabled: shop.slotted || !R.canAddSlot(run) || undefined,
+        onclick: () => buy(shop.slotPrice, (pay) => { run.slots++; shop.slotted = true; pay(); toast(t('You now bring {n} special stones into each duel.', { n: R.handSize(run) }), 'good'); }),
+      }, h('b', {}, t('A new stone slot')), h('span.price', {}, iconEl('coin'), shop.slotPrice ?? '—'),
+      h('span.dim', {}, shop.slotted ? t(' (done)') : R.canAddSlot(run) ? t(' bring {n} into each duel', { n: R.handSize(run) + 1 }) : t(' (as many as there can be)'))),
+      h('button.service', {
         disabled: shop.upgraded || !R.upgradeable(run).length || undefined,
-        onclick: () => buy(shop.upgradePrice, (pay) => pickFromPouch(t('Upgrade which stone?'), (s) => { if (s) { s.plus = true; shop.upgraded = true; pay(); } }, { filter: (s) => !s.plus, upgrade: true })),
-      }, h('b', {}, t('Upgrade a stone')), h('span.price', {}, iconEl('coin'), shop.upgradePrice), shop.upgraded ? h('span.dim', {}, t(' (done)')) : null),
+        onclick: () => buy(shop.upgradePrice, (pay) => pickFromPouch(t('Evolve which stone?'), (s) => { if (s) { R.evolve(s); shop.upgraded = true; pay(); } }, { evolve: true })),
+      }, h('b', {}, t('Evolve a stone')), h('span.price', {}, iconEl('coin'), shop.upgradePrice), shop.upgraded ? h('span.dim', {}, t(' (done)')) : null),
       h('button.service', {
         disabled: run.hearts >= run.maxHearts || shop.healed >= 2 || undefined,
         onclick: () => buy(shop.healPrice, (pay) => { run.hearts++; shop.healed++; sfx('heal'); pay(); }),
@@ -691,43 +632,30 @@ function shopScreen() {
 // ── Rest ────────────────────────────────────────────────────────────────────
 
 function restScreen() {
-  const n = R.has(run, 'anvil') ? 2 : 1;
+  const anvil = R.has(run, 'anvil');
   const heal = Math.max(2, Math.ceil(run.maxHearts * 0.4));
   const leave = () => { R.leaveNode(run); route(); };
-  if (run.pending.done) {
-    const more = (run.pending.upgrades ?? 1) < n && R.upgradeable(run).length;
-    screen(topBar(), h('div.page.rest', {}, h('div.campfire', { html: icon('fire') }), h('h2', {}, t('The fire burns low')),
-      more ? h('button.btn.wide.big', {
-        onclick: () => pickFromPouch(t('Upgrade which stone?'), (s) => {
-          if (!s) return;
-          s.plus = true; run.pending.upgrades = (run.pending.upgrades ?? 1) + 1; sfx('coin'); leave();
-        }, { filter: (s) => !s.plus, upgrade: true }),
-      }, t('Sharpen one more')) : null,
-      h('button.btn.primary.wide.big', { onclick: leave }, t('Move on'))));
-    return;
-  }
+  const p = run.pending;
+  // With the Tiny Anvil, evolving leaves time to rest too.
+  const canHeal = !p.healed && (!p.evolved || anvil) && run.hearts < run.maxHearts;
+  const canEvolve = !p.evolved && (!p.healed || anvil) && R.upgradeable(run).length > 0;
+  const doneOne = p.healed || p.evolved;
+  if (doneOne && !canHeal && !canEvolve) { leave(); return; }
   screen(topBar(), h('div.page.rest', {},
     h('div.campfire', { html: icon('fire') }),
-    h('h2', {}, t('A quiet campfire')),
-    h('p.dim', {}, run.hearts >= run.maxHearts && !R.upgradeable(run).length ? t('Nothing to mend and nothing left to sharpen: you are at full hearts and every stone is upgraded.') : t('Rest a while, or sharpen your stones.')),
-    h('button.btn.wide.big', {
-      disabled: run.hearts >= run.maxHearts || undefined,
-      onclick: () => { run.hearts = Math.min(run.maxHearts, run.hearts + heal); sfx('heal'); toast(`+${heal} ❤`, 'good'); flash = 'heal'; leave(); },
-    }, t('Rest: heal {n} ❤', { n: heal })),
-    h('button.btn.wide.big', {
-      disabled: !R.upgradeable(run).length || undefined,
-      onclick: () => {
-        let left = n;
-        const one = () => pickFromPouch(left > 1 ? t('Upgrade a stone ({n} left)', { n: left }) : t('Upgrade which stone?'), (s) => {
-          if (!s) { if (left < n) leave(); return; }
-          s.plus = true; left--; sfx('coin');
-          run.pending.done = true; run.pending.upgrades = n - left; save();
-          if (left > 0 && R.upgradeable(run).length) one(); else leave();
-        }, { filter: (s) => !s.plus, cancel: left < n ? t('Done') : t('Cancel'), upgrade: true });
-        one();
-      },
-    }, n > 1 ? t('Sharpen: upgrade two stones') : t('Sharpen: upgrade a stone')),
-    h('button.btn.wide.ghost', { onclick: leave }, t('Move on'))));
+    h('h2', {}, doneOne ? t('The fire burns low') : t('A quiet campfire')),
+    !doneOne ? h('p.dim', {}, run.hearts >= run.maxHearts && !R.upgradeable(run).length ? t('Nothing to mend and nothing left to evolve: you are at full hearts and every stone has grown up.')
+      : anvil ? t('Rest a while and evolve a stone — the anvil makes quick work of it.') : t('Rest a while, or work on a stone.')) : null,
+    canHeal ? h('button.btn.wide.big', {
+      onclick: () => { run.hearts = Math.min(run.maxHearts, run.hearts + heal); p.healed = true; sfx('heal'); toast(`+${heal} ❤`, 'good'); flash = 'heal'; save(); restScreen(); },
+    }, t('Rest: heal {n} ❤', { n: heal })) : null,
+    canEvolve ? h('button.btn.wide.big', {
+      onclick: () => pickFromPouch(t('Evolve which stone?'), (s) => {
+        if (!s) return;
+        R.evolve(s); p.evolved = true; sfx('coin'); save(); restScreen();
+      }, { evolve: true }),
+    }, t('Evolve a stone')) : null,
+    h('button.btn.wide' + (doneOne ? '.primary.big' : '.ghost'), { onclick: leave }, t('Move on'))));
 }
 
 // ── Events ──────────────────────────────────────────────────────────────────
@@ -743,11 +671,11 @@ function eventScreen() {
     upgradeStone: (text, n = 1, pay = null) => new Promise((resolve) => {
       let left = n;
       const done = [];
-      const one = () => pickFromPouch(left > 1 ? t('Upgrade a stone ({n} left)', { n: left }) : t('Upgrade which stone?'), (s) => {
-        if (s) { if (!done.length) pay?.(); s.plus = true; left--; done.push(stoneName(s)); save(); }
+      const one = () => pickFromPouch(left > 1 ? t('Evolve a stone ({n} left)', { n: left }) : t('Evolve which stone?'), (s) => {
+        if (s) { if (!done.length) pay?.(); R.evolve(s); left--; done.push(stoneName(s)); save(); }
         if (s && left > 0 && R.upgradeable(run).length) one();
-        else resolve(done.length ? t('{text} Upgraded: {stones}.', { text, stones: done.join(', ') }) : t('You change your mind.'));
-      }, { filter: (s) => !s.plus, cancel: done.length ? t('Done') : t('Never mind'), upgrade: true });
+        else resolve(done.length ? t('{text} You now have: {stones}.', { text, stones: done.join(', ') }) : t('You change your mind.'));
+      }, { cancel: done.length ? t('Done') : t('Never mind'), evolve: true });
       one();
     }),
     pickTrick: (text) => new Promise((resolve) => {
@@ -777,16 +705,15 @@ function eventScreen() {
     },
     transmute: () => new Promise((resolve) => pickFromPouch(t('Transmute which stone?'), (s) => {
       if (!s) return resolve(t('You change your mind.'));
-      const up = { starter: 'common', common: 'uncommon', uncommon: 'rare', rare: 'rare' }[STONES[s.type].rarity];
+      const up = { common: 'uncommon', uncommon: 'rare', rare: 'rare' }[STONES[STONES[s.type].evolvesFrom ?? s.type].rarity];
       let n;
       for (let g = 0; g < 20; g++) { n = R.randomStone(run, up); if (n.type !== s.type) break; }
       s.type = n.type;
-      s.plus = s.plus || n.plus;
       resolve(t('It bubbles and hisses… and becomes a {stone}!', { stone: stoneName(s) }));
     })),
     duplicate: () => new Promise((resolve) => pickFromPouch(t('Duplicate which stone?'), (s) => {
       if (!s) return resolve(t('The reflection fades.'));
-      R.gainStone(run, { type: s.type, plus: s.plus });
+      R.gainStone(run, { type: s.type });
       resolve(t('A second {stone} climbs out of the pond.', { stone: stoneName(s) }));
     })),
     fight: (id) => {
@@ -838,8 +765,8 @@ function shareResult(victory) {
     }
     grid = grid.trimEnd();
   }
-  const head = `Pif·Paf·Poe${run.daily ? t(' daily {d}', { d: run.daily }) : ''}${run.heat ? t(' · heat {n}', { n: run.heat }) : ''}`;
-  const line = victory ? t('Conquered the Summit as {kit} 🏆', { kit: R.KITS[run.kit].name }) : t('Fell in act {n} ({act})', { n: run.act, act: ACTS[run.act - 1].name });
+  const head = `Pif·Paf·Poe${run.heat ? t(' · heat {n}', { n: run.heat }) : ''}`;
+  const line = victory ? t('Conquered the Summit 🏆') : t('Fell in act {n} ({act})', { n: run.act, act: ACTS[run.act - 1].name });
   const text = `${head}\n${line}\n${t('{won} duels won, {lost} lost', { won: run.stats.won, lost: run.stats.lost })}\n${grid}\n${location.href.split('#')[0]}`;
   (navigator.clipboard?.writeText(text) ?? Promise.reject()).then(() => toast(t('Copied!'), 'good'), () => {
     const close = modal(h('div.menu', {}, h('h2', {}, t('Your result')), h('pre.share', {}, text), h('button.btn.wide', { onclick: () => close() }, t('OK'))));
@@ -850,12 +777,11 @@ function endScreen(victory) {
   recordEnd();
   const st = run.stats;
   const mins = Math.round((Date.now() - st.started) / 60000);
-  const kit = R.KITS[run.kit];
   screen(h('div.page.end', {},
     h('div.end-emoji', {}, victory ? art('x', 'trophy', '🏆') : art('x', 'tombstone', '🪦')),
     h('h1', {}, victory ? t('You conquered the Summit!') : t('Your climb ends here')),
     h('p', {}, victory
-      ? t(run.heat ? '{boss} bows. {kit} is the champion at heat {n}.' : '{boss} bows. {kit} is the champion.', { boss: ENEMIES[run.map.boss].name, kit: kit.name, n: run.heat })
+      ? t(run.heat ? '{boss} bows. You are the champion at heat {n}.' : '{boss} bows. You are the champion.', { boss: ENEMIES[run.map.boss].name, n: run.heat })
       : t('Fallen in act {n}, {act}.', { n: run.act, act: ACTS[run.act - 1].name })),
     h('div.stats', {},
       h('div', {}, h('b', {}, st.won), t(' duels won', { n: st.won })),
@@ -869,7 +795,7 @@ function endScreen(victory) {
     relicStrip(),
     victory && meta.maxHeat > run.heat ? h('p.good', {}, t('Heat {n} unlocked!', { n: run.heat + 1 })) : null,
     h('button.btn.wide', { onclick: () => shareResult(victory) }, t('Copy result to share')),
-    h('button.btn.primary.wide.big', { onclick: () => { run = null; duelState = null; chooseKit(); } }, t('New run')),
+    h('button.btn.primary.wide.big', { onclick: () => { run = null; duelState = null; newRunMenu(); } }, t('New run')),
     h('button.btn.wide', { onclick: () => { run = null; title(); } }, t('Title'))));
   try { localStorage.removeItem(SAVE); } catch { /* ignore */ }
 }
@@ -881,8 +807,8 @@ function showHelp(after) {
   const pages = [
     h('div', {}, h('h2', {}, t('The duel')),
       h('p', {}, t('Tic-tac-toe on a 3×3 board: three of your stones in a row — across, down or diagonal — wins.')),
-      h('p', {}, t('You are '), h('b.blue', {}, t('blue squares')), t(', the enemy is '), h('b.red', {}, t('red circles')), t('. You take turns placing one stone from your hand.')),
-      h('p', {}, t('The twist: most stones '), h('b', {}, t('do something when placed')), t(' — and what they do is move stones already on the board, yours and theirs alike. A line can be made by sliding a stone into it, and broken by the next stone played.'))),
+      h('p', {}, t('You are '), h('b.blue', {}, t('blue squares')), t(', the enemy is '), h('b.red', {}, t('red circles')), t('. The enemy always opens; then you take turns placing one stone each.')),
+      h('p', {}, s('pebble'), ' ', h('b', {}, t('Pebbles never run out.')), t(' Both sides may always place another. Besides them you bring a few '), h('b', {}, t('special stones')), t(' — two at first — which do something when placed: mostly move stones already on the board, yours and theirs alike.'))),
     h('div', {}, h('h2', {}, t('A turn')),
       h('p', {}, t('1. Tap a stone in your hand. Glowing squares show where it may go.')),
       h('p', {}, t('2. Tap a square. If the stone does something, you will see what — tap again or ✓ to confirm. If it can do it several ways, arrows and targets appear: tap one to preview it.')),
@@ -892,18 +818,17 @@ function showHelp(after) {
       h('p', {}, s('shift'), ' ', h('b', {}, STONES.shift.name), t(' slides its row or column one step, wrapping around.')),
       h('p', {}, s('rotate'), ' ', h('b', {}, STONES.rotate.name), t(' turns a 2×2 block clockwise.')),
       h('p', {}, s('magnet'), ' ', h('b', {}, STONES.magnet.name), t(': the enemy must place next to it. '), s('stinky'), ' ', h('b', {}, STONES.stinky.name), t(': must not.')),
-      h('p', {}, s('mountain'), ' ', h('b', {}, STONES.mountain.name), t(' is never moved — it is a wall for everything else.')),
-      h('p', {}, t('Tap any stone, anywhere, to read what it does. Upgraded stones (with a '), h('b.gold', {}, '+'), t(') do more.'))),
+      h('p', {}, s('mountain'), ' ', h('b', {}, STONES.mountain.name), t(' is never moved: moving stones step over it.')),
+      h('p', {}, t('Tap any stone, anywhere, to read what it does. Most stones can '), h('b', {}, t('evolve')), t(' into a stronger, named stone (marked with a '), h('b.gold', {}, '★'), t(').'))),
     h('div', {}, h('h2', {}, t('The rules that decide')),
-      h('p', {}, h('b', {}, t('A full board goes to whoever moved second')), t(' — and so does a game where the player to move has no stones left. Opening is an advantage; the tiebreak is the second player\'s consolation.')),
-      h('p', {}, t('Each duel is fought on a '), h('b', {}, t('space')), t(' that may switch one stone type off, for both sides. Switched-off stones still count for lines, they just do nothing.')),
-      h('p', {}, t('Several Magnets and Stinkies all pull at once: you must place where you satisfy as many as any square can.')),
-      h('p', {}, t('Nobody opens a duel in the centre: the very first stone must go elsewhere.'))),
+      h('p', {}, h('b', {}, t('A full board goes to you')), t(' — the enemy opened, so the tie is yours. Hold out, and you win.')),
+      h('p', {}, t('Some duels carry a '), h('b', {}, t('condition')), t(' for both sides: gravity, a hollow centre, open hands.')),
+      h('p', {}, t('Bosses bring no special stones at all. Instead each has '), h('b', {}, t('a rule in its favour')), t(' — it names the stone you play, closes a column, takes two turns at once… Read it before you choose your stones.'))),
     h('div', {}, h('h2', {}, t('The climb')),
-      h('p', {}, t('Three acts. Each act is a game of tic-tac-toe with its boss on an endless sheet of paper. It starts with a single O — the boss\'s first mark.')),
+      h('p', {}, t('Three acts. Each act is a game of tic-tac-toe with its boss on a 5×5 sheet of paper. It starts with a single O in the middle — the boss\'s first mark.')),
       h('p', {}, t('Wherever you go you mark an '), h('b.blue', {}, 'X'), t('; after each step the boss marks an '), h('b.red', {}, 'O'), t('. Every mark reveals the squares around it: duels, elites, shops, campfires, treasure and the unknown.')),
-      h('p', {}, h('b', {}, t('Four Xs in a row open the boss\'s door.')), t(' The squares that would help your line — or break the boss\'s — tend to hide the hardest duels. A lost duel scorches its square. Each line of four Os makes the boss stronger, and so does filling the page.')),
-      h('p', {}, t('Before each duel you choose which 5 stones of your pouch to bring. Lose and it costs hearts; run out and the climb is over. A boss has lives: each duel you win takes one.'))),
+      h('p', {}, h('b', {}, t('Three Xs in a row open the boss\'s door.')), t(' The squares that would help your line — or break the boss\'s — tend to hide the hardest duels. A lost duel scorches its square. A line of Os, or a full page, makes the boss stronger.')),
+      h('p', {}, t('Before each duel you choose which special stones to bring. Shops sell more slots. Lose and it costs hearts; run out and the climb is over. A boss has two lives.'))),
   ];
   let k = 0;
   const holder = h('div.help-page');
@@ -926,12 +851,22 @@ function showCodex() {
   let tab = 'stones';
   const body = h('div.codex');
   const draw = () => {
-    const tabs = h('div.tabs', {}, ['stones', 'tricks', 'relics', 'enemies'].map((x) => h('button.tab' + (x === tab ? '.on' : ''), { onclick: () => { tab = x; draw(); } }, t(x))));
+    const tabs = h('div.tabs', {}, ['stones', 'tricks', 'relics', 'rules', 'enemies'].map((x) => h('button.tab' + (x === tab ? '.on' : ''), { onclick: () => { tab = x; draw(); } }, t(x))));
     let list;
     if (tab === 'stones') {
-      list = STONE_TYPES.map((x) => h('div.codex-row', { onclick: () => infoStone({ type: x, plus: false }, 'X'), style: { cursor: 'pointer' } }, stoneEl({ type: x }, 'X'), h('div', {},
+      // Each stone, with its evolved form tucked under it.
+      const order = ['pebble', ...STONE_TYPES.filter((x) => x !== 'pebble' && !STONES[x].evolvesFrom)].flatMap((x) => (STONES[x].evolvesTo ? [x, STONES[x].evolvesTo] : [x]));
+      list = order.map((x) => h('div.codex-row' + (STONES[x].evolvesFrom ? '.evolved' : ''), { onclick: () => infoStone({ type: x }, 'X'), style: { cursor: 'pointer' } }, stoneEl({ type: x }, 'X'), h('div', {},
         h('b', {}, STONES[x].name), h('span.info-rarity.' + STONES[x].rarity, {}, ' ' + t(STONES[x].rarity)),
-        h('div', {}, STONES[x].text), h('div.dim', {}, '+ ' + STONES[x].plusText))));
+        STONES[x].evolvesFrom ? h('span.dim', {}, ' · ' + t('evolved {stone}', { stone: STONES[STONES[x].evolvesFrom].name })) : null,
+        h('div', {}, STONES[x].text))));
+    } else if (tab === 'rules') {
+      list = [
+        h('div.section-label', {}, t('Conditions: for both sides')),
+        ...Object.keys(CONDS).map((c) => h('div.codex-row', {}, h('div.trick-token', { html: icon(`cond-${c}`) }), h('div', {}, h('b', {}, CONDS[c].name), h('div', {}, CONDS[c].text)))),
+        h('div.section-label', {}, t('Boss rules: in the boss\'s favour')),
+        ...Object.keys(RULES).map((r) => h('div.codex-row', {}, h('div.trick-token', { html: icon(`rule-${r}`) }), h('div', {}, h('b', {}, RULES[r].name), h('div', {}, RULES[r].text)))),
+      ];
     } else if (tab === 'tricks') {
       list = TRICK_TYPES.map((x) => h('div.codex-row', { onclick: () => infoTrick(x), style: { cursor: 'pointer' } }, h('div.trick-token', { html: icon(x) }), h('div', {},
         h('b', {}, TRICKS[x].name), h('span.info-rarity.' + TRICKS[x].rarity, {}, ' ' + t(TRICKS[x].rarity)), h('div', {}, TRICKS[x].text))));
@@ -941,9 +876,10 @@ function showCodex() {
     } else {
       list = Object.values(ENEMIES).filter((e) => e.act > 0).map((e) => h('div.codex-row', {}, h('div.relic-token.small', {}, e.emoji), h('div', {},
         h('b', {}, e.name), h('span.dim', {}, ` · ${t('act {n}', { n: e.act })} ${t(e.tier)}`),
-        h('div.hand.show.tiny', {}, e.core.map((x) => stoneEl({ type: x }, 'O', { mini: true }))),
-        e.field ? h('div.dim', {}, `${t('Rule')} — ${FIELDS[e.field].name}: ${FIELDS[e.field].text}`) : null,
-        e.field2 ? h('div.dim', {}, `${t('Once beaten, it rises with a new rule')} — ${FIELDS[e.field2].name}: ${FIELDS[e.field2].text}`) : null)));
+        e.core ? h('div.hand.show.tiny', {}, e.core.map((x) => stoneEl({ type: x }, 'O', { mini: true }))) : null,
+        e.cond ? h('div.chips.inline', {}, ruleChip('cond', e.cond)) : null,
+        e.rules ? h('div.chips.inline', {}, e.rules.map((r) => ruleChip('rule', r))) : null,
+        e.rules2 && e.rules2.join() !== e.rules.join() ? h('div.dim', {}, t('Once beaten, it rises again with: {rules}.', { rules: e.rules2.map((r) => RULES[r].name).join(', ') })) : null)));
     }
     body.replaceChildren(tabs, h('div.codex-list', {}, list), h('button.btn.wide', { onclick: () => close() }, t('Close')));
   };

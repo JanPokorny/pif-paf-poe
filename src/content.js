@@ -102,10 +102,10 @@ export const ENEMIES = {
     tricks: ['muffle'], quote: 'You will stand where I let you.' },
   // bosses
   oak: { name: 'The Old Oak', emoji: '🌳', act: 1, tier: 'boss',
-    rules: ['clinch'], rules2: ['clinch'], iters: 320, blunder: 0.08,
+    rules: ['clinch'], rules2: ['clinch', 'headstart'], iters: 450, blunder: 0.08,
     quote: 'Stay close to me, little one.' },
   scarecrow: { name: 'The Scarecrow', emoji: '🌾', act: 1, tier: 'boss',
-    rules: ['reserved'], rules2: ['reserved', 'headstart'], iters: 320, blunder: 0.08,
+    rules: ['reserved'], rules2: ['reserved', 'headstart'], iters: 450, blunder: 0.08,
     quote: 'The middle of the field is mine.' },
 
   // Act 2 — the Quarry
@@ -139,13 +139,13 @@ export const ENEMIES = {
     tricks: ['anchor'], quote: 'I. DO. NOT. MOVE.' },
   // bosses
   colossus: { name: 'Clockwork Colossus', emoji: '⚙️', act: 2, tier: 'boss',
-    rules: ['column'], rules2: ['column'], iters: 250, blunder: 0.04,
+    rules: ['column'], rules2: ['column'], iters: 200, blunder: 0.04,
     quote: 'TICK. TOCK. THAT COLUMN, PLEASE.' },
   mirrorknight: { name: 'The Mirror Knight', emoji: '🛡️', act: 2, tier: 'boss',
-    rules: ['spy'], rules2: ['spy', 'headstart'], iters: 350, blunder: 0.04,
+    rules: ['spy'], rules2: ['spy', 'headstart'], iters: 500, blunder: 0.04,
     quote: 'Your left is my right.' },
   carpenter: { name: 'The Carpenter', emoji: '🪚', act: 2, tier: 'boss',
-    rules: ['elko'], rules2: ['elko', 'patient'], iters: 350, blunder: 0.04,
+    rules: ['elko'], rules2: ['elko', 'patient'], iters: 500, blunder: 0.04,
     quote: 'Straight lines are for amateurs.' },
 
   // Act 3 — the Summit
@@ -179,7 +179,7 @@ export const ENEMIES = {
     rules: ['tactics'], rules2: ['tactics', 'reserved'], iters: 400, blunder: 0.03,
     quote: 'You will play what I tell you to play.' },
   twinkings: { name: 'The Twin Kings', emoji: '🎭', act: 3, tier: 'boss',
-    rules: ['headstart'], rules2: ['headstart', 'reserved'], tricks: ['nudge'], iters: 450, blunder: 0.03,
+    rules: ['headstart'], rules2: ['headstart', 'reserved'], tricks: ['nudge'], iters: 650, blunder: 0.03,
     quote: 'Two crowns, two moves.' },
 };
 

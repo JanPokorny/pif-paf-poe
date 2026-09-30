@@ -1,6 +1,6 @@
 // Small DOM helpers shared by every screen.
 
-import { STONES, TRICKS, FIELDS, createGame, legalActions, applyAction, cloneState, allowedSquares } from '../engine.js';
+import { STONES, TRICKS, CONDS, RULES, createGame, legalActions, applyAction, cloneState, allowedSquares } from '../engine.js';
 import { RELICS } from '../content.js';
 import { icon, ICONS } from '../icons.js';
 import { t, lang, setLang, LANGS } from '../i18n.js';
@@ -25,7 +25,7 @@ export function h(tag, attrs = {}, ...children) {
   return el;
 }
 
-// A hand-drawn star sticker for upgraded stones.
+// A hand-drawn star sticker for evolved stones.
 const STAR = '<svg class="badge-plus" viewBox="-10 -10 20 20" aria-hidden="true"><path d="M0 -8.5 L2.4 -2.7 L8.6 -2.4 L3.8 1.5 L5.4 7.6 L0 4.2 L-5.4 7.6 L-3.8 1.5 L-8.6 -2.4 L-2.4 -2.7 Z"/></svg>';
 
 // Pen marks, as SVG strings in a 0..100 box: an X in two strokes, an O in one
@@ -50,7 +50,7 @@ export const iconEl = (name, cls = '') => h('span.icon-wrap', { html: icon(name,
 export function stoneEl(s, player = 'X', opts = {}) {
   const el = h(`div.stone.${player}`, {
     dataset: { type: s.type },
-    title: STONES[s.type]?.name + (s.plus ? '+' : ''),
+    title: STONES[s.type]?.name,
   });
   updateStone(el, s, player, opts);
   return el;
@@ -59,18 +59,20 @@ export function stoneEl(s, player = 'X', opts = {}) {
 export function updateStone(el, s, player, opts = {}) {
   el.classList.remove('X', 'O');
   el.classList.add(player);
-  el.classList.toggle('plus', !!s.plus);
+  el.classList.toggle('plus', !!STONES[s.type]?.evolvesFrom);
   el.classList.toggle('stuck', !!opts.stuck);
   el.classList.toggle('dead', !!opts.dead);
   el.classList.toggle('mini', !!opts.mini);
   if (el.dataset.type !== s.type || !el.firstChild) {
     el.dataset.type = s.type;
-    el.innerHTML = icon(s.type, 'glyph') + STAR + '<span class="tape"></span>';
+    // An evolved stone wears its plain form's glyph, and a star.
+    const glyph = ICONS[s.type] ? s.type : STONES[s.type]?.evolvesFrom ?? s.type;
+    el.innerHTML = icon(glyph, 'glyph') + STAR + '<span class="tape"></span>';
   }
 }
 
-export function stoneName(s) { return (STONES[s.type]?.name ?? s.type) + (s.plus ? '+' : ''); }
-export function stoneText(s) { const st = STONES[s.type]; return s.plus ? st.plusText : st.text; }
+export function stoneName(s) { return STONES[s.type]?.name ?? s.type; }
+export function stoneText(s) { return STONES[s.type]?.text ?? ''; }
 
 let toastTimer = null;
 let toastAt = 0;
@@ -117,19 +119,21 @@ function demoBoard(board, marks = {}) {
 function stoneDemo(s) {
   const st = STONES[s.type];
   const fresh = () => {
-    const g = createGame({ handX: [{ type: s.type, plus: s.plus }, { type: 'pebble', plus: false }], handO: ['pebble', 'pebble', 'pebble'], first: 'X', log: false });
+    const g = createGame({ handX: [s.type], first: 'X', log: false });
     let id = 50;
-    for (const [i, p] of Object.entries(DEMO_BOARD)) g.board[+i] = { player: p, type: 'pebble', plus: false, id: id++ };
+    for (const [i, p] of Object.entries(DEMO_BOARD)) g.board[+i] = { player: p, type: 'pebble', id: id++ };
     g.nextId = 100;
     return g;
   };
   try {
     if (st.restrict) {
       const g = fresh();
-      applyAction(g, { type: 'select', stone: s.type, plus: s.plus });
+      applyAction(g, { type: 'select', stone: s.type });
       applyAction(g, { type: 'place', pos: 4 });
+      if (g.phase === 'effect') applyAction(g, legalActions(g)[0]);
       if (g.phase === 'trick') applyAction(g, { type: 'trick', use: 'pass' });
-      const ok = new Set(allowedSquares(g, { type: 'shift', plus: false }));
+      g.phase = 'place';
+      const ok = new Set(allowedSquares(g));
       const marks = {};
       for (let i = 0; i < 9; i++) if (!g.board[i]) marks[i] = ok.has(i) ? 'ok' : 'no';
       return h('div.demo', {}, demoBoard(g.board, marks), h('div.demo-cap', {}, t('Placed in the centre: the enemy may only use the marked squares.')));
@@ -140,10 +144,10 @@ function stoneDemo(s) {
     for (const pos of [4, 0, 5, 7, 1]) {
       const g = fresh();
       if (g.board[pos]) continue;
-      applyAction(g, { type: 'select', stone: s.type, plus: s.plus });
+      applyAction(g, { type: 'select', stone: s.type });
       // Before: the stone drawn where it lands, nothing done yet.
       const before = cloneState(g).board;
-      before[pos] = { player: 'X', type: s.type, plus: s.plus, id: 99 };
+      before[pos] = { player: 'X', type: s.type, id: 99 };
       applyAction(g, { type: 'place', pos });
       const opts = g.phase === 'effect' ? legalActions(g) : [null];
       for (const o of opts) {
@@ -162,9 +166,10 @@ function stoneDemo(s) {
 
 function trickDemo(name) {
   try {
-    const g = createGame({ handX: ['pebble'], handO: ['pebble', 'pebble'], first: 'X', tricksX: [name], log: false });
+    const g = createGame({ handO: ['shift'], first: 'X', tricksX: [name], log: false });
     let id = 50;
-    for (const [i, p] of Object.entries({ ...DEMO_BOARD, 4: 'O', 0: 'X' })) g.board[+i] = { player: p, type: i === '0' ? 'shift' : 'pebble', plus: false, id: id++ };
+    for (const [i, p] of Object.entries({ ...DEMO_BOARD, 4: 'O', 0: 'X' })) g.board[+i] = { player: p, type: i === '0' ? 'shift' : 'pebble', id: id++ };
+    g.lastSpecial.X = 'shift';
     g.phase = 'trick';
     let best = null;
     for (const a of legalActions(g)) {
@@ -187,7 +192,9 @@ export function infoStone(s, player = 'X', extra = '') {
       h('div.info-rarity.' + st.rarity, {}, t(st.rarity)))),
     h('p', {}, stoneText(s)),
     stoneDemo(s),
-    !s.plus && st.plusText ? h('p.info-plus', {}, h('b', {}, t('Upgraded: ')), st.plusText) : null,
+    st.evolvesTo ? h('p.info-plus', {}, h('b', {}, t('Evolves into {stone}: ', { stone: STONES[st.evolvesTo].name })), STONES[st.evolvesTo].text) : null,
+    st.evolvesFrom ? h('p.info-plus', {}, t('An evolved {stone}.', { stone: STONES[st.evolvesFrom].name })) : null,
+    s.type === 'pebble' ? h('p.info-plus', {}, t('Pebbles never run out: you may always place another.')) : null,
     extra ? h('p.info-extra', {}, extra) : null,
     h('button.btn.wide', { onclick: () => close() }, t('OK')));
   const close = modal(body);
@@ -215,19 +222,20 @@ export function infoRelic(id) {
   const close = modal(body);
 }
 
-export function infoField(field) {
-  const f = FIELDS[field];
-  const close = modal(h('div.info-stone', {}, h('div.info-name', {}, t('Boss rule: ') + f.name), h('p', {}, f.text),
+// A duel condition (for both sides) or a boss rule (in the boss's favour).
+export const ruleOf = (kind, id) => (kind === 'cond' ? CONDS[id] : RULES[id]);
+export function infoRule(kind, id) {
+  const r = ruleOf(kind, id);
+  const close = modal(h('div.info-stone', {},
+    h('div.info-head', {}, h('div.trick-token', { html: icon(`${kind}-${id}`) }), h('div', {},
+      h('div.info-name', {}, r.name), h('div.info-rarity', {}, kind === 'cond' ? t('for both sides') : t('boss rule')))),
+    h('p', {}, r.text),
     h('button.btn.wide', { onclick: () => close() }, t('OK'))));
 }
-
-export function infoSpace(disabled) {
-  const stone = disabled && STONES[disabled].name;
-  const text = disabled
-    ? t('This duel is fought on a {stone} space: every {stone} stone, yours and theirs, is switched off. It is still placed and still counts towards a line — it just does nothing.', { stone })
-    : t('A neutral space: every stone works.');
-  const close = modal(h('div.info-stone', {}, h('div.info-name', {}, disabled ? t('No {stone}', { stone }) : t('Neutral space')), h('p', {}, text),
-    h('button.btn.wide', { onclick: () => close() }, t('OK'))));
+export function ruleChip(kind, id, cls = '') {
+  const r = ruleOf(kind, id);
+  return h(`button.rule-chip.${kind}${cls}`, { onclick: (e) => { e.stopPropagation(); infoRule(kind, id); } },
+    h('span.chip-ico', { html: icon(`${kind}-${id}`) }), h('span', {}, r.name));
 }
 
 // A card for reward and shop screens.

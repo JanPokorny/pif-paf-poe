@@ -318,7 +318,8 @@ export function prepareDuel(run, enemyId, context = {}) {
   const enemy = ENEMIES[enemyId];
   const tier = context.tier ?? enemy.tier;
   const handO = rollEnemyHand(run, enemy, tier, context);
-  let heatIters = run.heat >= 1 ? 1.5 : 1;
+  // Later acts think harder, and heat on top of that.
+  let heatIters = [1, 1.4, 1.7][Math.max(0, run.act - 1)] * (run.heat >= 1 ? 1.5 : 1);
   const enemyTricks = [...(enemy.tricks ?? [])];
   const usesO = 1;
   const modsO = { ...(enemy.mods ?? {}) };
@@ -348,7 +349,7 @@ export function prepareDuel(run, enemyId, context = {}) {
     enemyId, tier, handO, first: 'O', quirk, conds, rules,
     tricksO: enemyTricks, usesO,
     modsO,
-    iters: Math.round(enemy.iters * heatIters), blunder: run.heat >= 5 ? 0 : enemy.blunder,
+    iters: Math.round(enemy.iters * heatIters), blunder: run.heat >= 5 ? 0 : enemy.blunder * 0.7,
     bossRound: context.bossRound ?? 0, bossWins: context.bossWins ?? 0,
     event: context.event ?? null,
   };

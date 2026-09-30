@@ -662,3 +662,25 @@ b { font-weight: 400; background: linear-gradient(transparent 55%, var(--hi) 55%
 .map-sheet .map-cell.marked .doodle, .map-sheet .map-cell.marked .label, .map-sheet .map-cell.marked .cell-space { display: none; }
 .map-sheet .map-cell .label { font-size: 0.72rem; }
 .map-scroll { max-height: calc(100dvh - 250px); }
+
+/* ── The slower game: Pebbles for ever, rules and conditions ───────────── */
+.hand-slot, .pebble-mini { position: relative; }
+.inf { position: absolute; font-family: var(--hand, inherit); font-weight: 700; color: var(--pencil); line-height: 1; pointer-events: none; }
+.hand-slot .inf { top: 0; left: 2px; font-size: 1.05rem; }
+.pebble-mini { display: inline-flex; align-items: center; background: none; border: 0; padding: 0 4px 0 0; }
+.pebble-mini .inf { right: -4px; bottom: -4px; font-size: 0.9rem; }
+.enemy-hand .pebble-mini { margin-right: 4px; }
+.enemy-hand .stone.borrow { outline: 2px dashed var(--ink); outline-offset: 2px; border-radius: 50%; cursor: pointer; }
+.enemy-hand .stone.forbidden { opacity: 0.35; }
+.enemy-hand .stone.selected { transform: translateY(4px) scale(1.12); outline: 3px solid var(--hi); outline-offset: 2px; border-radius: 50%; }
+.rule-chip { display: inline-flex; align-items: center; gap: 4px; font: inherit; font-size: 0.95rem; line-height: 1; padding: 3px 8px 3px 5px; border: 1.5px solid currentColor; border-radius: 12px 14px 11px 15px; background: var(--paper, #fbf7ec); color: var(--ink); cursor: pointer; white-space: nowrap; }
+.rule-chip.rule { color: var(--red); }
+.rule-chip .chip-ico, .rule-chip .chip-ico .icon { width: 16px; height: 16px; }
+.rule-chip.small { font-size: 0.82rem; padding: 2px 6px 2px 4px; }
+.chips .rule-chip { margin: 0 2px; }
+.chips.inline { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 3px; justify-content: flex-start; }
+.door-rules { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 4px; }
+.facts-card .fact.rule-fact { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; line-height: 1.25; padding: 4px 4px 4px 4px; }
+.facts-card .fact.rule-fact::before { display: none; }
+.codex-row.evolved { margin-left: 22px; }
+.map-cell.gift .doodle { color: var(--rare); }
