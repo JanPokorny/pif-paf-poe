@@ -2,6 +2,7 @@
 // acts, events. Numbers here are the balance; tools/balance.mjs measures them.
 
 import { STONES, STONE_TYPES, TRICKS, TRICK_TYPES } from './engine.js';
+import { t } from './i18n.js';
 
 // ── Relics ──────────────────────────────────────────────────────────────────
 //
@@ -204,10 +205,10 @@ export const EVENTS = [
     text: 'A dusty stonemason sets down her chisel. "Fine stones you carry. I could make one finer — for a price."',
     choices: [
       { label: 'Pay 35 gold', detail: 'Upgrade a stone.', can: (r) => r.gold >= 35 && r.pouch.some((s) => !s.plus),
-        act: (r, api) => api.upgradeStone('The stonemason gets to work.', 1, () => { r.gold -= 35; }) },
+        act: (r, api) => api.upgradeStone(t('The stonemason gets to work.'), 1, () => { r.gold -= 35; }) },
       { label: 'Pay 2 hearts', detail: 'Upgrade two stones.', can: (r) => r.hearts > 2 && r.pouch.filter((s) => !s.plus).length >= 2,
-        act: (r, api) => api.upgradeStone('Blood and granite.', 2, () => { r.hearts -= 2; }) },
-      { label: 'Leave', act: () => 'You nod politely and move on.' },
+        act: (r, api) => api.upgradeStone(t('Blood and granite.'), 2, () => { r.hearts -= 2; }) },
+      { label: 'Leave', act: () => t('You nod politely and move on.') },
     ],
   },
   {
@@ -216,7 +217,7 @@ export const EVENTS = [
     choices: [
       { label: 'Offer a max heart', detail: 'Lose 1 max heart. Choose a rare stone.', can: (r) => r.maxHearts > 2,
         act: (r, api) => api.chooseStone('rare', () => { r.maxHearts--; r.hearts = Math.min(r.hearts, r.maxHearts); }) },
-      { label: 'Pray', detail: 'Heal 1 heart.', act: (r) => { r.hearts = Math.min(r.maxHearts, r.hearts + 1); return 'A warmth settles in your chest.'; } },
+      { label: 'Pray', detail: 'Heal 1 heart.', act: (r) => { r.hearts = Math.min(r.maxHearts, r.hearts + 1); return t('A warmth settles in your chest.'); } },
     ],
   },
   {
@@ -224,18 +225,18 @@ export const EVENTS = [
     text: 'A grinning fox shuffles three cups. "Double or nothing, friend?"',
     choices: [
       { label: 'Bet 30 gold', detail: '50%: +30 gold. 50%: −30 gold.', can: (r) => r.gold >= 30,
-        act: (r, api) => { if (api.rng() < 0.5) { r.gold += 30; return 'The pebble is under your cup! +30 gold.'; } r.gold -= 30; return 'Empty. The fox chuckles. −30 gold.'; } },
+        act: (r, api) => { if (api.rng() < 0.5) { r.gold += 30; return t('The pebble is under your cup! +30 gold.'); } r.gold -= 30; return t('Empty. The fox chuckles. −30 gold.'); } },
       { label: 'Bet everything', detail: '50%: double your gold.', can: (r) => r.gold > 0,
-        act: (r, api) => { if (api.rng() < 0.5) { r.gold *= 2; return `Fortune smiles! You now have ${r.gold} gold.`; } r.gold = 0; return 'Gone. All of it.'; } },
-      { label: 'Walk away', act: () => 'The fox shrugs and pockets the cups.' },
+        act: (r, api) => { if (api.rng() < 0.5) { r.gold *= 2; return t('Fortune smiles! You now have {n} gold.', { n: r.gold }); } r.gold = 0; return t('Gone. All of it.'); } },
+      { label: 'Walk away', act: () => t('The fox shrugs and pockets the cups.') },
     ],
   },
   {
     id: 'well', title: 'The Wishing Well', emoji: '🪣',
     text: 'Coins glitter at the bottom of a mossy well.',
     choices: [
-      { label: 'Drink', detail: 'Heal 2 hearts.', act: (r) => { r.hearts = Math.min(r.maxHearts, r.hearts + 2); return 'Cool, clear water. You feel restored.'; } },
-      { label: 'Fish for coins', detail: 'Gain 25–50 gold.', act: (r, api) => { const g = 25 + ((api.rng() * 26) | 0); r.gold += g; return `You fish out ${g} gold.`; } },
+      { label: 'Drink', detail: 'Heal 2 hearts.', act: (r) => { r.hearts = Math.min(r.maxHearts, r.hearts + 2); return t('Cool, clear water. You feel restored.'); } },
+      { label: 'Fish for coins', detail: 'Gain 25–50 gold.', act: (r, api) => { const g = 25 + ((api.rng() * 26) | 0); r.gold += g; return t('You fish out {n} gold.', { n: g }); } },
       { label: 'Toss a coin', detail: 'Pay 10 gold, gain a random trick.', can: (r, api) => r.gold >= 10 && api.trickRoom(),
         act: (r, api) => { r.gold -= 10; return api.gainRandomTrick(); } },
     ],
@@ -245,7 +246,7 @@ export const EVENTS = [
     text: '"A duel, traveller? Beat me and take my trinket. Lose, and it costs you a heart."',
     choices: [
       { label: 'Accept the duel', detail: 'Win: a relic. Lose: −1 heart.', act: (r, api) => api.fight('hermit') },
-      { label: 'Decline', act: () => 'The hermit returns to his tea.' },
+      { label: 'Decline', act: () => t('The hermit returns to his tea.') },
     ],
   },
   {
@@ -254,7 +255,7 @@ export const EVENTS = [
     choices: [
       { label: 'Transmute a stone', detail: 'Replace a stone with a random one of higher rarity.', can: (r) => r.pouch.length > 0,
         act: (r, api) => api.transmute() },
-      { label: 'Leave', act: () => 'The flasks keep bubbling.' },
+      { label: 'Leave', act: () => t('The flasks keep bubbling.') },
     ],
   },
   {
@@ -262,8 +263,8 @@ export const EVENTS = [
     text: 'A chest sits alone in the grass. It is almost certainly trapped.',
     choices: [
       { label: 'Open it', detail: 'Gain a relic. Lose 1 heart.', can: (r) => r.hearts > 1,
-        act: (r, api) => { r.hearts--; return api.gainRandomRelic('A needle pricks your thumb, but inside…'); } },
-      { label: 'Leave it', act: () => 'Wise, probably.' },
+        act: (r, api) => { r.hearts--; return api.gainRandomRelic(t('A needle pricks your thumb, but inside…')); } },
+      { label: 'Leave it', act: () => t('Wise, probably.') },
     ],
   },
   {
@@ -272,7 +273,7 @@ export const EVENTS = [
     choices: [
       { label: 'Reach in', detail: 'Duplicate a stone.', can: (r, api) => api.pouchRoom() && r.pouch.length > 0,
         act: (r, api) => api.duplicate() },
-      { label: 'Wash your face', detail: 'Heal 1 heart.', act: (r) => { r.hearts = Math.min(r.maxHearts, r.hearts + 1); return 'Refreshing.'; } },
+      { label: 'Wash your face', detail: 'Heal 1 heart.', act: (r) => { r.hearts = Math.min(r.maxHearts, r.hearts + 1); return t('Refreshing.'); } },
     ],
   },
   {
@@ -280,7 +281,7 @@ export const EVENTS = [
     text: 'A shadow bumps into you and reaches for your coin purse…',
     choices: [
       { label: 'Chase him', detail: 'Duel him. Win: get it back with interest. Lose: −1 heart.', act: (r, api) => api.fight('thief') },
-      { label: 'Let it go', detail: 'Lose 20 gold.', act: (r) => { r.gold = Math.max(0, r.gold - 20); return 'Easy come, easy go.'; } },
+      { label: 'Let it go', detail: 'Lose 20 gold.', act: (r) => { r.gold = Math.max(0, r.gold - 20); return t('Easy come, easy go.'); } },
     ],
   },
   {
@@ -289,7 +290,7 @@ export const EVENTS = [
     choices: [
       { label: 'Toss a stone in', detail: 'Remove a stone from your pouch. Heal 1.', can: (r) => r.pouch.length > 5,
         act: (r, api) => api.removeStone(true) },
-      { label: 'Move on', act: () => 'You keep what you have.' },
+      { label: 'Move on', act: () => t('You keep what you have.') },
     ],
   },
   {
@@ -298,14 +299,14 @@ export const EVENTS = [
     choices: [
       { label: 'Trade a trick', detail: 'Swap a trick for a random rare one.', can: (r) => r.tricks.length > 0,
         act: async (r, api) => {
-          const k = await api.pickTrick('Trade which trick?');
-          if (k < 0) return 'He shrugs and shuffles the deck.';
+          const k = await api.pickTrick(t('Trade which trick?'));
+          if (k < 0) return t('He shrugs and shuffles the deck.');
           r.tricks.splice(k, 1);
           return api.gainRandomTrick('rare');
         } },
       { label: 'Buy a trick', detail: 'Pay 25 gold for a random trick.', can: (r, api) => r.gold >= 25 && api.trickRoom(),
         act: (r, api) => { r.gold -= 25; return api.gainRandomTrick(); } },
-      { label: 'No thanks', act: () => 'He vanishes in a puff of smoke.' },
+      { label: 'No thanks', act: () => t('He vanishes in a puff of smoke.') },
     ],
   },
   {
@@ -317,7 +318,7 @@ export const EVENTS = [
           const plain = r.pouch.filter((s) => !s.plus);
           const s = plain[(api.rng() * plain.length) | 0];
           s.plus = true;
-          return `You read up on the ${STONES[s.type].name}. It is now upgraded.`;
+          return t('You read up on the {stone}. It is now upgraded.', { stone: STONES[s.type].name });
         } },
       { label: 'Borrow a book', detail: 'Gain a random uncommon trick.', can: (r, api) => api.trickRoom(),
         act: (r, api) => api.gainRandomTrick('uncommon') },
@@ -328,8 +329,8 @@ export const EVENTS = [
     text: 'A rope bridge sways over a gorge. On the far side, something glints.',
     choices: [
       { label: 'Cross it', detail: 'Lose 1 heart, gain 50 gold.', can: (r) => r.hearts > 1,
-        act: (r) => { r.hearts--; r.gold += 50; return 'A plank snaps under you — but you make it, and pocket 50 gold.'; } },
-      { label: 'Go around', act: () => 'The long way round. Nothing lost, nothing found.' },
+        act: (r) => { r.hearts--; r.gold += 50; return t('A plank snaps under you — but you make it, and pocket 50 gold.'); } },
+      { label: 'Go around', act: () => t('The long way round. Nothing lost, nothing found.') },
     ],
   },
   {
@@ -337,7 +338,7 @@ export const EVENTS = [
     text: '"Hoo. A late game, traveller? I play only the best — and I pay the best."',
     choices: [
       { label: 'Play the Owl', detail: 'A hard duel. Win: a relic and gold. Lose: −1 heart.', act: (r, api) => api.fight('nightowl') },
-      { label: 'Get some sleep', detail: 'Heal 1 heart.', act: (r) => { r.hearts = Math.min(r.maxHearts, r.hearts + 1); return 'You sleep soundly.'; } },
+      { label: 'Get some sleep', detail: 'Heal 1 heart.', act: (r) => { r.hearts = Math.min(r.maxHearts, r.hearts + 1); return t('You sleep soundly.'); } },
     ],
   },
   {
@@ -347,10 +348,10 @@ export const EVENTS = [
       { label: 'Listen', detail: 'Heal 1 heart and gain a random trick.', act: (r, api) => {
         const healed = r.hearts < r.maxHearts;
         r.hearts = Math.min(r.maxHearts, r.hearts + 1);
-        const t = api.trickRoom() ? ` ${api.gainRandomTrick()}` : '';
-        return `${healed ? 'You feel better.' : 'A fine story.'}${t}`;
+        const extra = api.trickRoom() ? ` ${api.gainRandomTrick()}` : '';
+        return `${healed ? t('You feel better.') : t('A fine story.')}${extra}`;
       } },
-      { label: 'Tell your own', detail: 'Gain 20 gold for a good yarn.', act: (r) => { r.gold += 20; return 'They toss you 20 gold. Not bad!'; } },
+      { label: 'Tell your own', detail: 'Gain 20 gold for a good yarn.', act: (r) => { r.gold += 20; return t('They toss you 20 gold. Not bad!'); } },
     ],
   },
 ];

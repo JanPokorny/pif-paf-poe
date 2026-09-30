@@ -130,7 +130,7 @@ b { font-weight: 400; background: linear-gradient(transparent 55%, var(--hi) 55%
 .relic-mini { font-size: 1.4rem; width: 40px; height: 40px; padding: 0; flex: none; background: none; border: 0; }
 
 /* ── Title ───────────────────────────────────────────────────────────────── */
-.title { min-height: 100dvh; display: flex; flex-direction: column; justify-content: center; align-items: center; padding: 24px 22px calc(24px + var(--safe-b)); gap: 18px; }
+.title { position: relative; min-height: 100dvh; display: flex; flex-direction: column; justify-content: center; align-items: center; padding: 24px 22px calc(24px + var(--safe-b)); gap: 18px; }
 .logo { text-align: center; }
 .logo h1 { font-size: 3rem; margin: 10px 0 0; color: var(--ink); transform: rotate(-2deg); }
 .logo h1 .x { color: var(--blue); } .logo h1 .o { color: var(--red); }
@@ -141,6 +141,10 @@ b { font-weight: 400; background: linear-gradient(transparent 55%, var(--hi) 55%
 .doodle-board .mark svg { width: 100%; height: 100%; }
 .title-buttons { width: 100%; max-width: 330px; display: flex; flex-direction: column; gap: 12px; }
 .title-foot { color: var(--pencil); font-size: 1rem; text-align: center; }
+.lang-toggle { display: flex; justify-content: center; align-items: center; gap: 2px; font-family: var(--marker); color: var(--pencil); }
+.lang-toggle .lang { background: none; border: 0; min-width: 44px; min-height: 40px; padding: 0 6px; font-size: 1.05rem; color: var(--pencil); opacity: 0.6; }
+.title > .lang-toggle { position: absolute; top: calc(4px + var(--safe-t)); right: 6px; }
+.lang-toggle .lang.on { opacity: 1; color: var(--ink); text-decoration: underline wavy var(--blue); text-underline-offset: 4px; }
 
 .kits { display: flex; flex-direction: column; gap: 14px; }
 .kit { text-align: left; padding: 12px 12px 10px; display: flex; flex-direction: column; gap: 6px; position: relative; border: 0; border-radius: 2px; box-shadow: 2px 6px 10px -5px rgba(80, 60, 0, 0.45); }
@@ -605,3 +609,6 @@ b { font-weight: 400; background: linear-gradient(transparent 55%, var(--hi) 55%
 .stone.on-board.hop { animation: hop 0.42s ease-in-out; z-index: 4; }
 @keyframes hop { 50% { scale: 1.3; filter: drop-shadow(0 8px 6px rgba(0,0,0,0.25)); } }
 .share { white-space: pre-wrap; font-family: var(--hand); background: var(--card); padding: 8px; user-select: all; }
+/* Czech needs háčky and čárky: a marker face that has them, a size up. */
+:root:lang(cs) { --marker: 'Caveat Brush', 'Patrick Hand', 'Comic Sans MS', system-ui, sans-serif; }
+:lang(cs) h1, :lang(cs) h2, :lang(cs) .turn-status, :lang(cs) .btn.primary, :lang(cs) .enemy-name, :lang(cs) .card-name, :lang(cs) .section-label { letter-spacing: 0.01em; font-size-adjust: 0.52; }

@@ -11,6 +11,8 @@ import {
 } from '../engine.js';
 import { h, stoneEl, updateStone, iconEl, toast, infoStone, infoTrick, infoField, infoSpace, stoneName, stoneText, sleep } from './common.js';
 import { icon } from '../icons.js';
+import { t } from '../i18n.js';
+import { RELICS } from '../content.js';
 import { think } from '../brain.js';
 import { sfx } from '../sound.js';
 
@@ -41,23 +43,25 @@ const SQUARE = ['top-left', 'top', 'top-right', 'left', 'centre', 'right', 'bott
 const BLOCK = { TL: 'top-left', TR: 'top-right', BL: 'bottom-left', BR: 'bottom-right' };
 
 // A few words on what an effect or trick choice did, for the move caption.
+const sq = (i) => t(SQUARE[i]);
+const turning = (cw) => t(cw ? 'clockwise' : 'anticlockwise');
 function describe(a) {
   if (a.use && a.use !== 'pass') {
-    const t = TRICKS[a.use].name;
-    if (a.from !== undefined) return `${t}: ${SQUARE[a.from]} → ${SQUARE[a.to]}`;
-    if (a.a !== undefined) return `${t}: swapped ${SQUARE[a.a]} and ${SQUARE[a.b]}`;
-    if (a.stone) return `${t}: you must play ${STONES[a.stone].name}`;
-    if (a.pos !== undefined) return `${t} on the ${SQUARE[a.pos]}`;
-    return t;
+    const trick = TRICKS[a.use].name;
+    if (a.from !== undefined) return `${trick}: ${sq(a.from)} → ${sq(a.to)}`;
+    if (a.a !== undefined) return t('{trick}: swapped {a} and {b}', { trick, a: sq(a.a), b: sq(a.b) });
+    if (a.stone) return t('{trick}: you must play {stone}', { trick, stone: STONES[a.stone].name });
+    if (a.pos !== undefined) return t('{trick} on the {square}', { trick, square: sq(a.pos) });
+    return trick;
   }
   if (a.dir) {
-    const which = a.index === undefined ? '' : (a.dir === 'left' || a.dir === 'right' ? ` row ${a.index + 1}` : ` column ${a.index + 1}`);
-    return `slid${which} ${a.dir}`;
+    if (a.index === undefined) return t(`slid ${a.dir}`);
+    return t(a.dir === 'left' || a.dir === 'right' ? `slid row {n} ${a.dir}` : `slid column {n} ${a.dir}`, { n: a.index + 1 });
   }
-  if (a.block) return `turned the ${BLOCK[a.block]} block ${a.cw ? 'clockwise' : 'anticlockwise'}`;
-  if (a.turn) return `turned the ring ${Math.abs(a.turn)} ${a.turn > 0 ? 'clockwise' : 'anticlockwise'}`;
-  if (a.axis) return `mirrored the board ${{ h: 'left–right', v: 'top–bottom', d: 'diagonally', a: 'diagonally' }[a.axis]}`;
-  if (a.target !== undefined) return `targeting the ${SQUARE[a.target]}`;
+  if (a.block) return t('turned the {block} block {turn}', { block: t(BLOCK[a.block]), turn: turning(a.cw) });
+  if (a.turn) return t('turned the ring {n} {turn}', { n: Math.abs(a.turn), turn: turning(a.turn > 0) });
+  if (a.axis) return t('mirrored the board {axis}', { axis: t({ h: 'left–right', v: 'top–bottom', d: 'diagonally', a: 'diagonally' }[a.axis]) });
+  if (a.target !== undefined) return t('targeting the {square}', { square: sq(a.target) });
   return '';
 }
 
@@ -94,9 +98,9 @@ export function mountDuel(root, opts) {
   const info = h('div.info-line');
 
   const header = h('div.enemy-bar', {},
-    h('div.portrait', { onclick: () => toast(`“${enemy.quote ?? '…'}”`) }, h('div.photo', {}, enemy.emoji)),
+    h('div.portrait', { onclick: () => toast(t('“{quote}”', { quote: enemy.quote ?? '…' })) }, h('div.photo', {}, enemy.emoji)),
     h('div.enemy-meta', {}, h('div.enemy-name', {}, enemy.name,
-      enemy.tier && enemy.tier !== 'normal' ? h('span.tier.' + enemy.tier, {}, enemy.tier === 'event' ? 'challenge' : enemy.tier) : null),
+      enemy.tier && enemy.tier !== 'normal' ? h('span.tier.' + enemy.tier, {}, t(enemy.tier === 'event' ? 'challenge' : enemy.tier)) : null),
     h('div.enemy-row', {}, enemyHand, enemyTricks)), extra);
 
   const el = h('div.duel', {}, header, chips, status, h('div.board-wrap', {}, board), actions, hand, trickRow, info);
@@ -150,7 +154,7 @@ export function mountDuel(root, opts) {
       e.addEventListener('click', () => { if (!e.classList.contains('target')) tapEnemyStone(st); });
       return e;
     }));
-    enemyTricks.replaceChildren(...s.tricks.O.map((t) => h('button.mini-trick', { html: icon(t), onclick: () => infoTrick(t) })));
+    enemyTricks.replaceChildren(...s.tricks.O.map((x) => h('button.mini-trick', { html: icon(x), onclick: () => infoTrick(x) })));
 
     // Player hand: during a turn in progress, show the hand as it was.
     const base = snapshot && s.phase !== 'select' && s.player === 'X' && s.turns === snapshot.turns ? snapshot : s;
@@ -165,17 +169,17 @@ export function mountDuel(root, opts) {
       if (!selectable && !(inTurn && s.phase === 'place')) b.classList.add('idle');
       return b;
     }));
-    if (!base.hands.X.length) hand.append(h('div.empty-hand', {}, 'No stones left'));
+    if (!base.hands.X.length) hand.append(h('div.empty-hand', {}, t('No stones left')));
 
     // Tricks.
     const usable = s.player === 'X' && s.phase === 'trick' && !busy
       ? new Set(legalActions(s).map((a) => a.use)) : new Set();
     trickRow.classList.toggle('spent', s.uses.X <= 0);
     trickRow.replaceChildren(
-      s.tricks.X.length ? h('span.uses', { title: 'trick uses left this duel' }, s.uses.X > 0 ? `×${s.uses.X}` : 'used up:') : h('span.no-tricks', {}, 'No tricks'),
-      ...s.tricks.X.map((t) => {
-        const b = h('button.trick-btn', { onclick: () => tapTrick(t) }, h('span.trick-ico', { html: icon(t) }), TRICKS[t].name);
-        if (usable.has(t)) b.classList.add('usable');
+      s.tricks.X.length ? h('span.uses', { title: t('trick uses left this duel') }, s.uses.X > 0 ? `×${s.uses.X}` : t('used up:')) : h('span.no-tricks', {}, t('No tricks')),
+      ...s.tricks.X.map((x) => {
+        const b = h('button.trick-btn', { onclick: () => tapTrick(x) }, h('span.trick-ico', { html: icon(x) }), TRICKS[x].name);
+        if (usable.has(x)) b.classList.add('usable');
         if (trickName === t) b.classList.add('aiming');
         return b;
       }));
@@ -185,14 +189,14 @@ export function mountDuel(root, opts) {
     const items = [];
     items.push(h('button.chip', { onclick: () => infoSpace(s.disabled) },
       s.disabled ? h('span.chip-ico.crossed', { html: icon(s.disabled) }) : null,
-      s.disabled ? `No ${STONES[s.disabled].name}` : 'Neutral space'));
-    if (s.field) items.push(h('button.chip.field', { onclick: () => infoField(s.field) }, 'Boss rule: ' + FIELDS[s.field].name));
+      s.disabled ? t('No {stone}', { stone: STONES[s.disabled].name }) : t('Neutral space')));
+    if (s.field) items.push(h('button.chip.field', { onclick: () => infoField(s.field) }, t('Boss rule: ') + FIELDS[s.field].name));
     const hx = !!s.mods.X.hourglass, ho = !!s.mods.O.hourglass;
     const tie = hx !== ho ? (hx ? 'X' : 'O') : other(s.first);
-    items.push(h('span.chip.opener', { title: 'Who takes a full board, or a player out of stones' }, `Full board → ${tie === 'X' ? 'you' : 'them'}`));
-    if (s.silenced.X) items.push(h('span.chip.bad', {}, `Hushed ×${s.silenced.X}`));
-    if (s.silenced.O) items.push(h('span.chip.good', {}, `Enemy hushed ×${s.silenced.O}`));
-    if (s.forced) items.push(h('span.chip.bad', {}, `${s.forced.player === 'X' ? 'You' : 'They'} must play ${STONES[s.forced.stone].name}`));
+    items.push(h('span.chip.opener', { title: t('Who takes a full board, or a player out of stones') }, t(tie === 'X' ? 'Full board → you' : 'Full board → them')));
+    if (s.silenced.X) items.push(h('span.chip.bad', {}, t('Hushed ×{n}', { n: s.silenced.X })));
+    if (s.silenced.O) items.push(h('span.chip.good', {}, t('Enemy hushed ×{n}', { n: s.silenced.O })));
+    if (s.forced) items.push(h('span.chip.bad', {}, t(s.forced.player === 'X' ? 'You must play {stone}' : 'They must play {stone}', { stone: STONES[s.forced.stone].name })));
     chips.replaceChildren(...items);
   }
 
@@ -214,8 +218,8 @@ export function mountDuel(root, opts) {
     const ps = preview.state;
     if (!ps.over) return;
     if (ps.reason === 'line') lineLayer.innerHTML = lineSvg(winningLine(ps, ps.winner), ps.winner, true);
-    if (ps.winner === 'X') setStatus('✓ This wins the duel!', 'win-note');
-    else setStatus('✗ This hands them the duel!', 'lose-note');
+    if (ps.winner === 'X') setStatus(t('✓ This wins the duel!'), 'win-note');
+    else setStatus(t('✗ This hands them the duel!'), 'lose-note');
   }
 
   function setStatus(text, cls = '') { status.textContent = text; status.className = 'turn-status ' + cls; }
@@ -255,7 +259,7 @@ export function mountDuel(root, opts) {
         const i = +k;
         if (!Number.isInteger(i) || !cells[i]) {
           // The choice that aims at no square in particular: "all of them".
-          btns.push(h('button.btn.opt' + (isChosen(group) ? '.chosen' : ''), { onclick: pickGroup(group) }, 'All of them'));
+          btns.push(h('button.btn.opt' + (isChosen(group) ? '.chosen' : ''), { onclick: pickGroup(group) }, t('All of them')));
           continue;
         }
         cells[i].classList.add('target');
@@ -277,7 +281,7 @@ export function mountDuel(root, opts) {
         if (index === '') { x = { left: -0.33, right: 3.33, up: 1.5, down: 1.5 }[dir]; y = { up: -0.3, down: 3.3, left: 1.5, right: 1.5 }[dir]; }
         else if (dir === 'left' || dir === 'right') { x = dir === 'left' ? -0.33 : 3.33; y = +index + 0.5; }
         else { y = dir === 'up' ? -0.3 : 3.3; x = +index + 0.5; }
-        const b = h('button.arrow' + (isChosen(group) ? '.chosen' : ''), { html: icon(DIR_ARROW[dir]), onclick: pickGroup(group), 'aria-label': dir });
+        const b = h('button.arrow' + (isChosen(group) ? '.chosen' : ''), { html: icon(DIR_ARROW[dir]), onclick: pickGroup(group), 'aria-label': t(dir) });
         place(x, y, b);
       }
     } else if (stage.kind === 'block') {
@@ -297,9 +301,9 @@ export function mountDuel(root, opts) {
       // Around the board's corners: clockwise on the right, anticlockwise on the left.
       const spot = { 1: [3.25, -0.25], [-1]: [-0.25, -0.25], 2: [3.25, 3.25], [-2]: [-0.25, 3.25] };
       for (const [k, group] of stage.groups) {
-        const t = +k;
-        const b = h('button.rot.turn' + (isChosen(group) ? '.chosen' : ''), { onclick: pickGroup(group), 'aria-label': `turn ${t}` },
-          h('span', { html: icon(t > 0 ? 'rotate-cw' : 'rotate-ccw') }), Math.abs(t) > 1 ? h('span.times', {}, '×2') : null);
+        const x = +k;
+        const b = h('button.rot.turn' + (isChosen(group) ? '.chosen' : ''), { onclick: pickGroup(group), 'aria-label': `turn ${x}` },
+          h('span', { html: icon(x > 0 ? 'rotate-cw' : 'rotate-ccw') }), Math.abs(x) > 1 ? h('span.times', {}, '×2') : null);
         place(...spot[t], b);
       }
     } else if (stage.kind === 'axis') {
@@ -318,7 +322,7 @@ export function mountDuel(root, opts) {
           e.onclick = (ev) => { ev.stopPropagation(); pickGroup(group)(); };
         }
       }
-      setTimeout(() => { if (!preview) info.textContent = 'Tap a stone in their hand, up top.'; });
+      setTimeout(() => { if (!preview) info.textContent = t('Tap a stone in their hand, up top.'); });
     }
     // Show which stone a two-step choice has already picked.
     if (stageCands.length && stageCands[0].from !== undefined && stageCands.every((c) => c.from === stageCands[0].from)) {
@@ -339,57 +343,57 @@ export function mountDuel(root, opts) {
     cells.forEach((c) => c.classList.remove('nogo', 'threat'));
 
     if (state.over) {
-      setStatus(state.winner === 'X' ? 'You win!' : `${enemy.name} wins`, state.winner === 'X' ? 'you' : 'enemy-done');
+      setStatus(state.winner === 'X' ? t('You win!') : t('{enemy} wins', { enemy: enemy.name }), state.winner === 'X' ? 'you' : 'enemy-done');
       renderActions([]);
       info.textContent = '';
       return;
     }
     if (busy || state.player !== 'X') {
-      setStatus(`${enemy.name} is thinking…`, 'enemy');
+      setStatus(t('{enemy} is thinking…', { enemy: enemy.name }), 'enemy');
       renderActions([]);
       info.textContent = caption.filter(Boolean).join(', ');
       return;
     }
     const undo = snapshot && state.turns === snapshot.turns && state.phase !== 'select'
-      ? h('button.btn.ghost', { onclick: undoTurn }, h('span', { html: icon('undo') }), 'Undo') : null;
+      ? h('button.btn.ghost', { onclick: undoTurn }, h('span', { html: icon('undo') }), t('Undo')) : null;
 
     if (state.phase === 'select') {
       markDangers();
-      setStatus('Your turn — pick a stone', 'you');
+      setStatus(t('Your turn — pick a stone'), 'you');
       info.textContent = caption.length ? `${enemy.name}: ${caption.filter(Boolean).join(', ')}.`
-        : state.hands.X.length ? 'Tap a stone in your hand. Tap any stone on the board to read it.' : '';
+        : state.hands.X.length ? t('Tap a stone in your hand. Tap any stone on the board to read it.') : '';
       if (state.turns >= 2 && state.board.some(Boolean) && cells.some((c) => c.classList.contains('threat'))) coach('enemy'); else coach('select');
       renderActions([]);
     } else if (state.phase === 'place' && !preview) {
-      setStatus('Place it on a glowing square', 'you');
+      setStatus(t('Place it on a glowing square'), 'you');
       describeSelected();
       coach('place');
       for (const i of allowedSquares(state)) cells[i].classList.add('allowed');
       renderActions([undo]);
     } else if (state.phase === 'place' && preview) {
       const dud = preview.logs?.find((l) => ['silenced', 'snared', 'disabled'].includes(l));
-      setStatus(dud ? `${{ silenced: 'Hushed', snared: 'Snared', disabled: 'Switched off' }[dud]} — it will do nothing. Confirm?` : 'This is what happens. Confirm?', dud ? 'lose-note' : 'you');
+      setStatus(dud ? t('{why} — it will do nothing. Confirm?', { why: t({ silenced: 'Hushed', snared: 'Snared', disabled: 'Switched off' }[dud]) }) : t('This is what happens. Confirm?'), dud ? 'lose-note' : 'you');
       cells[preview.action.pos].classList.add('chosen');
       for (const i of allowedSquares(state)) cells[i].classList.add('allowed');
-      renderActions([undo, h('button.btn.primary', { onclick: confirm }, h('span', { html: icon('check') }), 'Confirm')]);
+      renderActions([undo, h('button.btn.primary', { onclick: confirm }, h('span', { html: icon('check') }), t('Confirm'))]);
       verdict();
     } else if (state.phase === 'effect' || (state.phase === 'trick' && trickName)) {
       const btns = renderStage();
       const what = state.phase === 'effect' ? stoneName(state.board[state.placedAt]) : TRICKS[trickName].name;
-      setStatus(preview ? 'Tap again or ✓ to confirm' : state.phase === 'trick' ? `Aim your ${what}` : `Choose how your ${what} works`, 'you');
+      setStatus(preview ? t('Tap again or ✓ to confirm') : t(state.phase === 'trick' ? 'Aim your {what}' : 'Choose how your {what} works', { what }), 'you');
       if (state.phase === 'effect') { describeSelected(); if (!preview) coach('effect'); } else info.textContent = TRICKS[trickName].text;
       const back = state.phase === 'trick'
-        ? h('button.btn.ghost', { onclick: () => { trickName = null; preview = null; show(); } }, h('span', { html: icon('back') }), 'Back')
-        : (stageCands !== allEffect() ? h('button.btn.ghost', { onclick: () => { stageCands = cands = allEffect(); preview = null; show(); } }, h('span', { html: icon('back') }), 'Back') : null);
+        ? h('button.btn.ghost', { onclick: () => { trickName = null; preview = null; show(); } }, h('span', { html: icon('back') }), t('Back'))
+        : (stageCands !== allEffect() ? h('button.btn.ghost', { onclick: () => { stageCands = cands = allEffect(); preview = null; show(); } }, h('span', { html: icon('back') }), t('Back')) : null);
       renderActions([state.phase === 'effect' ? undo : back, state.phase === 'trick' ? undo : back,
-        ...btns, preview ? h('button.btn.primary', { onclick: confirm }, h('span', { html: icon('check') }), 'Confirm') : null]
+        ...btns, preview ? h('button.btn.primary', { onclick: confirm }, h('span', { html: icon('check') }), t('Confirm')) : null]
         .filter((b, k, arr) => b && arr.indexOf(b) === k));
       verdict();
     } else if (state.phase === 'trick') {
-      setStatus('Spend a trick, or end your turn', 'you');
-      info.textContent = 'Glowing tricks can be used now. A trick resolves before the check for three in a row.';
+      setStatus(t('Spend a trick, or end your turn'), 'you');
+      info.textContent = t('Glowing tricks can be used now. A trick resolves before the check for three in a row.');
       coach('trick');
-      renderActions([undo, h('button.btn.primary', { onclick: endTurnPass }, 'End turn')]);
+      renderActions([undo, h('button.btn.primary', { onclick: endTurnPass }, t('End turn'))]);
     }
   }
 
@@ -422,7 +426,7 @@ export function mountDuel(root, opts) {
       try { localStorage.setItem('ppp-coach', JSON.stringify(seen)); } catch { /* ignore */ }
     }
     coach.shown = kind;
-    info.replaceChildren(h('span.coach', {}, COACH[kind]));
+    info.replaceChildren(h('span.coach', {}, t(COACH[kind])));
     return true;
   }
 
@@ -430,7 +434,7 @@ export function mountDuel(root, opts) {
     const c = state.phase === 'effect' ? state.board[state.placedAt] : state.selected;
     if (!c) return;
     info.replaceChildren(h('b', {}, stoneName(c) + ': '), stoneText(c),
-      state.silenced.X > 0 && state.phase === 'place' ? h('span.red', {}, ' — but you are hushed: it will do nothing.') : '',
+      state.silenced.X > 0 && state.phase === 'place' ? h('span.red', {}, t(' — but you are hushed: it will do nothing.')) : '',
       h('button.info-more', { onclick: () => infoStone(c, 'X') }, 'ⓘ'));
   }
 
@@ -456,7 +460,7 @@ export function mountDuel(root, opts) {
     }
     const st = state.hands.X[k];
     const ok = legalActions(state).find((a) => a.stone === st.type && !!a.plus === !!st.plus);
-    if (!ok) { toast('Mind Control: you must play the named stone.', 'bad'); return; }
+    if (!ok) { toast(t('{trick}: you must play the named stone.', { trick: TRICKS['mind-control'].name }), 'bad'); return; }
     sfx('select');
     // Never touch the saved start-of-turn state: work on a copy of it.
     snapshot = state;
@@ -469,14 +473,14 @@ export function mountDuel(root, opts) {
   function tapSquare(i) {
     const s = preview ? preview.state : state;
     if (!myMove() || state.phase === 'select' || (state.phase === 'trick' && !trickName)) {
-      if (s.board[i]) infoStone(s.board[i], s.board[i].player, s.board[i].stuck ? 'This stone is stuck: nothing will move it.' : '');
+      if (s.board[i]) infoStone(s.board[i], s.board[i].player, s.board[i].stuck ? t('This stone is stuck: nothing will move it.') : '');
       return;
     }
     if (state.phase === 'place') {
       const allowed = allowedSquares(state);
       if (!allowed.includes(i)) {
         if (s.board[i] && !preview) infoStone(s.board[i], s.board[i].player);
-        else if (!s.board[i]) toast('Not there — the enemy\'s restrictions point elsewhere.', 'bad');
+        else if (!s.board[i]) toast(t('Not there — the enemy\'s restrictions point elsewhere.'), 'bad');
         return;
       }
       if (preview && preview.action.pos === i) return confirm();
@@ -500,11 +504,11 @@ export function mountDuel(root, opts) {
 
   function tapEnemyStone(st) { infoStone(st, 'O'); }
 
-  function tapTrick(t) {
-    if (!myMove() || state.phase !== 'trick') { infoTrick(t); return; }
-    const opts = legalActions(state).filter((a) => a.use === t);
-    if (!opts.length) { infoTrick(t); toast(`${TRICKS[t].name} has nothing to do right now.`); return; }
-    trickName = t;
+  function tapTrick(x) {
+    if (!myMove() || state.phase !== 'trick') { infoTrick(x); return; }
+    const opts = legalActions(state).filter((a) => a.use === x);
+    if (!opts.length) { infoTrick(x); toast(t('{trick} has nothing to do right now.', { trick: TRICKS[x].name })); return; }
+    trickName = x;
     preview = null;
     stageCands = cands = opts;
     show();
@@ -568,14 +572,15 @@ export function mountDuel(root, opts) {
   }
 
   function announce(logs, who) {
-    const name = who === 'X' ? 'Your' : `${enemy.name}'s`;
+    const me = who === 'X';
+    const v = { enemy: enemy.name };
     for (const l of logs) {
-      if (l === 'disabled') toast(`${name} stone is switched off by the space.`);
-      else if (l === 'silenced') toast(`Hushed! ${name} stone does nothing.`, who === 'X' ? 'bad' : 'good');
-      else if (l === 'snared') toast(`Snared! ${name} stone does nothing.`, who === 'X' ? 'bad' : 'good');
-      else if (l === 'echo') toast('Echo! It goes again.', 'good');
-      else if (l.startsWith('parrot:')) toast(`The Parrot copies ${STONES[l.slice(7)].name}!`);
-      else if (l.startsWith('trick:')) { toast(`${who === 'X' ? 'You' : enemy.name} used ${TRICKS[l.slice(6)].name}!`, who === 'X' ? 'good' : 'bad'); sfx('trick'); }
+      if (l === 'disabled') toast(t(me ? 'Your stone is switched off by the space.' : '{enemy}\'s stone is switched off by the space.', v));
+      else if (l === 'silenced') toast(t(me ? 'Hushed! Your stone does nothing.' : 'Hushed! {enemy}\'s stone does nothing.', v), me ? 'bad' : 'good');
+      else if (l === 'snared') toast(t(me ? 'Snared! Your stone does nothing.' : 'Snared! {enemy}\'s stone does nothing.', v), me ? 'bad' : 'good');
+      else if (l === 'echo') toast(t('Echo! It goes again.'), 'good');
+      else if (l.startsWith('parrot:')) toast(t('The {parrot} copies {stone}!', { parrot: STONES.parrot.name, stone: STONES[l.slice(7)].name }));
+      else if (l.startsWith('trick:')) { toast(t(me ? 'You used {trick}!' : '{enemy} used {trick}!', { ...v, trick: TRICKS[l.slice(6)].name }), me ? 'good' : 'bad'); sfx('trick'); }
       else if (l.startsWith('field:')) toast(`${FIELDS[l.slice(6)].name}!`);
     }
   }
@@ -596,7 +601,7 @@ export function mountDuel(root, opts) {
       if (action.type === 'select') {
         state.log = [];
         applyAction(state, action);
-        caption = [`played ${stoneName(state.selected)}`];
+        caption = [t('played {stone}', { stone: stoneName(state.selected) })];
         info.textContent = caption.filter(Boolean).join(', ');
         // Show which stone it took.
         renderHands(state);
@@ -631,7 +636,7 @@ export function mountDuel(root, opts) {
       renderChips(state);
       if (action.type === 'place') {
         lastEnemyId = state.placedId;
-        caption = [`played ${stoneName(state.lastPlaced.O)} on the ${SQUARE[action.pos]}`];
+        caption = [t('played {stone} on the {square}', { stone: stoneName(state.lastPlaced.O), square: sq(action.pos) })];
       } else if (action.type !== 'trick' || action.use !== 'pass') caption.push(describe(action));
       info.textContent = caption.filter(Boolean).join(', ');
       if (action.type === 'place') {
@@ -666,15 +671,21 @@ export function mountDuel(root, opts) {
     const won = state.winner === 'X';
     sfx(won ? 'win' : 'lose');
     await sleep(900);
+    const v = { enemy: enemy.name };
+    const hourglass = state.mods.X.hourglass !== !!state.mods.O.hourglass;
     const why = state.reason === 'line'
-      ? (won ? 'Three in a row!' : `${enemy.name} made three in a row.`)
+      ? (won ? t('Three in a row!') : t('{enemy} made three in a row.', v))
       : state.reason === 'full'
-        ? `The board is full — it goes to ${won ? 'you' : enemy.name}${state.mods.X.hourglass !== !!state.mods.O.hourglass ? ' (Hourglass)' : ', who moved second'}.`
-        : `${state.player === 'X' ? 'You are' : `${enemy.name} is`} out of stones — it goes to ${won ? 'you' : enemy.name}.`;
+        ? (hourglass
+          ? t(won ? 'The board is full — it goes to you ({hourglass}).' : 'The board is full — it goes to {enemy} ({hourglass}).', { ...v, hourglass: RELICS.hourglass.name })
+          : t(won ? 'The board is full — it goes to you, who moved second.' : 'The board is full — it goes to {enemy}, who moved second.', v))
+        : t(state.player === 'X'
+          ? (won ? 'You are out of stones — it goes to you.' : 'You are out of stones — it goes to {enemy}.')
+          : (won ? '{enemy} is out of stones — it goes to you.' : '{enemy} is out of stones — it goes to {enemy}.'), v);
     const banner = h('div.result-banner.' + (won ? 'won' : 'lost'), {},
-      h('div.result-title', {}, won ? 'Victory!' : 'Defeat'),
+      h('div.result-title', {}, won ? t('Victory!') : t('Defeat')),
       h('div.result-why', {}, why),
-      h('button.btn.primary.wide', { onclick: () => { banner.remove(); onEnd(state.winner); } }, 'Continue'));
+      h('button.btn.primary.wide', { onclick: () => { banner.remove(); onEnd(state.winner); } }, t('Continue')));
     el.append(banner);
   }
 
@@ -692,7 +703,7 @@ export function mountDuel(root, opts) {
     stageCands = cands = effectCands;
   }
   show();
-  if (state.turns <= 1 && state.phase === 'select' && enemy.quote && !caption.length) info.textContent = `${enemy.name}: “${enemy.quote}”`;
+  if (state.turns <= 1 && state.phase === 'select' && enemy.quote && !caption.length) info.textContent = t('{enemy}: “{quote}”', { enemy: enemy.name, quote: enemy.quote });
   if (state.over) finish();
   else if (state.player === 'O') enemyTurn();
 

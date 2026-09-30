@@ -32,5 +32,5 @@ npx http-server -c-1 .
 | `src/main.js`, `src/ui/` | the screens |
 | `tools/` | headless playtests and balance measurements (`node tools/balance.mjs`) |
 
-Fonts are self-hosted in `fonts/`: Patrick Hand (SIL OFL) and Permanent Marker (Apache 2.0).
+Fonts are self-hosted in `fonts/`: Patrick Hand and Caveat Brush (SIL OFL) and Permanent Marker (Apache 2.0).
 The first, glossy look is kept in `old/style-glossy.css` as a record of what not to do.
