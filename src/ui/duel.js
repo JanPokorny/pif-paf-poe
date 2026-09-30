@@ -7,7 +7,7 @@
 
 import {
   STONES, TRICKS, FIELDS, legalActions, applyAction, cloneState, allowedSquares,
-  winningLine, active, isStuck, row, col,
+  winningLine, active, isStuck, guarded, other, row, col,
 } from '../engine.js';
 import { h, stoneEl, updateStone, iconEl, toast, infoStone, infoTrick, infoField, infoSpace, stoneName, stoneText, sleep } from './common.js';
 import { icon } from '../icons.js';
@@ -117,7 +117,7 @@ export function mountDuel(root, opts) {
         setTimeout(() => e.classList.remove('pop'), 300);
         e.addEventListener('click', (ev) => { ev.stopPropagation(); tapSquare(+e.dataset.at); });
       }
-      updateStone(e, c, c.player, { stuck: isStuck(s, i) && !STONES[c.type].immovable && !(c.type === 'joker'), dead: !active(s, c) });
+      updateStone(e, c, c.player, { stuck: !!c.stuck || guarded({ ...s, player: other(c.player) }, i), dead: !active(s, c) });
       e.dataset.at = i;
       e.classList.toggle('last', c.id === lastEnemyId);
       e.style.setProperty('--r', row(i));

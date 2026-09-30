@@ -307,6 +307,7 @@ const RAW = {
 
   'o-mark': C(0, 0, 5.6, SW(3)),
 
+  guardian: P('M 0 -7 L 6 -4.6 V 0 C 6 3.8 3.4 6 0 7.4 C -3.4 6 -6 3.8 -6 0 V -4.6 Z') + P('M -2.6 0.2 L -0.6 2.4 L 3 -2.2', SW(1.6)),
   'arrow-up': arrow(0, 6, 0, -6.4, 4, 3),
   'arrow-down': arrow(0, -6, 0, 6.4, 4, 3),
   'arrow-left': arrow(6, 0, -6.4, 0, 4, 3),

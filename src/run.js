@@ -53,7 +53,7 @@ export const KITS = {
   },
   gambler: {
     name: 'The Gambler', emoji: '🎰', text: 'Rare stones, few hearts. Unlocked by winning once.',
-    pouch: ['pebble', 'pebble', 'joker', 'firecracker', 'shift', 'rotate'], tricks: ['pluck'], hearts: 4, gold: 80,
+    pouch: ['pebble', 'pebble', 'guardian', 'firecracker', 'shift', 'rotate'], tricks: ['pluck'], hearts: 4, gold: 80,
     relics: ['lucky-coin'], locked: true,
   },
 };

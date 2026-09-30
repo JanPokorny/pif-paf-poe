@@ -130,44 +130,56 @@ def('2048', {
 });
 
 def('bumper', {
-  name: 'Bumper', rarity: 'common', kind: 'move',
-  text: 'Pushes each stone beside it one step directly away, if there is room.',
-  plusText: 'Pushes each stone around it, corners included, one step away.',
+  name: 'Bumper', rarity: 'uncommon', kind: 'move',
+  text: 'Pushes each enemy stone beside it one step directly away. One pushed off the board goes back to their hand.',
+  plusText: 'Pushes each enemy stone around it, corners included, one step away. Off the board means back to hand.',
   options: () => [{}],
   apply(s, pos, a, cell) {
     const moves = [];
     for (const dir of cell.plus ? ALL8 : ORTHO) {
       const n = step(pos, dir), beyond = step(pos, dir, 2);
-      if (n < 0 || beyond < 0 || !s.board[n] || s.board[beyond] || isStuck(s, n)) continue;
-      moves.push([n, beyond]);
+      if (n < 0 || !s.board[n] || s.board[n].player === cell.player || isStuck(s, n)) continue;
+      if (beyond < 0) { if (!isSealed(s, n)) moves.push([n, -1]); } else if (!s.board[beyond]) moves.push([n, beyond]);
     }
-    for (const [from, to] of moves) move(s, from, to);
+    for (const [from, to] of moves) if (to < 0) returnToHand(s, from); else move(s, from, to);
   },
 });
 
 def('lasso', {
   name: 'Lasso', rarity: 'common', kind: 'move',
-  text: 'Stones two squares away in a straight line are pulled one step closer.',
-  plusText: 'Stones two squares away in any line, diagonals too, are pulled one step closer.',
-  options: () => [{}],
-  apply(s, pos, a, cell) {
-    const moves = [];
-    for (const dir of cell.plus ? ALL8 : ORTHO) {
-      const mid = step(pos, dir), far = step(pos, dir, 2);
-      if (far < 0 || !s.board[far] || s.board[mid] || isStuck(s, far)) continue;
-      moves.push([far, mid]);
-    }
-    for (const [from, to] of moves) move(s, from, to);
+  text: 'Every stone two squares away in a straight line, diagonals too, is pulled one step closer.',
+  plusText: 'Pull every stone two squares away one step closer — or pick just one of them.',
+  options(s, pos, cell) {
+    const pulls = lassoPulls(s, pos);
+    if (!cell.plus || pulls.length < 2) return [{}];
+    return [{}, ...pulls.map(([from]) => ({ target: from }))];
+  },
+  apply(s, pos, a) {
+    for (const [from, to] of lassoPulls(s, pos)) if (a.target === undefined || a.target === from) move(s, from, to);
   },
 });
 
+function lassoPulls(s, pos) {
+  const moves = [];
+  for (const dir of ALL8) {
+    const mid = step(pos, dir), far = step(pos, dir, 2);
+    if (far < 0 || !s.board[far] || s.board[mid] || isStuck(s, far)) continue;
+    moves.push([far, mid]);
+  }
+  return moves;
+}
+
 def('swap', {
   name: 'Swap', rarity: 'uncommon', kind: 'move',
-  text: 'Trade places with a stone beside it.',
-  plusText: 'Trade places with a stone around it, corners included.',
+  text: 'Trade places with a stone around it, corners included.',
+  plusText: 'Trade places with any stone in its row, column or diagonal.',
   options(s, pos, cell) {
-    return neighbours(pos, cell.plus)
+    const reach = cell.plus
+      ? [...new Set(LINES.filter((l) => l.includes(pos)).flat())].filter((j) => j !== pos)
+      : neighbours(pos, true);
+    return reach
       .filter((j) => s.board[j] && !isStuck(s, j) && !isSealed(s, j))
+      .sort((x, y) => x - y)
       .map((target) => ({ target }));
   },
   apply(s, pos, a) {
@@ -192,8 +204,8 @@ def('whirl', {
 
 def('frog', {
   name: 'Frog', rarity: 'uncommon', kind: 'move',
-  text: 'Leaps over a stone beside it into the empty square beyond.',
-  plusText: 'Leaps over a stone around it, diagonals too, into the empty square beyond.',
+  text: 'Leaps over a stone beside it into the empty square beyond. An enemy stone leapt over goes back to their hand.',
+  plusText: 'Leaps like a Frog, diagonals too. An enemy stone leapt over goes back to their hand.',
   options(s, pos, cell) {
     const out = [];
     for (const dir of cell.plus ? ALL8 : ORTHO) {
@@ -202,7 +214,12 @@ def('frog', {
     }
     return out;
   },
-  apply(s, pos, a) { move(s, pos, a.target); },
+  apply(s, pos, a, cell) {
+    const mid = at((row(pos) + row(a.target)) / 2, (col(pos) + col(a.target)) / 2);
+    move(s, pos, a.target);
+    const jumped = s.board[mid];
+    if (jumped && jumped.player !== cell.player && !isSealed(s, mid)) returnToHand(s, mid);
+  },
 });
 
 def('beacon', {
@@ -215,18 +232,17 @@ def('beacon', {
 
 def('flip', {
   name: 'Flip', rarity: 'uncommon', kind: 'move',
-  text: 'Mirror the whole board, left to right or top to bottom.',
-  plusText: 'Mirror the whole board across either axis or either diagonal.',
-  options: (s, pos, cell) => (cell.plus
-    ? [{ axis: 'h' }, { axis: 'v' }, { axis: 'd' }, { axis: 'a' }]
-    : [{ axis: 'h' }, { axis: 'v' }]),
-  apply(s, pos, a) {
+  text: 'Mirror the board across an axis or diagonal. This stone holds its square.',
+  plusText: 'Mirror only the enemy\'s stones across an axis or diagonal. Yours hold still.',
+  options: () => [{ axis: 'h' }, { axis: 'v' }, { axis: 'd' }, { axis: 'a' }],
+  apply(s, pos, a, cell) {
     const pairs = {
       h: [[0, 2], [3, 5], [6, 8]], v: [[0, 6], [1, 7], [2, 8]],
       d: [[1, 3], [2, 6], [5, 7]], a: [[0, 8], [1, 5], [3, 7]],
     }[a.axis];
+    const holds = (i) => isStuck(s, i) || (cell && (i === pos || (cell.plus && s.board[i]?.player === cell.player)));
     for (const [x, y] of pairs) {
-      if (isStuck(s, x) || isStuck(s, y)) continue;
+      if (holds(x) || holds(y)) continue;
       const held = s.board[x];
       s.board[x] = s.board[y];
       s.board[y] = held;
@@ -264,14 +280,18 @@ def('glue', {
 
 def('firecracker', {
   name: 'Firecracker', rarity: 'rare', kind: 'move',
-  text: 'Blows a stone beside it back into its owner\'s hand.',
-  plusText: 'Blows a stone around it, corners included, back into its owner\'s hand.',
+  text: 'Blows a stone around it, corners included, back into its owner\'s hand — and burns itself up.',
+  plusText: 'Blows every enemy stone beside it back into their hand — and burns itself up.',
   options(s, pos, cell) {
-    return neighbours(pos, cell.plus)
-      .filter((j) => s.board[j] && !isSealed(s, j))
-      .map((target) => ({ target }));
+    const hit = neighbours(pos, !cell.plus).filter((j) => s.board[j] && !isSealed(s, j));
+    if (cell.plus) return hit.some((j) => s.board[j].player !== cell.player) ? [{}] : [];
+    return hit.map((target) => ({ target }));
   },
-  apply(s, pos, a) { returnToHand(s, a.target); },
+  apply(s, pos, a, cell) {
+    if (a.target !== undefined) returnToHand(s, a.target);
+    else for (const j of neighbours(pos, false)) if (s.board[j] && s.board[j].player !== cell.player && !isSealed(s, j)) returnToHand(s, j);
+    s.board[pos] = null;
+  },
 });
 
 def('turncoat', {
@@ -297,14 +317,14 @@ def('parrot', {
 
 def('twin', {
   name: 'Twin', rarity: 'rare', kind: 'move',
-  text: 'If you hold a Pebble, place it beside this stone too.',
-  plusText: 'If you hold a Pebble, place it on any empty square too.',
+  text: 'If you hold a Pebble, it lands on the square facing this one through the centre, if that is empty.',
+  plusText: 'If you hold a Pebble, it lands facing this one through the centre, or on any empty square beside it.',
   options(s, pos, cell) {
     const hand = s.hands[cell.player];
     if (!hand.some((h) => h.type === 'pebble')) return [];
     const out = [];
     for (let j = 0; j < 9; j++) {
-      if (!s.board[j] && (cell.plus || adjacent(j, pos))) out.push({ target: j });
+      if (!s.board[j] && (j === 8 - pos || (cell.plus && adjacent(j, pos)))) out.push({ target: j });
     }
     return out;
   },
@@ -319,10 +339,10 @@ def('twin', {
   },
 });
 
-def('joker', {
-  name: 'Joker', rarity: 'rare', kind: 'wild',
-  text: 'Counts towards a line for both sides. Whoever moved is checked first.',
-  plusText: 'Counts towards a line for both sides, and nothing ever moves it.',
+def('guardian', {
+  name: 'Guardian', rarity: 'rare', kind: 'static',
+  text: 'It and your stones beside it are safe from the enemy: their stones and tricks cannot move, return, swap or convert them.',
+  plusText: 'It and your stones around it, corners included, are safe from anything the enemy does.',
 });
 
 export const STONE_TYPES = Object.keys(STONES);
@@ -479,31 +499,43 @@ export function active(s, cell) {
   return cell.type !== s.disabled || !!s.mods[cell.player].homeTurf;
 }
 
-// Stuck stones are walls to every movement effect: Mountains, Jokers+, and
-// anything Glued or Anchored.
+// Stuck stones are walls to every movement effect: Mountains, anything Glued
+// or Anchored, and a Guardian's charges against the enemy.
 export function isStuck(s, i) {
   const c = s.board[i];
   if (!c) return false;
   if (c.stuck) return true;
+  if (guarded(s, i)) return true;
   if (!active(s, c)) return false;
-  return !!STONES[c.type].immovable || (c.type === 'joker' && c.plus);
+  return !!STONES[c.type].immovable;
+}
+
+// Is this stone under a Guardian of its owner's, against whoever is moving?
+export function guarded(s, i) {
+  const c = s.board[i];
+  if (!c || c.player === s.player) return false;
+  for (let j = 0; j < 9; j++) {
+    const g = s.board[j];
+    if (g && g.type === 'guardian' && g.player === c.player && active(s, g) && (j === i || near(g.plus)(j, i))) return true;
+  }
+  return false;
 }
 
 // A Mountain+ refuses more than movement: returns, conversions and tricks too.
 export function isSealed(s, i) {
   const c = s.board[i];
-  return !!c && c.type === 'mountain' && c.plus && active(s, c);
+  return !!c && ((c.type === 'mountain' && c.plus && active(s, c)) || guarded(s, i));
 }
 
-// Does `player` hold a line? Jokers count for both.
+// Does `player` hold a line?
 export function hasLine(s, player) {
   const b = s.board;
-  const mine = (i) => b[i] && (b[i].player === player || (b[i].type === 'joker' && active(s, b[i])));
+  const mine = (i) => b[i] && b[i].player === player;
   return LINES.some(([x, y, z]) => mine(x) && mine(y) && mine(z));
 }
 export function winningLine(s, player) {
   const b = s.board;
-  const mine = (i) => b[i] && (b[i].player === player || (b[i].type === 'joker' && active(s, b[i])));
+  const mine = (i) => b[i] && b[i].player === player;
   return LINES.find(([x, y, z]) => mine(x) && mine(y) && mine(z)) ?? null;
 }
 
@@ -734,7 +766,9 @@ function endTurn(s) {
   s.phase = 'select';
 
   const full = s.board.every(Boolean);
-  if (full || !s.hands[s.player].length) {
+  // Stones that return to hand could in principle go round forever: forty
+  // turns is a full board's worth four times over, and counts as one.
+  if (full || !s.hands[s.player].length || s.turns >= 40) {
     // A filled board, or a player with nothing to play, goes to whoever moved
     // second -- unless exactly one side carries the Hourglass.
     const hx = !!s.mods.X.hourglass, ho = !!s.mods.O.hourglass;
