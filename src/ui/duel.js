@@ -134,12 +134,12 @@ export function mountDuel(root, opts) {
     }
   }
 
-  function renderHands(s) {
-    // Enemy hand.
-    enemyHand.classList.toggle('crowded', s.hands.O.length > 6);
-    enemyHand.replaceChildren(...s.hands.O.map((st) => {
+  function renderHands(s, shown = s) {
+    // Enemy hand, as the preview would leave it.
+    enemyHand.classList.toggle('crowded', shown.hands.O.length > 6);
+    enemyHand.replaceChildren(...shown.hands.O.map((st) => {
       const e = stoneEl(st, 'O', { mini: true, dead: s.disabled === st.type && !s.mods.O.homeTurf });
-      e.addEventListener('click', () => tapEnemyStone(st));
+      e.addEventListener('click', () => { if (!e.classList.contains('target')) tapEnemyStone(st); });
       return e;
     }));
     enemyTricks.replaceChildren(...s.tricks.O.map((t) => h('button.mini-trick', { html: icon(t), onclick: () => infoTrick(t) })));
@@ -302,10 +302,15 @@ export function mountDuel(root, opts) {
         place(...spot[k], h('button.rot.axis' + (isChosen(group) ? '.chosen' : ''), { onclick: pickGroup(group), 'aria-label': `mirror ${k}` }, label[k]));
       }
     } else if (stage.kind === 'stone') {
+      // Aim at the enemy's hand itself.
       for (const [k, group] of stage.groups) {
-        btns.push(h('button.btn.opt.glyph-opt' + (isChosen(group) ? '.chosen' : ''), { onclick: pickGroup(group), 'aria-label': STONES[k].name },
-          h('span.opt-ico', { html: icon(k) })));
+        for (const e of enemyHand.querySelectorAll(`.stone[data-type="${CSS.escape(k)}"]`)) {
+          e.classList.add('target');
+          if (isChosen(group)) e.classList.add('chosen');
+          e.onclick = (ev) => { ev.stopPropagation(); pickGroup(group)(); };
+        }
       }
+      setTimeout(() => { if (!preview) info.textContent = 'Tap a stone in their hand, up top.'; });
     }
     // Show which stone a two-step choice has already picked.
     if (stageCands.length && stageCands[0].from !== undefined && stageCands.every((c) => c.from === stageCands[0].from)) {
@@ -318,7 +323,7 @@ export function mountDuel(root, opts) {
   function show() {
     const s = preview ? preview.state : state;
     renderBoard(s);
-    renderHands(state);
+    renderHands(state, s);
     renderChips(s);
     cells.forEach((c, i) => { c.onclick = () => tapSquare(i); });
     clearOverlay();

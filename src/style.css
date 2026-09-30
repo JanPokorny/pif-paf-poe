@@ -592,3 +592,5 @@ b { font-weight: 400; background: linear-gradient(transparent 55%, var(--hi) 55%
 .map-cell .cell-space { width: 19px; height: 19px; right: -16px; top: -8px; background: var(--paper); border-radius: 50%; padding: 1px; }
 .map-cell .cell-space .icon { width: 17px; height: 17px; }
 .map-grid { width: min(100%, 440px, calc(100dvh - 370px)); }
+.enemy-hand .stone.target { outline: 3px dashed var(--ink); outline-offset: 3px; background: var(--hi); border-radius: 50%; animation: breathe 1.3s ease-in-out infinite; }
+.enemy-hand .stone.chosen { outline-color: var(--red); background: none; animation: none; }

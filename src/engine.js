@@ -341,6 +341,28 @@ def('twin', {
   },
 });
 
+def('magpie', {
+  name: 'Magpie', rarity: 'rare', kind: 'curse',
+  text: 'Steals a stone of your choice from the enemy\'s hand into yours.',
+  plusText: 'Steals a stone of your choice from the enemy\'s hand, upgraded, into yours.',
+  options(s, pos, cell) {
+    const seen = new Set(), out = [];
+    for (const h of s.hands[other(cell.player)]) {
+      const k = h.type + (h.plus ? '+' : '');
+      if (seen.has(k)) continue;
+      seen.add(k);
+      out.push({ stone: h.type, splus: !!h.plus });
+    }
+    return out;
+  },
+  apply(s, pos, a, cell) {
+    const hand = s.hands[other(cell.player)];
+    const k = hand.findIndex((h) => h.type === a.stone && !!h.plus === !!a.splus);
+    const [taken] = hand.splice(k, 1);
+    s.hands[cell.player].push({ type: taken.type, plus: taken.plus || cell.plus });
+  },
+});
+
 def('guardian', {
   name: 'Guardian', rarity: 'rare', kind: 'static',
   text: 'It and your stones beside it are safe from the enemy: their stones and tricks cannot move, return, swap or convert them.',

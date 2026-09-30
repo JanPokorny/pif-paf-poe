@@ -133,6 +133,9 @@ export const ENEMIES = {
   miner: { name: 'Quarry Miner', emoji: '⛏️', act: 2, tier: 'normal',
     core: ['2048', 'mountain'], pool: ['2048', 'mountain', 'shift', 'stinky'], iters: 180, blunder: 0.15,
     quote: 'Dig, slide, dig.' },
+  magpie: { name: 'Magpie Meg', emoji: '🐦', act: 2, tier: 'normal',
+    core: ['magpie', 'magpie'], pool: ['shift', 'rotate', 'magnet', 'pebble'], iters: 180, blunder: 0.15,
+    quote: 'Ooh, shiny. That one\'s mine now.' },
   // elites
   witch: { name: 'Snare Witch', emoji: '🕷️', act: 2, tier: 'elite',
     core: ['snare', 'snare', 'hush'], pool: ['magnet', 'shift', 'rotate'], iters: 600, blunder: 0.05,
