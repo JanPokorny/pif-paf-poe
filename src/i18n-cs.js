@@ -379,6 +379,7 @@ export default {
   '{enemy} wins': '{enemy} vítězí',
   '{enemy} is thinking…': '{enemy} přemýšlí…',
   'Undo': 'Vrátit tah',
+  'Example': 'Příklad',
   'Placed in the centre: the enemy may only use the marked squares.': 'Položený doprostřed: soupeř smí jen na zvýrazněná políčka.',
   'Your turn — pick a stone': 'Jsi na tahu — vyber kámen',
   'Tap a stone in your hand. Tap any stone on the board to read it.': 'Ťukni na kámen v ruce. Ťuknutím na kámen na desce si ho přečteš.',

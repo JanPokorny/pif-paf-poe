@@ -218,6 +218,7 @@ export function stoneCard(s, { onclick, price, sold, footer } = {}) {
     h('div.card-name', {}, stoneName(s)),
     h('div.card-text', {}, stoneText(s)),
     price !== undefined ? h('div.price', {}, iconEl('coin'), price) : null,
+    h('span.card-info', { role: 'button', 'aria-label': t('Example'), onclick: (e) => { e.stopPropagation(); infoStone(s, 'X'); } }, 'ⓘ'),
     footer ?? null);
 }
 
