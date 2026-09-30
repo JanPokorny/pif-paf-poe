@@ -546,6 +546,9 @@ export function randomRelic(run, rarity = null) {
   let pool = RELIC_TYPES.filter((r) => !has(run, r) && !BOSS_RELICS.includes(r));
   if (rarity) pool = pool.filter((r) => RELICS[r].rarity === rarity);
   if (!pool.length) pool = RELIC_TYPES.filter((r) => !has(run, r));
+  // A relic that upgrades stones you do not carry is no find at all.
+  const useful = pool.filter((r) => !RELICS[r].upgrades || RELICS[r].upgrades.some((ty) => run.pouch.some((p) => p.type === ty)));
+  if (useful.length) pool = useful;
   if (!pool.length) return null;
   const table = { common: 55, uncommon: 32, rare: 13 };
   const byR = weighted(run, table);
