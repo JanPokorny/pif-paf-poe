@@ -160,6 +160,25 @@ function stoneDemo(s) {
   } catch { return null; }
 }
 
+function trickDemo(name) {
+  try {
+    const g = createGame({ handX: ['pebble'], handO: ['pebble', 'pebble'], first: 'X', tricksX: [name], log: false });
+    let id = 50;
+    for (const [i, p] of Object.entries({ ...DEMO_BOARD, 4: 'O', 0: 'X' })) g.board[+i] = { player: p, type: i === '0' ? 'shift' : 'pebble', plus: false, id: id++ };
+    g.phase = 'trick';
+    let best = null;
+    for (const a of legalActions(g)) {
+      if (a.use !== name) continue;
+      const after = cloneState(g);
+      applyAction(after, a);
+      const moved = after.board.reduce((n, c, i) => n + ((c?.id ?? 0) !== (g.board[i]?.id ?? 0) || c?.player !== g.board[i]?.player ? 1 : 0), 0);
+      if (!best || moved > best.moved) best = { moved, after: after.board };
+    }
+    if (!best || !best.moved) return null;
+    return h('div.demo', {}, demoBoard(g.board), h('div.demo-arrow', {}, '→'), demoBoard(best.after));
+  } catch { return null; }
+}
+
 export function infoStone(s, player = 'X', extra = '') {
   const st = STONES[s.type];
   const body = h('div.info-stone', {},
@@ -180,6 +199,7 @@ export function infoTrick(name) {
     h('div.info-head', {}, h('div.trick-token', { html: icon(name) }), h('div', {},
       h('div.info-name', {}, tr.name), h('div.info-rarity.' + tr.rarity, {}, t('trick') + ' · ' + t(tr.rarity)))),
     h('p', {}, tr.text),
+    trickDemo(name),
     h('p.info-extra', {}, t('Tricks are spent at the end of your own turn, after your stone has done its thing. Each is used up once spent.')),
     h('button.btn.wide', { onclick: () => close() }, t('OK')));
   const close = modal(body);

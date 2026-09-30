@@ -871,7 +871,7 @@ function showCodex() {
         h('b', {}, STONES[x].name), h('span.info-rarity.' + STONES[x].rarity, {}, ' ' + t(STONES[x].rarity)),
         h('div', {}, STONES[x].text), h('div.dim', {}, '+ ' + STONES[x].plusText))));
     } else if (tab === 'tricks') {
-      list = TRICK_TYPES.map((x) => h('div.codex-row', {}, h('div.trick-token', { html: icon(x) }), h('div', {},
+      list = TRICK_TYPES.map((x) => h('div.codex-row', { onclick: () => infoTrick(x), style: { cursor: 'pointer' } }, h('div.trick-token', { html: icon(x) }), h('div', {},
         h('b', {}, TRICKS[x].name), h('span.info-rarity.' + TRICKS[x].rarity, {}, ' ' + t(TRICKS[x].rarity)), h('div', {}, TRICKS[x].text))));
     } else if (tab === 'relics') {
       list = RELIC_TYPES.map((r) => h('div.codex-row', {}, h('div.relic-token.small', {}, relicArt(r)), h('div', {},
