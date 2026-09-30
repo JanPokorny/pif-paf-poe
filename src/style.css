@@ -629,3 +629,6 @@ b { font-weight: 400; background: linear-gradient(transparent 55%, var(--hi) 55%
 .map-cell.scorched::after { content: ''; position: absolute; inset: 12%; border-radius: 30%; background: repeating-linear-gradient(-45deg, transparent 0 5px, rgba(43, 42, 51, 0.35) 5px 8px); filter: url(#pencil); pointer-events: none; }
 .map-cell.scorched .doodle, .map-cell.scorched .label { opacity: 0.3; }
 .map-cell.scorched .label { visibility: hidden; }
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; transition-duration: 0.01ms !important; }
+}
