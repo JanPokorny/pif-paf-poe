@@ -61,7 +61,6 @@ export default {
   'Heat {n}': 'Žár {n}',
   'Win a run to unlock more heat.': 'Vyhraj výpravu a odemkneš větší žár.',
   'Choose your kit': 'Vyber si postavu',
-  'Win a run to unlock the Gambler.': 'Hazardéra odemkneš první vyhranou výpravou.',
   '{n} gold': '{n} zlaťáků',
   'Locked — win a run to unlock': 'Zamčeno — odemkne se vyhranou výpravou',
 
@@ -379,6 +378,8 @@ export default {
   '{enemy} wins': '{enemy} vítězí',
   '{enemy} is thinking…': '{enemy} přemýšlí…',
   'Undo': 'Vrátit tah',
+  'Locked — reach the Summit to unlock': 'Zamčeno — odemkne se dosažením Vrcholu',
+  'Locked — win at heat 1 or more to unlock': 'Zamčeno — odemkne se výhrou na žáru 1 a víc',
   'Example': 'Příklad',
   'Placed in the centre: the enemy may only use the marked squares.': 'Položený doprostřed: soupeř smí jen na zvýrazněná políčka.',
   'Your turn — pick a stone': 'Jsi na tahu — vyber kámen',
@@ -713,6 +714,8 @@ export const CS_DATA = {
     tinkerer: { name: 'Kutil', text: 'Přesouvá kameny. Spoustu kamenů.' },
     warden: { name: 'Dozorce', text: 'Určuje soupeři, kde smí stát.' },
     gambler: { name: 'Hazardér', text: 'Vzácné kameny, málo srdcí. Odemkne se první výhrou.' },
+    trickster: { name: 'Kejklíř', text: 'Obyčejné kameny, rukáv plný triků. Odemkne se dosažením Vrcholu.' },
+    mason: { name: 'Zedník', text: 'Zdi a lepidlo, a tuhý kořínek. Odemkne se výhrou na žáru 1 a víc.' },
   },
 
   heat: [

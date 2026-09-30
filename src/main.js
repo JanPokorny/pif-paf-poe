@@ -49,6 +49,7 @@ function recordEnd() {
   const reached = { act: run.act, row: run.map ? R.xCount(run) : 0, victory: run.victory };
   const score = (r) => (r ? (r.victory ? 100 : 0) + r.act * 10 + r.row : -1);
   if (score(reached) > score(meta.best)) meta.best = reached;
+  meta.bestAct = Math.max(meta.bestAct ?? 0, run.act);
   if (run.daily) {
     meta.daily = { ...(meta.daily ?? {}) };
     meta.daily[run.daily] = run.victory ? 'conquered the Summit' : `fell in act ${run.act}`;
@@ -169,7 +170,7 @@ const today = () => new Date().toISOString().slice(0, 10);
 function startDaily() {
   const d = today();
   const seed = [...d].reduce((a, ch) => (Math.imul(a, 31) + ch.charCodeAt(0)) | 0, 7);
-  const kits = Object.keys(R.KITS).filter((k) => !R.KITS[k].locked);
+  const kits = Object.keys(R.KITS).filter((k) => !R.KITS[k].unlock);
   const kit = kits[Math.abs(seed) % kits.length];
   const go = () => {
     run = R.newRun({ kit, seed: Math.abs(seed), heat: 0 });
@@ -184,6 +185,19 @@ function startDaily() {
     h('button.btn.primary.wide', { onclick: () => { const sv = loadJSON(SAVE); if (sv?.run && !sv.run.over && !confirm(t('Start the daily climb? Your run in progress will be lost.'))) return; close(); go(); } }, t('Climb')),
     h('button.btn.ghost.wide', { onclick: () => close() }, t('Back')));
   const close = modal(body);
+}
+
+const UNLOCK_TEXT = {
+  win: 'Locked — win a run to unlock',
+  summit: 'Locked — reach the Summit to unlock',
+  heat: 'Locked — win at heat 1 or more to unlock',
+};
+function kitOpen(k) {
+  if (!k.unlock) return true;
+  if (k.unlock === 'win') return meta.wins > 0;
+  if (k.unlock === 'summit') return (meta.bestAct ?? 0) >= 3 || meta.wins > 0;
+  if (k.unlock === 'heat') return meta.bestHeatWon >= 1;
+  return false;
 }
 
 function chooseKit() {
@@ -203,11 +217,11 @@ function chooseKit() {
       h('div.page-head', {}, h('button.icon-btn', { onclick: title, html: icon('back'), 'aria-label': t('Back') }), h('h2', {}, t('Choose your kit'))),
       meta.maxHeat > 0 ? heatRow : null,
       h('div.kits', {}, Object.entries(R.KITS).map(([id, k]) => {
-        const locked = k.locked && meta.wins === 0;
+        const locked = !kitOpen(k);
         return h('button.kit' + (locked ? '.locked' : ''), {
           onclick: () => {
             if (Date.now() - shownAt < 450) return;   // the tap that opened this screen
-            if (locked) { toast(t('Win a run to unlock the Gambler.')); return; }
+            if (locked) { toast(t(UNLOCK_TEXT[k.unlock])); return; }
             meta.heat = heat; saveMeta();
             run = R.newRun({ kit: id, heat });
             duelState = null;
@@ -219,7 +233,7 @@ function chooseKit() {
         h('div.kit-stones', {}, k.pouch.map((x) => stoneEl({ type: x }, 'X', { mini: true })),
           k.tricks.map((x) => h('span.mini-trick', { html: icon(x) }))),
         h('div.kit-stats', {}, `❤ ${k.hearts - (heat >= 3 ? 1 : 0)}  ·  ${t('{n} gold', { n: k.gold })}${k.relics ? '  ·  ' + k.relics.map((r) => RELICS[r].name).join(', ') : ''}`),
-        locked ? h('div.kit-lock', {}, t('Locked — win a run to unlock')) : null);
+        locked ? h('div.kit-lock', {}, t(UNLOCK_TEXT[k.unlock])) : null);
       }))));
 }
 

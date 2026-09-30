@@ -52,7 +52,17 @@ export const KITS = {
   gambler: {
     name: 'The Gambler', emoji: '🎰', text: 'Rare stones, few hearts. Unlocked by winning once.',
     pouch: ['pebble', 'pebble', 'guardian', 'firecracker', 'shift', 'rotate'], tricks: ['pluck'], hearts: 4, gold: 80,
-    relics: ['lucky-coin'], locked: true,
+    relics: ['lucky-coin'], unlock: 'win',
+  },
+  trickster: {
+    name: 'The Trickster', emoji: '🃏', text: 'Plain stones, a sleeve full of tricks. Unlocked by reaching the Summit.',
+    pouch: ['pebble', 'pebble', 'pebble', 'shift', 'hush', 'rotate'], tricks: ['mirror', 'relocate', 'muffle'], hearts: 5, gold: 30,
+    relics: ['gloves'], unlock: 'summit',
+  },
+  mason: {
+    name: 'The Mason', emoji: '🧱', text: 'Walls and glue, and a thick skin. Unlocked by winning at heat 1 or more.',
+    pouch: ['pebble', 'mountain', 'mountain', 'glue', 'magnet', 'rotate'], tricks: ['anchor'], hearts: 7, gold: 20,
+    unlock: 'heat',
   },
 };
 
