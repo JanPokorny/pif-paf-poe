@@ -262,7 +262,8 @@ function showJournal() {
       h('span.kit-emoji', {}, art('kit', id, k.emoji)), h('span', {}, k.name),
       meta.kitWins?.[id] !== undefined ? h('span.small.dim', {}, t('best heat {n}', { n: meta.kitWins[id] })) : null))),
     h('div.section-label', {}, t('Records')),
-    h('p', {}, t('{runs} runs, {wins} won, {duels} duels won in all.', { runs: meta.runs, wins: meta.wins, duels: meta.duelsWon ?? 0 })),
+    h('p', {}, t('{runs} runs, {wins} won, {duels} duels won in all.', { runs: meta.runs, wins: meta.wins, duels: meta.duelsWon ?? 0 })
+      .replace(/^1 runs/, '1 run').replace(/, 1 duels/, ', 1 duel')),
     h('button.btn.wide', { onclick: () => close() }, t('Close')));
   const close = modal(body, { cls: 'tall' });
 }

@@ -312,7 +312,7 @@ export default {
   'Take one': 'Vezmi si jeden',
   'Journal': 'Deník',
   'Bosses beaten': 'Poražení bossové',
-  'Kits that reached the top': 'Výbavy, které zdolaly vrchol',
+  'Kits that reached the top': 'Postavy, které zdolaly vrchol',
   'best heat {n}': 'nejvyšší žár {n}',
   'Records': 'Záznamy',
   '{runs} runs, {wins} won, {duels} duels won in all.': 'Výprav: {runs}, vyhraných: {wins}, vyhraných duelů celkem: {duels}.',
