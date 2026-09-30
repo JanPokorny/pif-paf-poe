@@ -735,6 +735,18 @@ function eventScreen() {
 
 // ── The end ─────────────────────────────────────────────────────────────────
 
+// A result to paste to friends: the last act's map as Xs and Os.
+function shareResult(victory) {
+  const cells = run.map?.cells ?? [];
+  const grid = [0, 1, 2, 3].map((r) => cells.slice(r * 4, r * 4 + 4).map((c) => (c.mark === 'X' ? '❌' : c.mark === 'O' ? '⭕' : '⬜')).join('')).join('\n');
+  const head = `Pif·Paf·Poe${run.daily ? ` daily ${run.daily}` : ''}${run.heat ? ` · heat ${run.heat}` : ''}`;
+  const line = victory ? `Conquered the Summit as ${R.KITS[run.kit].name} 🏆` : `Fell in act ${run.act} (${ACTS[run.act - 1].name})`;
+  const text = `${head}\n${line}\n${run.stats.won} duels won, ${run.stats.lost} lost\n${grid}\n${location.href.split('#')[0]}`;
+  (navigator.clipboard?.writeText(text) ?? Promise.reject()).then(() => toast('Copied!', 'good'), () => {
+    const close = modal(h('div.menu', {}, h('h2', {}, 'Your result'), h('pre.share', {}, text), h('button.btn.wide', { onclick: () => close() }, 'OK')));
+  });
+}
+
 function endScreen(victory) {
   recordEnd();
   const st = run.stats;
@@ -756,6 +768,7 @@ function endScreen(victory) {
     h('div.hand.show', {}, run.pouch.map((s) => stoneEl(s, 'X', { mini: true }))),
     relicStrip(),
     victory && meta.maxHeat > run.heat ? h('p.good', {}, `Heat ${run.heat + 1} unlocked!`) : null,
+    h('button.btn.wide', { onclick: () => shareResult(victory) }, 'Copy result to share'),
     h('button.btn.primary.wide.big', { onclick: () => { run = null; duelState = null; chooseKit(); } }, 'New run'),
     h('button.btn.wide', { onclick: () => { run = null; title(); } }, 'Title')));
   try { localStorage.removeItem(SAVE); } catch { /* ignore */ }

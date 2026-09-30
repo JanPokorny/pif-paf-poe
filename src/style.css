@@ -604,3 +604,4 @@ b { font-weight: 400; background: linear-gradient(transparent 55%, var(--hi) 55%
 .card.taken { transition: transform 0.4s ease-in, opacity 0.4s ease-in; transform: translate(40vw, -60vh) scale(0.2) rotate(20deg) !important; opacity: 0; }
 .stone.on-board.hop { animation: hop 0.42s ease-in-out; z-index: 4; }
 @keyframes hop { 50% { scale: 1.3; filter: drop-shadow(0 8px 6px rgba(0,0,0,0.25)); } }
+.share { white-space: pre-wrap; font-family: var(--hand); background: var(--card); padding: 8px; user-select: all; }
