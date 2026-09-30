@@ -136,6 +136,7 @@ export function mountDuel(root, opts) {
 
   function renderHands(s) {
     // Enemy hand.
+    enemyHand.classList.toggle('crowded', s.hands.O.length > 6);
     enemyHand.replaceChildren(...s.hands.O.map((st) => {
       const e = stoneEl(st, 'O', { mini: true, dead: s.disabled === st.type && !s.mods.O.homeTurf });
       e.addEventListener('click', () => tapEnemyStone(st));
@@ -244,6 +245,11 @@ export function mountDuel(root, opts) {
     } else if (['pos', 'from', 'to', 'target'].includes(stage.kind)) {
       for (const [k, group] of stage.groups) {
         const i = +k;
+        if (!Number.isInteger(i) || !cells[i]) {
+          // The choice that aims at no square in particular: "all of them".
+          btns.push(h('button.btn.opt' + (isChosen(group) ? '.chosen' : ''), { onclick: pickGroup(group) }, 'All of them'));
+          continue;
+        }
         cells[i].classList.add('target');
         if (isChosen(group)) cells[i].classList.add('chosen');
         cells[i].onclick = pickGroup(group);

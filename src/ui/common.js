@@ -72,9 +72,13 @@ export function stoneName(s) { return (STONES[s.type]?.name ?? s.type) + (s.plus
 export function stoneText(s) { const st = STONES[s.type]; return s.plus ? st.plusText : st.text; }
 
 let toastTimer = null;
+let toastAt = 0;
+// Clear a note left over from the last screen, but not one just raised for this one.
+export function hideToast() { const el = document.getElementById('toast'); if (el && Date.now() - toastAt > 400) el.className = ''; }
 export function toast(msg, kind = '') {
   let el = document.getElementById('toast');
   if (!el) { el = h('div'); el.id = 'toast'; document.body.append(el); }
+  toastAt = Date.now();
   el.className = 'show ' + kind;
   el.textContent = msg;
   clearTimeout(toastTimer);

@@ -4,7 +4,7 @@
 import { STONES, TRICKS, STONE_TYPES, TRICK_TYPES, createGame, FIELDS } from './engine.js';
 import { RELICS, RELIC_TYPES, ENEMIES, ACTS, EVENTS } from './content.js';
 import * as R from './run.js';
-import { h, art, relicArt, scribbleX, scribbleO, stoneEl, iconEl, toast, modal, infoStone, infoTrick, infoRelic, infoSpace, infoField, stoneCard, trickCard, relicCard, stoneName } from './ui/common.js';
+import { h, hideToast, art, relicArt, scribbleX, scribbleO, stoneEl, iconEl, toast, modal, infoStone, infoTrick, infoRelic, infoSpace, infoField, stoneCard, trickCard, relicCard, stoneName } from './ui/common.js';
 import { icon } from './icons.js';
 import { mountDuel } from './ui/duel.js';
 import { sfx, soundOn, setSound } from './sound.js';
@@ -64,6 +64,7 @@ function topBar() {
 }
 
 function screen(...children) {
+  hideToast();
   const el = h('div.screen', {}, ...children);
   app.replaceChildren(el);
   app.scrollTop = 0;
@@ -383,7 +384,7 @@ function preDuel() {
   const tierLabel = { normal: '', elite: 'Elite', boss: 'Boss', event: 'Challenge' }[duel.tier];
   const stakes = duel.tier === 'boss'
     ? `Beat it twice to pass (${duel.bossWins}/2). Each loss costs 1 ❤.`
-    : `Lose and it costs ${R.heartsLost(duel)} ❤.`;
+    : `Lose and it costs ${R.heartsLost(duel)} ❤${duel.event ? '' : ' — and the boss takes this square'}.`;
   const canBack = (duel.tier === 'normal' || duel.tier === 'elite') && !duel.event;
   screen(topBar(),
     h('div.page', {},

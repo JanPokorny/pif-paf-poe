@@ -585,3 +585,10 @@ b { font-weight: 400; background: linear-gradient(transparent 55%, var(--hi) 55%
 .kit-emoji .art { width: 40px; height: 40px; color: var(--ink); }
 .event-emoji .art, .end-emoji .art { width: 96px; height: 96px; color: var(--ink); }
 .event-emoji, .end-emoji { display: flex; justify-content: center; }
+
+.enemy-hand.crowded .stone.mini { --size: 23px; }
+.map-cell.marked .label { visibility: hidden; }
+.map-cell.marked .doodle { opacity: 0.35; }
+.map-cell .cell-space { width: 19px; height: 19px; right: -16px; top: -8px; background: var(--paper); border-radius: 50%; padding: 1px; }
+.map-cell .cell-space .icon { width: 17px; height: 17px; }
+.map-grid { width: min(100%, 440px, calc(100dvh - 370px)); }
