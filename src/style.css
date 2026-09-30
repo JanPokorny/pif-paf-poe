@@ -632,3 +632,8 @@ b { font-weight: 400; background: linear-gradient(transparent 55%, var(--hi) 55%
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; transition-duration: 0.01ms !important; }
 }
+.journal-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+.journal-item { display: flex; flex-direction: column; align-items: center; gap: 4px; text-align: center; font-size: 0.85rem; line-height: 1.05; opacity: 0.35; }
+.journal-item.got { opacity: 1; }
+.journal-item .portrait { transform: rotate(-3deg); }
+.journal-item:nth-child(even) .portrait { transform: rotate(3deg); }

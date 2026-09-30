@@ -54,7 +54,9 @@ function recordEnd() {
     meta.daily = { ...(meta.daily ?? {}) };
     meta.daily[run.daily] = run.victory ? 'conquered the Summit' : `fell in act ${run.act}`;
   }
+  meta.duelsWon = (meta.duelsWon ?? 0) + run.stats.won;
   if (run.victory) {
+    meta.kitWins = { ...(meta.kitWins ?? {}), [run.kit]: Math.max(meta.kitWins?.[run.kit] ?? -1, run.heat) };
     meta.wins++;
     meta.bestHeatWon = Math.max(meta.bestHeatWon, run.heat);
     meta.maxHeat = Math.min(R.HEAT.length - 1, Math.max(meta.maxHeat, run.heat + 1));
@@ -164,6 +166,7 @@ function title() {
         h('button.btn.wide.big' + (saved?.run ? '' : '.primary'), { onclick: () => { if (saved?.run && !saved.run.over && !confirm(t('Start over? Your run in progress will be lost.'))) return; chooseKit(); } }, t('New run')),
         h('button.btn.wide', { onclick: startDaily }, `${t('Daily climb')}${meta.daily?.[today()] ? ' ✓' : ''}`),
         h('button.btn.wide', { onclick: practiceMenu }, t('Practice duel')),
+        meta.runs ? h('button.btn.wide', { onclick: showJournal }, t('Journal')) : null,
         h('button.btn.wide', { onclick: () => showHelp() }, t('How to play')),
         h('button.btn.wide', { onclick: showCodex }, t('Codex')),
         h('button.btn.wide.ghost', { onclick: () => { setSound(!soundOn()); title(); } }, h('span', { html: icon(soundOn() ? 'sound-on' : 'sound-off') }), soundOn() ? t('Sound on') : t('Sound off'))),
@@ -245,6 +248,24 @@ function chooseKit() {
 }
 
 // ── Practice: one duel, nothing at stake ────────────────────────────────────
+
+// What you have done across all runs: bosses beaten, kits won with.
+function showJournal() {
+  const bosses = Object.keys(ENEMIES).filter((k) => ENEMIES[k].tier === 'boss');
+  const body = h('div.menu.journal', {},
+    h('h2', {}, t('Journal')),
+    h('div.section-label', {}, t('Bosses beaten')),
+    h('div.journal-grid', {}, bosses.map((id) => h('div.journal-item' + (meta.beaten?.[id] ? '.got' : ''), {},
+      h('div.portrait', {}, h('div.photo', {}, ENEMIES[id].emoji)), h('span', {}, meta.beaten?.[id] ? ENEMIES[id].name : '?')))),
+    h('div.section-label', {}, t('Kits that reached the top')),
+    h('div.journal-grid', {}, Object.entries(R.KITS).map(([id, k]) => h('div.journal-item' + (meta.kitWins?.[id] !== undefined ? '.got' : ''), {},
+      h('span.kit-emoji', {}, art('kit', id, k.emoji)), h('span', {}, k.name),
+      meta.kitWins?.[id] !== undefined ? h('span.small.dim', {}, t('best heat {n}', { n: meta.kitWins[id] })) : null))),
+    h('div.section-label', {}, t('Records')),
+    h('p', {}, t('{runs} runs, {wins} won, {duels} duels won in all.', { runs: meta.runs, wins: meta.wins, duels: meta.duelsWon ?? 0 })),
+    h('button.btn.wide', { onclick: () => close() }, t('Close')));
+  const close = modal(body, { cls: 'tall' });
+}
 
 function practiceMenu() {
   const body = h('div.menu', {}, h('h2', {}, t('Practice duel')),
@@ -488,6 +509,10 @@ function duelScreen() {
       if (winner === 'X') {
         const res = R.duelWon(run);
         if (res.kind === 'boss-continue') toast(t('One down. It rises again!'));
+        if (res.kind === 'reward' && duel.tier === 'boss') {
+          meta.beaten = { ...(meta.beaten ?? {}), [duel.enemyId]: true };
+          saveMeta();
+        }
       } else {
         const res = R.duelLost(run);
         if (res.kind === 'rematch') toast(t('🎟️ {relic}: try again!', { relic: RELICS.rematch.name }));
