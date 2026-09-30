@@ -239,9 +239,9 @@ export function ruleChip(kind, id, cls = '') {
 }
 
 // A card for reward and shop screens.
-export function stoneCard(s, { onclick, price, sold, footer } = {}) {
+export function stoneCard(s, { onclick, price, sold, dear, footer } = {}) {
   const st = STONES[s.type];
-  return h(`button.card.stone-card.${st.rarity}${sold ? '.sold' : ''}`, { onclick, disabled: sold || undefined },
+  return h(`button.card.stone-card.${st.rarity}${sold ? '.sold' : dear ? '.dear' : ''}`, { onclick, disabled: sold || undefined },
     stoneEl(s, 'X'),
     h('div.card-name', {}, stoneName(s)),
     h('div.card-text', {}, stoneText(s)),
@@ -250,18 +250,18 @@ export function stoneCard(s, { onclick, price, sold, footer } = {}) {
     footer ?? null);
 }
 
-export function trickCard(name, { onclick, price, sold } = {}) {
+export function trickCard(name, { onclick, price, sold, dear } = {}) {
   const tr = TRICKS[name];
-  return h(`button.card.trick-card.${tr.rarity}${sold ? '.sold' : ''}`, { onclick, disabled: sold || undefined },
+  return h(`button.card.trick-card.${tr.rarity}${sold ? '.sold' : dear ? '.dear' : ''}`, { onclick, disabled: sold || undefined },
     h('div.trick-token', { html: icon(name) }),
     h('div.card-name', {}, tr.name),
     h('div.card-text', {}, tr.text),
     price !== undefined ? h('div.price', {}, iconEl('coin'), price) : null);
 }
 
-export function relicCard(id, { onclick, price, sold } = {}) {
+export function relicCard(id, { onclick, price, sold, dear } = {}) {
   const r = RELICS[id];
-  return h(`button.card.relic-card.${r.rarity}${sold ? '.sold' : ''}`, { onclick, disabled: sold || undefined },
+  return h(`button.card.relic-card.${r.rarity}${sold ? '.sold' : dear ? '.dear' : ''}`, { onclick, disabled: sold || undefined },
     h('div.relic-token', {}, relicArt(id)),
     h('div.card-name', {}, r.name),
     h('div.card-text', {}, r.text),

@@ -174,7 +174,7 @@ export function mountDuel(root, opts) {
     const theirs = inTurn && typeof selKey === 'string' && selKey.startsWith('O:') ? base.hands.O : shown.hands.O;
     enemyHand.classList.toggle('crowded', theirs.length > 6);
     enemyHand.replaceChildren(
-      h('span.pebble-mini', { title: t('Pebbles: as many as they like') }, stoneEl({ type: 'pebble' }, 'O', { mini: true }), h('span.inf', {}, '∞')),
+      h('span.pebble-mini', { title: t('Pebbles: as many as they like') }, stoneEl({ type: 'pebble' }, 'O', { mini: true })),
       ...theirs.map((st, k) => {
         const e = stoneEl(st, 'O', { mini: true });
         const key = `O:${st.type}`;
@@ -191,7 +191,7 @@ export function mountDuel(root, opts) {
     const slot = (key, st, label) => {
       const e = stoneEl(st, 'X');
       const b = h('button.hand-slot' + (key === 'pebble' ? '.pebble-slot' : ''), { onclick: () => tapHand(key) }, e,
-        h('span.slot-name', {}, label), key === 'pebble' ? h('span.inf', {}, '∞') : null);
+        h('span.slot-name', {}, label));
       if (inTurn && key === selKey) b.classList.add(s.phase === 'place' ? 'selected' : 'placed');
       if (selecting && !slotAction(s, key)) b.classList.add('forbidden');
       if (!selecting && !(inTurn && s.phase === 'place')) b.classList.add('idle');

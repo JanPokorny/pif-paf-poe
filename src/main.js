@@ -416,7 +416,7 @@ function preDuel() {
           h('div.quote', {}, t('“{quote}”', { quote: enemy.quote })))),
       h('div.section-label', {}, duel.tier === 'boss' ? t('It brings no special stones — only Pebbles, and its rules') : t('Their stones')),
       h('div.hand.enemy-hand.show', {},
-        h('button.slot-plain.pebble-mini', { onclick: () => infoStone({ type: 'pebble' }, 'O') }, stoneEl({ type: 'pebble' }, 'O'), h('span.inf', {}, '∞')),
+        h('button.slot-plain', { onclick: () => infoStone({ type: 'pebble' }, 'O') }, stoneEl({ type: 'pebble' }, 'O')),
         duel.handO.map((s) => h('button.slot-plain', { onclick: () => infoStone(s, 'O') }, stoneEl(s, 'O')))),
       duel.tricksO.length ? h('div.enemy-tricks-pre', {}, t('Tricks: '), duel.tricksO.map((x) => h('button.link', { onclick: () => infoTrick(x) }, TRICKS[x].name))) : null,
       h('div.duel-facts.facts-card', {},
@@ -595,17 +595,17 @@ function shopScreen() {
     h('div.shop-head', {}, h('span.shop-emoji', { html: icon('shop') }), h('div', {}, h('h2', {}, t('The Travelling Merchant')), h('div.dim', {}, t('“Stones, tricks, trinkets. Gold only.”')))),
     h('div.section-label', {}, t('Stones')),
     h('div.cards.scroll', {}, shop.stones.map((s) => stoneCard(s, {
-      price: s.price, sold: s.sold,
+      price: s.price, sold: s.sold, dear: run.gold < s.price,
       onclick: () => buy(s.price, (pay) => takeStone(s, (ok) => { if (ok) { s.sold = true; pay(); } })),
     }))),
     h('div.section-label', {}, t('Tricks')),
     h('div.cards.scroll', {}, shop.tricks.map((x) => trickCard(x.trick, {
-      price: x.price, sold: x.sold,
+      price: x.price, sold: x.sold, dear: run.gold < x.price,
       onclick: () => buy(x.price, (pay) => takeTrick(x.trick, (ok) => { if (ok) { x.sold = true; pay(); } })),
     }))),
     shop.relics.length ? [h('div.section-label', {}, t('Relics')),
       h('div.cards.scroll', {}, shop.relics.map((r) => relicCard(r.relic, {
-        price: r.price, sold: r.sold || R.has(run, r.relic),
+        price: r.price, sold: r.sold || R.has(run, r.relic), dear: run.gold < r.price,
         onclick: () => buy(r.price, (pay) => { R.gainRelic(run, r.relic); r.sold = true; pay(); }),
       })))] : null,
     h('div.section-label', {}, t('Services')),
@@ -613,16 +613,16 @@ function shopScreen() {
       h('button.service', {
         disabled: shop.slotted || !R.canAddSlot(run) || undefined,
         onclick: () => buy(shop.slotPrice, (pay) => { run.slots++; shop.slotted = true; pay(); toast(t('You now bring {n} special stones into each duel.', { n: R.handSize(run) }), 'good'); }),
-      }, h('b', {}, t('A new stone slot')), h('span.price', {}, iconEl('coin'), shop.slotPrice ?? '—'),
+      }, h('b', {}, t('A new stone slot')), h('span.price' + (run.gold < shop.slotPrice ? '.dear' : ''), {}, iconEl('coin'), shop.slotPrice ?? '—'),
       h('span.dim', {}, shop.slotted ? t(' (done)') : R.canAddSlot(run) ? t(' bring {n} into each duel', { n: R.handSize(run) + 1 }) : t(' (as many as there can be)'))),
       h('button.service', {
         disabled: shop.upgraded || !R.upgradeable(run).length || undefined,
         onclick: () => buy(shop.upgradePrice, (pay) => pickFromPouch(t('Evolve which stone?'), (s) => { if (s) { R.evolve(s); shop.upgraded = true; pay(); } }, { evolve: true })),
-      }, h('b', {}, t('Evolve a stone')), h('span.price', {}, iconEl('coin'), shop.upgradePrice), shop.upgraded ? h('span.dim', {}, t(' (done)')) : null),
+      }, h('b', {}, t('Evolve a stone')), h('span.price' + (run.gold < shop.upgradePrice ? '.dear' : ''), {}, iconEl('coin'), shop.upgradePrice), shop.upgraded ? h('span.dim', {}, t(' (done)')) : null),
       h('button.service', {
         disabled: run.hearts >= run.maxHearts || shop.healed >= 2 || undefined,
         onclick: () => buy(shop.healPrice, (pay) => { run.hearts++; shop.healed++; sfx('heal'); pay(); }),
-      }, h('b', {}, t('Bandage (+1 ❤)')), h('span.price', {}, iconEl('coin'), shop.healPrice), h('span.dim', {}, t(' {n} left', { n: 2 - shop.healed })))),
+      }, h('b', {}, t('Bandage (+1 ❤)')), h('span.price' + (run.gold < shop.healPrice ? '.dear' : ''), {}, iconEl('coin'), shop.healPrice), h('span.dim', {}, t(' {n} left', { n: 2 - shop.healed })))),
     h('button.btn.primary.wide.big', { onclick: () => { R.leaveNode(run); route(); } }, t('Leave shop'))));
 }
 
