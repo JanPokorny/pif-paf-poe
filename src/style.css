@@ -171,7 +171,7 @@ p { margin: 0.5em 0; }
 .enemy-tricks { display: flex; gap: 4px; margin-left: auto; }
 .mini-trick { width: 28px; height: 28px; border-radius: 8px; background: #3d2a4f; border: 1px solid #6b4a8a; padding: 4px; color: #e2c9ff; display: inline-flex; }
 .mini-trick .icon { width: 100%; height: 100%; }
-.tier { font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.08em; padding: 2px 7px; border-radius: 99px; background: var(--panel2); font-weight: 700; }
+.tier { display: inline-block; font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.08em; padding: 2px 7px; border-radius: 99px; background: var(--panel2); font-weight: 700; }
 .tier.elite { background: #5a2a2a; color: #ffb4a4; }
 .tier.boss { background: #5a4a14; color: var(--gold); }
 .tier.event { background: #2a3f5a; color: #a4d0ff; }
@@ -243,7 +243,9 @@ p { margin: 0.5em 0; }
 .hand-slot.forbidden { opacity: 0.3; }
 .hand-slot.idle { opacity: 0.75; }
 .empty-hand { color: var(--dim); font-size: 0.9rem; }
-.trick-row { display: flex; gap: 6px; align-items: center; justify-content: center; flex-wrap: wrap; }
+.trick-row { display: flex; gap: 6px; align-items: center; justify-content: safe center; flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; padding: 2px 0; }
+.trick-row::-webkit-scrollbar { display: none; }
+.trick-row .trick-btn { flex: none; padding: 5px 8px; font-size: 0.8rem; }
 .trick-row .uses { font-size: 0.74rem; color: var(--dim); }
 .no-tricks { font-size: 0.8rem; color: var(--dim); }
 .trick-btn { display: inline-flex; align-items: center; gap: 6px; padding: 6px 10px; border-radius: 10px; background: #2c2440; border: 1px solid #54407a; font-size: 0.85rem; color: #e2c9ff; }
@@ -424,3 +426,5 @@ p { margin: 0.5em 0; }
 #toast.bad { border-color: var(--bad); }
 
 @media (min-height: 800px) { .duel { gap: 10px; } }
+
+.stone.on-board.last::before { content: ''; position: absolute; inset: -5px; border-radius: inherit; border: 2px dashed #fff9; pointer-events: none; }

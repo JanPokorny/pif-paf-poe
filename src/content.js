@@ -94,10 +94,10 @@ export const ENEMIES = {
     quote: 'Push, pull, push, pull!' },
   // elites
   twins: { name: 'The Twins', emoji: '👯', act: 1, tier: 'elite',
-    core: ['twin', 'twin', 'pebble', 'pebble'], pool: ['shift', 'magnet'], iters: 250, blunder: 0.1,
+    core: ['twin', 'twin', 'pebble', 'pebble'], pool: ['shift', 'magnet'], iters: 110, blunder: 0.22,
     quote: 'Two for the price of one!' },
   stenchlord: { name: 'Lord of Stench', emoji: '🧅', act: 1, tier: 'elite',
-    core: ['stinky', 'stinky', 'magnet'], pool: ['shift', 'rotate', 'mountain'], iters: 250, blunder: 0.1,
+    core: ['stinky', 'stinky', 'magnet'], pool: ['shift', 'rotate', 'mountain'], iters: 140, blunder: 0.18,
     tricks: ['muffle'], quote: 'You will stand where I let you.' },
   // boss
   oak: { name: 'The Old Oak', emoji: '🌳', act: 1, tier: 'boss',
@@ -132,12 +132,12 @@ export const ENEMIES = {
     tricks: ['anchor'], quote: 'STUCK. FOREVER.' },
   // boss
   colossus: { name: 'Clockwork Colossus', emoji: '⚙️', act: 2, tier: 'boss',
-    core: ['whirl', 'mountain', 'magnet'], pool: ['whirl', 'rotate', 'beacon', 'swap', 'shift'], iters: 900, blunder: 0,
+    core: ['whirl', 'mountain', 'magnet'], pool: ['whirl', 'rotate', 'beacon', 'swap', 'shift'], iters: 700, blunder: 0.02,
     field: 'carousel', tricks: ['nudge'], quote: 'TICK. TOCK. YOUR TURN IS WOUND.' },
 
   // Act 3 — the Summit
   fay: { name: 'Firecracker Fay', emoji: '🎆', act: 3, tier: 'normal',
-    core: ['firecracker', 'firecracker'], pool: ['magnet', 'shift', 'rotate', 'bumper'], iters: 400, blunder: 0.08,
+    core: ['firecracker', 'firecracker'], pool: ['magnet', 'shift', 'rotate', 'bumper'], iters: 250, blunder: 0.1,
     quote: 'Boom! Back you go!' },
   fox: { name: 'Turncoat Fox', emoji: '🦊', act: 3, tier: 'normal',
     core: ['turncoat', 'turncoat'], pool: ['magnet', 'stinky', 'shift', 'mountain'], iters: 400, blunder: 0.08,
@@ -156,7 +156,7 @@ export const ENEMIES = {
     quote: 'ROAR. Mine mountain.' },
   // elites
   owl: { name: 'Grand Tactician', emoji: '🦉', act: 3, tier: 'elite',
-    core: ['magnet', 'stinky', 'shift'], pool: ['rotate', 'swap', 'beacon', 'firecracker'], iters: 1400, blunder: 0,
+    core: ['magnet', 'stinky', 'shift'], pool: ['rotate', 'swap', 'beacon', 'firecracker'], iters: 900, blunder: 0,
     tricks: ['mirror'], quote: 'I have seen this position before.' },
   storm: { name: 'Storm Caller', emoji: '⛈️', act: 3, tier: 'elite',
     core: ['whirl', 'flip', 'magnet'], pool: ['2048', 'bumper', 'shift', 'hush'], iters: 1100, blunder: 0,
@@ -164,14 +164,14 @@ export const ENEMIES = {
   // bosses
   grandmaster: { name: 'The Grandmaster', emoji: '👑', act: 3, tier: 'boss',
     core: ['magnet', 'stinky', 'shift', 'rotate'], pool: ['firecracker', 'turncoat', 'swap', 'mountain', 'beacon'],
-    iters: 2200, blunder: 0, tricks: ['overtake', 'mirror'], size: 6, mods: { homeTurf: true },
+    iters: 500, blunder: 0.03, tricks: ['mirror'], mods: { homeTurf: true },
     quote: 'Every stone you own, I have mastered.' },
 };
 
 export const ACTS = [
   { n: 1, name: 'The Meadow', boss: 'oak', plus: 0.0, bossPlus: 0.2, gold: [14, 22] },
-  { n: 2, name: 'The Quarry', boss: 'colossus', plus: 0.2, bossPlus: 0.45, gold: [18, 28] },
-  { n: 3, name: 'The Summit', boss: 'grandmaster', plus: 0.45, bossPlus: 0.8, gold: [22, 34] },
+  { n: 2, name: 'The Quarry', boss: 'colossus', plus: 0.2, bossPlus: 0.35, gold: [18, 28] },
+  { n: 3, name: 'The Summit', boss: 'grandmaster', plus: 0.4, bossPlus: 0.5, gold: [22, 34] },
 ];
 
 export const enemiesOf = (act, tier) => Object.keys(ENEMIES)
@@ -210,7 +210,7 @@ export const EVENTS = [
     id: 'gambler', title: 'The Gambler\'s Table', emoji: '🎲',
     text: 'A grinning fox shuffles three cups. "Double or nothing, friend?"',
     choices: [
-      { label: 'Bet 30 gold', detail: '50%: win 60. 50%: lose it.', can: (r) => r.gold >= 30,
+      { label: 'Bet 30 gold', detail: '50%: +30 gold. 50%: −30 gold.', can: (r) => r.gold >= 30,
         act: (r, api) => { if (api.rng() < 0.5) { r.gold += 30; return 'The pebble is under your cup! +30 gold.'; } r.gold -= 30; return 'Empty. The fox chuckles. −30 gold.'; } },
       { label: 'Bet everything', detail: '50%: double your gold.', can: (r) => r.gold > 0,
         act: (r, api) => { if (api.rng() < 0.5) { r.gold *= 2; return `Fortune smiles! You now have ${r.gold} gold.`; } r.gold = 0; return 'Gone. All of it.'; } },

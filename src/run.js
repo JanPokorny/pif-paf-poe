@@ -64,7 +64,7 @@ export const HEAT = [
   { n: 2, text: 'Enemy stones are upgraded more often.' },
   { n: 3, text: 'Start with 1 fewer heart.' },
   { n: 4, text: 'Elites and bosses bring an extra stone.' },
-  { n: 5, text: 'Enemies never blunder.' },
+  { n: 5, text: 'Enemies never blunder, and elites always open.' },
 ];
 
 let uidCounter = 1;
@@ -174,8 +174,8 @@ export function prepareDuel(run, enemyId, context = {}) {
   const handO = rollEnemyHand(run, enemy, tier);
   let first;
   if (tier === 'boss') first = (context.bossRound ?? 0) % 2 === 0 ? 'O' : 'X';
-  else if (tier === 'elite') first = 'O';
-  else if (has(run, 'opening-book')) first = 'X';
+  else if (tier === 'elite' && run.heat >= 5) first = 'O';
+  else if (has(run, 'opening-book') && tier !== 'elite') first = 'X';
   else first = rand(run) < 0.5 ? 'X' : 'O';
   const types = [...new Set([...CLASSIC_SPACES, ...handO.map((h) => h.type).filter((t) => t !== 'pebble')])];
   const disabled = rand(run) < 0.3 ? null : pick(run, types);
@@ -183,7 +183,7 @@ export function prepareDuel(run, enemyId, context = {}) {
   const enemyTricks = [...(enemy.tricks ?? [])];
   return {
     enemyId, tier, handO, first, disabled,
-    tricksO: enemyTricks, usesO: tier === 'boss' ? 2 : 1,
+    tricksO: enemyTricks, usesO: 1,
     modsO: { ...(enemy.mods ?? {}) }, field: enemy.field ?? null,
     iters: Math.round(enemy.iters * heatIters), blunder: run.heat >= 5 ? 0 : enemy.blunder,
     bossRound: context.bossRound ?? 0, bossWins: context.bossWins ?? 0,
@@ -316,7 +316,7 @@ export function duelWon(run) {
 }
 
 export function heartsLost(duel) {
-  return duel.tier === 'normal' || duel.tier === 'event' ? 1 : 2;
+  return duel.tier === 'elite' ? 2 : 1;
 }
 
 export function duelLost(run) {

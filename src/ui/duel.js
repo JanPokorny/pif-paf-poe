@@ -37,6 +37,29 @@ function stageOf(cands) {
 }
 
 const SPEED = { enemyPause: 380, move: 360 };
+const SQUARE = ['top-left', 'top', 'top-right', 'left', 'centre', 'right', 'bottom-left', 'bottom', 'bottom-right'];
+const BLOCK = { TL: 'top-left', TR: 'top-right', BL: 'bottom-left', BR: 'bottom-right' };
+
+// A few words on what an effect or trick choice did, for the move caption.
+function describe(a) {
+  if (a.use && a.use !== 'pass') {
+    const t = TRICKS[a.use].name;
+    if (a.from !== undefined) return `${t}: ${SQUARE[a.from]} → ${SQUARE[a.to]}`;
+    if (a.a !== undefined) return `${t}: swapped ${SQUARE[a.a]} and ${SQUARE[a.b]}`;
+    if (a.stone) return `${t}: you must play ${STONES[a.stone].name}`;
+    if (a.pos !== undefined) return `${t} on the ${SQUARE[a.pos]}`;
+    return t;
+  }
+  if (a.dir) {
+    const which = a.index === undefined ? '' : (a.dir === 'left' || a.dir === 'right' ? ` row ${a.index + 1}` : ` column ${a.index + 1}`);
+    return `slid${which} ${a.dir}`;
+  }
+  if (a.block) return `turned the ${BLOCK[a.block]} block ${a.cw ? 'clockwise' : 'anticlockwise'}`;
+  if (a.turn) return `turned the ring ${Math.abs(a.turn)} ${a.turn > 0 ? 'clockwise' : 'anticlockwise'}`;
+  if (a.axis) return `mirrored the board ${{ h: 'left–right', v: 'top–bottom', d: 'diagonally', a: 'diagonally' }[a.axis]}`;
+  if (a.target !== undefined) return `targeting the ${SQUARE[a.target]}`;
+  return '';
+}
 
 export function mountDuel(root, opts) {
   const { enemy, onEnd, onSave, extra = null } = opts;
@@ -49,6 +72,8 @@ export function mountDuel(root, opts) {
   let trickName = null;         // the trick being aimed
   let busy = false;             // the enemy is moving, or an animation runs
   let ended = false;
+  let caption = [];             // what the enemy just did
+  let lastEnemyId = null;
 
   // ── Layout ────────────────────────────────────────────────────────────────
   const enemyHand = h('div.hand.enemy-hand');
@@ -94,6 +119,7 @@ export function mountDuel(root, opts) {
       }
       updateStone(e, c, c.player, { stuck: isStuck(s, i) && !STONES[c.type].immovable && !(c.type === 'joker'), dead: !active(s, c) });
       e.dataset.at = i;
+      e.classList.toggle('last', c.id === lastEnemyId);
       e.style.setProperty('--r', row(i));
       e.style.setProperty('--c', col(i));
     });
@@ -264,7 +290,7 @@ export function mountDuel(root, opts) {
     if (busy || state.player !== 'X') {
       setStatus(`${enemy.name} is thinking…`, 'enemy');
       renderActions([]);
-      info.textContent = '';
+      info.textContent = caption.filter(Boolean).join(', ');
       return;
     }
     const undo = snapshot && state.turns === snapshot.turns && state.phase !== 'select'
@@ -272,7 +298,8 @@ export function mountDuel(root, opts) {
 
     if (state.phase === 'select') {
       setStatus('Your turn — pick a stone', 'you');
-      info.textContent = state.hands.X.length ? 'Tap a stone in your hand. Tap any stone on the board to read it.' : '';
+      info.textContent = caption.length ? `${enemy.name}: ${caption.filter(Boolean).join(', ')}.`
+        : state.hands.X.length ? 'Tap a stone in your hand. Tap any stone on the board to read it.' : '';
       renderActions([]);
     } else if (state.phase === 'place' && !preview) {
       setStatus('Place it on a glowing square', 'you');
@@ -470,6 +497,8 @@ export function mountDuel(root, opts) {
       if (action.type === 'select') {
         state.log = [];
         applyAction(state, action);
+        caption = [`played ${stoneName(state.selected)}`];
+        info.textContent = caption.filter(Boolean).join(', ');
         // Show which stone it took.
         renderHands(state);
         const k = state.hands.O.length;
@@ -487,6 +516,12 @@ export function mountDuel(root, opts) {
       renderBoard(state);
       renderHands(state);
       renderChips(state);
+      if (action.type === 'place') {
+        lastEnemyId = state.placedId;
+        const c = state.board[action.pos];
+        caption = [`played ${c ? stoneName(c) : stoneName(state.lastPlaced.O)} on the ${SQUARE[action.pos]}`];
+      } else if (action.type !== 'trick' || action.use !== 'pass') caption.push(describe(action));
+      info.textContent = caption.filter(Boolean).join(', ');
       if (action.type === 'place') {
         sfx('place');
         const e = [...stoneEls.values()].find((x) => +x.dataset.at === action.pos);

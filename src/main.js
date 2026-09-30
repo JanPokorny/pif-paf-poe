@@ -282,7 +282,7 @@ function preDuel() {
 
   const tierLabel = { normal: '', elite: 'Elite', boss: 'Boss', event: 'Challenge' }[duel.tier];
   const stakes = duel.tier === 'boss'
-    ? `Beat it twice to pass (${duel.bossWins}/2). Each loss costs 2 ❤.`
+    ? `Beat it twice to pass (${duel.bossWins}/2). Each loss costs 1 ❤.`
     : `Lose and it costs ${R.heartsLost(duel)} ❤.`;
   screen(topBar(),
     h('div.page', {},
@@ -340,7 +340,7 @@ function duelScreen() {
         if (res.kind === 'rematch') toast('🎟️ Rematch Token: try again!');
         else if (res.kind === 'dead') { recordEnd(); }
         else if (res.kind === 'lost') toast(`−${R.heartsLost(duel)} ❤`, 'bad');
-        else if (res.kind === 'boss-retry') toast(`−2 ❤. Again!`, 'bad');
+        else if (res.kind === 'boss-retry') toast(`−1 ❤. Again!`, 'bad');
       }
       route();
     },

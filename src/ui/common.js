@@ -56,7 +56,7 @@ export function stoneText(s) { const st = STONES[s.type]; return s.plus ? st.plu
 let toastTimer = null;
 export function toast(msg, kind = '') {
   let el = document.getElementById('toast');
-  if (!el) { el = h('div#toast'); el.id = 'toast'; document.body.append(el); }
+  if (!el) { el = h('div'); el.id = 'toast'; document.body.append(el); }
   el.className = 'show ' + kind;
   el.textContent = msg;
   clearTimeout(toastTimer);

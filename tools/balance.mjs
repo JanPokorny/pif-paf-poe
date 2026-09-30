@@ -1,0 +1,74 @@
+// How hard is each enemy? A player bot (MCTS at --piters) duels every enemy
+// with a pouch typical of the act it meets them in.
+//
+//   node tools/balance.mjs --games 40 --piters 300 [--only oak,twins]
+
+import { Worker, isMainThread, parentPort, workerData } from 'node:worker_threads';
+import { cpus } from 'node:os';
+import { createGame, applyAction } from '../src/engine.js';
+import { chooseAction, makeRng } from '../src/ai.js';
+import { ENEMIES } from '../src/content.js';
+import * as R from '../src/run.js';
+
+const arg = (k, d) => { const i = process.argv.indexOf('--' + k); return i > 0 ? process.argv[i + 1] : d; };
+
+// A pouch as it might look when meeting an enemy of this act.
+function typicalRun(seed, act, kit) {
+  const run = R.newRun({ seed, kit });
+  run.act = act;
+  const gains = [0, 3, 6][act - 1] + (act > 1 ? 1 : 0);
+  for (let i = 0; i < gains; i++) {
+    const s = R.randomStone(run);
+    if (R.pouchFull(run)) run.pouch.splice(run.pouch.findIndex((p) => p.type === 'pebble') >>> 0, 1);
+    R.gainStone(run, s);
+  }
+  const ups = [0, 2, 4][act - 1];
+  for (let i = 0; i < ups; i++) { const u = R.upgradeable(run); if (u.length) u[(R.rand(run) * u.length) | 0].plus = true; }
+  if (act > 1) run.tricks.push(R.randomTrick(run));
+  if (act > 2) run.tricks.push(R.randomTrick(run));
+  return run;
+}
+
+function duel(spec) {
+  const act = spec.act;
+  const run = typicalRun(spec.seed, act, spec.kit);
+  const duelSpec = R.prepareDuel(run, spec.enemy, { bossRound: spec.seed % 2 });
+  const hand = R.defaultHand(run);
+  const s = createGame({ ...R.gameConfig(run, duelSpec, hand), log: false });
+  const rng = makeRng(spec.seed * 7 + 1);
+  let n = 0;
+  while (!s.over && n++ < 200) {
+    const me = s.player === 'X';
+    const a = chooseAction(s, me ? { iterations: spec.piters, rng, blunder: spec.pblunder } : { iterations: duelSpec.iters, blunder: duelSpec.blunder, rng });
+    applyAction(s, a);
+  }
+  return { enemy: spec.enemy, won: s.winner === 'X' ? 1 : 0, first: duelSpec.first, reason: s.reason };
+}
+
+if (!isMainThread) {
+  parentPort.postMessage(workerData.map(duel));
+} else {
+  const games = +arg('games', 30), piters = +arg('piters', 300), pblunder = +arg('pblunder', 0);
+  const kit = arg('kit', 'apprentice');
+  const only = arg('only', null)?.split(',');
+  const ids = Object.keys(ENEMIES).filter((k) => !only || only.includes(k));
+  const specs = [];
+  for (const enemy of ids) for (let g = 0; g < games; g++) specs.push({ enemy, seed: 1000 + g, act: ENEMIES[enemy].act || 1, piters, pblunder, kit });
+  const W = Math.max(1, cpus().length);
+  const chunks = Array.from({ length: W }, () => []);
+  specs.forEach((s, i) => chunks[i % W].push(s));
+  const t0 = Date.now();
+  const res = (await Promise.all(chunks.filter((c) => c.length).map((c) => new Promise((ok, bad) => {
+    const w = new Worker(new URL(import.meta.url), { workerData: c });
+    w.on('message', ok); w.on('error', bad);
+  })))).flat();
+  for (const id of ids) {
+    const r = res.filter((x) => x.enemy === id);
+    const win = r.reduce((a, b) => a + b.won, 0) / r.length;
+    const opened = r.filter((x) => x.first === 'X');
+    const wOpen = opened.length ? opened.reduce((a, b) => a + b.won, 0) / opened.length : NaN;
+    const e = ENEMIES[id];
+    console.log(`${id.padEnd(12)} act ${e.act} ${e.tier.padEnd(6)} win ${(win * 100).toFixed(0).padStart(3)}%   (opening ${isNaN(wOpen) ? '  -' : (wOpen * 100).toFixed(0).padStart(3)}% of ${opened.length})`);
+  }
+  console.log(`${res.length} duels in ${((Date.now() - t0) / 1000).toFixed(1)}s on ${W} threads`);
+}
