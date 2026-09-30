@@ -4,7 +4,7 @@
 import { STONES, TRICKS, STONE_TYPES, TRICK_TYPES, createGame, FIELDS } from './engine.js';
 import { RELICS, RELIC_TYPES, ENEMIES, ACTS, EVENTS } from './content.js';
 import * as R from './run.js';
-import { h, scribbleX, scribbleO, stoneEl, iconEl, toast, modal, infoStone, infoTrick, infoRelic, infoSpace, infoField, stoneCard, trickCard, relicCard, stoneName } from './ui/common.js';
+import { h, art, relicArt, scribbleX, scribbleO, stoneEl, iconEl, toast, modal, infoStone, infoTrick, infoRelic, infoSpace, infoField, stoneCard, trickCard, relicCard, stoneName } from './ui/common.js';
 import { icon } from './icons.js';
 import { mountDuel } from './ui/duel.js';
 import { sfx, soundOn, setSound } from './sound.js';
@@ -73,7 +73,7 @@ function screen(...children) {
 
 function relicStrip() {
   if (!run.relics.length) return null;
-  return h('div.relic-strip', {}, run.relics.map((r) => h('button.relic-mini', { onclick: () => infoRelic(r), title: RELICS[r].name }, RELICS[r].emoji)));
+  return h('div.relic-strip', {}, run.relics.map((r) => h('button.relic-mini', { onclick: () => infoRelic(r), title: RELICS[r].name }, relicArt(r))));
 }
 
 function showPouch() {
@@ -83,7 +83,7 @@ function showPouch() {
     h('h2', {}, `Tricks · ${run.tricks.length}/${R.trickCap(run)}`),
     run.tricks.length ? h('div.trick-list', {}, run.tricks.map((t) => h('button.trick-btn', { onclick: () => infoTrick(t) }, h('span.trick-ico', { html: icon(t) }), TRICKS[t].name))) : h('p.dim', {}, 'No tricks.'),
     h('h2', {}, 'Relics'),
-    run.relics.length ? h('div.relic-list', {}, run.relics.map((r) => h('button.relic-row', { onclick: () => infoRelic(r) }, h('span.relic-token.small', {}, RELICS[r].emoji), h('span', {}, h('b', {}, RELICS[r].name), h('br'), RELICS[r].text)))) : h('p.dim', {}, 'No relics yet.'),
+    run.relics.length ? h('div.relic-list', {}, run.relics.map((r) => h('button.relic-row', { onclick: () => infoRelic(r) }, h('span.relic-token.small', {}, relicArt(r)), h('span', {}, h('b', {}, RELICS[r].name), h('br'), RELICS[r].text)))) : h('p.dim', {}, 'No relics yet.'),
     h('p.dim', {}, `You bring ${R.handSize(run)} stones into each duel and may spend ${R.trickUses(run)} trick${R.trickUses(run) > 1 ? 's' : ''} per duel.`),
     h('button.btn.wide', { onclick: () => close() }, 'Close'));
   const close = modal(body, { cls: 'tall' });
@@ -155,7 +155,7 @@ function startDaily() {
     route();
   };
   const body = h('div.menu', {}, h('h2', {}, `Daily climb · ${d}`),
-    h('p', {}, `Today everyone climbs the same mountain as ${R.KITS[kit].name} ${R.KITS[kit].emoji}. Same maps, same enemies, same loot.`),
+    h('p', {}, `Today everyone climbs the same mountain as ${R.KITS[kit].name}. Same maps, same enemies, same loot.`),
     meta.daily?.[d] ? h('p.dim', {}, `Your result today: ${meta.daily[d]}`) : null,
     h('button.btn.primary.wide', { onclick: () => { const sv = loadJSON(SAVE); if (sv?.run && !sv.run.over && !confirm('Start the daily climb? Your run in progress will be lost.')) return; close(); go(); } }, 'Climb'),
     h('button.btn.ghost.wide', { onclick: () => close() }, 'Back'));
@@ -191,10 +191,10 @@ function chooseKit() {
             route();
           },
         },
-        h('div.kit-head', {}, h('span.kit-emoji', {}, k.emoji), h('div', {}, h('div.kit-name', {}, k.name), h('div.kit-text', {}, k.text))),
+        h('div.kit-head', {}, h('span.kit-emoji', {}, art('kit', id, k.emoji)), h('div', {}, h('div.kit-name', {}, k.name), h('div.kit-text', {}, k.text))),
         h('div.kit-stones', {}, k.pouch.map((t) => stoneEl({ type: t }, 'X', { mini: true })),
           k.tricks.map((t) => h('span.mini-trick', { html: icon(t) }))),
-        h('div.kit-stats', {}, `❤ ${k.hearts - (heat >= 3 ? 1 : 0)}  ·  ${k.gold} gold${k.relics ? '  ·  ' + k.relics.map((r) => RELICS[r].emoji).join('') : ''}`),
+        h('div.kit-stats', {}, `❤ ${k.hearts - (heat >= 3 ? 1 : 0)}  ·  ${k.gold} gold${k.relics ? '  ·  ' + k.relics.map((r) => RELICS[r].name).join(', ') : ''}`),
         locked ? h('div.kit-lock', {}, '🔒 Win a run to unlock') : null);
       }))));
 }
@@ -666,7 +666,7 @@ function eventScreen() {
       const id = R.randomRelic(run);
       if (!id) return text + ' nothing.';
       R.gainRelic(run, id);
-      return `${text} ${RELICS[id].emoji} ${RELICS[id].name}! ${RELICS[id].text}`;
+      return `${text} ${RELICS[id].name}! ${RELICS[id].text}`;
     },
     transmute: () => new Promise((resolve) => pickFromPouch('Transmute which stone?', (s) => {
       if (!s) return resolve('You change your mind.');
@@ -715,7 +715,7 @@ function eventScreen() {
       }, h('b', {}, c.label), c.detail ? h('span.dim', {}, ' — ' + c.detail) : null);
     });
   screen(topBar(), h('div.page.event', {},
-    h('div.event-emoji', {}, ev.emoji),
+    h('div.event-emoji', {}, art('event', ev.id, ev.emoji)),
     h('h2', {}, ev.title),
     h('p', {}, ev.text),
     h('div.choices', {}, choices)));
@@ -729,9 +729,9 @@ function endScreen(victory) {
   const mins = Math.round((Date.now() - st.started) / 60000);
   const kit = R.KITS[run.kit];
   screen(h('div.page.end', {},
-    h('div.end-emoji', {}, victory ? '🏆' : '🪦'),
+    h('div.end-emoji', {}, victory ? art('x', 'trophy', '🏆') : art('x', 'tombstone', '🪦')),
     h('h1', {}, victory ? 'You conquered the Summit!' : 'Your climb ends here'),
-    h('p', {}, victory ? `The Grandmaster bows. ${kit.name} ${kit.emoji} is the champion${run.heat ? ` at heat ${run.heat}` : ''}.`
+    h('p', {}, victory ? `The Grandmaster bows. ${kit.name} is the champion${run.heat ? ` at heat ${run.heat}` : ''}.`
       : `Fallen in act ${run.act}, ${ACTS[run.act - 1].name}.`),
     h('div.stats', {},
       h('div', {}, h('b', {}, st.won), ' duels won'),
@@ -810,7 +810,7 @@ function showCodex() {
       list = TRICK_TYPES.map((t) => h('div.codex-row', {}, h('div.trick-token', { html: icon(t) }), h('div', {},
         h('b', {}, TRICKS[t].name), h('span.info-rarity.' + TRICKS[t].rarity, {}, ' ' + TRICKS[t].rarity), h('div', {}, TRICKS[t].text))));
     } else if (tab === 'relics') {
-      list = RELIC_TYPES.map((r) => h('div.codex-row', {}, h('div.relic-token.small', {}, RELICS[r].emoji), h('div', {},
+      list = RELIC_TYPES.map((r) => h('div.codex-row', {}, h('div.relic-token.small', {}, relicArt(r)), h('div', {},
         h('b', {}, RELICS[r].name), h('span.info-rarity.' + RELICS[r].rarity, {}, ' ' + RELICS[r].rarity), h('div', {}, RELICS[r].text))));
     } else {
       list = Object.values(ENEMIES).filter((e) => e.act > 0).map((e) => h('div.codex-row', {}, h('div.relic-token.small', {}, e.emoji), h('div', {},

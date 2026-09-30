@@ -2,7 +2,7 @@
 
 import { STONES, TRICKS, FIELDS } from '../engine.js';
 import { RELICS } from '../content.js';
-import { icon } from '../icons.js';
+import { icon, ICONS } from '../icons.js';
 
 export function h(tag, attrs = {}, ...children) {
   const [name, ...classes] = tag.split('.');
@@ -35,6 +35,13 @@ export function scribbleX(fresh = false) {
 export function scribbleO(fresh = false) {
   return `<svg class="scribble o${fresh ? ' fresh' : ''}" viewBox="0 0 100 100" aria-hidden="true"><path pathLength="100" d="M56 16 C 30 12, 14 34, 18 56 C 22 80, 48 90, 68 80 C 88 70, 88 40, 74 26 C 66 18, 52 14, 42 20"/></svg>`;
 }
+
+// Ink art for a relic, event or kit, falling back to its emoji as a stamp.
+export function art(kind, id, emoji) {
+  const name = kind === 'x' ? id : `${kind}-${id}`;
+  return ICONS[name] ? h('span.art', { html: icon(name) }) : h('span.art.stamp', {}, emoji);
+}
+export const relicArt = (id) => art('relic', id, RELICS[id]?.emoji ?? '?');
 
 export const iconEl = (name, cls = '') => h('span.icon-wrap', { html: icon(name, cls) });
 
@@ -116,7 +123,7 @@ export function infoTrick(name) {
 export function infoRelic(id) {
   const r = RELICS[id];
   const body = h('div.info-stone', {},
-    h('div.info-head', {}, h('div.relic-token', {}, r.emoji), h('div', {},
+    h('div.info-head', {}, h('div.relic-token', {}, relicArt(id)), h('div', {},
       h('div.info-name', {}, r.name), h('div.info-rarity.' + r.rarity, {}, 'relic · ' + r.rarity))),
     h('p', {}, r.text),
     h('button.btn.wide', { onclick: () => close() }, 'OK'));
@@ -160,7 +167,7 @@ export function trickCard(name, { onclick, price, sold } = {}) {
 export function relicCard(id, { onclick, price, sold } = {}) {
   const r = RELICS[id];
   return h(`button.card.relic-card.${r.rarity}${sold ? '.sold' : ''}`, { onclick, disabled: sold || undefined },
-    h('div.relic-token', {}, r.emoji),
+    h('div.relic-token', {}, relicArt(id)),
     h('div.card-name', {}, r.name),
     h('div.card-text', {}, r.text),
     price !== undefined ? h('div.price', {}, iconEl('coin'), price) : null);

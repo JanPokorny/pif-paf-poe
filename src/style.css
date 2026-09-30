@@ -573,3 +573,15 @@ b { font-weight: 400; background: linear-gradient(transparent 55%, var(--hi) 55%
 .stone-grid.upgrades { grid-template-columns: repeat(2, 1fr); }
 .coach { color: var(--ink); background: var(--sticky); padding: 2px 6px; box-shadow: 1px 3px 5px -3px rgba(80,60,0,.5); display: inline-block; transform: rotate(-0.5deg); }
 .map-cell.boss-threat::after { content: ''; position: absolute; inset: 14%; border: 2.5px dashed rgba(200, 55, 45, 0.6); border-radius: 50%; pointer-events: none; }
+
+/* Ink art replaces the stamped emoji where it exists. */
+.art { display: inline-flex; align-items: center; justify-content: center; line-height: 1; }
+.art .icon { width: 100%; height: 100%; filter: url(#ink); }
+.relic-mini, .relic-token, .kit-emoji, .event-emoji, .end-emoji { filter: none !important; mix-blend-mode: normal; opacity: 1; }
+.art.stamp { filter: grayscale(1) contrast(1.35) sepia(0.35); mix-blend-mode: multiply; opacity: 0.85; }
+.relic-token .art { width: 70%; height: 70%; color: var(--ink); }
+.relic-mini .art { width: 30px; height: 30px; color: var(--ink); }
+.relic-mini { border: 1.5px solid rgba(43, 42, 51, 0.5); border-radius: 50%; }
+.kit-emoji .art { width: 40px; height: 40px; color: var(--ink); }
+.event-emoji .art, .end-emoji .art { width: 96px; height: 96px; color: var(--ink); }
+.event-emoji, .end-emoji { display: flex; justify-content: center; }
