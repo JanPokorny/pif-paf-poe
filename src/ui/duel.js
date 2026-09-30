@@ -96,7 +96,7 @@ export function mountDuel(root, opts) {
   const header = h('div.enemy-bar', {},
     h('div.portrait', { onclick: () => toast(`“${enemy.quote ?? '…'}”`) }, h('div.photo', {}, enemy.emoji)),
     h('div.enemy-meta', {}, h('div.enemy-name', {}, enemy.name,
-      enemy.tier && enemy.tier !== 'normal' ? h('span.tier.' + enemy.tier, {}, enemy.tier) : null),
+      enemy.tier && enemy.tier !== 'normal' ? h('span.tier.' + enemy.tier, {}, enemy.tier === 'event' ? 'challenge' : enemy.tier) : null),
     h('div.enemy-row', {}, enemyHand, enemyTricks)), extra);
 
   const el = h('div.duel', {}, header, chips, status, h('div.board-wrap', {}, board), actions, hand, trickRow, info);
@@ -118,7 +118,6 @@ export function mountDuel(root, opts) {
         stonesLayer.append(e);
         stoneEls.set(c.id, e);
         setTimeout(() => e.classList.remove('pop'), 300);
-        e.addEventListener('click', (ev) => { ev.stopPropagation(); tapSquare(+e.dataset.at); });
       }
       updateStone(e, c, c.player, { stuck: !!c.stuck || guarded({ ...s, player: other(c.player) }, i), dead: !active(s, c) });
       e.dataset.at = i;
@@ -152,7 +151,7 @@ export function mountDuel(root, opts) {
     hand.replaceChildren(...base.hands.X.map((st, k) => {
       const e = stoneEl(st, 'X', { dead: s.disabled === st.type && !s.mods.X.homeTurf });
       const b = h('button.hand-slot', { onclick: () => tapHand(k) }, e);
-      if (inTurn && k === selIndex) b.classList.add('selected');
+      if (inTurn && k === selIndex) b.classList.add(s.phase === 'place' ? 'selected' : 'placed');
       if (selectable && !selectable.has(st.type + (st.plus ? '+' : ''))) b.classList.add('forbidden');
       if (!selectable && !(inTurn && s.phase === 'place')) b.classList.add('idle');
       return b;
@@ -163,7 +162,7 @@ export function mountDuel(root, opts) {
     const usable = s.player === 'X' && s.phase === 'trick' && !busy
       ? new Set(legalActions(s).map((a) => a.use)) : new Set();
     trickRow.replaceChildren(
-      h('span.uses', {}, s.uses.X > 0 ? `Tricks ×${s.uses.X}` : 'Tricks spent'),
+      h('span.uses', {}, s.uses.X > 0 ? `Tricks ×${s.uses.X}` : 'No trick uses left'),
       ...s.tricks.X.map((t) => {
         const b = h('button.trick-btn', { onclick: () => tapTrick(t) }, h('span.trick-ico', { html: icon(t) }), TRICKS[t].name);
         if (usable.has(t)) b.classList.add('usable');
@@ -250,7 +249,7 @@ export function mountDuel(root, opts) {
       for (const [k, group] of stage.groups) {
         const [blk, cw] = k.split('|');
         const [x, y] = centre[blk];
-        const off = both.has(blk + '!') ? (cw === 'true' ? 0.2 : -0.2) : 0;
+        const off = both.has(blk + '!') ? (cw === 'true' ? 0.27 : -0.27) : 0;
         const b = h('button.rot' + (isChosen(group) ? '.chosen' : ''), { html: icon(cw === 'true' ? 'rotate-cw' : 'rotate-ccw'), onclick: pickGroup(group) });
         place(x + off, y, b);
       }
@@ -318,7 +317,7 @@ export function mountDuel(root, opts) {
     } else if (state.phase === 'effect' || (state.phase === 'trick' && trickName)) {
       const btns = renderStage();
       const what = state.phase === 'effect' ? stoneName(state.board[state.placedAt]) : TRICKS[trickName].name;
-      setStatus(preview ? 'Tap again or ✓ to confirm' : `Choose how your ${what} works`, 'you');
+      setStatus(preview ? 'Tap again or ✓ to confirm' : state.phase === 'trick' ? `Aim your ${what}` : `Choose how your ${what} works`, 'you');
       if (state.phase === 'effect') describeSelected(); else info.textContent = TRICKS[trickName].text;
       const back = state.phase === 'trick'
         ? h('button.btn.ghost', { onclick: () => { trickName = null; preview = null; show(); } }, h('span', { html: icon('back') }), 'Back')
@@ -364,9 +363,10 @@ export function mountDuel(root, opts) {
     const ok = legalActions(state).find((a) => a.stone === st.type && !!a.plus === !!st.plus);
     if (!ok) { toast('Mind Control: you must play the named stone.', 'bad'); return; }
     sfx('select');
-    snapshot = cloneState(state); snapshot.log = [];
+    // Never touch the saved start-of-turn state: work on a copy of it.
+    snapshot = state;
     selIndex = k;
-    state.log = state.log ?? [];
+    state = cloneState(snapshot); state.log = [];
     applyAction(state, ok);
     show();
   }
@@ -462,8 +462,8 @@ export function mountDuel(root, opts) {
         effectCands = legalActions(state);
         stageCands = cands = effectCands;
       }
-      if (state.phase === 'select') { snapshot = null; selIndex = null; }
-      save();
+      // Only a turn's start is saved: a reload mid-turn starts the turn over.
+      if (state.phase === 'select') { snapshot = null; selIndex = null; save(); }
       show();
     } else {
       snapshot = null; selIndex = null;
@@ -570,20 +570,28 @@ export function mountDuel(root, opts) {
       h('div.result-title', {}, won ? 'Victory!' : 'Defeat'),
       h('div.result-why', {}, why),
       h('button.btn.primary.wide', { onclick: () => { banner.remove(); onEnd(state.winner); } }, 'Continue'),
-      h('button.btn.ghost.wide', { onclick: () => { banner.classList.toggle('peek'); } }, 'Look at the board'));
+      h('button.btn.ghost.wide', { onclick: (e) => { banner.classList.toggle('peek'); e.currentTarget.textContent = banner.classList.contains('peek') ? 'Show the result' : 'Look at the board'; } }, 'Look at the board'));
     el.append(banner);
   }
 
   // ── Go ────────────────────────────────────────────────────────────────────
   state.log = [];
+  // An old save from the middle of a turn: put a chosen stone back in hand,
+  // or pick up the choice it was waiting on.
+  if (!state.over && state.player === 'X' && state.phase === 'place' && state.selected) {
+    state.hands.X.push(state.selected);
+    state.selected = null;
+    state.phase = 'select';
+  }
+  if (!state.over && state.player === 'X' && state.phase === 'effect') {
+    effectCands = legalActions(state);
+    stageCands = cands = effectCands;
+  }
   show();
   if (state.turns === 0 && state.phase === 'select' && enemy.quote) toast(`${enemy.emoji} “${enemy.quote}”`);
   if (state.over) finish();
   else if (state.player === 'O') enemyTurn();
-  else if (state.phase !== 'select') {
-    // Resumed mid-turn: start the turn over.
-    afterCommit();
-  }
+
 
   return { destroy() { ended = true; } };
 }

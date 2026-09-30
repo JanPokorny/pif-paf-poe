@@ -272,11 +272,22 @@ export function gameConfig(run, duel, uids) {
 }
 
 // The default loadout: last time's stones if still owned, topped up.
-export function defaultHand(run) {
+export function defaultHand(run, disabled = null) {
   const size = handSize(run);
   const owned = new Set(run.pouch.map((s) => s.uid));
-  const chosen = (run.lastHand ?? []).filter((u) => owned.has(u)).slice(0, size);
-  const rank = (s) => (s.type === 'pebble' ? 0 : 1) + (s.plus ? 0.5 : 0) + ({ common: 0, uncommon: 0.2, rare: 0.4 }[STONES[s.type].rarity] ?? 0);
+  const works = (s) => s.type !== disabled || has(run, 'home-turf');
+  const rank = (s) => (works(s) ? 0 : -5) + (s.type === 'pebble' ? 0 : 1) + (s.plus ? 0.5 : 0)
+    + ({ common: 0, uncommon: 0.2, rare: 0.4 }[STONES[s.type].rarity] ?? 0);
+  // Last time's stones, if still owned -- but not ones this space switches off
+  // while something else in the pouch would work.
+  const spare = run.pouch.filter((s) => works(s) && !(run.lastHand ?? []).includes(s.uid)).length;
+  let dropped = 0;
+  const chosen = (run.lastHand ?? []).filter((u) => {
+    if (!owned.has(u)) return false;
+    const s = run.pouch.find((p) => p.uid === u);
+    if (!works(s) && dropped < spare) { dropped++; return false; }
+    return true;
+  }).slice(0, size);
   const rest = run.pouch.filter((s) => !chosen.includes(s.uid)).sort((a, b) => rank(b) - rank(a));
   while (chosen.length < Math.min(size, run.pouch.length)) chosen.push(rest.shift().uid);
   return chosen;

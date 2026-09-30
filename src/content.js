@@ -201,9 +201,9 @@ export const EVENTS = [
     text: 'A dusty stonemason sets down her chisel. "Fine stones you carry. I could make one finer — for a price."',
     choices: [
       { label: 'Pay 35 gold', detail: 'Upgrade a stone.', can: (r) => r.gold >= 35 && r.pouch.some((s) => !s.plus),
-        act: (r, api) => { r.gold -= 35; return api.upgradeStone('The stonemason gets to work.'); } },
+        act: (r, api) => api.upgradeStone('The stonemason gets to work.', 1, () => { r.gold -= 35; }) },
       { label: 'Pay 2 hearts', detail: 'Upgrade two stones.', can: (r) => r.hearts > 2 && r.pouch.filter((s) => !s.plus).length >= 2,
-        act: (r, api) => { r.hearts -= 2; return api.upgradeStone('Blood and granite.', 2); } },
+        act: (r, api) => api.upgradeStone('Blood and granite.', 2, () => { r.hearts -= 2; }) },
       { label: 'Leave', act: () => 'You nod politely and move on.' },
     ],
   },
@@ -212,7 +212,7 @@ export const EVENTS = [
     text: 'An old shrine hums quietly. Offerings of heart-shaped stones lie at its foot.',
     choices: [
       { label: 'Offer a max heart', detail: 'Lose 1 max heart. Choose a rare stone.', can: (r) => r.maxHearts > 2,
-        act: (r, api) => { r.maxHearts--; r.hearts = Math.min(r.hearts, r.maxHearts); return api.chooseStone('rare'); } },
+        act: (r, api) => api.chooseStone('rare', () => { r.maxHearts--; r.hearts = Math.min(r.hearts, r.maxHearts); }) },
       { label: 'Pray', detail: 'Heal 1 heart.', act: (r) => { r.hearts = Math.min(r.maxHearts, r.hearts + 1); return 'A warmth settles in your chest.'; } },
     ],
   },
@@ -274,7 +274,7 @@ export const EVENTS = [
   },
   {
     id: 'thief', title: 'A Pickpocket!', emoji: '🥷',
-    text: 'A shadow bumps into you. Your coin purse feels lighter…',
+    text: 'A shadow bumps into you and reaches for your coin purse…',
     choices: [
       { label: 'Chase him', detail: 'Duel him. Win: get it back with interest. Lose: −1 heart.', act: (r, api) => api.fight('thief') },
       { label: 'Let it go', detail: 'Lose 20 gold.', act: (r) => { r.gold = Math.max(0, r.gold - 20); return 'Easy come, easy go.'; } },
@@ -294,7 +294,12 @@ export const EVENTS = [
     text: 'A magician fans out a deck of tricks. "Swap one, any one."',
     choices: [
       { label: 'Trade a trick', detail: 'Swap a trick for a random rare one.', can: (r) => r.tricks.length > 0,
-        act: (r, api) => { r.tricks.pop(); return api.gainRandomTrick('rare'); } },
+        act: async (r, api) => {
+          const k = await api.pickTrick('Trade which trick?');
+          if (k < 0) return 'He shrugs and shuffles the deck.';
+          r.tricks.splice(k, 1);
+          return api.gainRandomTrick('rare');
+        } },
       { label: 'Buy a trick', detail: 'Pay 25 gold for a random trick.', can: (r, api) => r.gold >= 25 && api.trickRoom(),
         act: (r, api) => { r.gold -= 25; return api.gainRandomTrick(); } },
       { label: 'No thanks', act: () => 'He vanishes in a puff of smoke.' },

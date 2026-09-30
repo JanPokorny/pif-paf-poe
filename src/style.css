@@ -241,11 +241,12 @@ b { font-weight: 400; background: linear-gradient(transparent 55%, var(--hi) 55%
 .board-lines { position: absolute; inset: 0; pointer-events: none; }
 .board-lines svg { width: 100%; height: 100%; overflow: visible; display: block; }
 .board-lines path { fill: none; stroke: var(--pencil); stroke-width: 5; stroke-linecap: round; filter: url(#pencil); opacity: 0.85; }
-.cells { position: absolute; inset: 0; display: grid; grid-template-columns: repeat(3, 1fr); }
+.cells { position: absolute; inset: 0; display: grid; grid-template-columns: repeat(3, 1fr); z-index: 3; }
 .cell { position: relative; }
 .cell::after { content: ''; position: absolute; inset: 14%; border-radius: 40% 30% 45% 35%; pointer-events: none; opacity: 0; transition: opacity 0.2s; }
 .cell.allowed::after { opacity: 1; background: var(--hi); animation: breathe 1.6s ease-in-out infinite; }
-.cell.target::after { opacity: 1; inset: 6%; border: 3px dashed var(--ink); background: rgba(255, 228, 0, 0.18); z-index: 3; animation: breathe 1.3s ease-in-out infinite; }
+.cell { cursor: pointer; }
+.cell.target::after { opacity: 1; inset: 4%; border: 3px dashed var(--ink); background: rgba(255, 228, 0, 0.28); animation: breathe 1.3s ease-in-out infinite; }
 .cell.chosen::after { opacity: 1; background: var(--hi-orange); border-color: transparent; animation: none; }
 @keyframes breathe { 0%, 100% { opacity: 0.55; } 50% { opacity: 1; } }
 
@@ -255,7 +256,7 @@ b { font-weight: 400; background: linear-gradient(transparent 55%, var(--hi) 55%
   position: absolute; left: calc(var(--cell) * 0.15); top: calc(var(--cell) * 0.15);
   transform: translate(calc(var(--c) * var(--cell)), calc(var(--r) * var(--cell))) rotate(var(--tilt, 0deg));
   transition: transform 0.4s cubic-bezier(.3,1.25,.5,1), opacity 0.25s;
-  pointer-events: auto; cursor: pointer; z-index: 2;
+  pointer-events: none; z-index: 2;
 }
 .stone.on-board::before { border-width: 3px; }
 .stone.on-board .badge-plus { width: 28px; height: 28px; top: -11px; right: -11px; }
@@ -292,13 +293,14 @@ b { font-weight: 400; background: linear-gradient(transparent 55%, var(--hi) 55%
 @keyframes blink { 50% { opacity: 0.2; } }
 .actions { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; min-height: 46px; }
 .actions .btn { flex: 1 1 auto; max-width: 220px; }
-.player-hand { justify-content: center; gap: 8px; min-height: 66px; flex-wrap: nowrap; }
+.player-hand { justify-content: center; gap: 2px; min-height: 66px; flex-wrap: nowrap; }
 .hand-slot { background: none; border: 0; padding: 5px; transition: transform 0.15s; }
 .hand-slot:nth-child(odd) .stone { --tilt: -3deg; } .hand-slot:nth-child(even) .stone { --tilt: 2deg; }
-.hand-slot .stone { --size: min(54px, calc((100vw - 60px) / 6.4)); }
+.hand-slot .stone { --size: min(54px, calc((100vw - 64px) / 7.3)); }
 .hand-slot.selected { transform: translateY(-10px); }
 .hand-slot.selected .stone::before { box-shadow: 0 0 0 6px var(--hi); }
 .hand-slot.forbidden { opacity: 0.3; }
+.hand-slot.placed, .hand-slot.placed.idle { opacity: 0.25; }
 .hand-slot.idle { opacity: 0.8; }
 .empty-hand { color: var(--faint); }
 .trick-row { display: flex; gap: 8px; align-items: center; justify-content: safe center; flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; padding: 4px 2px; }
@@ -489,7 +491,7 @@ b { font-weight: 400; background: linear-gradient(transparent 55%, var(--hi) 55%
 
 /* A sticky note slapped at the top of the page. */
 #toast {
-  position: fixed; left: 50%; top: calc(10px + var(--safe-t)); z-index: 100; max-width: 90vw; text-align: center;
+  position: fixed; left: 50%; top: calc(22% + var(--safe-t)); z-index: 100; max-width: 90vw; text-align: center;
   background: var(--sticky); padding: 10px 16px; font-size: 1.05rem;
   box-shadow: 2px 8px 14px -6px rgba(80, 60, 0, 0.55);
   opacity: 0; transform: translate(-50%, -30px) rotate(-2deg); transition: opacity 0.2s, transform 0.2s; pointer-events: none;
@@ -509,3 +511,7 @@ b { font-weight: 400; background: linear-gradient(transparent 55%, var(--hi) 55%
 .actions .btn.glyph-opt { flex: 0 0 auto; min-width: 50px; padding: 0.2em 0.6em; font-size: 1.5rem; }
 .actions { flex-wrap: nowrap; }
 .actions .btn { min-width: 0; padding-left: 0.7em; padding-right: 0.7em; }
+
+.page { padding-bottom: calc(40px + var(--safe-b)); }
+.hand.enemy-hand { gap: 4px; }
+.enemy-hand .stone.mini { --size: 28px; }

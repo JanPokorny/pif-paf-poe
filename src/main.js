@@ -58,7 +58,7 @@ function topBar() {
   return h('div.topbar', {},
     hearts,
     h('div.gold', {}, h('span', { html: icon('coin') }), run.gold),
-    h('div.where', {}, `Act ${run.act} · ${ACTS[run.act - 1].name}`),
+    h('div.where', {}, `Act ${run.act} · ${ACTS[run.act - 1].name.replace(/^The /, '')}`),
     h('button.icon-btn', { onclick: showPouch, 'aria-label': 'Your pouch' }, h('span', { html: icon('hand') })),
     h('button.icon-btn', { onclick: showMenu, 'aria-label': 'Menu' }, h('span', { html: icon('gear') })));
 }
@@ -130,12 +130,12 @@ function title() {
         h('div.subtitle', {}, 'a roguelike of moving stones')),
       h('div.title-buttons', {},
         saved?.run && !saved.run.over ? h('button.btn.primary.wide.big', { onclick: () => { run = saved.run; duelState = saved.duel; route(); } }, 'Continue run') : null,
-        h('button.btn.wide.big' + (saved?.run ? '' : '.primary'), { onclick: chooseKit }, 'New run'),
+        h('button.btn.wide.big' + (saved?.run ? '' : '.primary'), { onclick: () => { if (saved?.run && !saved.run.over && !confirm('Start over? Your run in progress will be lost.')) return; chooseKit(); } }, 'New run'),
         h('button.btn.wide', { onclick: startDaily }, `Daily climb${meta.daily?.[today()] ? ' ✓' : ''}`),
-        h('button.btn.wide', { onclick: showHelp }, 'How to play'),
+        h('button.btn.wide', { onclick: () => showHelp() }, 'How to play'),
         h('button.btn.wide', { onclick: showCodex }, 'Codex'),
         h('button.btn.wide.ghost', { onclick: () => { setSound(!soundOn()); title(); } }, soundOn() ? '🔊 Sound on' : '🔇 Sound off')),
-      h('div.title-foot', {}, best, h('br'), `${meta.runs} runs · ${meta.wins} wins`)));
+      h('div.title-foot', {}, best, h('br'), `${meta.runs} run${meta.runs === 1 ? '' : 's'} · ${meta.wins} win${meta.wins === 1 ? '' : 's'}`)));
 }
 
 const today = () => new Date().toISOString().slice(0, 10);
@@ -156,7 +156,7 @@ function startDaily() {
   const body = h('div.menu', {}, h('h2', {}, `Daily climb · ${d}`),
     h('p', {}, `Today everyone climbs the same mountain as ${R.KITS[kit].name} ${R.KITS[kit].emoji}. Same maps, same enemies, same loot.`),
     meta.daily?.[d] ? h('p.dim', {}, `Your result today: ${meta.daily[d]}`) : null,
-    h('button.btn.primary.wide', { onclick: () => { close(); go(); } }, 'Climb'),
+    h('button.btn.primary.wide', { onclick: () => { const sv = loadJSON(SAVE); if (sv?.run && !sv.run.over && !confirm('Start the daily climb? Your run in progress will be lost.')) return; close(); go(); } }, 'Climb'),
     h('button.btn.ghost.wide', { onclick: () => close() }, 'Back'));
   const close = modal(body);
 }
@@ -166,19 +166,22 @@ function chooseKit() {
   const heatRow = h('div.heat-row');
   const drawHeat = () => {
     heatRow.replaceChildren(
-      h('div.heat-label', {}, `Heat ${heat}`, h('span.dim', {}, ' — ' + R.HEAT.slice(1, heat + 1).map((x) => x.text).join(' ') || ' — ' + R.HEAT[0].text)),
+      h('div.heat-label', {}, `Heat ${heat}`, h('span.dim', {}, ' — ' + (heat ? R.HEAT.slice(1, heat + 1).map((x) => x.text).join(' ') : R.HEAT[0].text))),
       h('div.heat-btns', {},
         h('button.btn.small', { onclick: () => { if (heat > 0) { heat--; drawHeat(); } } }, '−'),
         h('button.btn.small', { onclick: () => { if (heat < meta.maxHeat) { heat++; drawHeat(); } else toast('Win a run to unlock more heat.'); } }, '+')));
   };
   drawHeat();
+  const shownAt = Date.now();
   screen(
     h('div.page', {},
       h('div.page-head', {}, h('button.icon-btn', { onclick: title, html: icon('back') }), h('h2', {}, 'Choose your kit')),
+      meta.maxHeat > 0 ? heatRow : null,
       h('div.kits', {}, Object.entries(R.KITS).map(([id, k]) => {
         const locked = k.locked && meta.wins === 0;
         return h('button.kit' + (locked ? '.locked' : ''), {
           onclick: () => {
+            if (Date.now() - shownAt < 450) return;   // the tap that opened this screen
             if (locked) { toast('Win a run to unlock the Gambler.'); return; }
             meta.heat = heat; saveMeta();
             run = R.newRun({ kit: id, heat });
@@ -191,10 +194,9 @@ function chooseKit() {
         h('div.kit-head', {}, h('span.kit-emoji', {}, k.emoji), h('div', {}, h('div.kit-name', {}, k.name), h('div.kit-text', {}, k.text))),
         h('div.kit-stones', {}, k.pouch.map((t) => stoneEl({ type: t }, 'X', { mini: true })),
           k.tricks.map((t) => h('span.mini-trick', { html: icon(t) }))),
-        h('div.kit-stats', {}, `❤ ${k.hearts}  ·  ${k.gold} gold${k.relics ? '  ·  ' + k.relics.map((r) => RELICS[r].emoji).join('') : ''}`),
+        h('div.kit-stats', {}, `❤ ${k.hearts - (heat >= 3 ? 1 : 0)}  ·  ${k.gold} gold${k.relics ? '  ·  ' + k.relics.map((r) => RELICS[r].emoji).join('') : ''}`),
         locked ? h('div.kit-lock', {}, '🔒 Win a run to unlock') : null);
-      })),
-      meta.maxHeat > 0 ? heatRow : null));
+      }))));
 }
 
 // ── Router ──────────────────────────────────────────────────────────────────
@@ -308,7 +310,7 @@ function preDuel() {
   const duel = run.pending.duel;
   const enemy = ENEMIES[duel.enemyId];
   const size = R.handSize(run);
-  let chosen = R.defaultHand(run);
+  let chosen = R.defaultHand(run, duel.disabled);
   const grid = h('div.stone-grid.pick');
   const count = h('span.count');
   const fight = h('button.btn.primary.wide.big', { onclick: begin }, 'Fight!');
@@ -472,9 +474,9 @@ function rewardScreen() {
       }))));
   }
   const pendingBoss = rw.relicChoice?.length && !rw.taken.boss;
-  parts.push(h('button.btn.wide.big' + (pendingBoss ? '' : '.primary'), {
+  parts.push(h('div.sticky-bottom', {}, h('button.btn.wide.big' + (pendingBoss ? '' : '.primary'), {
     onclick: () => { if (pendingBoss && !confirm('Leave without a boss relic?')) return; done(); },
-  }, (rw.stones.length && !rw.taken.stone) || (rw.trick && !rw.taken.trick) ? 'Skip' : 'Continue'));
+  }, (rw.stones.length && !rw.taken.stone) || (rw.trick && !rw.taken.trick) ? 'Skip' : 'Continue')));
   screen(topBar(), h('div.page.reward', {}, parts));
 }
 
@@ -537,6 +539,11 @@ function restScreen() {
   const n = R.has(run, 'anvil') ? 2 : 1;
   const heal = Math.max(2, Math.ceil(run.maxHearts * 0.4));
   const leave = () => { R.leaveNode(run); route(); };
+  if (run.pending.done) {
+    screen(topBar(), h('div.page.rest', {}, h('div.campfire', {}, '🔥'), h('h2', {}, 'The fire burns low'),
+      h('button.btn.primary.wide.big', { onclick: leave }, 'Move on')));
+    return;
+  }
   screen(topBar(), h('div.page.rest', {},
     h('div.campfire', {}, '🔥'),
     h('h2', {}, 'A quiet campfire'),
@@ -552,6 +559,7 @@ function restScreen() {
         const one = () => pickFromPouch(left > 1 ? `Upgrade a stone (${left} left)` : 'Upgrade which stone?', (s) => {
           if (!s) { if (left < n) leave(); return; }
           s.plus = true; left--; sfx('coin');
+          run.pending.done = true; save();
           if (left > 0 && R.upgradeable(run).length) one(); else leave();
         }, { filter: (s) => !s.plus, cancel: left < n ? 'Done' : 'Cancel' });
         one();
@@ -569,18 +577,27 @@ function eventScreen() {
     rng: () => R.rand(run),
     pouchRoom: () => !R.pouchFull(run),
     trickRoom: () => !R.tricksFull(run),
-    upgradeStone: (text, n = 1) => new Promise((resolve) => {
+    // `pay` is charged on the first pick, so backing out costs nothing.
+    upgradeStone: (text, n = 1, pay = null) => new Promise((resolve) => {
       let left = n;
-      const one = () => pickFromPouch('Upgrade which stone?', (s) => {
-        if (s) { s.plus = true; left--; }
-        if (s && left > 0 && R.upgradeable(run).length) one(); else resolve(text);
-      }, { filter: (s) => !s.plus, cancel: 'Done' });
+      const done = [];
+      const one = () => pickFromPouch(left > 1 ? `Upgrade a stone (${left} left)` : 'Upgrade which stone?', (s) => {
+        if (s) { if (!done.length) pay?.(); s.plus = true; left--; done.push(stoneName(s)); save(); }
+        if (s && left > 0 && R.upgradeable(run).length) one();
+        else resolve(done.length ? `${text} Upgraded: ${done.join(', ')}.` : 'You change your mind.');
+      }, { filter: (s) => !s.plus, cancel: done.length ? 'Done' : 'Never mind' });
       one();
     }),
-    chooseStone: (rarity) => new Promise((resolve) => {
+    pickTrick: (text) => new Promise((resolve) => {
+      const body = h('div.menu', {}, h('h2', {}, text),
+        run.tricks.map((t, k) => h('button.btn.wide', { onclick: () => { close(); resolve(k); } }, TRICKS[t].name)),
+        h('button.btn.wide.ghost', { onclick: () => { close(); resolve(-1); } }, 'Never mind'));
+      const close = modal(body, { dismissable: false });
+    }),
+    chooseStone: (rarity, pay = null) => new Promise((resolve) => {
       const opts = R.stoneChoices(run, 'elite', rarity);
       const body = h('div.pouch-view', {}, h('h2', {}, 'Choose a stone'),
-        h('div.cards', {}, opts.map((s) => stoneCard(s, { onclick: () => { close(); takeStone(s, () => resolve(`You take the ${stoneName(s)}.`)); } }))),
+        h('div.cards', {}, opts.map((s) => stoneCard(s, { onclick: () => { close(); takeStone(s, (ok) => { if (ok) pay?.(); resolve(ok ? `You take the ${stoneName(s)}.` : 'You leave it be.'); }); } }))),
         h('button.btn.wide.ghost', { onclick: () => { close(); resolve('You take nothing.'); } }, 'None'));
       const close = modal(body, { dismissable: false, cls: 'tall' });
     }),
@@ -631,6 +648,9 @@ function eventScreen() {
       return h('button.choice' + (ok ? '' : '.disabled'), {
         disabled: !ok || undefined,
         onclick: async () => {
+          // A reload in the middle of a choice must not offer the event again.
+          run.pending.result = 'You move on.';
+          save();
           const out = await c.act(run, api);
           if (out === null) return;   // it started a duel
           run.pending.result = out;

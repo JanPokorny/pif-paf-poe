@@ -15,7 +15,7 @@ const value = (s) => (s.type === 'pebble' ? 0 : 1) + (s.plus ? 0.6 : 0) + ({ com
 
 function playDuel(run, cfg, piters, pblunder, rng) {
   const duel = run.pending.duel;
-  const hand = R.defaultHand(run);
+  const hand = R.defaultHand(run, duel.disabled);
   const s = createGame({ ...R.gameConfig(run, duel, hand), log: false });
   let n = 0;
   while (!s.over && n++ < 300) {
@@ -40,8 +40,9 @@ const api = (run) => ({
   rng: () => R.rand(run),
   pouchRoom: () => !R.pouchFull(run),
   trickRoom: () => !R.tricksFull(run),
-  upgradeStone: (t, n = 1) => { for (let i = 0; i < n; i++) { const u = R.upgradeable(run).sort((a, b) => value(b) - value(a)); if (u[0]) u[0].plus = true; } return t; },
-  chooseStone: (r) => { const c = R.stoneChoices(run, 'elite', r); takeStone(run, c[0]); return 'ok'; },
+  upgradeStone: (t, n = 1, pay) => { pay?.(); for (let i = 0; i < n; i++) { const u = R.upgradeable(run).sort((a, b) => value(b) - value(a)); if (u[0]) u[0].plus = true; } return t; },
+  pickTrick: () => 0,
+  chooseStone: (r, pay) => { pay?.(); const c = R.stoneChoices(run, 'elite', r); takeStone(run, c[0]); return 'ok'; },
   gainRandomTrick: (r) => { if (!R.tricksFull(run)) run.tricks.push(R.randomTrick(run, r)); return 'ok'; },
   gainRandomRelic: (t) => { R.gainRelic(run, R.randomRelic(run)); return t; },
   transmute: () => { const p = run.pouch.find((s) => s.type === 'pebble') ?? run.pouch[0]; const n = R.randomStone(run, 'uncommon'); p.type = n.type; return 'ok'; },
