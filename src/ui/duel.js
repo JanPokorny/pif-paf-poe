@@ -471,7 +471,7 @@ export function mountDuel(root, opts) {
     place: 'Tip: highlighted squares are where it may go. Striped squares are ones the enemy\'s stones keep you out of.',
     effect: 'Tip: this stone moves things. Tap a yellow note or dashed square to see the result, then tap it again (or ✓) to confirm.',
     trick: 'Tip: you may spend a trick now, before the check for three in a row — or just end your turn.',
-    enemy: 'Tip: a red ! marks a square where the enemy could finish a line with one plain stone.',
+    enemy: 'Tip: a dashed red circle marks a square where the enemy could finish a line with one plain stone.',
   };
   function coach(kind) {
     let seen;
@@ -536,7 +536,7 @@ export function mountDuel(root, opts) {
     const s = preview ? preview.state : state;
     if (myMove() && state.phase === 'select' && !s.board[i] && cells[i].classList.contains('nogo')) { toast(whyNot(i), 'bad'); return; }
     if (!myMove() || state.phase === 'select' || (state.phase === 'trick' && !trickName)) {
-      if (s.board[i]) infoStone(s.board[i], s.board[i].player, s.board[i].stuck ? t('This stone is stuck: nothing will move it.') : '');
+      if (s.board[i]) infoStone(s.board[i], s.board[i].player);
       return;
     }
     if (state.phase === 'place') {

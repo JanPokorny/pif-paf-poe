@@ -29,7 +29,6 @@ const DELTA = {
   upleft: [-1, -1], upright: [-1, 1], downleft: [1, -1], downright: [1, 1],
 };
 const ORTHO = ['up', 'down', 'left', 'right'];
-const DIAG = ['upleft', 'upright', 'downleft', 'downright'];
 const ALL8 = Object.keys(DELTA);
 
 export const other = (p) => (p === 'X' ? 'O' : 'X');
@@ -60,20 +59,11 @@ const colSquares = (c) => [c, c + 3, c + 6];
 //   options(s, pos, cell) -> the choices its effect offers (objects merged into
 //                            the effect action); [] or absent means no effect
 //   apply(s, pos, action, cell)
-//   restrict(square, stonePos, big, line) -> does this square satisfy it?
+//   restrict(square, stonePos, line) -> does this square satisfy it?
 // `immovable` stones are walls for every movement effect, and are stepped over.
-// An evolved stone (`evolvesTo` on its plain form) shares its plain form's
-// hooks with `big` set: the hooks read big(cell) to do more.
 
 export const STONES = {};
 const def = (id, spec) => { STONES[id] = { id, ...spec }; };
-const big = (cell) => !!STONES[cell.type]?.big;
-// An evolved stone: the plain one's hooks, doing more.
-function evolved(id, base, spec) {
-  const b = STONES[base];
-  b.evolvesTo = id;
-  STONES[id] = { ...b, id, big: true, evolvesFrom: base, evolvesTo: undefined, ...spec };
-}
 
 def('pebble', {
   name: 'Pebble', rarity: 'starter', kind: 'plain',
@@ -83,53 +73,31 @@ def('pebble', {
 def('shift', {
   name: 'Shift', rarity: 'common', kind: 'move',
   text: 'Slide this stone\'s row or column one step. What falls off the end wraps around.',
-  options(s, pos, cell) {
-    const out = [];
-    for (const dir of DIRS) {
-      const horizontal = dir === 'left' || dir === 'right';
-      if (big(cell)) for (let index = 0; index < 3; index++) out.push({ dir, index });
-      else out.push({ dir, index: horizontal ? row(pos) : col(pos) });
-    }
-    return out;
-  },
+  options: (s, pos) => DIRS.map((dir) => ({ dir, index: dir === 'left' || dir === 'right' ? row(pos) : col(pos) })),
   apply(s, pos, a) { stepAlong(s, lineOrder(a.index, a.dir)); },
 });
-evolved('rail', 'shift', { name: 'Rail', rarity: 'uncommon', text: 'Slide any row or column one step, wrapping around.' });
 
 def('rotate', {
   name: 'Rotate', rarity: 'common', kind: 'move',
   text: 'Turn a 2x2 block this stone is in one step clockwise.',
-  options(s, pos, cell) {
-    const out = [];
-    for (const block of Object.keys(BLOCKS)) {
-      if (!BLOCKS[block].includes(pos)) continue;
-      out.push({ block, cw: true });
-      if (big(cell)) out.push({ block, cw: false });
-    }
-    return out;
-  },
+  options: (s, pos) => Object.keys(BLOCKS).filter((block) => BLOCKS[block].includes(pos)).map((block) => ({ block, cw: true })),
   apply(s, pos, a) {
     const [tl, tr, bl, br] = BLOCKS[a.block];
     stepAlong(s, a.cw ? [tl, tr, br, bl] : [tl, bl, br, tr]);
   },
 });
-evolved('pivot', 'rotate', { name: 'Pivot', rarity: 'uncommon', text: 'Turn a 2x2 block this stone is in one step, either way.' });
 
 def('magnet', {
   name: 'Magnet', rarity: 'common', kind: 'restrict',
   text: 'The enemy must place next to it.',
   restrict: (sq, m) => adjacent(sq, m),
 });
-evolved('electromagnet', 'magnet', { name: 'Electromagnet', rarity: 'uncommon', heavy: true,
-  text: 'The enemy must place next to it. It counts twice against other restrictions, and nothing moves it.' });
 
 def('stinky', {
   name: 'Stinky', rarity: 'common', kind: 'restrict',
   text: 'The enemy must not place next to it.',
   restrict: (sq, m) => !adjacent(sq, m),
 });
-evolved('stench', 'stinky', { name: 'Stench', rarity: 'uncommon', heavy: true,
-  text: 'The enemy must not place next to it. It counts twice against other restrictions, and nothing moves it.' });
 
 def('mountain', {
   name: 'Mountain', rarity: 'common', kind: 'static', immovable: true,
@@ -139,19 +107,17 @@ def('mountain', {
 def('2048', {
   name: '2048', rarity: 'uncommon', kind: 'move',
   text: 'Every stone slides one way as far as it goes, as in the tile game.',
-  options: (s, pos, cell) => DIRS.flatMap((dir) => (big(cell) ? [{ dir, hold: false }, { dir, hold: true }] : [{ dir }])),
-  apply(s, pos, a, cell) { slideAll(s, a.dir, a.hold ? cell.id : null); },
+  options: () => DIRS.map((dir) => ({ dir })),
+  apply(s, pos, a) { slideAll(s, a.dir, null); },
 });
-evolved('4096', '2048', { name: '4096', rarity: 'rare', text: 'Every stone slides one way as far as it goes — or every other stone, while this one holds its square.' });
 
 def('bumper', {
   name: 'Bumper', rarity: 'uncommon', kind: 'move',
   text: 'Pushes each enemy stone beside it one step directly away, if there is an empty square to push it to.',
-  // Blast: the straight neighbours, or the diagonal ones.
-  options: (s, pos, cell) => (big(cell) ? [{ ring: 'ortho' }, { ring: 'diag' }] : [{}]),
+  options: () => [{}],
   apply(s, pos, a, cell) {
     const moves = [];
-    for (const dir of a.ring === 'diag' ? DIAG : ORTHO) {
+    for (const dir of ORTHO) {
       const n = step(pos, dir), beyond = step(pos, dir, 2);
       if (n < 0 || !s.board[n] || s.board[n].player === cell.player || isStuck(s, n)) continue;
       // Only onto the board: a stone at the edge stays put.
@@ -160,7 +126,6 @@ def('bumper', {
     for (const [from, to] of moves) move(s, from, to);
   },
 });
-evolved('blast', 'bumper', { name: 'Blast', rarity: 'rare', text: 'Pushes each enemy stone beside it one step away — or each one diagonally off its corners — into an empty square.' });
 
 def('lasso', {
   name: 'Lasso', rarity: 'common', kind: 'move',
@@ -188,12 +153,9 @@ function lassoPulls(s, pos) {
 def('swap', {
   name: 'Swap', rarity: 'uncommon', kind: 'move',
   text: 'Trade places with a stone around it, corners included.',
-  options(s, pos, cell) {
+  options(s, pos) {
     if (isStuck(s, pos)) return [];
-    const reach = big(cell)
-      ? [...new Set([...neighbours(pos, true), ...LINES.filter((l) => l.includes(pos)).flat()])].filter((j) => j !== pos)
-      : neighbours(pos, true);
-    return reach.filter((j) => s.board[j] && !isStuck(s, j)).sort((x, y) => x - y).map((target) => ({ target }));
+    return neighbours(pos, true).filter((j) => s.board[j] && !isStuck(s, j)).sort((x, y) => x - y).map((target) => ({ target }));
   },
   apply(s, pos, a) {
     const held = s.board[a.target];
@@ -201,28 +163,24 @@ def('swap', {
     s.board[pos] = held;
   },
 });
-evolved('teleport', 'swap', { name: 'Teleport', rarity: 'rare', text: 'Trade places with a stone around it, or anywhere in its row, column or diagonal.' });
 
 def('whirl', {
   name: 'Whirl', rarity: 'uncommon', kind: 'move',
   text: 'The eight outer squares turn one step, either way. The centre stays.',
-  options: (s, pos, cell) => (big(cell)
-    ? [{ turn: 1 }, { turn: -1 }, { turn: 2 }, { turn: -2 }]
-    : [{ turn: 1 }, { turn: -1 }]),
+  options: () => [{ turn: 1 }, { turn: -1 }],
   apply(s, pos, a) {
     const order = a.turn > 0 ? RING : RING.slice().reverse();
     for (let k = 0; k < Math.abs(a.turn); k++) stepAlong(s, order);
   },
 });
-evolved('cyclone', 'whirl', { name: 'Cyclone', rarity: 'rare', text: 'The eight outer squares turn one or two steps, either way.' });
 
 def('frog', {
   name: 'Frog', rarity: 'uncommon', kind: 'move',
   text: 'Leaps over a stone beside it into the empty square beyond. An enemy stone leapt over goes back to their hand.',
-  options(s, pos, cell) {
+  options(s, pos) {
     const out = [];
     if (isStuck(s, pos)) return out;
-    for (const dir of big(cell) ? ALL8 : ORTHO) {
+    for (const dir of ORTHO) {
       const n = step(pos, dir), beyond = step(pos, dir, 2);
       if (beyond >= 0 && s.board[n] && !s.board[beyond]) out.push({ target: beyond });
     }
@@ -235,36 +193,25 @@ def('frog', {
     if (jumped && jumped.player !== cell.player) returnToHand(s, mid);
   },
 });
-evolved('kangaroo', 'frog', { name: 'Kangaroo', rarity: 'rare', text: 'Leaps like a Frog, diagonals too. An enemy stone leapt over goes back to their hand.' });
 
 def('beacon', {
   name: 'Beacon', rarity: 'uncommon', kind: 'restrict',
   text: 'Pick its row or its column: the enemy must place there.',
-  options(s, pos, cell) {
-    const out = [{ line: 'row' }, { line: 'col' }];
-    if (big(cell) && pos % 4 === 0) out.push({ line: 'd' });
-    if (big(cell) && [2, 4, 6].includes(pos)) out.push({ line: 'a' });
-    return out;
-  },
+  options: () => [{ line: 'row' }, { line: 'col' }],
   apply(s, pos, a) { s.board[pos].line = a.line; },
-  restrict: (sq, m, b, line) => {
+  restrict: (sq, m, line) => {
     if (line === 'row') return row(sq) === row(m);
     if (line === 'col') return col(sq) === col(m);
-    if (line === 'd') return sq % 4 === 0;
-    if (line === 'a') return [2, 4, 6].includes(sq);
     return row(sq) === row(m) || col(sq) === col(m);
   },
 });
-evolved('lighthouse', 'beacon', { name: 'Lighthouse', rarity: 'rare',
-  text: 'Pick its row, its column or its diagonal: the enemy must place there.' });
 
 def('flip', {
   name: 'Flip', rarity: 'uncommon', kind: 'move',
   text: 'Mirror the board across an axis or diagonal. This stone holds its square.',
-  options: (s, pos, cell) => ['h', 'v', 'd', 'a'].flatMap((axis) => (big(cell) ? [{ axis, only: false }, { axis, only: true }] : [{ axis }])),
-  apply(s, pos, a, cell) { mirror(s, a.axis, (i) => isStuck(s, i) || (cell && (i === pos || (a.only && s.board[i]?.player === cell.player)))); },
+  options: () => ['h', 'v', 'd', 'a'].map((axis) => ({ axis })),
+  apply(s, pos, a) { mirror(s, a.axis, (i) => isStuck(s, i) || i === pos); },
 });
-evolved('kaleidoscope', 'flip', { name: 'Kaleidoscope', rarity: 'rare', text: 'Mirror the board across an axis or diagonal — all of it, or only the enemy\'s stones while yours hold still.' });
 
 function mirror(s, axis, holds) {
   const pairs = {
@@ -282,19 +229,12 @@ function mirror(s, axis, holds) {
 def('firecracker', {
   name: 'Firecracker', rarity: 'rare', kind: 'move',
   text: 'Blows a stone around it, corners included, back into its owner\'s hand — and burns itself up.',
-  options(s, pos, cell) {
-    const out = neighbours(pos, true).filter((j) => s.board[j]).map((target) => ({ target }));
-    const volley = neighbours(pos, false).filter((j) => s.board[j] && s.board[j].player !== cell.player);
-    if (big(cell) && volley.length > 1) out.push({});
-    return out;
-  },
-  apply(s, pos, a, cell) {
-    if (a.target !== undefined) returnToHand(s, a.target);
-    else for (const j of neighbours(pos, false)) if (s.board[j] && s.board[j].player !== cell.player) returnToHand(s, j);
+  options: (s, pos) => neighbours(pos, true).filter((j) => s.board[j]).map((target) => ({ target })),
+  apply(s, pos, a) {
+    returnToHand(s, a.target);
     s.board[pos] = null;
   },
 });
-evolved('bomb', 'firecracker', { name: 'Bomb', rarity: 'rare', text: 'Blows a stone around it back into its owner\'s hand — or every enemy stone beside it at once — and burns itself up.' });
 
 def('turncoat', {
   name: 'Turncoat', rarity: 'rare', kind: 'move',
@@ -340,8 +280,8 @@ def('magpie', {
 });
 
 export const STONE_TYPES = Object.keys(STONES);
-// Stones you can find: everything but the Pebble and the evolved forms.
-export const BASE_STONES = STONE_TYPES.filter((t) => t !== 'pebble' && !STONES[t].evolvesFrom);
+// Stones you can find: everything but the Pebble.
+export const BASE_STONES = STONE_TYPES.filter((t) => t !== 'pebble');
 
 // ── Tricks ──────────────────────────────────────────────────────────────────
 //
@@ -364,7 +304,7 @@ export const TRICKS = {
     options(s, p) {
       const out = [];
       for (let i = 0; i < 9; i++) {
-        if (s.board[i]?.player !== p || s.board[i].stuck) continue;
+        if (s.board[i]?.player !== p) continue;
         for (let to = 0; to < 9; to++) if (!s.board[to]) out.push({ from: i, to });
       }
       return out;
@@ -375,8 +315,7 @@ export const TRICKS = {
     name: 'Mirror', rarity: 'common',
     text: 'Swap what stands on two squares facing each other through the centre.',
     options(s) {
-      const held = (i) => !!s.board[i]?.stuck;
-      return SYMMETRIC.filter(([a, b]) => (s.board[a] || s.board[b]) && !held(a) && !held(b)).map(([a, b]) => ({ a, b }));
+      return SYMMETRIC.filter(([a, b]) => s.board[a] || s.board[b]).map(([a, b]) => ({ a, b }));
     },
     apply(s, p, t) {
       const held = s.board[t.a];
@@ -429,16 +368,6 @@ export const TRICKS = {
     text: 'The enemy\'s next stone does nothing.',
     options: (s, p) => (s.silenced[other(p)] ? [] : [{}]),
     apply(s, p) { s.silenced[other(p)] = 1; },
-  },
-  anchor: {
-    name: 'Anchor', rarity: 'common',
-    text: 'Fix one of your stones in place: nothing will move it again.',
-    options(s, p) {
-      const out = [];
-      for (let i = 0; i < 9; i++) if (s.board[i]?.player === p && !isStuck(s, i)) out.push({ pos: i });
-      return out;
-    },
-    apply(s, p, a) { s.board[a.pos].stuck = true; },
   },
   pluck: {
     name: 'Pluck', rarity: 'rare',
@@ -500,14 +429,13 @@ const shapesOf = (s) => (s.rules.includes('elko') ? ELS : LINES);
 // A stone does its thing unless something has hushed it.
 export function active(s, cell) { return !cell.hushed; }
 
-// Stuck stones are walls to every movement effect -- Mountains, Electromagnets,
-// Lighthouses and anything anchored -- and moving stones step over them.
+// Mountains are walls to every movement effect, and moving stones step over
+// them. A hushed Mountain is no wall.
 export function isStuck(s, i) {
   const c = s.board[i];
   if (!c) return false;
-  if (c.stuck) return true;
   if (!active(s, c)) return false;
-  return !!STONES[c.type].immovable || !!STONES[c.type].heavy;
+  return !!STONES[c.type].immovable;
 }
 
 export function hasLine(s, player) { return !!winningLine(s, player); }
@@ -527,7 +455,7 @@ export function restrictionsOn(s, player) {
     const c = s.board[i];
     if (!c || c.player === player || !active(s, c)) continue;
     const st = STONES[c.type];
-    if (st.restrict) out.push({ pos: i, st, big: big(c), line: c.line, w: st.heavy ? 2 : 1 });
+    if (st.restrict) out.push({ pos: i, st, line: c.line });
   }
   return out;
 }
@@ -546,7 +474,7 @@ export function allowedSquares(s) {
   if (s.mods[p].freeFirst && s.placements[p] === 0) return pool;
   const rs = restrictionsOn(s, p);
   if (!rs.length) return pool;
-  const scores = pool.map((i) => rs.reduce((n, r) => n + (r.st.restrict(i, r.pos, r.big, r.line) ? r.w : 0), 0));
+  const scores = pool.map((i) => rs.reduce((n, r) => n + (r.st.restrict(i, r.pos, r.line) ? 1 : 0), 0));
   const best = Math.max(...scores);
   return pool.filter((_, k) => scores[k] === best);
 }
@@ -607,7 +535,7 @@ export function createGame({
   modsX = noMods(), modsO = noMods(), conds = [], rules = [], log = true,
 }) {
   return {
-    board: Array(9).fill(null),     // {player, type, id, stuck?, line?, hushed?} | null
+    board: Array(9).fill(null),     // {player, type, id, line?, hushed?} | null
     hands: { X: handX.map(norm).filter((h) => h.type !== 'pebble'), O: handO.map(norm).filter((h) => h.type !== 'pebble') },
     tricks: { X: [...tricksX], O: [...tricksO] },
     uses: { X: usesX, O: usesO },   // tricks each side may still spend this duel

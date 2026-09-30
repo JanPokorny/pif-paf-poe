@@ -12,9 +12,8 @@ import * as R from '../src/run.js';
 
 const arg = (k, d) => { const i = process.argv.indexOf('--' + k); return i > 0 ? process.argv[i + 1] : d; };
 // Roughly how much each stone wins, from tools/stones.mjs.
-const STRENGTH = { lighthouse: 81, electromagnet: 80, stench: 76, rail: 76, stinky: 74, magnet: 73, beacon: 69, magpie: 68, twin: 64, shift: 57, teleport: 56, '4096': 55, '2048': 53, swap: 50, mountain: 49, blast: 49, turncoat: 46, kaleidoscope: 45, flip: 44, parrot: 44, bumper: 43, cyclone: 43, pivot: 41, rotate: 39, whirl: 39, kangaroo: 34, frog: 30, bomb: 26, lasso: 25, firecracker: 25 };
-const value = (s) => (STRENGTH[s.type] ?? 45) / 50 + (STONES[s.type].evolvesTo ? (STRENGTH[STONES[s.type].evolvesTo] - STRENGTH[s.type]) / 100 : 0);
-const evolveBest = (run) => { const u = R.upgradeable(run).sort((a, b) => value(b) - value(a)); if (u[0]) R.evolve(u[0]); };
+const STRENGTH = { stinky: 74, magnet: 73, beacon: 69, magpie: 68, twin: 64, shift: 57, '2048': 53, swap: 50, mountain: 49, turncoat: 46, flip: 44, parrot: 44, bumper: 43, rotate: 39, whirl: 39, frog: 30, lasso: 25, firecracker: 25 };
+const value = (s) => (STRENGTH[s.type] ?? 45) / 50;
 
 function playDuel(run, cfg, piters, pblunder, rng) {
   const duel = run.pending.duel;
@@ -48,7 +47,14 @@ const api = (run) => ({
   rng: () => R.rand(run),
   pouchRoom: () => !R.pouchFull(run),
   trickRoom: () => !R.tricksFull(run),
-  upgradeStone: (t, n = 1, pay) => { pay?.(); for (let i = 0; i < n; i++) evolveBest(run); return t; },
+  // Trade the two weakest stones, if that yields something better than both.
+  craft: () => {
+    const [a, b] = run.pouch.slice().sort((x, y) => value(x) - value(y));
+    if (!b) return 'no';
+    const [c] = R.craftChoices(run, a, b).sort((x, y) => value(y) - value(x));
+    if (c && value(c) > value(b)) R.craft(run, a.uid, b.uid, c);
+    return 'ok';
+  },
   pickTrick: () => 0,
   chooseStone: (r, pay) => { pay?.(); const c = R.stoneChoices(run, 'elite', r); takeStone(run, c[0]); return 'ok'; },
   gainRandomTrick: (r) => { if (!R.tricksFull(run)) run.tricks.push(R.randomTrick(run, r)); return 'ok'; },
@@ -102,16 +108,15 @@ function playRun(spec) {
         for (const r of shop.relics) if (!r.sold && run.gold >= r.price) { run.gold -= r.price; R.gainRelic(run, r.relic); r.sold = true; }
         for (const s of shop.stones.slice().sort((a, b) => value(b) - value(a))) if (!s.sold && run.gold >= s.price && value(s) > 1.2) { run.gold -= s.price; takeStone(run, s); s.sold = true; }
         if (run.gold >= shop.slotPrice && R.canAddSlot(run) && run.pouch.length > R.handSize(run)) { run.gold -= shop.slotPrice; run.slots++; }
-        if (run.gold >= shop.upgradePrice && R.upgradeable(run).length) { run.gold -= shop.upgradePrice; evolveBest(run); }
         R.leaveNode(run);
         break;
       }
       case 'rest': {
-        if (run.hearts <= run.maxHearts / 2 || !R.upgradeable(run).length) run.hearts = Math.min(run.maxHearts, run.hearts + Math.max(2, Math.ceil(run.maxHearts * 0.4)));
-        else evolveBest(run);
+        run.hearts = Math.min(run.maxHearts, run.hearts + Math.max(2, Math.ceil(run.maxHearts * 0.4)));
         R.leaveNode(run);
         break;
       }
+      case 'craft': api(run).craft(); R.leaveNode(run); break;
       case 'treasure': if (run.pending.choices?.[0]) R.gainRelic(run, run.pending.choices[0]); R.leaveNode(run); break;
       case 'event': {
         const ev = EVENTS.find((e) => e.id === run.pending.id);

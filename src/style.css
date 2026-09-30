@@ -555,7 +555,8 @@ b { font-weight: 400; background: linear-gradient(transparent 55%, var(--hi) 55%
 .board.shake { animation: shake 0.35s; }
 @keyframes shake { 20% { transform: translate(-3px, 2px) rotate(-0.6deg); } 50% { transform: translate(3px, -1px) rotate(0.5deg); } 80% { transform: translate(-1px, 1px); } }
 .cell.nogo::before { content: ''; position: absolute; inset: 18%; background: repeating-linear-gradient(-45deg, transparent 0 6px, rgba(200, 55, 45, 0.28) 6px 8px); border-radius: 30%; pointer-events: none; }
-.cell.threat::before { content: '!'; position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-family: var(--marker); font-size: calc(var(--cell) * 0.42); color: rgba(200, 55, 45, 0.5); pointer-events: none; }
+/* A square where the enemy would win: the same dashed red ring as on the map. */
+.cell.threat::before { content: ''; position: absolute; inset: 14%; border: 2.5px dashed rgba(200, 55, 45, 0.6); border-radius: 50%; pointer-events: none; }
 
 /* Emoji are stamped onto the page in ink, like the enemy photos. */
 .relic-mini, .relic-token, .kit-emoji, .event-emoji, .end-emoji {
@@ -682,7 +683,6 @@ b { font-weight: 400; background: linear-gradient(transparent 55%, var(--hi) 55%
 .door-rules { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 4px; }
 .facts-card .fact.rule-fact { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; line-height: 1.25; padding: 4px 4px 4px 4px; }
 .facts-card .fact.rule-fact::before { display: none; }
-.codex-row.evolved { margin-left: 22px; }
 .map-cell.gift .doodle { color: var(--rare); }
 /* In a duel the notes go up top, clear of the hand and the info line. */
 body:has(.duel) #toast { bottom: auto; top: calc(10px + var(--safe-t)); transform: translate(-50%, -30px) rotate(-2deg); }

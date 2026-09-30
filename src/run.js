@@ -37,7 +37,7 @@ function shuffle(run, list) {
 export const HEAT = [
   { n: 0, text: 'The standard climb.' },
   { n: 1, text: 'Enemies think harder.' },
-  { n: 2, text: 'Enemy stones are evolved more often.' },
+  { n: 2, text: 'Shops charge a quarter more.' },
   { n: 3, text: 'Start with 1 fewer heart.' },
   { n: 4, text: 'Elites bring an extra stone, bosses an extra trick.' },
   { n: 5, text: 'Enemies never blunder.' },
@@ -73,8 +73,31 @@ export const trickCap = (run) => 3 + (has(run, 'satchel') ? 1 : 0);
 export const handSize = (run) => Math.min(MAX_SLOTS + 1, (run.slots ?? 2) + (has(run, 'deep-pockets') ? 1 : 0));
 export const trickUses = (run) => 1 + (has(run, 'gloves') ? 1 : 0);
 export const stoneName = (s) => STONES[s.type].name;
-export const evolvable = (run) => run.pouch.filter((s) => STONES[s.type].evolvesTo);
-export function evolve(s) { s.type = STONES[s.type].evolvesTo ?? s.type; return s; }
+
+// ── Crafting ────────────────────────────────────────────────────────────────
+//
+// At a workshop two stones become one of the next tier up from the humbler
+// of the two (rares stay rare): a choice of two.
+
+const TIERS = ['common', 'uncommon', 'rare'];
+export const craftTier = (a, b) => {
+  const low = Math.min(TIERS.indexOf(STONES[a.type].rarity), TIERS.indexOf(STONES[b.type].rarity));
+  return TIERS[Math.min(TIERS.length - 1, low + 1)];
+};
+export function craftChoices(run, a, b) {
+  const tier = craftTier(a, b);
+  const out = [];
+  for (let g = 0; out.length < 2 && g < 40; g++) {
+    const s = randomStone(run, tier);
+    if (!out.some((o) => o.type === s.type) && s.type !== a.type && s.type !== b.type) out.push(s);
+  }
+  return out;
+}
+// Trade the two stones (by uid) for the one chosen.
+export function craft(run, uidA, uidB, result) {
+  run.pouch = run.pouch.filter((s) => s.uid !== uidA && s.uid !== uidB);
+  return gainStone(run, result);
+}
 
 // ── The map ─────────────────────────────────────────────────────────────────
 //
@@ -87,16 +110,13 @@ export function evolve(s) { s.type = STONES[s.type].evolvesTo ?? s.type; return 
 //
 // You mark X wherever you step. A duel lost scorches its square: you may not
 // step there again, but the boss may, and you choose again at once -- the
-// boss answers only once you have really placed a mark. The boss fights the
-// squares it takes too, and may lose: then the square is scorched and its
-// turn is gone.
+// boss answers only once you have really placed a mark.
 //
 // Each clearing the boss takes costs you a heart; its three in a row costs
 // one more and a fresh map, as does a map where nobody can win any more.
 // Every new map in an act is less friendly than the last.
 
 export const BOSS_LIVES = 2;              // duels a boss must lose
-const BOSS_LOSES = { fight: 0.5, elite: 0.7 };   // the chance it loses the duel on a square it takes
 const BOSS_SEES = [0.3, 0.4, 0.5, 0.6];   // the chance it blocks your two in a row, by map
 export const CLEARING_GOLD = 15;          // for each clearing you take
 export const LINES = [[0, 1, 2], [3, 4, 5], [6, 7, 8], [0, 3, 6], [1, 4, 7], [2, 5, 8], [0, 4, 8], [2, 4, 6]];
@@ -183,7 +203,7 @@ function fillCell(run, c, i) {
   const p = map.page - 1;
   const hard = (CORNERS.includes(i) || i === 4 ? 3 : 0) + (CORNERS.includes(c) || c === 4 ? 3 : 0);
   const soft = (n) => Math.max(2, n - 3 * p);
-  const table = { fight: 40 + 4 * p, elite: 2 + 6 * p + hard, event: 16, treasure: soft(6), rest: soft(12), shop: soft(10) };
+  const table = { fight: 40 + 4 * p, elite: 2 + 6 * p + hard, event: 16, treasure: soft(6), rest: soft(12), shop: soft(10), craft: soft(6) };
   if (run.act === 1 && map.page === 1 && c === 4) delete table.elite;
   const kind = weighted(run, table);
   const cell = { kind, mark: null };
@@ -268,7 +288,6 @@ export function settleCell(run, mark) {
   const cell = map.cells[c][i];
   map.at = null;
   map.lastO = null;
-  map.bossLost = null;
   map.news = null;
   if (mark !== 'X') {
     cell.mark = 'S';
@@ -289,7 +308,7 @@ function bossTurn(run, target) {
   const where = clearingsFor(map, 'O', target);
   if (!where.length) return;
   const sees = rand(run) < BOSS_SEES[Math.min(BOSS_SEES.length - 1, map.page - 1)];
-  const value = { treasure: 8, gift: 6, shop: 4, rest: 4, event: 2, elite: 0, fight: 1 };
+  const value = { treasure: 8, gift: 6, shop: 4, rest: 4, craft: 4, event: 2, elite: 0, fight: 1 };
   let best = null, bestScore = -Infinity;
   for (const c of where) {
     map.cells[c].forEach((x, i) => {
@@ -302,12 +321,6 @@ function bossTurn(run, target) {
   const [c, i] = parseKey(best);
   const cell = map.cells[c][i];
   map.next = i;
-  // A square with an enemy on it is a duel for the boss too, and it may lose.
-  if (!cell.mark && rand(run) < (BOSS_LOSES[cell.kind] ?? 0)) {
-    cell.mark = 'S';
-    map.bossLost = best;
-    return;
-  }
   cell.mark = 'O';
   map.lastO = best;
   if (settleClearing(run, c) === 'O') {
@@ -362,10 +375,7 @@ function rollEnemyHand(run, enemy, tier, context) {
   if (context.easy) size = Math.min(size, 1);
   const hand = enemy.core.slice(0, size);
   while (hand.length < size) hand.push(pick(run, enemy.pool));
-  let evolveChance = act.evolve + (tier === 'elite' ? 0.15 : 0);
-  if (run.heat >= 2) evolveChance += 0.15;
-  if (enemy.act === 0) evolveChance = ACTS[run.act - 1].evolve;
-  return hand.map((type) => ({ type: STONES[type].evolvesTo && rand(run) < evolveChance ? STONES[type].evolvesTo : type }));
+  return hand.map((type) => ({ type }));
 }
 
 
@@ -395,7 +405,6 @@ export function prepareDuel(run, enemyId, context = {}) {
   let quirk = null;
   if (tier === 'elite' && run.act >= 2) {
     quirk = pick(run, Object.keys(QUIRKS));
-    if (quirk === 'armored') handO.forEach((h) => { h.type = STONES[h.type].evolvesTo ?? h.type; });
     if (quirk === 'tricky') enemyTricks.push(randomTrick(run));
     if (quirk === 'stocked') handO.push({ type: pick(run, enemy.pool) });
     if (quirk === 'keen') heatIters *= 1.5;
@@ -411,7 +420,6 @@ export function prepareDuel(run, enemyId, context = {}) {
 }
 
 export const QUIRKS = {
-  armored: { name: 'Seasoned', text: 'Every stone it brings is evolved.' },
   tricky: { name: 'Tricky', text: 'It carries an extra trick.' },
   stocked: { name: 'Stocked', text: 'It brings an extra stone.' },
   keen: { name: 'Keen', text: 'It thinks harder.' },
@@ -440,7 +448,7 @@ export function gameConfig(run, duel, uids) {
 export function defaultHand(run) {
   const size = handSize(run);
   const owned = new Set(run.pouch.map((s) => s.uid));
-  const rank = (s) => ({ common: 0, uncommon: 0.2, rare: 0.4 }[STONES[s.type].rarity] ?? 0) + (STONES[s.type].evolvesFrom ? 0.5 : 0);
+  const rank = (s) => ({ common: 0, uncommon: 0.2, rare: 0.4 }[STONES[s.type].rarity] ?? 0);
   const chosen = (run.lastHand ?? []).filter((u) => owned.has(u)).slice(0, size);
   const rest = run.pouch.filter((s) => !chosen.includes(s.uid)).sort((a, b) => rank(b) - rank(a));
   while (chosen.length < Math.min(size, run.pouch.length)) chosen.push(rest.shift().uid);
@@ -467,6 +475,7 @@ export function enterNode(run, key) {
       break;
     case 'shop': run.pending = { kind: 'shop', shop: makeShop(run) }; run.screen = 'shop'; break;
     case 'rest': run.pending = { kind: 'rest' }; run.screen = 'rest'; break;
+    case 'craft': run.pending = { kind: 'craft' }; run.screen = 'craft'; break;
     case 'gift': {
       // A special stone, free: one of two.
       const stones = stoneChoices(run, 'normal', null, 2);
@@ -651,7 +660,7 @@ export const tricksFull = (run) => run.tricks.length >= trickCap(run);
 // ── Shop ────────────────────────────────────────────────────────────────────
 
 export function price(run, base) {
-  return Math.round(base * (has(run, 'badge') ? 0.75 : 1) * (1 + 0.1 * (run.act - 1)));
+  return Math.round(base * (has(run, 'badge') ? 0.75 : 1) * (run.heat >= 2 ? 1.25 : 1) * (1 + 0.1 * (run.act - 1)));
 }
 
 export function makeShop(run) {
@@ -674,11 +683,10 @@ export function makeShop(run) {
   }
   return {
     stones, tricks, relics,
-    upgradePrice: price(run, has(run, 'whetstone') ? 35 : 70), healPrice: price(run, 30),
+    healPrice: price(run, 30),
     slotPrice: price(run, 60 + 40 * (run.slots - START.slots)),
-    upgraded: false, healed: 0, slotted: false,
+    healed: 0, slotted: false,
   };
 }
 
-export const upgradeable = evolvable;
 export const canAddSlot = (run) => run.slots < MAX_SLOTS;

@@ -5,7 +5,7 @@
 Tic-tac-toe where the pieces move, as a mobile-friendly browser roguelike drawn on a notebook
 page. Duel a cast of enemies on a 3×3 board. Pebbles never run out; beside them you bring a few
 special stones that *do something* when placed — two at first, more as you buy slots — and they
-evolve into stronger, named stones along the way. Some duels carry a condition for both sides
+can be crafted, two into one of a higher tier, along the way. Some duels carry a condition for both sides
 (gravity, a hollow centre, open hands); bosses bring no stones at all, only a rule in their
 favour.
 

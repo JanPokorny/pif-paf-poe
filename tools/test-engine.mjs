@@ -211,17 +211,11 @@ test('Wings: your first stone ignores the enemy\'s restrictions', () => {
 
 group('stones');
 
-test('every stone has a name and text; evolved stones point back', () => {
-  for (const t of STONE_TYPES) {
-    const st = STONES[t];
-    assert.ok(st.name && st.text, t);
-    if (st.evolvesTo) { assert.equal(STONES[st.evolvesTo].evolvesFrom, t, t); assert.ok(STONES[st.evolvesTo].big); }
-  }
+test('every stone has a name and text', () => {
+  for (const t of STONE_TYPES) assert.ok(STONES[t].name && STONES[t].text, t);
 });
-test('BASE_STONES are the findable ones: no Pebble, no evolved forms', () => {
-  assert.ok(!BASE_STONES.includes('pebble'));
-  for (const t of BASE_STONES) assert.ok(!STONES[t].evolvesFrom, t);
-  for (const t of STONE_TYPES) if (t !== 'pebble' && !STONES[t].evolvesFrom) assert.ok(BASE_STONES.includes(t), t);
+test('BASE_STONES are the findable ones: everything but the Pebble', () => {
+  assert.deepEqual(BASE_STONES, STONE_TYPES.filter((t) => t !== 'pebble'));
 });
 test('Shift offers its own row and column, each way', () => {
   const s = G();
@@ -243,14 +237,6 @@ test('Shift steps over a Mountain: it holds its square, the rest go round', () =
   eff(s, { dir: 'right', index: 0 });
   expectAt(s, { 0: id, 1: 101, 2: 100 });
 });
-test('Rail slides any row or column', () => {
-  const s = G();
-  lay(s, { 6: 'O pebble' });
-  play(s, 'rail', 0);
-  assert.equal(effectOpts(s).length, 12);
-  eff(s, { dir: 'right', index: 2 });
-  expectAt(s, { 7: 106 });
-});
 test('Rotate in a corner has one block, one way: it resolves on its own', () => {
   const s = G();
   lay(s, { 1: 'O pebble' });
@@ -271,14 +257,6 @@ test('Rotate steps over a Mountain in the block', () => {
   // tl -> tr -> (br held) -> bl -> tl
   expectAt(s, { 1: id, 4: 104, 3: 101, 0: 0 });
 });
-test('Pivot turns either way', () => {
-  const s = G();
-  lay(s, { 1: 'O pebble' });
-  const id = play(s, 'pivot', 0);
-  assert.equal(effectOpts(s).length, 2);
-  eff(s, { cw: false });
-  expectAt(s, { 3: id, 0: 101 });
-});
 test('2048 slides everything one way as far as it goes, stepping over Mountains', () => {
   const s = G();
   lay(s, { 0: 'O pebble', 1: 'O mountain', 6: 'O pebble' });
@@ -291,13 +269,6 @@ test('2048 slides everything one way as far as it goes, stepping over Mountains'
   play(t, '2048', 5);
   eff(t, { dir: 'left' });
   expectAt(t, { 0: 100, 1: 102 });
-});
-test('4096 may hold its own square while everything else slides', () => {
-  const s = G();
-  lay(s, { 0: 'O pebble' });
-  const id = play(s, '4096', 1);
-  eff(s, { dir: 'right', hold: true });
-  expectAt(s, { 1: id, 2: 100 });
 });
 test('Bumper pushes each enemy stone beside it one step away, into an empty square', () => {
   const s = G();
@@ -318,13 +289,6 @@ test('Bumper does not push a Mountain', () => {
   play(s, 'bumper', 4);
   expectAt(s, { 1: 101 });
 });
-test('Blast pushes the straight neighbours, or the diagonal ones', () => {
-  const s = G();
-  lay(s, { 4: 'O pebble', 1: 'O pebble' });
-  play(s, 'blast', 0);
-  eff(s, { ring: 'diag' });
-  expectAt(s, { 8: 104, 4: 0, 1: 101 });
-});
 test('Lasso pulls a stone two squares away one step closer — or all of them', () => {
   const s = G();
   lay(s, { 0: 'O pebble', 6: 'O pebble' });
@@ -337,17 +301,15 @@ test('Lasso pulls a stone two squares away one step closer — or all of them', 
   eff(t, { target: 6 });
   expectAt(t, { 0: 100, 4: 106 });
 });
-test('Swap trades with a stone around it; Teleport also along its lines', () => {
+test('Swap trades with a stone around it, corners included — not further', () => {
   const s = G();
   lay(s, { 7: 'O pebble' });
   play(s, 'swap', 1);
   turnPassedTo(s, 'O');   // nothing around it: no effect
   const t = G();
-  lay(t, { 7: 'O pebble', 3: 'O pebble' });
-  const id = play(t, 'teleport', 1);
-  sameSet(effectOpts(t).map((a) => a.target), [3, 7]);
-  eff(t, { target: 7 });
-  expectAt(t, { 1: 107, 7: id });
+  lay(t, { 0: 'O pebble' });
+  const id = play(t, 'swap', 4);
+  expectAt(t, { 4: 100, 0: id });
 });
 test('Whirl turns the ring; the centre stays', () => {
   const s = G();
@@ -356,13 +318,6 @@ test('Whirl turns the ring; the centre stays', () => {
   eff(s, { turn: 1 });
   expectAt(s, { 1: 100, 4: 104 });
 });
-test('Cyclone may turn two steps', () => {
-  const s = G();
-  lay(s, { 0: 'O pebble' });
-  play(s, 'cyclone', 4);
-  eff(s, { turn: 2 });
-  expectAt(s, { 2: 100 });
-});
 test('Frog leaps over a stone; an enemy stone leapt over goes back to hand', () => {
   const s = G();
   lay(s, { 4: 'O swap' });
@@ -370,15 +325,11 @@ test('Frog leaps over a stone; an enemy stone leapt over goes back to hand', () 
   expectAt(s, { 7: id, 4: 0, 1: 0 });
   assert.equal(count(s, 'O', 'swap'), 1);
 });
-test('Frog does not leap diagonally; Kangaroo does', () => {
+test('Frog does not leap diagonally', () => {
   const s = G();
   lay(s, { 4: 'O pebble' });
   play(s, 'frog', 0);
   turnPassedTo(s, 'O');
-  const t = G();
-  lay(t, { 4: 'O pebble' });
-  const id = play(t, 'kangaroo', 0);
-  expectAt(t, { 8: id, 4: 0 });
 });
 test('Flip mirrors the board; it holds its own square', () => {
   const s = G();
@@ -387,26 +338,8 @@ test('Flip mirrors the board; it holds its own square', () => {
   eff(s, { axis: 'h' });
   expectAt(s, { 2: 100, 3: 103, 5: 105, 4: id });
 });
-test('Kaleidoscope may mirror only the enemy\'s stones', () => {
-  const s = G();
-  lay(s, { 0: 'O pebble', 6: 'X pebble' });
-  play(s, 'kaleidoscope', 4);
-  eff(s, { axis: 'h', only: true });
-  expectAt(s, { 2: 100, 6: 106, 8: 0 });
-});
 test('Magnet: the enemy must place next to it', () => sameSet(allowedFor({ 0: 'O magnet' }), [1, 3]));
-test('Electromagnet counts twice and nothing moves it', () => {
-  sameSet(allowedFor({ 0: 'O electromagnet', 8: 'O magnet' }), [1, 3]);
-  const s = G();
-  lay(s, { 0: 'O electromagnet' });
-  assert.ok(isStuck(s, 0));
-});
 test('Stinky: must not place next to it', () => sameSet(allowedFor({ 4: 'O stinky' }), [0, 2, 6, 8]));
-test('Stench: must not place next to it, and it counts twice', () => {
-  sameSet(allowedFor({ 4: 'O stench' }), [0, 2, 6, 8]);
-  // the Stench forbids 1 and 3; a plain Magnet at 0 wants them: the Stench wins
-  sameSet(allowedFor({ 4: 'O stench', 0: 'O magnet' }), [2, 6, 8]);
-});
 test('Beacon: pick its row or its column', () => {
   const s = G();
   play(s, 'beacon', 1);
@@ -414,14 +347,6 @@ test('Beacon: pick its row or its column', () => {
   eff(s, { line: 'col' });
   applyAction(s, { type: 'select', stone: 'pebble' });
   sameSet(allowedSquares(s), [4, 7]);
-});
-test('Lighthouse adds its diagonal', () => {
-  const s = G();
-  play(s, 'lighthouse', 0);
-  sameSet(effectOpts(s).map((o) => o.line), ['row', 'col', 'd']);
-  eff(s, { line: 'd' });
-  applyAction(s, { type: 'select', stone: 'pebble' });
-  sameSet(allowedSquares(s), [4, 8]);
 });
 test('Restrictions compose: satisfy as many as any square can', () => {
   sameSet(allowedFor({ 0: 'O magnet', 2: 'O beacon' }), [1]);
@@ -443,13 +368,6 @@ test('Firecracker blows a stone back into its owner\'s hand and burns itself up'
   eff(s, { target: 0 });
   expectAt(s, { 0: 0, 4: 0, 8: 108 });
   assert.equal(count(s, 'O', 'shift'), 1);
-});
-test('Bomb may blow every enemy stone beside it at once', () => {
-  const s = G();
-  lay(s, { 1: 'O pebble', 3: 'O pebble', 0: 'O pebble' });
-  play(s, 'bomb', 4);
-  applyAction(s, legalActions(s).find((a) => a.target === undefined));
-  expectAt(s, { 1: 0, 3: 0, 0: 100, 4: 0 });
 });
 test('Turncoat trades sides with an enemy stone beside it', () => {
   const s = G();
@@ -495,48 +413,6 @@ test('A Pebble sent back to hand is simply gone', () => {
   play(s, 'firecracker', 4);   // one target: it goes off on its own
   assert.equal(s.board[1], null);
   assert.equal(s.hands.O.length, 0);
-});
-
-// Every evolved stone can do everything its plain form can, from any board.
-// Did the stone have anything to do from there (even one forced thing)?
-function hadEffect(s0, type, pos) {
-  const st = STONES[type];
-  const t = cloneState(s0);
-  t.board[pos] = { player: 'X', type, id: 999 };
-  return st.options(t, pos, t.board[pos]).length > 0;
-}
-// `effectOnly`: leave out the case of the plain stone having nothing to do.
-function outcomes(s0, type, pos, effectOnly = false) {
-  const out = new Set();
-  const s = cloneState(s0);
-  s.hands.X.push({ type });
-  applyAction(s, { type: 'select', stone: type });
-  applyAction(s, { type: 'place', pos });
-  const snap = (x) => JSON.stringify(x.board.map((c) => (c ? `${c.player}${c.id}${c.line ?? ''}` : '.')).map((v, i) => (i === pos && s0.board[pos] === null ? v.replace(/\d+/, '#') : v)));
-  if (s.phase !== 'effect') { if (!effectOnly || hadEffect(s0, type, pos)) out.add(snap(s)); return out; }
-  for (const a of legalActions(s)) {
-    const t = cloneState(s);
-    applyAction(t, a);
-    out.add(snap(t));
-  }
-  return out;
-}
-test('evolving never takes a choice away', () => {
-  const r = rng32(99);
-  const kinds = ['X pebble', 'O pebble', 'O mountain', 'X mountain'];
-  for (const base of STONE_TYPES.filter((t) => STONES[t].evolvesTo && STONES[t].options)) {
-    const evo = STONES[base].evolvesTo;
-    for (let g = 0; g < 150; g++) {
-      const s = G();
-      for (let i = 0; i < 9; i++) if (r() < 0.4) lay(s, { [i]: kinds[(r() * kinds.length) | 0] });
-      const free = s.board.map((c, i) => (c ? -1 : i)).filter((i) => i >= 0);
-      if (!free.length) continue;
-      const pos = free[(r() * free.length) | 0];
-      const a = outcomes(s, base, pos, true), b = outcomes(s, evo, pos);
-      // Beacon lines differ only in the label: compare what the plain form can do.
-      for (const o of a) assert.ok(b.has(o), `${evo} cannot do what ${base} did at ${pos}\n${render(s)}${o}`);
-    }
-  }
 });
 
 // ── Tricks ──────────────────────────────────────────────────────────────────
@@ -589,12 +465,6 @@ test('Muffle: the enemy\'s next special stone does nothing', () => {
   play(s, 'bumper', 4);
   expectAt(s, { 1: 101 });
   assert.ok(s.board[4].hushed);
-});
-test('Anchor fixes a stone: shifts step over it', () => {
-  const s = G({ tricksX: ['anchor'] });
-  play(s, 'pebble', 0);
-  trick(s, 'anchor', { pos: 0 });
-  assert.ok(isStuck(s, 0));
 });
 test('Encore returns your last special stone to your hand', () => {
   const s = G({ tricksX: ['reinforce'] });
@@ -760,12 +630,13 @@ test('Column: the boss closes a column for your next turn', () => {
   assert.equal(s.dictate, null, 'the word lasts one turn');
 });
 test('Spy: the boss names the direction your stone moves', () => {
-  const s = B(['spy'], { handX: ['rail'] });
+  const s = B(['spy'], { handX: ['2048'] });
   play(s, 'pebble', 4);
   act(s, { type: 'dictate', value: 'up' });
-  play(s, 'rail', 0);
-  assert.equal(s.phase, 'effect');
-  assert.deepEqual([...new Set(legalActions(s).map((a) => a.dir))], ['up']);
+  const id = play(s, '2048', 6);   // one way left to go: it slides at once
+  expectAt(s, { 0: id, 1: s.board[1]?.id });
+  assert.equal(s.board[1]?.player, 'O');
+  turnPassedTo(s, 'O');
 });
 test('Reserved: you may not take the centre; the boss may', () => {
   sameSet(allowedFor({}, { rules: ['reserved'] }), [0, 1, 2, 3, 5, 6, 7, 8]);

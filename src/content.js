@@ -34,16 +34,12 @@ export const RELICS = {
     text: 'Gain a random trick after every elite or boss you beat.' },
   phoenix: { name: 'Phoenix Feather', emoji: '🪶', rarity: 'rare',
     text: 'Once, when you would run out of hearts, rise again with 3.' },
-  anvil: { name: 'Tiny Anvil', emoji: '⚒️', rarity: 'uncommon',
-    text: 'At a campfire, you may evolve a stone and still rest.' },
   rematch: { name: 'Rematch Token', emoji: '🎟️', rarity: 'uncommon',
     text: 'The first duel you lose in each act is replayed instead of costing hearts.' },
   piggy: { name: 'Piggy Bank', emoji: '🐷', rarity: 'common',
     text: 'Gain 60 gold now.' },
   'war-chest': { name: 'War Chest', emoji: '💰', rarity: 'rare',
     text: 'Gain 150 gold now.' },
-  whetstone: { name: 'Whetstone', emoji: '🪨', rarity: 'uncommon',
-    text: 'Evolving a stone costs half as much in shops.' },
 };
 export const BOSS_RELICS = ['deep-pockets', 'gloves', 'echo', 'phoenix', 'war-chest'];
 export const RELIC_TYPES = Object.keys(RELICS);
@@ -54,14 +50,14 @@ export const STONE_PRICE = { common: 45, uncommon: 70, rare: 100 };
 export const TRICK_PRICE = { common: 45, uncommon: 65, rare: 95 };
 export const RELIC_PRICE = { common: 110, uncommon: 140, rare: 170 };
 
-// Stones you can find: everything but the Pebble and the evolved forms.
+// Stones you can find: everything but the Pebble.
 export const REWARD_STONES = BASE_STONES;
 
 // ── Enemies ─────────────────────────────────────────────────────────────────
 //
 // Everyone plays Pebbles as they like. An enemy's special stones are its
-// `core` plus draws from its `pool` up to its act's hand size; later acts
-// evolve some of them. `iters` and `blunder` are its brain. A `cond` is its
+// `core` plus draws from its `pool` up to its act's hand size. `iters` and
+// `blunder` are its brain. A `cond` is its
 // home rule, for both sides; others may roll one.
 //
 // A boss brings no special stones at all: it has `rules` that favour it, and
@@ -135,8 +131,8 @@ export const ENEMIES = {
     core: ['magnet', 'stinky', 'swap'], pool: ['magnet', 'shift', 'rotate'], iters: 350, blunder: 0.08,
     tricks: ['muffle'], quote: 'Nobody sits in the middle, dear.' },
   golem: { name: 'Stone Golem', emoji: '🗿', act: 2, tier: 'elite',
-    core: ['mountain', 'mountain', 'electromagnet'], pool: ['2048', 'shift', 'magnet'], iters: 350, blunder: 0.08,
-    tricks: ['anchor'], quote: 'I. DO. NOT. MOVE.' },
+    core: ['mountain', 'mountain', 'magnet'], pool: ['2048', 'shift', 'magnet'], iters: 350, blunder: 0.08,
+    tricks: ['nudge'], quote: 'I. DO. NOT. MOVE.' },
   // bosses
   colossus: { name: 'Clockwork Colossus', emoji: '⚙️', act: 2, tier: 'boss',
     rules: ['column'], rules2: ['column'], iters: 200, blunder: 0.04,
@@ -161,18 +157,18 @@ export const ENEMIES = {
   jester: { name: 'The Jester', emoji: '🃏', act: 3, tier: 'normal',
     core: ['swap', 'flip'], pool: ['shift', 'swap', 'magnet', 'whirl'], iters: 220, blunder: 0.14,
     quote: 'Now you see it, now you don\'t!' },
-  robot: { name: 'Tile Bot 4096', emoji: '🤖', act: 3, tier: 'normal',
-    core: ['4096', '2048'], pool: ['mountain', 'magnet', 'stinky'], iters: 450, blunder: 0.05,
+  robot: { name: 'Tile Bot 2048', emoji: '🤖', act: 3, tier: 'normal',
+    core: ['2048', '2048'], pool: ['mountain', 'magnet', 'stinky'], iters: 450, blunder: 0.05,
     quote: 'CALCULATING OPTIMAL SLIDE.' },
   yeti: { name: 'Summit Yeti', emoji: '🦍', act: 3, tier: 'normal', cond: 'gravity',
     core: ['mountain', 'bumper'], pool: ['lasso', 'frog', 'whirl', 'mountain'], iters: 450, blunder: 0.05,
     quote: 'ROAR. Everything falls down mountain.' },
   // elites
   owl: { name: 'Grand Tactician', emoji: '🦉', act: 3, tier: 'elite',
-    core: ['electromagnet', 'rail', 'swap'], pool: ['rotate', 'swap', 'beacon', 'firecracker'], iters: 300, blunder: 0.06,
+    core: ['magnet', 'shift', 'swap'], pool: ['rotate', 'swap', 'beacon', 'firecracker'], iters: 300, blunder: 0.06,
     tricks: ['mirror'], quote: 'I have seen this position before.' },
   storm: { name: 'Storm Caller', emoji: '⛈️', act: 3, tier: 'elite',
-    core: ['cyclone', 'flip', 'magnet'], pool: ['2048', 'bumper', 'shift'], iters: 300, blunder: 0.06,
+    core: ['whirl', 'flip', 'magnet'], pool: ['2048', 'bumper', 'shift'], iters: 300, blunder: 0.06,
     quote: 'The wind takes everything.' },
   // bosses
   grandmaster: { name: 'The Grandmaster', emoji: '👑', act: 3, tier: 'boss',
@@ -186,9 +182,9 @@ export const ENEMIES = {
 };
 
 export const ACTS = [
-  { n: 1, name: 'The Meadow', bosses: ['oak', 'scarecrow'], size: 2, evolve: 0.0, cond: 0.25, gold: [14, 22] },
-  { n: 2, name: 'The Quarry', bosses: ['colossus', 'mirrorknight', 'carpenter'], size: 3, evolve: 0.15, cond: 0.35, gold: [18, 28] },
-  { n: 3, name: 'The Summit', bosses: ['grandmaster', 'twinkings'], size: 3, evolve: 0.4, cond: 0.4, gold: [22, 34] },
+  { n: 1, name: 'The Meadow', bosses: ['oak', 'scarecrow'], size: 2, cond: 0.25, gold: [14, 22] },
+  { n: 2, name: 'The Quarry', bosses: ['colossus', 'mirrorknight', 'carpenter'], size: 3, cond: 0.35, gold: [18, 28] },
+  { n: 3, name: 'The Summit', bosses: ['grandmaster', 'twinkings'], size: 3, cond: 0.4, gold: [22, 34] },
 ];
 
 export const enemiesOf = (act, tier) => Object.keys(ENEMIES)
@@ -202,18 +198,14 @@ export const EASY_OPENERS = ['pip', 'otter', 'rock'];
 // Each choice is { label, detail?, can?(run), run(run, api) -> text }. The api
 // (from run.js) offers the helpers a choice needs: gain stone, pick a stone, etc.
 
-// Stones in a pouch that have an evolved form.
-export const evolvable = (run) => run.pouch.filter((s) => STONES[s.type].evolvesTo);
 
 export const EVENTS = [
   {
     id: 'stonemason', title: 'The Wandering Stonemason', emoji: '🧑‍🔧',
-    text: 'A dusty stonemason sets down her chisel. "Fine stones you carry. I could make one into something else entirely — for a price."',
+    text: 'A dusty stonemason sets down her chisel. "Give me two of those stones, and I\'ll carve you one finer."',
     choices: [
-      { label: 'Pay 35 gold', detail: 'Evolve a stone.', can: (r) => r.gold >= 35 && evolvable(r).length > 0,
-        act: (r, api) => api.upgradeStone(t('The stonemason gets to work.'), 1, () => { r.gold -= 35; }) },
-      { label: 'Pay 2 hearts', detail: 'Evolve two stones.', can: (r) => r.hearts > 2 && evolvable(r).length >= 2,
-        act: (r, api) => api.upgradeStone(t('Blood and granite.'), 2, () => { r.hearts -= 2; }) },
+      { label: 'Trade two stones', detail: 'Two stones for one of a higher tier.', can: (r) => r.pouch.length >= 2,
+        act: (r, api) => api.craft() },
       { label: 'Leave', act: () => t('You nod politely and move on.') },
     ],
   },
@@ -294,15 +286,8 @@ export const EVENTS = [
     id: 'fountain', title: 'The Wishing Fountain', emoji: '⛲',
     text: 'Coins glint under the water. A sign reads: "One wish per traveller."',
     choices: [
-      { label: 'Wish for strength', detail: 'Evolve a random stone. Lose 1 heart.', can: (r) => r.hearts > 1 && evolvable(r).length > 0,
-        act: (r, api) => {
-          const plain = evolvable(r);
-          const s = plain[(api.rng() * plain.length) | 0];
-          const was = STONES[s.type].name;
-          s.type = STONES[s.type].evolvesTo;
-          r.hearts--;
-          return t('The water boils for a moment. Your {stone} comes out a {evolved}.', { stone: was, evolved: STONES[s.type].name });
-        } },
+      { label: 'Wish for strength', detail: 'Choose a stone. Lose 1 heart.', can: (r, api) => r.hearts > 1 && api.pouchRoom(),
+        act: (r, api) => api.chooseStone(null, () => { r.hearts--; }) },
       { label: 'Wish for health', detail: 'Pay 20 gold, heal 2 hearts.', can: (r) => r.gold >= 20,
         act: (r) => { r.gold -= 20; r.hearts = Math.min(r.maxHearts, r.hearts + 2); return t('You feel much better.'); } },
       { label: 'Move on', act: () => t('You keep your coins.') },
@@ -328,14 +313,8 @@ export const EVENTS = [
     id: 'library', title: 'The Rulebook Library', emoji: '📚',
     text: 'Shelves of dog-eared rulebooks. Someone has scribbled strategies in every margin.',
     choices: [
-      { label: 'Study', detail: 'Evolve a random stone.', can: (r) => evolvable(r).length > 0,
-        act: (r, api) => {
-          const plain = evolvable(r);
-          const s = plain[(api.rng() * plain.length) | 0];
-          const was = STONES[s.type].name;
-          s.type = STONES[s.type].evolvesTo;
-          return t('You read up on the {stone}. It is now a {evolved}.', { stone: was, evolved: STONES[s.type].name });
-        } },
+      { label: 'Study', detail: 'Pay 30 gold, choose an uncommon stone.', can: (r, api) => r.gold >= 30 && api.pouchRoom(),
+        act: (r, api) => api.chooseStone('uncommon', () => { r.gold -= 30; }) },
       { label: 'Borrow a book', detail: 'Gain a random uncommon trick.', can: (r, api) => api.trickRoom(),
         act: (r, api) => api.gainRandomTrick('uncommon') },
     ],

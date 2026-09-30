@@ -25,7 +25,7 @@ export function h(tag, attrs = {}, ...children) {
   return el;
 }
 
-// A hand-drawn star sticker for evolved stones.
+// A hand-drawn star sticker (unused while no stone is special enough).
 const STAR = '<svg class="badge-plus" viewBox="-10 -10 20 20" aria-hidden="true"><path d="M0 -8.5 L2.4 -2.7 L8.6 -2.4 L3.8 1.5 L5.4 7.6 L0 4.2 L-5.4 7.6 L-3.8 1.5 L-8.6 -2.4 L-2.4 -2.7 Z"/></svg>';
 
 // Pen marks, as SVG strings in a 0..100 box: an X in two strokes, an O in one
@@ -59,15 +59,12 @@ export function stoneEl(s, player = 'X', opts = {}) {
 export function updateStone(el, s, player, opts = {}) {
   el.classList.remove('X', 'O');
   el.classList.add(player);
-  el.classList.toggle('plus', !!STONES[s.type]?.evolvesFrom);
   el.classList.toggle('stuck', !!opts.stuck);
   el.classList.toggle('dead', !!opts.dead);
   el.classList.toggle('mini', !!opts.mini);
   if (el.dataset.type !== s.type || !el.firstChild) {
     el.dataset.type = s.type;
-    // An evolved stone wears its plain form's glyph, and a star.
-    const glyph = ICONS[s.type] ? s.type : STONES[s.type]?.evolvesFrom ?? s.type;
-    el.innerHTML = icon(glyph, 'glyph') + STAR + '<span class="tape"></span>';
+    el.innerHTML = icon(s.type, 'glyph') + STAR + '<span class="tape"></span>';
   }
 }
 
@@ -192,8 +189,6 @@ export function infoStone(s, player = 'X', extra = '') {
       h('div.info-rarity.' + st.rarity, {}, t(st.rarity)))),
     h('p', {}, stoneText(s)),
     stoneDemo(s),
-    st.evolvesTo ? h('p.info-plus', {}, h('b', {}, t('Evolves into {stone}: ', { stone: STONES[st.evolvesTo].name })), STONES[st.evolvesTo].text) : null,
-    st.evolvesFrom ? h('p.info-plus', {}, t('An evolved {stone}.', { stone: STONES[st.evolvesFrom].name })) : null,
     s.type === 'pebble' ? h('p.info-plus', {}, t('Pebbles never run out: you may always place another.')) : null,
     extra ? h('p.info-extra', {}, extra) : null,
     h('button.btn.wide', { onclick: () => close() }, t('OK')));

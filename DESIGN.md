@@ -11,7 +11,8 @@ numbers. The camp game's own reasoning is in `old/adr/`.
   where you satisfy as many as any square can (`old/adr/2026-08-18-…`).
 - **Counterattacks → tricks.** Spent at the end of your own turn, before the line check, so any
   of them can finish a line. Overtake, Relocate, Mirror, Mind Control and Rehearse are the five
-  the ADR kept; six more were added (Nudge, Muffle, Anchor, Pluck, Bribe, Encore).
+  the ADR kept; five more were added (Nudge, Muffle, Pluck, Bribe, Encore). An Anchor trick that
+  fixed a stone in place was cut: the Mountain is the only thing nothing moves.
 - **Boss rules** come from an older iteration's sheet of special rules (Taktika, Náskok, Elko,
   Lep, Sloup, Špion, Reservé).
 
@@ -44,7 +45,7 @@ duel, and a rule for who wins when someone runs out. The second version slows it
   A boss has two lives; once beaten it rises again, often with a second rule.
   Double Time is the hard one, and it wants a particular loadout. Bot duels, 20 each: Pebbles
   only or two Mountains win 0%, movers (Shift and Rotate, Rail/Pivot/Teleport, 2048/4096)
-  20–40%, restrictions (Magnet and Stinky, Electromagnet and Stench, Beacon and Lighthouse)
+  20–40%, restrictions (Magnet and Stinky, and their evolved forms of the time)
   95–100%. The Twin Kings' second life adds Reserved, and then restrictions alone drop to
   0–15%: it takes a restriction *and* a mover (Magnet and Shift: 95%).
   The sheet's Sloup had the boss choose the column you *must* play in; measured against the bot
@@ -53,12 +54,12 @@ duel, and a rule for who wins when someone runs out. The second version slows it
 - **Mountain is the only wall.** The protective and disabling stones (Snare, Hush, Glue,
   Guardian) were confusing and are gone. Moving stones — shifts, rotations, whirls, 2048, and
   Gravity — step over a Mountain: it holds its square and the rest go round.
-- **Named evolutions instead of +.** Twelve stones evolve into a named stone that can do
-  everything the plain one can and more: Shift → Rail, Rotate → Pivot, Magnet → Electromagnet,
-  Stinky → Stench, 2048 → 4096, Bumper → Blast, Swap → Teleport, Whirl → Cyclone, Frog → Kangaroo,
-  Beacon → Lighthouse, Flip → Kaleidoscope, Firecracker → Bomb. The test suite checks the
-  "never less" part on random boards. Campfires, shops and a few events evolve stones; nothing
-  you find is evolved already, but later enemies' stones often are.
+- **No second level of stones.** The + versions went first, then the twelve named evolutions
+  that replaced them (Rail, Electromagnet, Lighthouse…): an evolved restriction that also could
+  not be moved was a Mountain in disguise, and two levels of every stone were more to learn than
+  they were worth. Instead there is **crafting**: at a workshop (a square of the map, or the
+  wandering stonemason) two stones become one of the next tier up from the humbler of the two —
+  two commons make an uncommon, rares stay rare — chosen from two.
 
 ## The map
 
@@ -71,8 +72,6 @@ middle.
   you to step in any open one.
 - **Scorching.** A lost duel costs its hearts and scorches the square: you may not step there
   again, but the boss may. You choose again at once — the boss answers only a real X.
-- **The boss fights too.** On a square with an enemy it may lose (30% of duels, half of elites,
-  at the moment 50/70% while balance is open): the square is scorched and its turn is gone.
 - **Clearings.** Three in a row takes a clearing (+15 gold for you, −1 ❤ if it is the boss's).
   Three clearings in a row open the boss's door. The boss's three in a row costs another heart
   and starts a fresh map; so does a map nobody can win any more. Each new map of an act is less
@@ -85,7 +84,7 @@ Acts are long: a map takes some 25–35 of your steps. Balance for this map is s
 
 ## The stones
 
-30 types, 12 of them evolved forms. Every stone's card shows an example computed by the engine.
+18 types. Every stone's card shows an example computed by the engine.
 
 A hand of one stone plus a Shift against a Shift and a Rotate, both seats, 80 games, MCTS at 200
 iterations (`node tools/stones.mjs`):
@@ -105,10 +104,8 @@ iterations (`node tools/stones.mjs`):
 | Teleport, 4096 | 55–56% | | Pebble | 14% |
 | 2048, Swap, Mountain, Blast | 49–53% | | | |
 
-What that table changed along the way: Stench forbade the corners too and so, in the centre,
-forbade everything — which means nothing; it now counts twice instead. Blast pushed diagonal
-neighbours as well, which often helped the enemy; it now chooses the straight or the diagonal
-ones. Lighthouse was also heavy and won 95%; Twin won 93% and now needs the centre empty too.
+The table was measured with the evolved forms still in; they are gone now. Twin won 93% and now
+needs the centre empty too.
 
 ## Difficulty
 
@@ -125,13 +122,13 @@ At heat 0 (six hearts), bots that play the map sensibly, pick their stones by st
 | 150 iterations, 10% blunders | about 13% |
 | 300 iterations, no blunders | about 34% |
 
-Heat 1–5 raises it after each win: deeper search, more evolved enemy stones, a heart fewer,
+Heat 1–5 raises it after each win: deeper search, dearer shops, a heart fewer,
 bigger elite hands and boss tricks, no blunders.
 
 ## Tests
 
 - `node tools/test-engine.mjs` — every stone, trick, condition and boss rule against its own
-  text, "evolving never takes a choice away" on random boards, plus a 20,000-game fuzz of
+  text, plus a 20,000-game fuzz of
   invariants.
 - `node tools/runbot.mjs` — whole runs, including the save format's JSON round trip.
 - `node tools/smoke.mjs` — random duels with everything switched on, and the AI's timing.

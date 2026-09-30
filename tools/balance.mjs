@@ -19,8 +19,6 @@ function typicalRun(seed, act) {
   const gains = [0, 2, 4][act - 1];
   for (let i = 0; i < gains; i++) R.gainStone(run, R.randomStone(run));
   run.slots += act - 1;
-  const ups = [0, 1, 3][act - 1];
-  for (let i = 0; i < ups; i++) { const u = R.upgradeable(run); if (u.length) R.evolve(u[(R.rand(run) * u.length) | 0]); }
   if (act > 1) run.tricks.push(R.randomTrick(run));
   if (act > 2) run.tricks.push(R.randomTrick(run));
   return run;
