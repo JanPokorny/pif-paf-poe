@@ -656,3 +656,9 @@ b { font-weight: 400; background: linear-gradient(transparent 55%, var(--hi) 55%
 .map-sheet .map-cell.reach::before { display: none; }
 .map-sheet .map-cell:not(.marked):active { background: var(--hi); }
 .boss-lives span.lost-life { opacity: 0.3; animation: crack 0.7s ease-out; }
+
+/* A busy sheet reads better small: marked squares show only their mark. */
+.map-sheet { --cell: max(58px, min(90px, calc((min(100vw, 520px) - 32px) / var(--cols)))); }
+.map-sheet .map-cell.marked .doodle, .map-sheet .map-cell.marked .label, .map-sheet .map-cell.marked .cell-space { display: none; }
+.map-sheet .map-cell .label { font-size: 0.72rem; }
+.map-scroll { max-height: calc(100dvh - 250px); }

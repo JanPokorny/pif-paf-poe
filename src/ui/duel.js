@@ -16,7 +16,7 @@ import { RELICS } from '../content.js';
 import { think } from '../brain.js';
 import { sfx } from '../sound.js';
 
-const FIELD_ORDER = ['pos', 'from', 'a', 'to', 'target', 'dir', 'block', 'turn', 'axis', 'stone', 'hold', 'only'];
+const FIELD_ORDER = ['pos', 'from', 'a', 'to', 'target', 'dir', 'block', 'turn', 'axis', 'line', 'stone', 'hold', 'only'];
 const DIR_ARROW = { up: 'arrow-up', down: 'arrow-down', left: 'arrow-left', right: 'arrow-right' };
 
 // The next choice that tells these candidates apart.
@@ -315,6 +315,17 @@ export function mountDuel(root, opts) {
       const label = { h: '↔', v: '↕', d: '⤡', a: '⤢' };
       for (const [k, group] of stage.groups) {
         place(...spot[k], h('button.rot.axis' + (isChosen(group) ? '.chosen' : ''), { onclick: pickGroup(group), 'aria-label': `mirror ${k}` }, label[k]));
+      }
+    } else if (stage.kind === 'line') {
+      // A Beacon's line: a note at the end of its row, its column, its diagonal.
+      const at = state.placedAt;
+      const spot = { row: [3.3, row(at) + 0.5], col: [col(at) + 0.5, 3.3], d: [3.25, 3.25], a: [-0.25, 3.25] };
+      const label = { row: '↔', col: '↕', d: '⤡', a: '⤢' };
+      for (const [k, group] of stage.groups) {
+        place(...spot[k], h('button.rot.axis' + (isChosen(group) ? '.chosen' : ''), { onclick: pickGroup(group), 'aria-label': k }, label[k]));
+      }
+      if (chosen?.line) {
+        for (let i = 0; i < 9; i++) if (STONES.beacon.restrict(i, at, false, chosen.line) && i !== at) cells[i].classList.add('chosen');
       }
     } else if (stage.kind === 'hold' || stage.kind === 'only') {
       const label = stage.kind === 'hold'

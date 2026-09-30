@@ -231,10 +231,23 @@ def('frog', {
 
 def('beacon', {
   name: 'Beacon', rarity: 'uncommon', kind: 'restrict',
-  text: 'The enemy must place in its row or column.',
-  plusText: 'The enemy must place in its row or column; it counts twice against other restrictions, and nothing moves it.',
+  text: 'Pick its row or its column: the enemy must place there.',
+  plusText: 'Pick its row, column or a diagonal: the enemy must place there. It counts twice against other restrictions, and nothing moves it.',
   heavy: true,
-  restrict: (sq, m) => row(sq) === row(m) || col(sq) === col(m),
+  options(s, pos, cell) {
+    const out = [{ line: 'row' }, { line: 'col' }];
+    if (cell.plus && pos % 4 === 0) out.push({ line: 'd' });
+    if (cell.plus && [2, 4, 6].includes(pos)) out.push({ line: 'a' });
+    return out;
+  },
+  apply(s, pos, a) { s.board[pos].line = a.line; },
+  restrict: (sq, m, plus, line) => {
+    if (line === 'row') return row(sq) === row(m);
+    if (line === 'col') return col(sq) === col(m);
+    if (line === 'd') return sq % 4 === 0;
+    if (line === 'a') return [2, 4, 6].includes(sq);
+    return row(sq) === row(m) || col(sq) === col(m);
+  },
 });
 
 def('flip', {
@@ -585,7 +598,7 @@ export function restrictionsOn(s, player) {
   for (let i = 0; i < 9; i++) {
     const c = s.board[i];
     if (!c || c.player === player || !active(s, c)) continue;
-    if (STONES[c.type].restrict) out.push({ pos: i, st: STONES[c.type], plus: c.plus, w: c.plus && STONES[c.type].heavy ? 2 : 1 });
+    if (STONES[c.type].restrict) out.push({ pos: i, st: STONES[c.type], plus: c.plus, line: c.line, w: c.plus && STONES[c.type].heavy ? 2 : 1 });
   }
   return out;
 }
@@ -604,7 +617,7 @@ export function allowedSquares(s, stone = s.selected) {
     pool = pool.filter((i) => i !== 4);
   }
   if (!rs.length) return pool;
-  const scores = pool.map((i) => rs.reduce((n, r) => n + (r.st.restrict(i, r.pos, r.plus) ? r.w : 0), 0));
+  const scores = pool.map((i) => rs.reduce((n, r) => n + (r.st.restrict(i, r.pos, r.plus, r.line) ? r.w : 0), 0));
   const best = Math.max(...scores);
   return pool.filter((_, k) => scores[k] === best);
 }
@@ -622,25 +635,15 @@ function returnToHand(s, i) {
   s.board[i] = null;
 }
 
-// Advance every stone one step along `cells`, wrapping from last to first. With
-// a stuck stone in the way the cycle breaks into strips: inside a strip a stone
-// advances if the square ahead is empty or emptied by the stone ahead of it.
+// Advance every stone one step along `cells`, wrapping from last to first.
+// Stuck stones hold their squares and are simply stepped over: everything
+// else still goes round, into the next square that is not stuck.
 function stepAlong(s, cells) {
-  const b = s.board, n = cells.length;
-  const wall = cells.map((i) => isStuck(s, i));
-  if (!wall.some(Boolean)) {
-    const before = cells.map((i) => b[i]);
-    for (let k = 0; k < n; k++) b[cells[(k + 1) % n]] = before[k];
-    return;
-  }
-  for (let w = 0; w < n; w++) {
-    if (!wall[w]) continue;
-    const strip = [];
-    for (let k = 1; k < n && !wall[(w + k) % n]; k++) strip.push(cells[(w + k) % n]);
-    for (let k = strip.length - 1; k > 0; k--) {
-      if (!b[strip[k]] && b[strip[k - 1]]) { b[strip[k]] = b[strip[k - 1]]; b[strip[k - 1]] = null; }
-    }
-  }
+  const b = s.board;
+  const free = cells.filter((i) => !isStuck(s, i));
+  if (free.length < 2) return;
+  const before = free.map((i) => b[i]);
+  for (let k = 0; k < free.length; k++) b[free[(k + 1) % free.length]] = before[k];
 }
 
 function lineOrder(index, dir) {

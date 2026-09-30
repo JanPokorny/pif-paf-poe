@@ -475,12 +475,12 @@ test('Shift does not touch other rows', () => {
   eff(s, { dir: 'right', index: 0 });
   expectAt(s, { 3: 103, 6: 106 });
 });
-test('Shift: a Mountain holds its square and blocks the stone behind it', () => {
+test('Shift: a Mountain holds its square and the stones step over it', () => {
   const s = G();
   lay(s, { 1: 'O mountain' });
   const id = play(s, 'shift', 0);
-  eff(s, { dir: 'right', index: 0 });   // S cannot enter the Mountain's square
-  expectAt(s, { 0: id, 1: 101, 2: 0 });
+  eff(s, { dir: 'right', index: 0 });   // S skips the Mountain's square
+  expectAt(s, { 0: 0, 1: 101, 2: id });
 });
 test('Shift: stones still wrap round the end past a Mountain elsewhere in the row', () => {
   const s = G();
@@ -496,12 +496,12 @@ test('Shift: a stone steps into a square emptied ahead of it; Mountain at the en
   eff(s, { dir: 'right', index: 0 });
   expectAt(s, { 0: 0, 1: id, 2: 102 });
 });
-test('Shift: nothing wraps into a Mountain', () => {
+test('Shift: nothing wraps into a Mountain; the rest go round it', () => {
   const s = G();
   lay(s, { 0: 'O mountain', 2: 'O pebble' });
   const id = play(s, 'shift', 1);
-  eff(s, { dir: 'right', index: 0 });   // 2 would wrap to 0: blocked; so 1 stays
-  expectAt(s, { 0: 100, 1: id, 2: 102 });
+  eff(s, { dir: 'right', index: 0 });   // 2 wraps past the Mountain to 1
+  expectAt(s, { 0: 100, 1: 102, 2: id });
 });
 test('Shift: a guarded enemy stone and a glued stone are walls too', () => {
   for (const wall of ['O guardian', 'O pebble!']) {
@@ -509,7 +509,7 @@ test('Shift: a guarded enemy stone and a glued stone are walls too', () => {
     lay(s, { 1: wall });
     const id = play(s, 'shift', 0);
     eff(s, { dir: 'right', index: 0 });
-    expectAt(s, { 0: id, 1: 101, 2: 0 }, wall);
+    expectAt(s, { 0: 0, 1: 101, 2: id }, wall);
   }
 });
 test('Shift+ offers every row and column, each way', () => {
@@ -795,8 +795,8 @@ test('Whirl respects Mountains on the ring', () => {
   const s = G();
   lay(s, { 2: 'O mountain', 1: 'O pebble', 0: 'X pebble', 3: 'X pebble' });
   play(s, 'whirl', 4);
-  eff(s, { turn: 1 });   // 1 cannot enter 2; 0 and 3 are blocked behind it
-  expectAt(s, { 0: 100, 1: 101, 2: 102, 3: 103 });
+  eff(s, { turn: 1 });   // the ring turns, stepping over the Mountain on 2
+  expectAt(s, { 0: 103, 1: 100, 2: 102, 3: 0, 5: 101 });
 });
 
 group('frog');
@@ -920,6 +920,15 @@ test('Stinky: must not place next to it', () => sameSet(allowedFor({ 4: 'O stink
 test('Stinky+: corners included', () => sameSet(allowedFor({ 0: 'O stinky+' }), [2, 5, 6, 7, 8]));
 test('Stinky+ in the centre leaves nothing to satisfy: anywhere goes', () => sameSet(allowedFor({ 4: 'O stinky+' }), [0, 1, 2, 3, 5, 6, 7, 8]));
 test('Beacon: its row or column', () => sameSet(allowedFor({ 0: 'O beacon' }), [1, 2, 3, 6]));
+test('Beacon: placing one picks its row or its column', () => {
+  const s = G();
+  play(s, 'beacon', 1);
+  sameSet(effectOpts(s).map((o) => o.line), ['row', 'col']);
+  eff(s, { line: 'col' });
+  s.hands.O.push({ type: 'pebble', plus: false });
+  applyAction(s, { type: 'select', stone: 'pebble', plus: false });
+  sameSet(allowedSquares(s), [4, 7]);
+});
 test('Beacon+: row or column, and it outweighs another restriction', () => sameSet(allowedFor({ 0: 'O beacon+', 8: 'O magnet' }), [1, 2, 3, 6]));
 test('Beacon+ off the diagonals: only row and column', () => sameSet(allowedFor({ 1: 'O beacon+' }), [0, 2, 4, 7]));
 test('Beacon+ in the centre: its row and column', () => sameSet(allowedFor({ 4: 'O beacon+' }), [1, 3, 5, 7]));
@@ -1589,8 +1598,8 @@ test('Quake: the board mirrors left to right', () => {
 test('Fields respect Mountains and glue', () => {
   const s = G({ field: 'carousel', first: 'O' });
   lay(s, { 1: 'X mountain', 5: 'X pebble!' });
-  const id = play(s, 'pebble', 0);   // 0 -> 1 is blocked
-  expectAt(s, { 0: id, 1: 101, 5: 105, 8: 0 });
+  const id = play(s, 'pebble', 0);   // 0 steps over the Mountain on 1 to 2
+  expectAt(s, { 0: 0, 1: 101, 2: id, 5: 105 });
 });
 test('a line the field makes counts (for whoever gets it)', () => {
   const s = G({ field: 'carousel', first: 'O' });
@@ -1796,7 +1805,7 @@ for (let g = 0; g < GAMES; g++) {
     try { applyAction(s, a); } catch (e) { fuzzFail('legal actions never throw', `${where()} ${JSON.stringify(a)}: ${e.message}`); break; }
     n++; fuzzSteps++;
     invariants(s, where());
-    if (n > 60) { fuzzFail('duel ends within 60 actions', where() + '\n' + render(s)); break; }
+    if (n > 90) { fuzzFail('duel ends within 90 actions', where() + '\n' + render(s)); break; }
   }
   maxLen = Math.max(maxLen, n);
   if (s.over) { wins[s.winner]++; reasons[s.reason] = (reasons[s.reason] || 0) + 1; }

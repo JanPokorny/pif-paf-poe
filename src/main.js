@@ -419,7 +419,7 @@ function mapScreen() {
       h('div.map-help', {}, !R.xCount(run)
         ? t('The boss has made its first mark. Pick any square beside it; every mark reveals the paper around it. Squares that would help your line hide harder duels.')
         : R.pageFull(map) ? t('The page is full: only the boss is left.')
-          : t('Pick any open square. Four Xs in a row open the door; the squares that matter most are the hardest. {n} squares left on this page.', { n: R.PAGE - map.visited })),
+          : tp(R.PAGE - map.visited, 'Four Xs in a row open the door. {n} square left on this page.', 'Four Xs in a row open the door. {n} squares left on this page.')),
       threats.size ? h('div.map-help.red', {}, t('Dashed red circle: the boss would finish a line of Os there.')) : null));
   // Keep the newest marks in view.
   requestAnimationFrame(() => {
