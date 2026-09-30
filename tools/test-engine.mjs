@@ -671,12 +671,22 @@ test('Bumper does not push stuck stones or Mountains, not even off the board', (
 
 group('lasso');
 
-test('Lasso pulls every stone two squares away in a straight line, diagonals too, one step closer', () => {
+test('Lasso pulls every stone two squares away in a straight line, diagonals too, one step closer — or one', () => {
   const s = G();
   lay(s, { 2: 'O pebble', 6: 'O pebble', 3: 'X pebble', 8: 'X pebble' });
-  play(s, 'lasso', 0);   // single option: resolves on its own
+  play(s, 'lasso', 0);
+  assert.equal(effectOpts(s).length, 3, 'all, or either of the two it reaches');
+  eff(s, {});
   turnPassedTo(s, 'O');
   expectAt(s, { 2: 0, 1: 102, 6: 106, 3: 103, 8: 0, 4: 108 });
+});
+test('Lasso+ hushes the enemy stones it pulls', () => {
+  const s = G();
+  lay(s, { 2: 'O pebble', 8: 'X pebble' });
+  play(s, 'lasso+', 0);
+  eff(s, {});
+  assert.equal(s.board[1].hushed, true);
+  assert.ok(!s.board[4].hushed, 'your own stone is not hushed');
 });
 test('Lasso+ pulls every one, or just one of them', () => {
   const s = G();

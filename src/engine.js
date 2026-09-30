@@ -147,15 +147,19 @@ def('bumper', {
 
 def('lasso', {
   name: 'Lasso', rarity: 'common', kind: 'move',
-  text: 'Every stone two squares away in a straight line, diagonals too, is pulled one step closer.',
-  plusText: 'Pull every stone two squares away one step closer — or pick just one of them.',
+  text: 'Pull a stone two squares away in a straight line, diagonals too, one step closer — or all of them.',
+  plusText: 'Pull one stone two squares away closer, or all of them; enemy stones it pulls are hushed for good.',
   options(s, pos, cell) {
     const pulls = lassoPulls(s, pos);
-    if (!cell.plus || pulls.length < 2) return [{}];
+    if (pulls.length < 2) return [{}];
     return [{}, ...pulls.map(([from]) => ({ target: from }))];
   },
-  apply(s, pos, a) {
-    for (const [from, to] of lassoPulls(s, pos)) if (a.target === undefined || a.target === from) move(s, from, to);
+  apply(s, pos, a, cell) {
+    for (const [from, to] of lassoPulls(s, pos)) {
+      if (a.target !== undefined && a.target !== from) continue;
+      move(s, from, to);
+      if (cell.plus && s.board[to].player !== cell.player) s.board[to].hushed = true;
+    }
   },
 });
 
