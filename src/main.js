@@ -472,7 +472,7 @@ function rewardScreen() {
   const pendingBoss = rw.relicChoice?.length && !rw.taken.boss;
   parts.push(h('button.btn.wide.big' + (pendingBoss ? '' : '.primary'), {
     onclick: () => { if (pendingBoss && !confirm('Leave without a boss relic?')) return; done(); },
-  }, (rw.stones.length && !rw.taken.stone) || (rw.trick && !rw.taken.trick) ? 'Skip the rest' : 'Continue'));
+  }, (rw.stones.length && !rw.taken.stone) || (rw.trick && !rw.taken.trick) ? 'Skip' : 'Continue'));
   screen(topBar(), h('div.page.reward', {}, parts));
 }
 
