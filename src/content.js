@@ -174,7 +174,7 @@ export const ENEMIES = {
   // bosses
   grandmaster: { name: 'The Grandmaster', emoji: '👑', act: 3, tier: 'boss',
     core: ['magnet', 'stinky', 'shift', 'rotate'], pool: ['firecracker', 'turncoat', 'swap', 'mountain', 'beacon'],
-    iters: 420, blunder: 0.04, tricks: ['mirror'], mods: { homeTurf: true },
+    iters: 420, blunder: 0.04, tricks: ['mirror'], mods: { homeTurf: true }, field2: 'quake',
     quote: 'Every stone you own, I have mastered.' },
 };
 

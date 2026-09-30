@@ -817,7 +817,8 @@ function showCodex() {
       list = Object.values(ENEMIES).filter((e) => e.act > 0).map((e) => h('div.codex-row', {}, h('div.relic-token.small', {}, e.emoji), h('div', {},
         h('b', {}, e.name), h('span.dim', {}, ` · act ${e.act} ${e.tier}`),
         h('div.hand.show.tiny', {}, e.core.map((t) => stoneEl({ type: t }, 'O', { mini: true }))),
-        e.field ? h('div.dim', {}, `Boss rule — ${FIELDS[e.field].name}: ${FIELDS[e.field].text}`) : null)));
+        e.field ? h('div.dim', {}, `Rule — ${FIELDS[e.field].name}: ${FIELDS[e.field].text}`) : null,
+        e.field2 ? h('div.dim', {}, `Once beaten, it rises with a new rule — ${FIELDS[e.field2].name}: ${FIELDS[e.field2].text}`) : null)));
     }
     body.replaceChildren(tabs, h('div.codex-list', {}, list), h('button.btn.wide', { onclick: () => close() }, 'Close'));
   };

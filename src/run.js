@@ -264,7 +264,7 @@ export function prepareDuel(run, enemyId, context = {}) {
   return {
     enemyId, tier, handO, first, disabled,
     tricksO: enemyTricks, usesO: 1,
-    modsO: { ...(enemy.mods ?? {}) }, field: enemy.field ?? null,
+    modsO: { ...(enemy.mods ?? {}) }, field: (tier === 'boss' && (context.bossWins ?? 0) > 0 && enemy.field2) || enemy.field || null,
     iters: Math.round(enemy.iters * heatIters), blunder: run.heat >= 5 ? 0 : enemy.blunder,
     bossRound: context.bossRound ?? 0, bossWins: context.bossWins ?? 0,
     event: context.event ?? null,

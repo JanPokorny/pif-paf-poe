@@ -484,7 +484,7 @@ export const FIELDS = {
   gravity: { name: 'Gravity', text: 'After each of its turns, every stone falls as far down as it can.' },
   carousel: { name: 'Carousel', text: 'After each of its turns, the outer ring turns one step clockwise.' },
   tide: { name: 'Tide', text: 'After each of its turns, the middle row slides one step right, wrapping.' },
-  quake: { name: 'Quake', text: 'After each of its turns, the board mirrors left to right.' },
+  quake: { name: 'Quake', text: 'After each of its turns, the board mirrors left to right. Mountains and stuck stones hold.' },
 };
 
 function applyField(s, field) {
