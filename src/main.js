@@ -202,7 +202,7 @@ function route() {
     case 'map': return mapScreen();
     case 'actintro': return actIntro();
     case 'predual': return duelState ? duelScreen() : preDuel();
-    case 'duel': return duelScreen();
+    case 'duel': return duelState ? duelScreen() : preDuel();
     case 'reward': return rewardScreen();
     case 'shop': return shopScreen();
     case 'rest': return restScreen();
