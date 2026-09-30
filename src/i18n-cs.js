@@ -378,6 +378,8 @@ export default {
   '{enemy} wins': '{enemy} vítězí',
   '{enemy} is thinking…': '{enemy} přemýšlí…',
   'Undo': 'Vrátit tah',
+  'Enemy speed: fast': 'Tempo soupeře: rychlé',
+  'Enemy speed: normal': 'Tempo soupeře: běžné',
   'Locked — reach the Summit to unlock': 'Zamčeno — odemkne se dosažením Vrcholu',
   'Locked — win at heat 1 or more to unlock': 'Zamčeno — odemkne se výhrou na žáru 1 a víc',
   'Example': 'Příklad',

@@ -39,6 +39,8 @@ function stageOf(cands) {
 }
 
 const SPEED = { enemyPause: 380, move: 360 };
+// 'Fast' in the menu halves every pause the enemy takes.
+const pace = (ms) => { let f = false; try { f = localStorage.getItem('ppp-fast') === 'on'; } catch { /* ignore */ } return f ? ms * 0.45 : ms; };
 const SQUARE = ['top-left', 'top', 'top-right', 'left', 'centre', 'right', 'bottom-left', 'bottom', 'bottom-right'];
 const BLOCK = { TL: 'top-left', TR: 'top-right', BL: 'bottom-left', BR: 'bottom-right' };
 
@@ -591,7 +593,7 @@ export function mountDuel(root, opts) {
   async function enemyTurn() {
     busy = true;
     show();
-    await sleep(SPEED.enemyPause);
+    await sleep(pace(SPEED.enemyPause));
     while (!ended && !state.over && state.player === 'O') {
       const acts = legalActions(state);
       const t0 = performance.now();
@@ -610,7 +612,7 @@ export function mountDuel(root, opts) {
         lifted.classList.add('lifted');
         enemyHand.append(lifted);
         sfx('select');
-        await sleep(Math.max(120, 420 - waited));
+        await sleep(pace(Math.max(120, 420 - waited)));
         continue;
       }
       state.log = [];
@@ -626,7 +628,7 @@ export function mountDuel(root, opts) {
       state.log = [];
       if (beforeField && logs.some((l) => l.startsWith('field:'))) {
         renderBoard(beforeField);
-        await sleep(520);
+        await sleep(pace(520));
         board.classList.add('shake');
         setTimeout(() => board.classList.remove('shake'), 400);
         sfx('thud');
@@ -646,7 +648,7 @@ export function mountDuel(root, opts) {
         setTimeout(() => e?.classList.remove('flash'), 600);
       } else sfx('move');
       announce(logs, 'O');
-      await sleep(action.type === 'place' ? 520 : 600);
+      await sleep(pace(action.type === 'place' ? 520 : 600));
     }
     busy = false;
     if (state.over) return finish();

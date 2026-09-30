@@ -123,7 +123,12 @@ function showMenu() {
 }
 
 function soundButton(close) {
-  return h('button.btn.wide', { onclick: () => { setSound(!soundOn()); close(); toast(soundOn() ? t('Sound on') : t('Sound off')); } }, soundOn() ? t('Sound: on') : t('Sound: off'));
+  let fast = false;
+  try { fast = localStorage.getItem('ppp-fast') === 'on'; } catch { /* ignore */ }
+  return [
+    h('button.btn.wide', { onclick: () => { setSound(!soundOn()); close(); toast(soundOn() ? t('Sound on') : t('Sound off')); } }, soundOn() ? t('Sound: on') : t('Sound: off')),
+    h('button.btn.wide', { onclick: () => { try { localStorage.setItem('ppp-fast', fast ? 'off' : 'on'); } catch { /* ignore */ } close(); } }, fast ? t('Enemy speed: fast') : t('Enemy speed: normal')),
+  ];
 }
 
 // A daily result is saved in English; say it in the current language.
