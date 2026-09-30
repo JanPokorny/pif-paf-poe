@@ -261,6 +261,8 @@ function mapScreen() {
     if (c.mark === 'O') el.insertAdjacentHTML('beforeend', scribbleO(map.lastO === i));
     return el;
   });
+  if (freshX !== null && freshX !== undefined) sfx('scribbleX');
+  if (map.lastO !== null && map.lastO !== undefined) sfx('scribbleO');
   map.freshX = null;
   const lastO = map.lastO;
   map.lastO = null;

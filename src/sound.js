@@ -25,7 +25,29 @@ function tone(freq, dur, { type = 'sine', gain = 0.12, at = 0, slide = 0 } = {})
   o.stop(t + dur + 0.02);
 }
 
+// A short burst of filtered noise: a pencil stroke.
+function scratch(at = 0, dur = 0.18) {
+  const t = ctx.currentTime + at;
+  const buf = ctx.createBuffer(1, Math.ceil(ctx.sampleRate * dur), ctx.sampleRate);
+  const d = buf.getChannelData(0);
+  for (let i = 0; i < d.length; i++) d[i] = (Math.random() * 2 - 1) * (0.6 + 0.4 * Math.sin(i / 90));
+  const src = ctx.createBufferSource();
+  src.buffer = buf;
+  const f = ctx.createBiquadFilter();
+  f.type = 'bandpass';
+  f.frequency.value = 2400;
+  f.Q.value = 0.8;
+  const g = ctx.createGain();
+  g.gain.setValueAtTime(0.0001, t);
+  g.gain.exponentialRampToValueAtTime(0.09, t + 0.02);
+  g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+  src.connect(f).connect(g).connect(ctx.destination);
+  src.start(t);
+}
+
 const SOUNDS = {
+  scribbleX: () => { scratch(0, 0.16); scratch(0.3, 0.16); },
+  scribbleO: () => scratch(0.9, 0.45),
   select: () => tone(660, 0.06, { type: 'triangle', gain: 0.06 }),
   place: () => { tone(220, 0.09, { type: 'triangle', gain: 0.16, slide: 0.6 }); tone(110, 0.08, { gain: 0.1 }); },
   move: () => tone(300, 0.16, { type: 'sawtooth', gain: 0.035, slide: 1.8 }),
