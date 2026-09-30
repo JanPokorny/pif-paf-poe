@@ -177,7 +177,7 @@ export function mountDuel(root, opts) {
     items.push(h('button.chip', { onclick: () => infoSpace(s.disabled) },
       s.disabled ? h('span.chip-ico.crossed', { html: icon(s.disabled) }) : null,
       s.disabled ? `No ${STONES[s.disabled].name}` : 'Neutral space'));
-    if (s.field) items.push(h('button.chip.field', { onclick: () => infoField(s.field) }, '⚠ ' + FIELDS[s.field].name));
+    if (s.field) items.push(h('button.chip.field', { onclick: () => infoField(s.field) }, 'Boss rule: ' + FIELDS[s.field].name));
     const hx = !!s.mods.X.hourglass, ho = !!s.mods.O.hourglass;
     const tie = hx !== ho ? (hx ? 'X' : 'O') : other(s.first);
     items.push(h('span.chip.opener', { title: 'Who takes a full board, or a player out of stones' }, `Full board → ${tie === 'X' ? 'you' : 'them'}`));

@@ -135,7 +135,7 @@ function title() {
         h('button.btn.wide', { onclick: practiceMenu }, 'Practice duel'),
         h('button.btn.wide', { onclick: () => showHelp() }, 'How to play'),
         h('button.btn.wide', { onclick: showCodex }, 'Codex'),
-        h('button.btn.wide.ghost', { onclick: () => { setSound(!soundOn()); title(); } }, soundOn() ? '🔊 Sound on' : '🔇 Sound off')),
+        h('button.btn.wide.ghost', { onclick: () => { setSound(!soundOn()); title(); } }, h('span', { html: icon(soundOn() ? 'sound-on' : 'sound-off') }), soundOn() ? 'Sound on' : 'Sound off')),
       h('div.title-foot', {}, best, h('br'), `${meta.runs} run${meta.runs === 1 ? '' : 's'} · ${meta.wins} win${meta.wins === 1 ? '' : 's'}`)));
 }
 
@@ -195,7 +195,7 @@ function chooseKit() {
         h('div.kit-stones', {}, k.pouch.map((t) => stoneEl({ type: t }, 'X', { mini: true })),
           k.tricks.map((t) => h('span.mini-trick', { html: icon(t) }))),
         h('div.kit-stats', {}, `❤ ${k.hearts - (heat >= 3 ? 1 : 0)}  ·  ${k.gold} gold${k.relics ? '  ·  ' + k.relics.map((r) => RELICS[r].name).join(', ') : ''}`),
-        locked ? h('div.kit-lock', {}, '🔒 Win a run to unlock') : null);
+        locked ? h('div.kit-lock', {}, 'Locked — win a run to unlock') : null);
       }))));
 }
 
@@ -399,10 +399,10 @@ function preDuel() {
       duel.tricksO.length ? h('div.enemy-tricks-pre', {}, 'Tricks: ', duel.tricksO.map((t) => h('button.link', { onclick: () => infoTrick(t) }, TRICKS[t].name))) : null,
       h('div.duel-facts.facts-card', {},
         h('button.fact', { onclick: () => infoSpace(duel.disabled) },
-          duel.disabled ? h('span.chip-ico.crossed', { html: icon(duel.disabled) }) : '◻',
+          duel.disabled ? h('span.chip-ico.crossed', { html: icon(duel.disabled) }) : '',
           duel.disabled ? ` No ${STONES[duel.disabled].name} here` : ' Neutral space'),
-        h('div.fact', {}, duel.first === 'X' ? '▶ You open' : `▶ ${enemy.name} opens — a full board goes to you`),
-        duel.field ? h('button.fact.warn', { onclick: () => infoField(duel.field) }, `⚠ ${FIELDS[duel.field].name}: ${FIELDS[duel.field].text}`) : null,
+        h('div.fact', {}, duel.first === 'X' ? 'You open' : `${enemy.name} opens — a full board goes to you`),
+        duel.field ? h('button.fact.warn', { onclick: () => infoField(duel.field) }, `${FIELDS[duel.field].name}: ${FIELDS[duel.field].text}`) : null,
         h('div.fact.dim', {}, stakes)),
       h('div.section-label', {}, 'Bring your stones ', count),
       grid,
