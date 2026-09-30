@@ -552,7 +552,7 @@ function rewardScreen() {
             rw.taken.stone = true;
             save();
             card.classList.add('taken');
-            setTimeout(rewardScreen, 420);
+            setTimeout(() => { if (run?.pending === rw) rewardScreen(); }, 420);
           });
         },
       }))));

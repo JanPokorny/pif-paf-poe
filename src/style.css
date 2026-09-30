@@ -612,3 +612,4 @@ b { font-weight: 400; background: linear-gradient(transparent 55%, var(--hi) 55%
 /* Czech needs háčky and čárky: a marker face that has them, a size up. */
 :root:lang(cs) { --marker: 'Caveat Brush', 'Patrick Hand', 'Comic Sans MS', system-ui, sans-serif; }
 :lang(cs) h1, :lang(cs) h2, :lang(cs) .turn-status, :lang(cs) .btn.primary, :lang(cs) .enemy-name, :lang(cs) .card-name, :lang(cs) .section-label { letter-spacing: 0.01em; font-size-adjust: 0.52; }
+.slot-plain .stone { --size: 38px; }

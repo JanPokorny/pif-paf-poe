@@ -163,7 +163,7 @@ export function mountDuel(root, opts) {
     const inTurn = base !== s;
     hand.replaceChildren(...base.hands.X.map((st, k) => {
       const e = stoneEl(st, 'X', { dead: s.disabled === st.type && !s.mods.X.homeTurf });
-      const b = h('button.hand-slot', { onclick: () => tapHand(k) }, e, h('span.slot-name', {}, stoneName(st)));
+      const b = h('button.hand-slot', { onclick: () => tapHand(k) }, e, h('span.slot-name', {}, STONES[st.type].name));
       if (inTurn && k === selIndex) b.classList.add(s.phase === 'place' ? 'selected' : 'placed');
       if (selectable && !selectable.has(st.type + (st.plus ? '+' : ''))) b.classList.add('forbidden');
       if (!selectable && !(inTurn && s.phase === 'place')) b.classList.add('idle');
