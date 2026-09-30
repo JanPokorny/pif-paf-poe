@@ -776,7 +776,7 @@ function showHelp(after) {
       h('p', {}, 'Several Magnets and Stinkies all pull at once: you must place where you satisfy as many as any square can.')),
     h('div', {}, h('h2', {}, 'The climb'),
       h('p', {}, 'Three acts. Each act is itself a game of tic-tac-toe against its boss, on a 4×4 grid of encounters: duels ⚔, elites 💀, shops, campfires, treasure and the unknown.'),
-      h('p', {}, 'Wherever you go you mark an ', h('b.blue', {}, 'X'), ' — next to one you already have. After each step the boss marks an ', h('b.red', {}, 'O'), ', taking that square away. Lose a duel and the boss takes that square too.'),
+      h('p', {}, 'Wherever you go you mark an ', h('b.blue', {}, 'X'), ' — next to one you already have. After each step the boss marks an ', h('b.red', {}, 'O'), ', taking that square away. Lose a duel and the boss takes that square — that is its move.'),
       h('p', {}, h('b', {}, 'Three Xs in a row open the boss\'s door.'), ' If the boss draws its own line first, or boxes you in, it grows stronger.'),
       h('p', {}, 'Before each duel you see the enemy\'s stones and the space, and choose which 5 of your pouch to bring. Lose and it costs hearts; run out and the climb is over. Bosses must be beaten twice.')),
   ];

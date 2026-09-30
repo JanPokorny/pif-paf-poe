@@ -211,7 +211,8 @@ export function settleCell(run, mark) {
   map.visited++;
   map.lastO = null;
   if (lineOf(map.cells, 'X').length) map.open = true;
-  if (!map.cells.every((c) => c.mark)) map.lastO = bossMark(run);
+  // A square the boss won from you is its move this time.
+  if (mark === 'X' && !map.cells.every((c) => c.mark)) map.lastO = bossMark(run);
   // The boss's first line of three makes it stronger; later ones add nothing.
   const oLines = lineOf(map.cells, 'O').length;
   if (oLines && !map.oLines) { map.power++; map.news = 'oline'; }
