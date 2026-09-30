@@ -305,6 +305,7 @@ function mapScreen() {
   });
   if (freshX !== null && freshX !== undefined) sfx('scribbleX');
   if (map.lastO !== null && map.lastO !== undefined) sfx('scribbleO');
+  const threatened = cells.some((c) => c.classList.contains('boss-threat'));
   map.freshX = null;
   const lastO = map.lastO;
   map.lastO = null;
@@ -331,7 +332,8 @@ function mapScreen() {
       h('div.map-help', {}, !R.xCount(run)
         ? 'Pick any square to start. You mark X where you go; after each step the boss marks an O. Next time, go beside one of your Xs — diagonals count.'
         : reach.size > (map.open ? 1 : 0) ? 'Go to a highlighted square next to one of your Xs — diagonals count.'
-          : 'No open squares left beside your Xs. Face the boss!')));
+          : 'No open squares left beside your Xs. Face the boss!'),
+      threatened ? h('div.map-help.red', {}, 'Dashed red circle: the boss would finish a line of Os there.') : null));
   void el;
 }
 
