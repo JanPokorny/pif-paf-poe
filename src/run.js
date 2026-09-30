@@ -80,9 +80,9 @@ export function evolve(s) { s.type = STONES[s.type].evolvesTo ?? s.type; return 
 //
 // Each act is played against its boss as tic-tac-toe on pages of graph paper,
 // 3x3 and fully on view. The boss opens every page with an O in the middle.
-// Wherever you go you mark an X; after each step the boss marks an O -- but
-// never on a shop, a campfire or a gift. A duel lost scorches its square, for
-// both sides. Three Xs in a row open the boss's door. Three Os in a row cost
+// Wherever you go you mark an X; after each step the boss marks an O, on any
+// open square -- a shop or a campfire it takes is gone. A duel lost scorches
+// its square, for both sides. Three Xs in a row open the boss's door. Three Os in a row cost
 // you a heart, and a full page is a draw: either way the page turns, and each
 // new page hides less friendly squares than the last.
 
@@ -212,7 +212,7 @@ export function bossThreats(map) {
   if (map.result) return [];
   const out = [];
   for (const [k, c] of Object.entries(map.cells)) {
-    if (c.mark || !bossMayMark(c)) continue;
+    if (c.mark) continue;
     const [x, y] = coords(k);
     if (reach(map, x, y, 'O') >= LINE - 1) out.push(k);
   }
@@ -221,7 +221,6 @@ export function bossThreats(map) {
 
 export const lineReach = (map, k, mark = 'X') => reach(map, ...coords(k), mark);
 const openSquares = (map) => Object.entries(map.cells).filter(([, c]) => !c.mark).map(([k]) => k);
-const bossMayMark = (c) => c.kind !== 'shop' && c.kind !== 'rest' && c.kind !== 'gift';
 
 // Where you may go next: any open square, or the boss once its door is open.
 export function reachable(run) {
@@ -232,13 +231,13 @@ export function reachable(run) {
 }
 
 // The boss's reply: finish a line if it can, block yours if it must,
-// otherwise build its own and spoil yours, with a little noise. It never
-// marks a shop, a campfire or a gift, and passes if that is all there is.
+// otherwise build its own and spoil yours, with a little noise -- and it
+// likes to take the squares you would want.
 function bossMark(run) {
   const map = run.map;
-  const free = Object.entries(map.cells).filter(([, c]) => !c.mark && bossMayMark(c));
+  const free = Object.entries(map.cells).filter(([, c]) => !c.mark);
   if (!free.length) return null;
-  const value = { treasure: 6, elite: 1, event: 2, fight: 1 };
+  const value = { treasure: 6, gift: 5, shop: 3, rest: 3, event: 2, elite: 1, fight: 1 };
   // It does not always see your threat coming — less and less, page by page.
   const sees = rand(run) < BOSS_SEES[Math.min(BOSS_SEES.length - 1, map.page - 1)];
   let best = null, bestScore = -Infinity;

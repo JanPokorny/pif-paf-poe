@@ -64,7 +64,7 @@ duel, and a rule for who wins when someone runs out. The second version slows it
 
 Each act is tic-tac-toe with its boss, a 3×3 page at a time, every square on view from the
 start. The boss opens each page in the middle. Wherever you go you mark an X and the boss
-answers with an O — never on a shop, a campfire or a gift, so those are squares it cannot block.
+answers with an O, anywhere: a shop, campfire or gift it takes is gone, and it likes taking them.
 A lost duel scorches its square: no line runs through it, for either side.
 
 - **Three Xs in a row** open the boss's door, and the boss duel follows.

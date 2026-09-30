@@ -352,7 +352,7 @@ function mapScreen() {
       turn,
       map.result ? (map.result === 'won' ? null : h('div.map-help', {}, t('The boss opens a fresh page — and every page hides fewer friends than the last.')))
         : h('div.map-help', {}, !R.xCount(run)
-          ? t('The boss has opened in the middle. Go anywhere: you mark an X, then it marks an O — never on a shop, a campfire or a gift. Three Os in a row cost you a heart; a full page turns over.')
+          ? t('The boss has opened in the middle. Go anywhere: you mark an X, then it marks an O — anywhere, even a shop or a campfire. Three Os in a row cost you a heart; a full page turns over.')
           : t('Three Xs in a row open the door. Three Os cost you a heart.')),
       threats.size ? h('div.map-help.red', {}, t('Dashed red circle: the boss would finish a line of Os there.')) : null));
 }
@@ -823,7 +823,7 @@ function showHelp(after) {
       h('p', {}, t('Bosses bring no special stones at all. Instead each has '), h('b', {}, t('a rule in its favour')), t(' — it names the stone you play, closes a column, takes two turns at once… Read it before you choose your stones.'))),
     h('div', {}, h('h2', {}, t('The climb')),
       h('p', {}, t('Three acts. Each act is tic-tac-toe with its boss, on pages of nine squares: duels, elites, shops, campfires, treasure and the unknown. The boss opens every page in the middle.')),
-      h('p', {}, t('Wherever you go you mark an '), h('b.blue', {}, 'X'), t('; after each step the boss marks an '), h('b.red', {}, 'O'), t(' — never on a shop, a campfire or a gift. A lost duel scorches its square.')),
+      h('p', {}, t('Wherever you go you mark an '), h('b.blue', {}, 'X'), t('; after each step the boss marks an '), h('b.red', {}, 'O'), t(' — anywhere at all: a shop or a campfire it takes is gone. A lost duel scorches its square.')),
       h('p', {}, h('b', {}, t('Three Xs in a row open the boss\'s door.')), t(' Three Os cost you a heart, and a full page is a draw; either way the boss opens a fresh page, each less friendly than the last.')),
       h('p', {}, t('Before each duel you choose which special stones to bring. Shops sell more slots. Lose and it costs hearts; run out and the climb is over. A boss has two lives.'))),
   ];
