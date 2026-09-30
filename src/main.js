@@ -16,6 +16,7 @@ const META = 'ppp-meta-v1';
 let run = null;
 let duelState = null;   // the engine state of a duel in progress, saved with the run
 let duelView = null;
+let flash = null;       // 'hurt' or 'heal': the hearts on the next top bar react
 
 // ── Persistence ─────────────────────────────────────────────────────────────
 
@@ -53,8 +54,9 @@ function recordEnd() {
 // ── Chrome ──────────────────────────────────────────────────────────────────
 
 function topBar() {
-  const hearts = h('div.hearts', {},
+  const hearts = h('div.hearts' + (flash ? '.' + flash : ''), {},
     h('span', { html: icon('heart') }), `${run.hearts}/${run.maxHearts}`);
+  flash = null;
   return h('div.topbar', {},
     hearts,
     h('div.gold', {}, h('span', { html: icon('coin') }), run.gold),
@@ -443,8 +445,8 @@ function duelScreen() {
         const res = R.duelLost(run);
         if (res.kind === 'rematch') toast('🎟️ Rematch Token: try again!');
         else if (res.kind === 'dead') { /* recorded by the end screen */ }
-        else if (res.kind === 'lost') toast(`−${R.heartsLost(duel)} ❤`, 'bad');
-        else if (res.kind === 'boss-retry') toast(`−1 ❤. Again!`, 'bad');
+        else if (res.kind === 'lost') { toast(`−${R.heartsLost(duel)} ❤`, 'bad'); flash = 'hurt'; }
+        else if (res.kind === 'boss-retry') { toast(`−1 ❤. Again!`, 'bad'); flash = 'hurt'; }
       }
       route();
     },
@@ -519,7 +521,16 @@ function rewardScreen() {
   if (rw.stones.length && !rw.taken.stone) {
     parts.push(h('div.section-label', {}, 'Take a stone'),
       h('div.cards', {}, rw.stones.map((s) => stoneCard(s, {
-        onclick: () => takeStone(s, (ok) => { if (ok) { rw.taken.stone = true; save(); rewardScreen(); } }),
+        onclick: (e) => {
+          const card = e.currentTarget;
+          takeStone(s, (ok) => {
+            if (!ok) return;
+            rw.taken.stone = true;
+            save();
+            card.classList.add('taken');
+            setTimeout(rewardScreen, 420);
+          });
+        },
       }))));
   }
   const pendingBoss = rw.relicChoice?.length && !rw.taken.boss;
@@ -606,7 +617,7 @@ function restScreen() {
     h('p.dim', {}, 'Rest a while, or sharpen your stones.'),
     h('button.btn.wide.big', {
       disabled: run.hearts >= run.maxHearts || undefined,
-      onclick: () => { run.hearts = Math.min(run.maxHearts, run.hearts + heal); sfx('heal'); toast(`+${heal} ❤`, 'good'); leave(); },
+      onclick: () => { run.hearts = Math.min(run.maxHearts, run.hearts + heal); sfx('heal'); toast(`+${heal} ❤`, 'good'); flash = 'heal'; leave(); },
     }, `Rest: heal ${heal} ❤`),
     h('button.btn.wide.big', {
       disabled: !R.upgradeable(run).length || undefined,

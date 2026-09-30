@@ -594,3 +594,11 @@ b { font-weight: 400; background: linear-gradient(transparent 55%, var(--hi) 55%
 .map-grid { width: min(100%, 440px, calc(100dvh - 370px)); }
 .enemy-hand .stone.target { outline: 3px dashed var(--ink); outline-offset: 3px; background: var(--hi); border-radius: 50%; animation: breathe 1.3s ease-in-out infinite; }
 .enemy-hand .stone.chosen { outline-color: var(--red); background: none; animation: none; }
+
+.hearts.hurt { animation: hurt 0.7s ease-out; }
+.hearts.hurt .icon { animation: crack 0.7s ease-out; }
+.hearts.heal { animation: healpop 0.6s ease-out; }
+@keyframes hurt { 0%, 60% { color: var(--red); } 20% { transform: translateX(-4px); } 40% { transform: translateX(4px); } }
+@keyframes crack { 30% { transform: scale(1.4) rotate(-12deg); } }
+@keyframes healpop { 40% { transform: scale(1.25); color: var(--good); } }
+.card.taken { transition: transform 0.4s ease-in, opacity 0.4s ease-in; transform: translate(40vw, -60vh) scale(0.2) rotate(20deg) !important; opacity: 0; }
