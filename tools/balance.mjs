@@ -13,7 +13,7 @@ import * as R from '../src/run.js';
 const arg = (k, d) => { const i = process.argv.indexOf('--' + k); return i > 0 ? process.argv[i + 1] : d; };
 
 // A pouch as it might look when meeting an enemy of this act.
-function typicalRun(seed, act, power = 0) {
+function typicalRun(seed, act) {
   const run = R.newRun({ seed });
   run.act = act;
   const gains = [0, 2, 4][act - 1];
@@ -23,13 +23,12 @@ function typicalRun(seed, act, power = 0) {
   for (let i = 0; i < ups; i++) { const u = R.upgradeable(run); if (u.length) R.evolve(u[(R.rand(run) * u.length) | 0]); }
   if (act > 1) run.tricks.push(R.randomTrick(run));
   if (act > 2) run.tricks.push(R.randomTrick(run));
-  run.map.power = power;
   return run;
 }
 
 function duel(spec) {
   const act = spec.act;
-  const run = typicalRun(spec.seed, act, spec.power);
+  const run = typicalRun(spec.seed, act);
   const duelSpec = R.prepareDuel(run, spec.enemy, { bossWins: spec.life ?? spec.seed % 2 });
   const hand = R.defaultHand(run);
   const s = createGame({ ...R.gameConfig(run, duelSpec, hand), log: false });
@@ -50,7 +49,7 @@ if (!isMainThread) {
   const only = arg('only', null)?.split(',');
   const ids = Object.keys(ENEMIES).filter((k) => !only || only.includes(k));
   const specs = [];
-  for (const enemy of ids) for (let g = 0; g < games; g++) specs.push({ enemy, seed: 1000 + g, act: ENEMIES[enemy].act || 1, piters, pblunder, power: +arg('power', 0), life: arg('life') === undefined ? undefined : +arg('life') });
+  for (const enemy of ids) for (let g = 0; g < games; g++) specs.push({ enemy, seed: 1000 + g, act: ENEMIES[enemy].act || 1, piters, pblunder, life: arg('life') === undefined ? undefined : +arg('life') });
   const W = Math.max(1, cpus().length);
   const chunks = Array.from({ length: W }, () => []);
   specs.forEach((s, i) => chunks[i % W].push(s));

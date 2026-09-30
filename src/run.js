@@ -43,7 +43,7 @@ export const HEAT = [
   { n: 5, text: 'Enemies never blunder.' },
 ];
 
-export const START = { pouch: ['shift', 'rotate', 'magnet'], tricks: ['overtake'], hearts: 5, gold: 30, slots: 2 };
+export const START = { pouch: ['shift', 'rotate', 'magnet'], tricks: ['overtake'], hearts: 6, gold: 30, slots: 2 };
 export const MAX_SLOTS = 5;
 
 const stone = (run, type) => ({ type, uid: run.nextUid++ });
@@ -78,20 +78,18 @@ export function evolve(s) { s.type = STONES[s.type].evolvesTo ?? s.type; return 
 
 // ── The map ─────────────────────────────────────────────────────────────────
 //
-// Each act is a game of tic-tac-toe with its boss on a 5x5 sheet of graph
-// paper. At first there is only the boss's opening O in the middle. Every
-// mark, yours or the boss's, reveals the squares around it -- and a square is
-// decided the moment it is revealed, by how much it matters: a square that
-// would extend your line, or break the boss's, turns up as a hard duel; one
-// off to the side is a campfire, a shop or treasure. Three Xs in a row open
-// the boss's door. Each line of three Os the boss draws makes it stronger. A
-// duel lost scorches its square, and the boss never marks shops or campfires.
+// Each act is played against its boss as tic-tac-toe on pages of graph paper,
+// 3x3 and fully on view. The boss opens every page with an O in the middle.
+// Wherever you go you mark an X; after each step the boss marks an O -- but
+// never on a shop, a campfire or a gift. A duel lost scorches its square, for
+// both sides. Three Xs in a row open the boss's door. Three Os in a row cost
+// you a heart, and a full page is a draw: either way the page turns, and each
+// new page hides less friendly squares than the last.
 
 export const BOSS_LIVES = 2;              // duels a boss must lose
-export const SIZE = 5;
-export const LINE = 3;                     // marks in a row that count
-export const MAX_POWER = 1;
-export const PAGE = 10;                   // squares an act allows before the boss will wait no longer
+const BOSS_SEES = [0.5, 0.6, 0.7, 0.8];   // the chance it blocks your two in a row, by page
+export const SIZE = 3;
+export const LINE = 3;
 const MID = (SIZE - 1) / 2;
 const DIRS4 = [[1, 0], [0, 1], [1, 1], [1, -1]];
 export const keyOf = (x, y) => `${x},${y}`;
@@ -128,21 +126,19 @@ function reach(map, x, y, mark) {
   return best;
 }
 
-function hasLine(map, mark) { return countLines(map, mark) > 0; }
-function countLines(map, mark) {
-  let lines = 0;
+// The squares of a finished line of `mark`, or null.
+export function lineOf(map, mark) {
   for (let y = 0; y < SIZE; y++) {
     for (let x = 0; x < SIZE; x++) {
       if (markAt(map, x, y) !== mark) continue;
       for (const [dx, dy] of DIRS4) {
-        if (markAt(map, x - dx, y - dy) === mark) continue;   // count each run once, from its start
-        let n = 1;
-        while (markAt(map, x + n * dx, y + n * dy) === mark) n++;
-        if (n >= LINE) lines++;
+        const run = [];
+        for (let n = 0; n < LINE && markAt(map, x + n * dx, y + n * dy) === mark; n++) run.push(keyOf(x + n * dx, y + n * dy));
+        if (run.length === LINE) return run;
       }
     }
   }
-  return lines;
+  return null;
 }
 
 // Step back out of a duel you have only looked at.
@@ -152,46 +148,45 @@ export function retreat(run) {
   run.screen = 'map';
 }
 
-export function makeMap(run) {
+// A fresh page: the act's boss, and how many pages it has taken so far.
+export function makeMap(run, prev = null) {
   const mid = keyOf(MID, MID);
   const map = {
-    v: 3,
-    cells: {},         // "x,y" -> {kind, mark, duel?}; only revealed squares exist
-    boss: pick(run, ACTS[run.act - 1].bosses),
+    v: 4,
+    cells: {},         // "x,y" -> {kind, mark, duel?}
+    boss: prev?.boss ?? pick(run, ACTS[run.act - 1].bosses),
+    page: (prev?.page ?? 0) + 1,
     at: null,          // the square being visited right now
     lastO: mid,        // the boss's latest mark, for the page to draw in
-    open: false,       // the boss's door
-    power: 0,          // how much stronger the boss has grown
-    oLines: 0,
-    visited: 0,
-    fights: 0,         // duels revealed so far, for the gentle first few
+    result: null,      // 'won' (the door is open), 'lost' or 'draw' (the page turns)
+    line: null,        // the squares of the line that ended the page
+    fights: prev?.fights ?? 0,   // duels so far this act, for the gentle first few
   };
   map.cells[mid] = { kind: 'boss-mark', mark: 'O' };
   run.map = map;
-  reveal(run, MID, MID);
-  // The very first page hides a gift: a special stone, free.
-  if (run.act === 1) {
-    const ring = Object.entries(map.cells).filter(([, c]) => !c.mark && c.kind !== 'elite');
-    const [k] = pick(run, ring);
-    map.cells[k] = { kind: 'gift', mark: null };
+  const squares = [];
+  for (let y = 0; y < SIZE; y++) for (let x = 0; x < SIZE; x++) if (keyOf(x, y) !== mid) squares.push(keyOf(x, y));
+  // The very first page of the climb hides a gift: a special stone, free.
+  const gift = run.act === 1 && map.page === 1 ? pick(run, squares) : null;
+  for (const k of shuffle(run, squares)) {
+    if (k === gift) map.cells[k] = { kind: 'gift', mark: null };
+    else fillCell(run, k);
   }
   return map;
 }
 
-// Decide what a square is, the moment it comes into view.
-function revealCell(run, x, y) {
+// What a square is. Corners sit on three lines and hide harder things; each
+// new page of an act is less friendly than the last.
+function fillCell(run, k) {
   const map = run.map;
-  const k = keyOf(x, y);
-  if (!inside(x, y) || map.cells[k]) return;
-  const mine = reach(map, x, y, 'X');     // how much it would do for your lines
-  const theirs = reach(map, x, y, 'O');   // how much it would break the boss's
-  const stake = Math.max(mine, theirs);
-  const table = stake >= 2 ? { elite: 40, fight: 50, event: 10 }
-    : stake === 1 ? { elite: 5, fight: 50, event: 18, treasure: 8, rest: 10, shop: 9 }
-      : { fight: 36, event: 20, treasure: 14, rest: 15, shop: 15 };
-  if (run.act === 1 && map.visited < 2) delete table.elite;
-  // One unopened chest on view at a time.
-  if (Object.values(map.cells).some((c) => c.kind === 'treasure' && !c.mark)) delete table.treasure;
+  const [x, y] = coords(k);
+  const corner = x !== MID && y !== MID;
+  const p = map.page - 1;
+  const soft = (n) => Math.max(2, n - 3 * p);
+  const table = { fight: 42 + 4 * p, elite: 3 + 8 * p + (corner ? 6 : 0), event: 16, treasure: soft(10), rest: soft(14), shop: soft(14) };
+  if (run.act === 1 && map.page === 1) delete table.elite;
+  // One unopened chest on a page.
+  if (Object.values(map.cells).some((c) => c.kind === 'treasure')) delete table.treasure;
   const kind = weighted(run, table);
   const cell = { kind, mark: null };
   if (kind === 'fight') {
@@ -205,10 +200,6 @@ function revealCell(run, x, y) {
   map.cells[k] = cell;
 }
 
-function reveal(run, x, y) {
-  for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++) if (dx || dy) revealCell(run, x + dx, y + dy);
-}
-
 export const xCount = (run) => Object.values(run.map?.cells ?? {}).filter((c) => c.mark === 'X').length;
 
 // The page, as a box: {x0, y0, x1, y1}.
@@ -218,9 +209,10 @@ export function mapBounds() {
 
 // Where the boss would finish a line with its next mark.
 export function bossThreats(map) {
+  if (map.result) return [];
   const out = [];
   for (const [k, c] of Object.entries(map.cells)) {
-    if (c.mark) continue;
+    if (c.mark || !bossMayMark(c)) continue;
     const [x, y] = coords(k);
     if (reach(map, x, y, 'O') >= LINE - 1) out.push(k);
   }
@@ -229,71 +221,96 @@ export function bossThreats(map) {
 
 export const lineReach = (map, k, mark = 'X') => reach(map, ...coords(k), mark);
 const openSquares = (map) => Object.entries(map.cells).filter(([, c]) => !c.mark).map(([k]) => k);
-export const pageFull = (map) => map.visited >= PAGE || !openSquares(map).length;
+const bossMayMark = (c) => c.kind !== 'shop' && c.kind !== 'rest' && c.kind !== 'gift';
 
-// Where you may go next: any open square on view, and the boss once its door
-// is open. When the page is full, only the boss.
+// Where you may go next: any open square, or the boss once its door is open.
 export function reachable(run) {
-  if (pageFull(run.map)) return ['boss'];
-  const out = openSquares(run.map);
-  if (run.map.open) out.push('boss');
-  return out;
+  const map = run.map;
+  if (map.result === 'won') return ['boss'];
+  if (map.result) return [];
+  return openSquares(map);
 }
 
 // The boss's reply: finish a line if it can, block yours if it must,
-// otherwise build its own and spoil yours, with a little noise.
+// otherwise build its own and spoil yours, with a little noise. It never
+// marks a shop, a campfire or a gift, and passes if that is all there is.
 function bossMark(run) {
   const map = run.map;
-  const free = Object.entries(map.cells).filter(([, c]) => !c.mark && c.kind !== 'shop' && c.kind !== 'rest' && c.kind !== 'gift');
+  const free = Object.entries(map.cells).filter(([, c]) => !c.mark && bossMayMark(c));
   if (!free.length) return null;
   const value = { treasure: 6, elite: 1, event: 2, fight: 1 };
+  // It does not always see your threat coming — less and less, page by page.
+  const sees = rand(run) < BOSS_SEES[Math.min(BOSS_SEES.length - 1, map.page - 1)];
   let best = null, bestScore = -Infinity;
   for (const [k, c] of free) {
     const [x, y] = coords(k);
     const mine = reach(map, x, y, 'O'), yours = reach(map, x, y, 'X');
-    let score = (value[c.kind] ?? 0) + rand(run) * 6;
+    let score = (value[c.kind] ?? 0) + rand(run) * 8;
     if (mine >= LINE - 1) score += 1000;
-    if (yours >= LINE - 1) score += 500;
-    score += [0, 8, 20][Math.min(2, yours)] + [0, 6, 16][Math.min(2, mine)];
+    if (yours >= LINE - 1 && sees) score += 500;
+    score += [0, 5, 20][Math.min(2, yours)] + [0, 4, 16][Math.min(2, mine)];
+    // A fork: two lines at once, and you can block only one.
+    if (threatsAfter(map, k) >= 2) score += 300;
     if (score > bestScore) { bestScore = score; best = k; }
   }
   map.cells[best].mark = 'O';
   return best;
 }
 
+// How many open squares would finish a line of Os, were the boss to mark `k`.
+function threatsAfter(map, k) {
+  const c = map.cells[k];
+  c.mark = 'O';
+  let n = 0;
+  for (const [j, d] of Object.entries(map.cells)) {
+    if (d.mark || j === k) continue;
+    if (reach(map, ...coords(j), 'O') >= LINE - 1) n++;
+  }
+  c.mark = null;
+  return n;
+}
+
 // A square is done with: yours if you came through it, scorched if you lost
-// the duel there. Then the boss marks, the lines are counted, and the paper
-// round the new marks comes into view.
+// the duel there. Then the boss marks, and the page may be over.
 export function settleCell(run, mark) {
   const map = run.map;
   if (map.at === null) return;
-  const wasOpen = map.open;
   const at = map.at;
-  map.cells[at].mark = mark === 'O' ? 'S' : mark;
+  // A lost duel scorches its square: no line runs through it, for either side.
+  map.cells[at].mark = mark === 'X' ? 'X' : 'S';
   map.freshX = mark === 'X' ? at : null;
   map.at = null;
-  map.visited++;
   map.lastO = null;
-  map.bonus = 0;
-  if (mark === 'X') reveal(run, ...coords(at));
-  if (hasLine(map, 'X')) map.open = true;
-  // Squares cleared past an open door pay a little extra: a reason to press on.
-  if (mark === 'X' && wasOpen) { map.bonus = 10; run.gold += 10; }
+  if ((map.line = lineOf(map, 'X'))) { map.result = 'won'; return; }
   map.lastO = bossMark(run);
-  if (map.lastO) reveal(run, ...coords(map.lastO));
-  // Every new line of Os makes the boss stronger, up to a point.
-  const oLines = countLines(map, 'O');
-  if (oLines > (map.oLines ?? 0) && map.power < MAX_POWER) {
-    map.power = Math.min(MAX_POWER, map.power + oLines - (map.oLines ?? 0));
-    map.news = 'oline';
+  if ((map.line = lineOf(map, 'O'))) {
+    map.result = 'lost';
+    hurt(run, 1);
+    return;
   }
-  map.oLines = oLines;
-  // A full page: the boss comes for you, and it has had time to prepare.
-  if (pageFull(map) && !map.open) {
-    map.open = true;
-    map.power = Math.min(MAX_POWER, map.power + 1);
-    map.news = 'full';
+  if (!openSquares(map).length) map.result = 'draw';
+}
+
+// Turn the page after a lost or drawn one: the boss opens a fresh one.
+export function nextPage(run) {
+  makeMap(run, run.map);
+  run.screen = 'map';
+}
+
+// Hearts lost, with the Phoenix's second chance. True if the climb is over.
+export function hurt(run, n) {
+  run.hearts -= n;
+  if (run.hearts > 0) return false;
+  if (has(run, 'phoenix') && !run.phoenixUsed) {
+    run.phoenixUsed = true;
+    run.hearts = 3;
+    return false;
   }
+  run.hearts = 0;
+  run.over = true;
+  run.screen = 'gameover';
+  run.pending = null;
+  return true;
 }
 
 // ── Duels ───────────────────────────────────────────────────────────────────
@@ -318,17 +335,16 @@ export function prepareDuel(run, enemyId, context = {}) {
   const enemy = ENEMIES[enemyId];
   const tier = context.tier ?? enemy.tier;
   const handO = rollEnemyHand(run, enemy, tier, context);
-  // Later acts think harder, and heat on top of that.
-  let heatIters = [1, 1.4, 1.7][Math.max(0, run.act - 1)] * (run.heat >= 1 ? 1.5 : 1);
+  // Heat makes everyone think harder. Later acts' rank and file already think
+  // hard by nature; they are eased a little, as an act is several pages of them.
+  let heatIters = (tier === 'boss' ? 1 : [1, 0.8, 0.6][Math.max(0, run.act - 1)]) * (run.heat >= 1 ? 1.5 : 1);
   const enemyTricks = [...(enemy.tricks ?? [])];
   const usesO = 1;
   const modsO = { ...(enemy.mods ?? {}) };
   let conds = [], rules = [];
   if (tier === 'boss') {
     rules = [...(((context.bossWins ?? 0) > 0 && enemy.rules2) || enemy.rules || [])];
-    const power = run.map?.power ?? 0;
     if (run.heat >= 4) enemyTricks.push(randomTrick(run));
-    heatIters *= 1 + 0.5 * power;   // a boss with power thinks harder
   } else {
     // A home rule, or sometimes one rolled for the day.
     const act = ACTS[run.act - 1];
@@ -402,7 +418,6 @@ export function enterNode(run, key) {
     return;
   }
   run.map.at = key;
-  run.map.news = null;
   const node = run.map.cells[key];
   switch (node.kind) {
     case 'fight':
@@ -495,19 +510,7 @@ export function duelLost(run) {
     run.screen = 'predual';
     return { kind: 'rematch' };
   }
-  run.hearts -= heartsLost(duel);
-  if (run.hearts <= 0) {
-    if (has(run, 'phoenix') && !run.phoenixUsed) {
-      run.phoenixUsed = true;
-      run.hearts = 3;
-    } else {
-      run.hearts = 0;
-      run.over = true;
-      run.screen = 'gameover';
-      run.pending = null;
-      return { kind: 'dead' };
-    }
-  }
+  if (hurt(run, heartsLost(duel))) return { kind: 'dead' };
   if (duel.tier === 'boss') {
     run.pending = { kind: 'duel', duel: prepareDuel(run, duel.enemyId, { bossRound: duel.bossRound + 1, bossWins: duel.bossWins }) };
     run.screen = 'predual';
@@ -515,8 +518,8 @@ export function duelLost(run) {
   }
   run.pending = null;
   settleCell(run, 'O');
-  run.screen = 'map';
-  return { kind: 'lost' };
+  if (!run.over) run.screen = 'map';
+  return { kind: run.over ? 'dead' : 'lost' };
 }
 
 // After the reward screen (and after a boss's relic), onward.
@@ -536,7 +539,7 @@ export function leaveNode(run) {
     return;
   }
   settleCell(run, 'X');
-  run.screen = 'map';
+  if (!run.over) run.screen = 'map';
 }
 
 // ── Loot ────────────────────────────────────────────────────────────────────

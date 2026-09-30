@@ -687,3 +687,9 @@ b { font-weight: 400; background: linear-gradient(transparent 55%, var(--hi) 55%
 /* In a duel the notes go up top, clear of the hand and the info line. */
 body:has(.duel) #toast { bottom: auto; top: calc(10px + var(--safe-t)); transform: translate(-50%, -30px) rotate(-2deg); }
 body:has(.duel) #toast.show { transform: translate(-50%, 0) rotate(-1deg); }
+/* The 3x3 page: bigger squares, and the line that ended it. */
+.map-sheet { --cell: max(84px, min(120px, calc((min(100vw, 520px) - 40px) / var(--cols)))); }
+.map-cell.in-line::after { content: ''; position: absolute; inset: 10%; border-radius: 40% 34% 44% 38%; pointer-events: none; }
+.map-cell.line-x::after { background: rgba(31, 79, 176, 0.14); box-shadow: 0 0 0 3px rgba(31, 79, 176, 0.35); }
+.map-cell.line-o::after { background: rgba(200, 55, 45, 0.14); box-shadow: 0 0 0 3px rgba(200, 55, 45, 0.35); }
+.map-news.good { color: var(--blue); }

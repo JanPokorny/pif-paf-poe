@@ -63,25 +63,24 @@ function playRun(spec) {
   const rng = makeRng(spec.seed);
   const log = [];
   let guard = 0;
-  while (!run.over && guard++ < 400) {
+  while (!run.over && guard++ < 3000) {
     switch (run.screen) {
       case 'map': case 'actintro': {
         run.screen = 'map';
         let opts = R.reachable(run);
-        // Take the boss once the door is open and the pouch has had a few squares.
-        if (opts.includes('boss') && (run.map.visited >= +(spec.stay ?? 8) || opts.length === 1)) { log.push('[p' + run.map.power + ' v' + run.map.visited + ']'); R.enterNode(run, 'boss'); break; }
-        opts = opts.filter((k) => k !== 'boss');
-        // Build the line when healthy; otherwise heal and shop.
-        const kinds = opts.map((k) => run.map.cells[k].kind);
-        if (run.hearts > 2 && opts.length) {
-          const best = opts.map((k) => [k, R.lineReach(run.map, k) * 3 + R.lineReach(run.map, k, 'O') * 2 + R.rand(run)]).sort((a, b) => b[1] - a[1])[0][0];
-          R.enterNode(run, best);
-          break;
-        }
-        let pickI = (R.rand(run) * opts.length) | 0;
-        const want = run.hearts <= 2 ? ['rest', 'shop', 'event'] : run.hearts >= run.maxHearts - 1 ? ['elite', 'treasure', 'fight'] : ['treasure', 'fight', 'event'];
-        for (const w of want) { const i = kinds.indexOf(w); if (i >= 0) { pickI = i; break; } }
-        R.enterNode(run, opts[pickI]);
+        // A page lost or drawn turns; a page won opens the boss's door.
+        if (run.map.result === 'lost' || run.map.result === 'draw') { log.push(run.map.result === 'lost' ? '[O]' : '[=]'); R.nextPage(run); break; }
+        if (opts.includes('boss')) { log.push(`[X p${run.map.page}]`); R.enterNode(run, 'boss'); break; }
+        // Tic-tac-toe first: win, block, fork; then corners; then what the
+        // hearts want.
+        const want = run.hearts <= 2 ? { rest: 3, shop: 2, event: 1 } : run.hearts >= run.maxHearts - 1 ? { elite: 1, treasure: 2, fight: 1 } : { treasure: 2, fight: 1, event: 1 };
+        const score = (k) => {
+          const mine = R.lineReach(run.map, k), theirs = R.lineReach(run.map, k, 'O');
+          const [x, y] = R.coords(k);
+          return (mine >= 2 ? 100 : 0) + (theirs >= 2 ? 50 : 0) + mine * 3 + theirs * 2 + (x !== 1 && y !== 1 ? 2 : 0)
+            + (want[run.map.cells[k].kind] ?? 0) + R.rand(run);
+        };
+        R.enterNode(run, opts.sort((a, b) => score(b) - score(a))[0]);
         break;
       }
       case 'predual': case 'duel': {
@@ -133,7 +132,7 @@ function playRun(spec) {
   if (!run.over) throw new Error('run did not end: ' + run.screen);
   // JSON round trip must survive (the save format).
   JSON.parse(JSON.stringify(run));
-  return { seed: spec.seed, victory: run.victory, act: run.act, row: run.map.visited, hearts: run.hearts, log: log.join(' '), relics: run.relics.join(','), pouch: run.pouch.map((s) => s.type).join(',') + ` slots ${run.slots}` };
+  return { seed: spec.seed, victory: run.victory, act: run.act, row: run.map.page, hearts: run.hearts, log: log.join(' '), relics: run.relics.join(','), pouch: run.pouch.map((s) => s.type).join(',') + ` slots ${run.slots}` };
 }
 
 if (!isMainThread) {
@@ -150,7 +149,7 @@ if (!isMainThread) {
   const res = (await Promise.all(chunks.map((c) => new Promise((ok, bad) => { const w = new Worker(new URL(import.meta.url), { workerData: c }); w.on('message', ok); w.on('error', bad); })))).flat();
   for (const r of res) {
     if (r.error) { console.log(`seed ${r.seed}: ERROR ${r.error}`); continue; }
-    console.log(`seed ${r.seed}: ${r.victory ? 'VICTORY' : `died act ${r.act} after ${r.row} squares`}  | ${r.log}\n    relics ${r.relics}\n    pouch ${r.pouch}`);
+    console.log(`seed ${r.seed}: ${r.victory ? 'VICTORY' : `died act ${r.act} on page ${r.row}`}  | ${r.log}\n    relics ${r.relics}\n    pouch ${r.pouch}`);
   }
   const ok = res.filter((r) => !r.error);
   console.log(`\n${ok.filter((r) => r.victory).length}/${ok.length} victories; mean act reached ${(ok.reduce((a, r) => a + r.act, 0) / ok.length).toFixed(2)}; ${((Date.now() - t0) / 1000).toFixed(0)}s`);

@@ -9,9 +9,10 @@ evolve into stronger, named stones along the way. Some duels carry a condition f
 (gravity, a hollow centre, open hands); bosses bring no stones at all, only a rule in their
 favour.
 
-Each of the three acts is itself a game of tic-tac-toe against its boss, on a 5×5 sheet: it
-starts with the boss's O in the middle, every mark reveals the encounters around it, and three
-Xs in a row open the boss's door — but the squares that matter most hide the hardest duels.
+Each of the three acts is itself tic-tac-toe against its boss, a 3×3 page of encounters at a
+time: the boss opens in the middle, you mark an X wherever you go and it answers with an O.
+Three Xs in a row open the boss's door; three Os cost a heart, and a full page is a draw — either
+way a fresh, less friendly page follows.
 
 It grew out of a physical summer-camp game; the original rules, simulations and print-and-play
 sheets live in [`old/`](old/).

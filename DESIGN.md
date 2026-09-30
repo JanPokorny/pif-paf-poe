@@ -60,14 +60,24 @@ duel, and a rule for who wins when someone runs out. The second version slows it
 
 ## The map
 
-Each act is a game of tic-tac-toe with its boss on a 5×5 sheet of graph paper. It starts with
-the boss's O in the middle; every mark reveals the squares around it, and a square is decided
-the moment it comes into view, by how much it matters: one that would extend your line or break
-the boss's turns up as an elite or a duel, one off to the side as a campfire, shop or treasure.
-**Three Xs in a row open the boss's door.** A lost duel scorches its square; the boss never marks
-shops or campfires; a line of three Os, or a full page (ten squares), makes the boss stronger —
-it thinks harder. Squares cleared after the door opens pay gold, so pressing on is a gamble.
-In the first act one of the first squares is a **gift**: a special stone of two, free.
+Each act is tic-tac-toe with its boss, a 3×3 page at a time, every square on view from the
+start. The boss opens each page in the middle. Wherever you go you mark an X and the boss
+answers with an O — never on a shop, a campfire or a gift, so those are squares it cannot block.
+A lost duel scorches its square: no line runs through it, for either side.
+
+- **Three Xs in a row** open the boss's door, and the boss duel follows.
+- **Three Os in a row** cost you a heart, and the page turns.
+- **A full page** with neither is a draw, and the page turns.
+
+A fresh page is less friendly than the last: more duels and elites, fewer shops, campfires and
+chests; corners, on three lines each, hide harder squares than edges. The boss blocks your two in
+a row only some of the time (half on the first page, more on each after), and it looks for forks;
+a player who plays the map well never loses a page, one who plays it loosely gets forked. The
+first page of the climb hides a **gift**: a special stone of two, free.
+
+Two things were tried and dropped. A lost duel that left its square open for a rematch pulled
+players (and bots) into spending heart after heart on the one square their line needed. A lost
+duel that handed the square to the boss made every loss cost twice.
 
 ## The stones
 
@@ -100,16 +110,16 @@ ones. Lighthouse was also heavy and won 95%; Twin won 93% and now needs the cent
 
 Enemies are the same Monte Carlo search as the camp game's AI (`src/ai.js`), dialled by
 iterations and a blunder rate. `node tools/balance.mjs` duels a bot with a typical pouch against
-every enemy (`--power 1 --life 1` for a grown boss's second life); `node tools/runbot.mjs` plays
+every enemy (`--life 1` for a boss's second life); `node tools/runbot.mjs` plays
 whole runs headless; `node tools/stones.mjs` measures the stones.
 
-At heat 0, bots that pick their stones by strength and keep one that moves things win:
+At heat 0 (six hearts), bots that play the map sensibly, pick their stones by strength and keep one that moves things win:
 
 | player bot | runs won |
 |---|---|
-| 80 iterations, 20% blunders | about 30% |
-| 150 iterations, 10% blunders | about 50% |
-| 300 iterations, no blunders | about 65% |
+| 80 iterations, 20% blunders | about 20% |
+| 150 iterations, 10% blunders | about 27% |
+| 300 iterations, no blunders | about 37% |
 
 Heat 1–5 raises it after each win: deeper search, more evolved enemy stones, a heart fewer,
 bigger elite hands and boss tricks, no blunders.

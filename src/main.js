@@ -267,9 +267,9 @@ function route() {
 const NODE_ICON = { fight: 'sword', elite: 'skull', shop: 'shop', rest: 'fire', event: 'question', treasure: 'chest', boss: 'crown', gift: 'star' };
 const NODE_NAME = { 'boss-mark': t('Boss'), fight: t('Duel'), elite: t('Elite'), shop: t('Shop'), rest: t('Campfire'), event: t('Unknown'), treasure: t('Treasure'), boss: t('Boss'), gift: t('Gift') };
 
-// The act's map: tic-tac-toe against its boss on a 5x5 sheet, revealed a
-// mark at a time.
+// The act's map: tic-tac-toe against its boss, a 3x3 page at a time.
 function mapScreen() {
+  if (run.map?.v !== 4) R.makeMap(run);   // a save from the 5x5 days: a fresh page
   const map = run.map;
   const reach = new Set(R.reachable(run));
   const boss = ENEMIES[map.boss];
@@ -283,14 +283,13 @@ function mapScreen() {
     for (let x = x0; x <= x1; x++) {
       const k = R.keyOf(x, y);
       const c = map.cells[k];
-      if (!c) { grid.push(h('div.map-fog')); continue; }
       const can = reach.has(k);
       const kind = c.kind === 'boss-mark' ? 'boss-mark' : c.kind;
       const el = h(`button.map-cell.${kind}` + (can ? '.reach' : '') + (c.mark ? '.marked' : ''), {
         'aria-label': NODE_NAME[kind] ?? boss.name, dataset: { k },
         onclick: () => {
           if (!can) {
-            const why = c.mark === 'X' ? t('You have been here.') : c.mark === 'O' ? t('{boss} took this square.', { boss: boss.name }) : t('You lost the duel here: the square is scorched.');
+            const why = map.result ? t('This page is over.') : c.mark === 'X' ? t('You have been here.') : c.mark === 'O' ? t('{boss} took this square.', { boss: boss.name }) : t('You lost the duel here: the square is scorched.');
             toast(why);
             return;
           }
@@ -308,6 +307,7 @@ function mapScreen() {
       if (c.mark === 'X') el.insertAdjacentHTML('beforeend', scribbleX(freshX === k));
       if (c.mark === 'O') el.insertAdjacentHTML('beforeend', scribbleO(lastO === k));
       if (c.mark === 'S') el.classList.add('scorched');
+      if (map.line?.includes(k)) el.classList.add('in-line', map.result === 'won' ? 'line-x' : 'line-o');
       grid.push(el);
     }
   }
@@ -315,25 +315,26 @@ function mapScreen() {
   if (lastO && freshX) sfx('scribbleO');
   map.freshX = null;
   map.lastO = null;
-  const news = map.news === 'oline' ? t('{boss} drew three in a row — it grows stronger!', { boss: boss.name })
-    : map.news === 'full' ? t('The page is full. {boss} will wait no longer — and it has grown stronger.', { boss: boss.name })
-    : lastO && map.cells[lastO] && map.cells[lastO].kind !== 'boss-mark' ? t('{boss} marks the {node} square.', { boss: boss.name, node: NODE_NAME[map.cells[lastO].kind].toLowerCase() }) : '';
-  const bonus = map.bonus;
-  map.bonus = 0;
-  map.news = null;
-  if (bonus) setTimeout(() => toast(t('+{n} gold for pressing on past the open door.', { n: bonus }), 'good'), 50);
-  const door = h('button.boss-door' + (map.open ? '.open' : ''), {
+  const won = map.result === 'won';
+  const news = map.result === 'lost' ? t('{boss} made three in a row: −1 ❤.', { boss: boss.name })
+    : map.result === 'draw' ? t('The page is full, and nobody has three in a row.')
+      : won ? t('Three in a row! The door is open.')
+        : lastO && map.cells[lastO] && map.cells[lastO].kind !== 'boss-mark' ? t('{boss} marks the {node} square.', { boss: boss.name, node: NODE_NAME[map.cells[lastO].kind].toLowerCase() }) : '';
+  if (map.result === 'lost' && lastO) { flash = 'hurt'; sfx('lose'); }
+  const door = h('button.boss-door' + (won ? '.open' : ''), {
     onclick: () => {
-      if (!map.open) { toast(t('Draw three Xs in a row — across, down or diagonal — to open the door.')); return; }
+      if (!won) { toast(t('Draw three Xs in a row — across, down or diagonal — to open the door.')); return; }
       R.enterNode(run, 'boss'); duelState = null; route();
     },
   },
   h('div.portrait', {}, h('div.photo', {}, boss.emoji)),
   h('div.door-text', {},
     h('div.door-name', {}, boss.name),
-    map.open ? h('div', {}, t('The door is open. Tap to face the boss — or keep exploring.')) : h('div', {}, t('Draw three in a row to open the door.')),
-    h('div.door-rules', {}, (boss.rules ?? []).map((r) => ruleChip('rule', r, '.small'))),
-    map.power ? h('div.power', {}, t('Grown stronger: it thinks harder.')) : null));
+    won ? h('div', {}, t('The door is open. Tap to face the boss.')) : h('div', {}, t('Page {n}. Three in a row opens the door.', { n: map.page })),
+    h('div.door-rules', {}, (boss.rules ?? []).map((r) => ruleChip('rule', r, '.small')))));
+  const turn = map.result === 'lost' || map.result === 'draw'
+    ? h('button.btn.primary.wide.big', { onclick: () => { R.nextPage(run); save(); route(); } }, t('Turn the page'))
+    : null;
   // Lines of pencil between the squares on view, each a little crooked.
   const W = cols * 100, H = rows * 100;
   let paths = '';
@@ -347,13 +348,13 @@ function mapScreen() {
     h('div.map-page', {},
       door,
       scroller,
-      h('div.map-news', {}, news),
-      h('div.map-help', {}, !R.xCount(run)
-        ? t('The boss has made its first mark, in the middle. Pick any square beside it; every mark reveals the paper around it. Squares that would help your line hide harder duels.')
-        : R.pageFull(map) ? t('The page is full: only the boss is left.')
-          : tp(R.PAGE - map.visited, 'Three Xs in a row open the door. {n} square left on this page.', 'Three Xs in a row open the door. {n} squares left on this page.')),
+      h('div.map-news' + (map.result === 'won' ? '.good' : ''), {}, news),
+      turn,
+      map.result ? (map.result === 'won' ? null : h('div.map-help', {}, t('The boss opens a fresh page — and every page hides fewer friends than the last.')))
+        : h('div.map-help', {}, !R.xCount(run)
+          ? t('The boss has opened in the middle. Go anywhere: you mark an X, then it marks an O — never on a shop, a campfire or a gift. Three Os in a row cost you a heart; a full page turns over.')
+          : t('Three Xs in a row open the door. Three Os cost you a heart.')),
       threats.size ? h('div.map-help.red', {}, t('Dashed red circle: the boss would finish a line of Os there.')) : null));
-  // Keep the newest marks in view.
 }
 
 function actIntro() {
@@ -362,8 +363,8 @@ function actIntro() {
     h('div.act-n', {}, t('Act {n}', { n: act.n })),
     h('h1', {}, act.name),
     h('p', {}, t(['A summer camp. A field of stones that will not stay still.', 'The meadow is behind you. The ground turns to stone.', 'The air thins. Only the best players make it this far.'][act.n - 1])),
-    h('div.rules-note', {}, t('This act is tic-tac-toe with {boss} on a 5×5 page. It has made the first mark, in the middle. Wherever you go you mark an X, and it answers with an O; every mark reveals the squares around it. Three Xs in a row open its door — but the squares that matter most hide the hardest duels.', { boss: ENEMIES[run.map.boss].name })),
-    run.act === 1 ? h('p.dim', {}, t('Somewhere beside it lies a gift: a special stone, free.')) : null,
+    h('div.rules-note', {}, t('This act is tic-tac-toe with {boss}, a page of nine squares at a time. It opens in the middle. Wherever you go you mark an X, and it answers with an O. Three Xs in a row open its door. Three Os cost you a heart, and a full page is a draw: either way it opens a fresh page, and each hides harder squares than the last.', { boss: ENEMIES[run.map.boss].name })),
+    run.act === 1 ? h('p.dim', {}, t('Somewhere on the first page lies a gift: a special stone, free.')) : null,
     h('button.btn.primary.wide.big', { onclick: () => { run.screen = 'map'; route(); } }, t('Onward'))));
 }
 
@@ -821,9 +822,9 @@ function showHelp(after) {
       h('p', {}, t('Some duels carry a '), h('b', {}, t('condition')), t(' for both sides: gravity, a hollow centre, open hands.')),
       h('p', {}, t('Bosses bring no special stones at all. Instead each has '), h('b', {}, t('a rule in its favour')), t(' — it names the stone you play, closes a column, takes two turns at once… Read it before you choose your stones.'))),
     h('div', {}, h('h2', {}, t('The climb')),
-      h('p', {}, t('Three acts. Each act is a game of tic-tac-toe with its boss on a 5×5 sheet of paper. It starts with a single O in the middle — the boss\'s first mark.')),
-      h('p', {}, t('Wherever you go you mark an '), h('b.blue', {}, 'X'), t('; after each step the boss marks an '), h('b.red', {}, 'O'), t('. Every mark reveals the squares around it: duels, elites, shops, campfires, treasure and the unknown.')),
-      h('p', {}, h('b', {}, t('Three Xs in a row open the boss\'s door.')), t(' The squares that would help your line — or break the boss\'s — tend to hide the hardest duels. A lost duel scorches its square. A line of Os, or a full page, makes the boss stronger.')),
+      h('p', {}, t('Three acts. Each act is tic-tac-toe with its boss, on pages of nine squares: duels, elites, shops, campfires, treasure and the unknown. The boss opens every page in the middle.')),
+      h('p', {}, t('Wherever you go you mark an '), h('b.blue', {}, 'X'), t('; after each step the boss marks an '), h('b.red', {}, 'O'), t(' — never on a shop, a campfire or a gift. A lost duel scorches its square.')),
+      h('p', {}, h('b', {}, t('Three Xs in a row open the boss\'s door.')), t(' Three Os cost you a heart, and a full page is a draw; either way the boss opens a fresh page, each less friendly than the last.')),
       h('p', {}, t('Before each duel you choose which special stones to bring. Shops sell more slots. Lose and it costs hearts; run out and the climb is over. A boss has two lives.'))),
   ];
   let k = 0;
