@@ -285,7 +285,8 @@ function mapScreen() {
       onclick: () => {
         if (!can) {
           const why = c.mark === 'X' ? 'You have been here.' : c.mark === 'O' ? `${boss.name} took this square.` : 'Too far: go next to one of your Xs.';
-          toast(`${NODE_NAME[c.kind]} — ${c.mark ? why : NODE_TEXT[c.kind] + ' ' + why}`);
+          const what = c.duel ? `${ENEMIES[c.duel.enemyId].name}${c.kind === 'elite' ? ' (elite)' : ''}${c.duel.disabled ? `, no ${STONES[c.duel.disabled].name}` : ''}` : NODE_NAME[c.kind];
+          toast(`${what} — ${c.mark ? why : NODE_TEXT[c.kind] + ' ' + why}`);
           return;
         }
         sfx('click');
@@ -293,7 +294,11 @@ function mapScreen() {
         duelState = null;
         route();
       },
-    }, h('span.doodle', { html: icon(NODE_ICON[c.kind]) }), h('span.label', {}, NODE_NAME[c.kind]));
+    }, c.duel
+      ? h('span.doodle.foe', {}, h('span.photo', {}, ENEMIES[c.duel.enemyId].emoji),
+        c.duel.disabled ? h('span.cell-space', { html: icon(c.duel.disabled) }) : null)
+      : h('span.doodle', { html: icon(NODE_ICON[c.kind]) }),
+    h('span.label', {}, c.duel ? ENEMIES[c.duel.enemyId].name.replace(/^(The|Captain|Lord of) /, '').split(' ')[0] : NODE_NAME[c.kind]));
     if (c.mark === 'X') el.insertAdjacentHTML('beforeend', scribbleX(freshX === i));
     if (c.mark === 'O') el.insertAdjacentHTML('beforeend', scribbleO(map.lastO === i));
     return el;
@@ -377,8 +382,10 @@ function preDuel() {
   const stakes = duel.tier === 'boss'
     ? `Beat it twice to pass (${duel.bossWins}/2). Each loss costs 1 ❤.`
     : `Lose and it costs ${R.heartsLost(duel)} ❤.`;
+  const canBack = (duel.tier === 'normal' || duel.tier === 'elite') && !duel.event;
   screen(topBar(),
     h('div.page', {},
+      canBack ? h('button.btn.ghost.small.back-map', { onclick: () => { R.retreat(run); route(); } }, h('span', { html: icon('back') }), 'Back to the map') : null,
       h('div.enemy-card.' + duel.tier, {},
         h('div.portrait.big', {}, h('div.photo', {}, enemy.emoji)),
         h('div', {},

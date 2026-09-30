@@ -117,14 +117,37 @@ export const MAP_LINES = (() => {
 })();
 const mapNear = (a, b) => a !== b && Math.abs(((a / SIZE) | 0) - ((b / SIZE) | 0)) <= 1 && Math.abs((a % SIZE) - (b % SIZE)) <= 1;
 
+// Step back out of a duel you have only looked at.
+export function retreat(run) {
+  run.map.at = null;
+  run.pending = null;
+  run.screen = 'map';
+}
+
 export function makeMap(run) {
   const kinds = shuffle(run, [
     'fight', 'fight', 'fight', 'fight', 'fight', 'fight',
     'elite', 'elite', 'event', 'event', 'event',
     'rest', 'rest', 'shop', 'treasure', 'treasure',
   ]);
+  // Duels are settled when the map is drawn, so you can scout them.
+  const easy = run.act === 1 ? shuffle(run, EASY_OPENERS) : [];
+  const normals = shuffle(run, enemiesOf(run.act, 'normal').filter((e) => !easy.includes(e)));
+  const elites = shuffle(run, enemiesOf(run.act, 'elite'));
+  let nf = 0, ne = 0;
+  const cells = kinds.map((kind) => {
+    const cell = { kind, mark: null };
+    if (kind === 'fight') {
+      const id = nf < easy.length ? easy[nf] : normals[(nf - easy.length) % normals.length];
+      nf++;
+      cell.duel = prepareDuel(run, id);
+    } else if (kind === 'elite') {
+      cell.duel = prepareDuel(run, elites[ne++ % elites.length]);
+    }
+    return cell;
+  });
   return {
-    cells: kinds.map((kind) => ({ kind, mark: null })),
+    cells,
     boss: ACTS[run.act - 1].boss,
     at: null,          // the square being visited right now
     lastO: null,       // the boss's latest mark, for the page to draw in
@@ -307,24 +330,11 @@ export function enterNode(run, key) {
   run.map.news = null;
   const node = run.map.cells[i];
   switch (node.kind) {
-    case 'fight': {
-      const fought = run.map.visited + 1;
-      let pool = enemiesOf(run.act, 'normal');
-      if (run.act === 1 && fought <= 2) pool = EASY_OPENERS;
-      const recent = run.recent ?? [];
-      const fresh = pool.filter((e) => !recent.includes(e));
-      const id = pick(run, fresh.length ? fresh : pool);
-      run.recent = [...recent.slice(-3), id];
-      run.pending = { kind: 'duel', duel: prepareDuel(run, id) };
+    case 'fight':
+    case 'elite':
+      run.pending = { kind: 'duel', duel: JSON.parse(JSON.stringify(node.duel)) };
       run.screen = 'predual';
       break;
-    }
-    case 'elite': {
-      const id = pick(run, enemiesOf(run.act, 'elite'));
-      run.pending = { kind: 'duel', duel: prepareDuel(run, id) };
-      run.screen = 'predual';
-      break;
-    }
     case 'shop': run.pending = { kind: 'shop', shop: makeShop(run) }; run.screen = 'shop'; break;
     case 'rest': run.pending = { kind: 'rest' }; run.screen = 'rest'; break;
     case 'treasure': {
