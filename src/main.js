@@ -409,14 +409,20 @@ function preDuel() {
   draw();
 
   const tierLabel = { normal: '', elite: t('Elite'), boss: t('Boss'), event: t('Challenge') }[duel.tier];
-  const stakes = duel.tier === 'boss'
-    ? tp(R.BOSS_LIVES - duel.bossWins, '{n} life left · lose: −1 ❤', '{n} lives left · lose: −1 ❤')
-    : t('Lose: −{n} ❤', { n: R.heartsLost(duel) });
+  const facts = [
+    ...(duel.rules ?? []).map((r) => h('div.fact.warn.rule-fact', {}, ruleChip('rule', r), h('span', {}, RULES[r].text))),
+    ...(duel.conds ?? []).map((c) => h('div.fact.rule-fact', {}, ruleChip('cond', c), h('span', {}, CONDS[c].text))),
+    duel.quirk ? h('div.fact.warn', {}, `${R.QUIRKS[duel.quirk].name}: ${R.QUIRKS[duel.quirk].text}`) : null,
+    duel.tier === 'boss' && duel.bossWins === 0 && enemy.rules2 && enemy.rules2.join() !== duel.rules.join()
+      ? h('div.fact.dim', {}, t('Second life: {rules}', { rules: enemy.rules2.map((r) => RULES[r].name).join(', ') })) : null,
+    duel.tier === 'boss' ? h('div.fact.dim', {}, tp(R.BOSS_LIVES - duel.bossWins, '{n} life left', '{n} lives left')) : null,
+  ].filter(Boolean);
   const canBack = duel.tier !== 'boss' && !duel.event;
   screen(topBar(),
     h('div.page', {},
       canBack ? h('button.btn.ghost.small.back-map', { onclick: () => { R.retreat(run); route(); } }, h('span', { html: icon('back') }), t('Back to the map')) : null,
       h('div.enemy-card.' + duel.tier, {},
+        h('div.stake', { title: t('Lose: −{n} ❤', { n: R.heartsLost(duel) }) }, `−${R.heartsLost(duel)} `, h('span', { html: icon('heart') })),
         h('div.portrait.big', {}, h('div.photo', {}, enemy.emoji)),
         h('div', {},
           tierLabel ? h('div.tier.' + duel.tier, {}, tierLabel) : null,
@@ -426,14 +432,7 @@ function preDuel() {
       h('div.hand.enemy-hand.show', {},
         h('button.slot-plain', { onclick: () => infoStone({ type: 'pebble' }, 'O') }, stoneEl({ type: 'pebble' }, 'O')),
         duel.handO.map((s) => h('button.slot-plain', { onclick: () => infoStone(s, 'O') }, stoneEl(s, 'O')))),
-      h('div.duel-facts.facts-card', {},
-        (duel.rules ?? []).map((r) => h('div.fact.warn.rule-fact', {}, ruleChip('rule', r), h('span', {}, RULES[r].text))),
-        (duel.conds ?? []).map((c) => h('div.fact.rule-fact', {}, ruleChip('cond', c), h('span', {}, CONDS[c].text))),
-        h('div.fact', {}, (duel.rules ?? []).includes('patient') ? t('They open') : t('They open · full board is yours')),
-        duel.quirk ? h('div.fact.warn', {}, `${R.QUIRKS[duel.quirk].name}: ${R.QUIRKS[duel.quirk].text}`) : null,
-        duel.tier === 'boss' && duel.bossWins === 0 && enemy.rules2 && enemy.rules2.join() !== duel.rules.join()
-          ? h('div.fact.dim', {}, t('Second life: {rules}', { rules: enemy.rules2.map((r) => RULES[r].name).join(', ') })) : null,
-        h('div.fact.dim', {}, stakes)),
+      facts.length ? h('div.duel-facts.facts-card', {}, facts) : null,
       h('div.section-label', {}, t('Your stones '), count),
       run.pouch.length ? grid : h('p.dim', {}, t('Pebbles only.')),
       h('div.pre-spacer'),
