@@ -396,7 +396,7 @@ function mapScreen() {
       scroller,
       h('div.map-news', {}, news),
       h('div.map-help', {}, breaching ? t('Tap a rock to break it.')
-        : !R.xCount(run) ? t('Pick a square next to the O.')
+        : !R.xCount(run) ? t('Pick any free square.')
           : R.pageFull(map) ? t('Page full: face the boss.')
             : tp(R.PAGE - map.visited, '{n} step left on this page.', '{n} steps left on this page.')),
       threats.size ? h('div.map-help.red', {}, t('Dashed circle: the boss wins a line there.')) : null));

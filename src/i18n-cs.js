@@ -316,7 +316,7 @@ export default {
   'Page full: {boss} is stronger.': 'Plná stránka: {boss} zesílil.',
   'Face the boss': 'Na bosse',
   "Three Xs in a row open the boss's door.": 'Tři X v řadě otevřou bossovy dveře.',
-  'Pick a square next to the O.': 'Vyber políčko vedle O.',
+  'Pick any free square.': 'Vyber kterékoli volné políčko.',
   'Page full: face the boss.': 'Plná stránka: na bosse.',
   '{n} step left on this page.': ['Na stránce zbývá {n} krok.', 'Na stránce zbývají {n} kroky.', 'Na stránce zbývá {n} kroků.'],
   '{n} steps left on this page.': ['Na stránce zbývá {n} krok.', 'Na stránce zbývají {n} kroky.', 'Na stránce zbývá {n} kroků.'],

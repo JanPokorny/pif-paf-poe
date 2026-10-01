@@ -430,12 +430,38 @@ function bossMark(run) {
 // A square is done with. Yours if you came through it: then the paper round
 // it comes into view, the boss answers, and the lines are counted. Scorched
 // if you lost the duel there: then you choose again.
+// The boss's move. With no free square on view it steps into the fog: an
+// unknown square right beside the revealed page, never a rock, the one
+// best for its lines.
+function bossTurn(run) {
+  const o = bossMark(run);
+  if (o) return o;
+  const map = run.map;
+  const fog = new Set();
+  for (const k of Object.keys(map.cells)) {
+    const [x, y] = coords(k);
+    for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++) {
+      const q = keyOf(x + dx, y + dy);
+      if (!map.cells[q]) fog.add(q);
+    }
+  }
+  if (!fog.size) return null;
+  let best = null, bestScore = -Infinity;
+  for (const q of fog) {
+    const sc = reach(map, ...coords(q), 'O') * 3 + rand(run);
+    if (sc > bestScore) { best = q; bestScore = sc; }
+  }
+  revealCell(run, ...coords(best), false, true);
+  map.cells[best].mark = 'O';
+  return best;
+}
+
 // Nowhere left for you to step: the boss moves instead, and its marks reveal
 // more of the page. Only if it cannot move either is the page full.
 function bossFills(run) {
   const map = run.map;
   for (let guard = 0; guard < 6 && !openSquares(map).length && map.visited < PAGE; guard++) {
-    const o = bossMark(run);
+    const o = bossTurn(run);
     if (!o) break;
     map.lastO = o;
     map.revealO = [...(map.revealO ?? []), ...reveal(run, ...coords(o))];
@@ -472,7 +498,7 @@ export function settleCell(run, mark) {
   const aid = map.armed;
   if (aid) { run.aids[aid]--; map.armed = null; }
   if (aid !== 'double') {
-    map.lastO = bossMark(run);
+    map.lastO = bossTurn(run);
     if (map.lastO) map.revealO = reveal(run, ...coords(map.lastO));
   }
   // Every new line of Os makes the boss stronger, up to a point.
