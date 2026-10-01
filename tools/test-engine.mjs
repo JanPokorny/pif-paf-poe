@@ -13,6 +13,7 @@ import {
   createGame, applyAction, legalActions, cloneState, allowedSquares, isStuck,
   hasLine, render, STONES, STONE_TYPES, BASE_STONES, TRICKS, TRICK_TYPES, CONDS, RULES, ELS,
 } from '../src/engine.js';
+import { chooseAction } from '../src/ai.js';
 
 // ── Harness ─────────────────────────────────────────────────────────────────
 
@@ -456,6 +457,15 @@ test('Mind Control names the enemy\'s next stone, a Pebble included', () => {
   play(s, 'pebble', 0);
   trick(s, 'mind-control', { stone: 'pebble' });
   assert.deepEqual(legalActions(s).map((a) => a.stone), ['pebble']);
+});
+test('Mind Control: the enemy AI plays the stone it was named', () => {
+  for (const name of ['pebble', 'shift', 'rotate']) {
+    const s = G({ tricksX: ['mind-control'], handO: ['shift', 'rotate', 'magnet'] });
+    play(s, 'pebble', 0);
+    trick(s, 'mind-control', { stone: name });
+    assert.equal(s.player, 'O');
+    assert.equal(chooseAction(s, { iters: 200, seed: 7 }).stone, name);
+  }
 });
 test('Muffle: the enemy\'s next special stone does nothing', () => {
   const s = G({ tricksX: ['muffle'] });
