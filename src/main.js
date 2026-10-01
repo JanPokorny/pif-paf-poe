@@ -181,7 +181,6 @@ function title() {
           h('span', {}, t('Continue run')),
           h('span.continue-sub', {}, `${t('Act {n}', { n: saved.run.act })} · ❤ ${saved.run.hearts}`)) : null,
         h('button.btn.wide.big' + (saved?.run ? '' : '.primary'), { onclick: () => { if (saved?.run && !saved.run.over && !confirm(t('Start over? Your run in progress will be lost.'))) return; newRunMenu(); } }, t('New run')),
-        meta.runs ? h('button.btn.wide', { onclick: showJournal }, t('Journal')) : null,
         h('button.btn.wide.ghost', { onclick: () => { setSound(!soundOn()); title(); } }, h('span', { html: icon(soundOn() ? 'sound-on' : 'sound-off') }), soundOn() ? t('Sound on') : t('Sound off')),
         langToggle()),
       h('div.title-foot', {}, best, h('br'), `${tp(meta.runs, '{n} run', '{n} runs')} · ${tp(meta.wins, '{n} win', '{n} wins')}`)));
@@ -211,21 +210,6 @@ function newRunMenu() {
     h('button.btn.primary.wide', { onclick: () => { close(); go(heat); } }, t('Climb')),
     h('button.btn.ghost.wide', { onclick: () => close() }, t('Back')));
   const close = modal(body);
-}
-
-// What you have done across all runs: bosses beaten, records.
-function showJournal() {
-  const bosses = Object.keys(ENEMIES).filter((k) => ENEMIES[k].tier === 'boss');
-  const body = h('div.menu.journal', {},
-    h('h2', {}, t('Journal')),
-    h('div.section-label', {}, t('Bosses beaten')),
-    h('div.journal-grid', {}, bosses.map((id) => h('div.journal-item' + (meta.beaten?.[id] ? '.got' : ''), {},
-      h('div.portrait', {}, h('div.photo', {}, ENEMIES[id].emoji)), h('span', {}, meta.beaten?.[id] ? ENEMIES[id].name : '?')))),
-    h('div.section-label', {}, t('Records')),
-    h('p', {}, t('{runs} runs, {wins} won, {duels} duels won in all.', { runs: meta.runs, wins: meta.wins, duels: meta.duelsWon ?? 0 })
-      .replace(/^1 runs/, '1 run').replace(/, 1 duels/, ', 1 duel')),
-    h('button.btn.wide', { onclick: () => close() }, t('Close')));
-  const close = modal(body, { cls: 'tall' });
 }
 
 // ── Router ──────────────────────────────────────────────────────────────────

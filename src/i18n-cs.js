@@ -188,10 +188,6 @@ export default {
   'It slides too': 'Sjede taky',
   'Only their stones': 'Jen soupeřovy',
   'All stones': 'Všechny kameny',
-  'Journal': 'Deník',
-  'Bosses beaten': 'Poražení bossové',
-  'Records': 'Záznamy',
-  '{runs} runs, {wins} won, {duels} duels won in all.': 'Výprav: {runs}, vyhraných: {wins}, vyhraných duelů celkem: {duels}.',
 
   // ── Codex ─────────────────────────────────────────────────────────────────
   'stones': 'kameny',
