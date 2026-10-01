@@ -439,7 +439,7 @@ export const CS_DATA = {
     rock: { name: 'Bručivý balvan', short: 'Balvan', quote: 'Hmpf. Nehnu se.' },
     top: { name: 'Roztočená káča', short: 'Káča', quote: 'Dokola a dokola a dokola.' },
     skunk: { name: 'Smradlavý skunk', short: 'Skunk', quote: 'Drž si odstup.' },
-    mole: { name: 'Krtek Popleta', short: 'Krtek', quote: 'Strč, táhni, strč, táhni!' },
+    mole: { name: 'Křeček Popleta', short: 'Křeček', quote: 'Strč, táhni, strč, táhni!' },
     twins: { name: 'Dvojčata', short: 'Dvojčata', quote: 'Dva za cenu jednoho!' },
     stenchlord: { name: 'Pán Puchu', short: 'Pán Puchu', quote: 'Budeš stát, kde ti dovolím.' },
     oak: { name: 'Starý dub', short: 'Dub', quote: 'Drž se u mě, maličký.' },

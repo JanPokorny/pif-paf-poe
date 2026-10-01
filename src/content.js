@@ -83,7 +83,7 @@ export const ENEMIES = {
   skunk: { name: 'Stinky Skunk', emoji: '🦨', act: 1, tier: 'normal',
     core: ['stinky', 'stinky'], pool: ['stinky', 'shift', 'lasso'], iters: 70, blunder: 0.3,
     quote: 'Keep your distance.' },
-  mole: { name: 'Bumbling Mole', emoji: '🐹', act: 1, tier: 'normal',
+  mole: { name: 'Bumbling Hamster', emoji: '🐹', act: 1, tier: 'normal',
     core: ['bumper', 'lasso'], pool: ['bumper', 'lasso'], iters: 70, blunder: 0.3,
     quote: 'Push, pull, push, pull!' },
   apple: { name: 'Falling Apple', emoji: '🍎', act: 1, tier: 'normal', cond: 'gravity',
