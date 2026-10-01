@@ -1,0 +1,1574 @@
+{
+ "exp": "effects",
+ "games": 10,
+ "secs": 6.617,
+ "by": {
+  "2048": {
+   "n": 10,
+   "won": 0,
+   "full": 0,
+   "turns": 52,
+   "track": {
+    "2048": {
+     "placed": 9,
+     "dud": 2,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 36
+    },
+    "swap": {
+     "placed": 1,
+     "dud": 0,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 0
+    },
+    "bumper": {
+     "placed": 1,
+     "dud": 1,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 0
+    },
+    "lasso": {
+     "placed": 1,
+     "dud": 1,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 0
+    },
+    "beacon": {
+     "placed": 1,
+     "dud": 0,
+     "bite": 1,
+     "restrictTurns": 1,
+     "choices": 2
+    },
+    "turncoat": {
+     "placed": 1,
+     "dud": 0,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 0
+    }
+   }
+  },
+  "stinky": {
+   "n": 10,
+   "won": 1,
+   "full": 0,
+   "turns": 49,
+   "track": {
+    "2048": {
+     "placed": 2,
+     "dud": 2,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 8
+    },
+    "stinky": {
+     "placed": 7,
+     "dud": 0,
+     "bite": 11,
+     "restrictTurns": 13,
+     "choices": 0
+    },
+    "bumper": {
+     "placed": 1,
+     "dud": 1,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 0
+    },
+    "mountain": {
+     "placed": 1,
+     "dud": 0,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 0
+    },
+    "lasso": {
+     "placed": 1,
+     "dud": 1,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 0
+    },
+    "beacon": {
+     "placed": 1,
+     "dud": 0,
+     "bite": 1,
+     "restrictTurns": 2,
+     "choices": 2
+    },
+    "swap": {
+     "placed": 1,
+     "dud": 0,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 0
+    },
+    "turncoat": {
+     "placed": 1,
+     "dud": 0,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 0
+    }
+   }
+  },
+  "mountain": {
+   "n": 10,
+   "won": 0,
+   "full": 0,
+   "turns": 54,
+   "track": {
+    "2048": {
+     "placed": 1,
+     "dud": 0,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 4
+    },
+    "swap": {
+     "placed": 2,
+     "dud": 0,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 2
+    },
+    "mountain": {
+     "placed": 6,
+     "dud": 0,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 0
+    },
+    "beacon": {
+     "placed": 1,
+     "dud": 0,
+     "bite": 2,
+     "restrictTurns": 4,
+     "choices": 2
+    },
+    "turncoat": {
+     "placed": 1,
+     "dud": 1,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 0
+    }
+   }
+  },
+  "rotate": {
+   "n": 10,
+   "won": 2,
+   "full": 2,
+   "turns": 54,
+   "track": {
+    "2048": {
+     "placed": 2,
+     "dud": 1,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 8
+    },
+    "rotate": {
+     "placed": 8,
+     "dud": 2,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 12
+    },
+    "bumper": {
+     "placed": 1,
+     "dud": 0,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 0
+    },
+    "lasso": {
+     "placed": 1,
+     "dud": 1,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 0
+    },
+    "mountain": {
+     "placed": 1,
+     "dud": 0,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 0
+    },
+    "beacon": {
+     "placed": 1,
+     "dud": 0,
+     "bite": 1,
+     "restrictTurns": 2,
+     "choices": 2
+    },
+    "swap": {
+     "placed": 1,
+     "dud": 0,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 0
+    }
+   }
+  },
+  "magnet": {
+   "n": 10,
+   "won": 0,
+   "full": 0,
+   "turns": 58,
+   "track": {
+    "2048": {
+     "placed": 2,
+     "dud": 1,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 8
+    },
+    "magnet": {
+     "placed": 10,
+     "dud": 0,
+     "bite": 15,
+     "restrictTurns": 22,
+     "choices": 0
+    },
+    "bumper": {
+     "placed": 1,
+     "dud": 1,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 0
+    },
+    "mountain": {
+     "placed": 1,
+     "dud": 0,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 0
+    },
+    "lasso": {
+     "placed": 1,
+     "dud": 1,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 0
+    },
+    "beacon": {
+     "placed": 1,
+     "dud": 0,
+     "bite": 1,
+     "restrictTurns": 1,
+     "choices": 2
+    },
+    "swap": {
+     "placed": 1,
+     "dud": 0,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 0
+    },
+    "turncoat": {
+     "placed": 1,
+     "dud": 1,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 0
+    }
+   }
+  },
+  "bumper": {
+   "n": 10,
+   "won": 1,
+   "full": 0,
+   "turns": 49,
+   "track": {
+    "2048": {
+     "placed": 2,
+     "dud": 0,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 8
+    },
+    "bumper": {
+     "placed": 6,
+     "dud": 5,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 0
+    },
+    "swap": {
+     "placed": 2,
+     "dud": 0,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 6
+    },
+    "lasso": {
+     "placed": 1,
+     "dud": 1,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 0
+    },
+    "mountain": {
+     "placed": 1,
+     "dud": 0,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 0
+    },
+    "beacon": {
+     "placed": 1,
+     "dud": 0,
+     "bite": 1,
+     "restrictTurns": 2,
+     "choices": 2
+    },
+    "turncoat": {
+     "placed": 1,
+     "dud": 0,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 0
+    },
+    "magnet": {
+     "placed": 0,
+     "dud": 0,
+     "bite": 0,
+     "restrictTurns": 1,
+     "choices": 0
+    }
+   }
+  },
+  "lasso": {
+   "n": 10,
+   "won": 1,
+   "full": 1,
+   "turns": 56,
+   "track": {
+    "2048": {
+     "placed": 1,
+     "dud": 0,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 4
+    },
+    "lasso": {
+     "placed": 9,
+     "dud": 8,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 0
+    },
+    "swap": {
+     "placed": 2,
+     "dud": 0,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 0
+    },
+    "bumper": {
+     "placed": 1,
+     "dud": 1,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 0
+    },
+    "mountain": {
+     "placed": 1,
+     "dud": 0,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 0
+    }
+   }
+  },
+  "shift": {
+   "n": 10,
+   "won": 2,
+   "full": 1,
+   "turns": 55,
+   "track": {
+    "2048": {
+     "placed": 1,
+     "dud": 0,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 4
+    },
+    "shift": {
+     "placed": 10,
+     "dud": 2,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 40
+    },
+    "swap": {
+     "placed": 2,
+     "dud": 0,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 3
+    },
+    "bumper": {
+     "placed": 1,
+     "dud": 1,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 0
+    },
+    "mountain": {
+     "placed": 2,
+     "dud": 0,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 0
+    },
+    "beacon": {
+     "placed": 1,
+     "dud": 0,
+     "bite": 3,
+     "restrictTurns": 4,
+     "choices": 2
+    }
+   }
+  },
+  "swap": {
+   "n": 10,
+   "won": 1,
+   "full": 0,
+   "turns": 49,
+   "track": {
+    "2048": {
+     "placed": 2,
+     "dud": 0,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 8
+    },
+    "swap": {
+     "placed": 7,
+     "dud": 0,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 8
+    },
+    "bumper": {
+     "placed": 1,
+     "dud": 0,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 0
+    },
+    "mountain": {
+     "placed": 2,
+     "dud": 0,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 0
+    },
+    "beacon": {
+     "placed": 1,
+     "dud": 0,
+     "bite": 1,
+     "restrictTurns": 2,
+     "choices": 2
+    },
+    "turncoat": {
+     "placed": 1,
+     "dud": 0,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 0
+    }
+   }
+  },
+  "whirl": {
+   "n": 10,
+   "won": 3,
+   "full": 2,
+   "turns": 55,
+   "track": {
+    "2048": {
+     "placed": 2,
+     "dud": 0,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 8
+    },
+    "whirl": {
+     "placed": 8,
+     "dud": 0,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 16
+    },
+    "swap": {
+     "placed": 1,
+     "dud": 0,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 2
+    },
+    "bumper": {
+     "placed": 1,
+     "dud": 0,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 0
+    },
+    "mountain": {
+     "placed": 2,
+     "dud": 0,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 0
+    },
+    "lasso": {
+     "placed": 1,
+     "dud": 1,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 0
+    },
+    "beacon": {
+     "placed": 1,
+     "dud": 0,
+     "bite": 2,
+     "restrictTurns": 3,
+     "choices": 2
+    },
+    "turncoat": {
+     "placed": 1,
+     "dud": 0,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 0
+    },
+    "magnet": {
+     "placed": 0,
+     "dud": 0,
+     "bite": 0,
+     "restrictTurns": 1,
+     "choices": 0
+    }
+   }
+  },
+  "frog": {
+   "n": 10,
+   "won": 0,
+   "full": 0,
+   "turns": 50,
+   "track": {
+    "2048": {
+     "placed": 2,
+     "dud": 0,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 8
+    },
+    "frog": {
+     "placed": 6,
+     "dud": 3,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 0
+    },
+    "swap": {
+     "placed": 1,
+     "dud": 0,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 3
+    },
+    "bumper": {
+     "placed": 1,
+     "dud": 1,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 0
+    },
+    "mountain": {
+     "placed": 1,
+     "dud": 0,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 0
+    },
+    "turncoat": {
+     "placed": 1,
+     "dud": 0,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 0
+    }
+   }
+  },
+  "beacon": {
+   "n": 10,
+   "won": 1,
+   "full": 1,
+   "turns": 62,
+   "track": {
+    "2048": {
+     "placed": 1,
+     "dud": 0,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 4
+    },
+    "beacon": {
+     "placed": 9,
+     "dud": 0,
+     "bite": 14,
+     "restrictTurns": 23,
+     "choices": 18
+    },
+    "swap": {
+     "placed": 1,
+     "dud": 0,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 0
+    },
+    "lasso": {
+     "placed": 1,
+     "dud": 0,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 0
+    },
+    "mountain": {
+     "placed": 1,
+     "dud": 0,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 0
+    },
+    "turncoat": {
+     "placed": 1,
+     "dud": 0,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 0
+    },
+    "magnet": {
+     "placed": 0,
+     "dud": 0,
+     "bite": 0,
+     "restrictTurns": 1,
+     "choices": 0
+    }
+   }
+  },
+  "turncoat": {
+   "n": 10,
+   "won": 4,
+   "full": 2,
+   "turns": 58,
+   "track": {
+    "2048": {
+     "placed": 1,
+     "dud": 0,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 4
+    },
+    "turncoat": {
+     "placed": 10,
+     "dud": 1,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 0
+    },
+    "magnet": {
+     "placed": 0,
+     "dud": 0,
+     "bite": 3,
+     "restrictTurns": 3,
+     "choices": 0
+    },
+    "bumper": {
+     "placed": 1,
+     "dud": 1,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 0
+    },
+    "mountain": {
+     "placed": 1,
+     "dud": 0,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 0
+    },
+    "lasso": {
+     "placed": 1,
+     "dud": 1,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 0
+    },
+    "beacon": {
+     "placed": 1,
+     "dud": 0,
+     "bite": 1,
+     "restrictTurns": 2,
+     "choices": 2
+    },
+    "swap": {
+     "placed": 1,
+     "dud": 1,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 0
+    }
+   }
+  },
+  "parrot": {
+   "n": 10,
+   "won": 1,
+   "full": 1,
+   "turns": 64,
+   "track": {
+    "2048": {
+     "placed": 2,
+     "dud": 0,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 8
+    },
+    "parrot": {
+     "placed": 6,
+     "dud": 4,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 6
+    },
+    "swap": {
+     "placed": 2,
+     "dud": 0,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 7
+    },
+    "bumper": {
+     "placed": 1,
+     "dud": 1,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 0
+    },
+    "magnet": {
+     "placed": 0,
+     "dud": 0,
+     "bite": 0,
+     "restrictTurns": 2,
+     "choices": 0
+    },
+    "mountain": {
+     "placed": 1,
+     "dud": 0,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 0
+    },
+    "beacon": {
+     "placed": 1,
+     "dud": 0,
+     "bite": 1,
+     "restrictTurns": 1,
+     "choices": 2
+    },
+    "turncoat": {
+     "placed": 1,
+     "dud": 0,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 0
+    }
+   }
+  },
+  "flip": {
+   "n": 10,
+   "won": 0,
+   "full": 0,
+   "turns": 50,
+   "track": {
+    "flip": {
+     "placed": 6,
+     "dud": 1,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 24
+    },
+    "swap": {
+     "placed": 2,
+     "dud": 0,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 0
+    },
+    "bumper": {
+     "placed": 1,
+     "dud": 0,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 0
+    },
+    "mountain": {
+     "placed": 1,
+     "dud": 0,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 0
+    },
+    "turncoat": {
+     "placed": 1,
+     "dud": 0,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 0
+    }
+   }
+  },
+  "firecracker": {
+   "n": 10,
+   "won": 0,
+   "full": 0,
+   "turns": 64,
+   "track": {
+    "2048": {
+     "placed": 2,
+     "dud": 2,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 8
+    },
+    "firecracker": {
+     "placed": 10,
+     "dud": 1,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 4
+    },
+    "bumper": {
+     "placed": 1,
+     "dud": 1,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 0
+    },
+    "mountain": {
+     "placed": 2,
+     "dud": 0,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 0
+    },
+    "lasso": {
+     "placed": 1,
+     "dud": 1,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 0
+    },
+    "beacon": {
+     "placed": 1,
+     "dud": 0,
+     "bite": 1,
+     "restrictTurns": 2,
+     "choices": 2
+    },
+    "swap": {
+     "placed": 1,
+     "dud": 1,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 0
+    }
+   }
+  },
+  "twin": {
+   "n": 10,
+   "won": 0,
+   "full": 0,
+   "turns": 52,
+   "track": {
+    "2048": {
+     "placed": 1,
+     "dud": 0,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 4
+    },
+    "twin": {
+     "placed": 9,
+     "dud": 7,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 0
+    },
+    "swap": {
+     "placed": 2,
+     "dud": 0,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 0
+    },
+    "bumper": {
+     "placed": 1,
+     "dud": 0,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 0
+    },
+    "lasso": {
+     "placed": 1,
+     "dud": 1,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 0
+    },
+    "mountain": {
+     "placed": 1,
+     "dud": 0,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 0
+    },
+    "beacon": {
+     "placed": 1,
+     "dud": 0,
+     "bite": 0,
+     "restrictTurns": 1,
+     "choices": 2
+    },
+    "turncoat": {
+     "placed": 1,
+     "dud": 0,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 0
+    }
+   }
+  },
+  "magpie": {
+   "n": 10,
+   "won": 1,
+   "full": 0,
+   "turns": 49,
+   "track": {
+    "2048": {
+     "placed": 2,
+     "dud": 1,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 8
+    },
+    "magpie": {
+     "placed": 9,
+     "dud": 0,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 18
+    },
+    "swap": {
+     "placed": 2,
+     "dud": 0,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 2
+    },
+    "bumper": {
+     "placed": 1,
+     "dud": 0,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 0
+    },
+    "shift": {
+     "placed": 2,
+     "dud": 0,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 8
+    },
+    "rotate": {
+     "placed": 1,
+     "dud": 0,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 2
+    },
+    "lasso": {
+     "placed": 1,
+     "dud": 1,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 0
+    },
+    "beacon": {
+     "placed": 1,
+     "dud": 0,
+     "bite": 3,
+     "restrictTurns": 3,
+     "choices": 2
+    },
+    "magnet": {
+     "placed": 1,
+     "dud": 0,
+     "bite": 1,
+     "restrictTurns": 1,
+     "choices": 0
+    },
+    "turncoat": {
+     "placed": 1,
+     "dud": 0,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 0
+    }
+   }
+  },
+  "overtake": {
+   "n": 10,
+   "won": 1,
+   "full": 0,
+   "turns": 49,
+   "track": {
+    "2048": {
+     "placed": 1,
+     "dud": 0,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 4
+    },
+    "swap": {
+     "placed": 1,
+     "dud": 0,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 0
+    },
+    "mountain": {
+     "placed": 2,
+     "dud": 0,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 0
+    },
+    "lasso": {
+     "placed": 1,
+     "dud": 0,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 0
+    },
+    "overtake": {
+     "placed": 4,
+     "dud": 4,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 0
+    },
+    "beacon": {
+     "placed": 1,
+     "dud": 0,
+     "bite": 1,
+     "restrictTurns": 3,
+     "choices": 2
+    },
+    "turncoat": {
+     "placed": 1,
+     "dud": 0,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 0
+    }
+   }
+  },
+  "relocate": {
+   "n": 10,
+   "won": 0,
+   "full": 0,
+   "turns": 52,
+   "track": {
+    "2048": {
+     "placed": 2,
+     "dud": 0,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 8
+    },
+    "swap": {
+     "placed": 1,
+     "dud": 1,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 0
+    },
+    "relocate": {
+     "placed": 4,
+     "dud": 2,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 36
+    },
+    "mountain": {
+     "placed": 1,
+     "dud": 0,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 0
+    },
+    "lasso": {
+     "placed": 1,
+     "dud": 1,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 0
+    },
+    "beacon": {
+     "placed": 1,
+     "dud": 0,
+     "bite": 2,
+     "restrictTurns": 3,
+     "choices": 2
+    },
+    "turncoat": {
+     "placed": 1,
+     "dud": 0,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 0
+    }
+   }
+  },
+  "mind-control": {
+   "n": 10,
+   "won": 1,
+   "full": 1,
+   "turns": 46,
+   "track": {
+    "2048": {
+     "placed": 1,
+     "dud": 1,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 4
+    },
+    "swap": {
+     "placed": 1,
+     "dud": 0,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 0
+    },
+    "mind-control": {
+     "placed": 3,
+     "dud": 0,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 5
+    },
+    "bumper": {
+     "placed": 1,
+     "dud": 1,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 0
+    },
+    "lasso": {
+     "placed": 1,
+     "dud": 1,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 0
+    },
+    "mountain": {
+     "placed": 1,
+     "dud": 0,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 0
+    },
+    "turncoat": {
+     "placed": 1,
+     "dud": 0,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 2
+    }
+   }
+  },
+  "rehearse": {
+   "n": 10,
+   "won": 0,
+   "full": 0,
+   "turns": 42,
+   "track": {
+    "2048": {
+     "placed": 1,
+     "dud": 0,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 4
+    },
+    "swap": {
+     "placed": 1,
+     "dud": 0,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 0
+    },
+    "rehearse": {
+     "placed": 7,
+     "dud": 7,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 2
+    },
+    "mountain": {
+     "placed": 1,
+     "dud": 0,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 0
+    },
+    "lasso": {
+     "placed": 1,
+     "dud": 1,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 0
+    },
+    "beacon": {
+     "placed": 1,
+     "dud": 0,
+     "bite": 2,
+     "restrictTurns": 2,
+     "choices": 2
+    },
+    "turncoat": {
+     "placed": 1,
+     "dud": 1,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 0
+    }
+   }
+  },
+  "mirror": {
+   "n": 10,
+   "won": 0,
+   "full": 0,
+   "turns": 54,
+   "track": {
+    "2048": {
+     "placed": 1,
+     "dud": 0,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 4
+    },
+    "mirror": {
+     "placed": 4,
+     "dud": 2,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 11
+    },
+    "swap": {
+     "placed": 2,
+     "dud": 0,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 0
+    },
+    "bumper": {
+     "placed": 1,
+     "dud": 1,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 0
+    },
+    "mountain": {
+     "placed": 2,
+     "dud": 0,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 0
+    },
+    "lasso": {
+     "placed": 1,
+     "dud": 1,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 0
+    },
+    "beacon": {
+     "placed": 1,
+     "dud": 0,
+     "bite": 1,
+     "restrictTurns": 3,
+     "choices": 2
+    },
+    "turncoat": {
+     "placed": 1,
+     "dud": 0,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 0
+    }
+   }
+  },
+  "nudge": {
+   "n": 10,
+   "won": 2,
+   "full": 1,
+   "turns": 47,
+   "track": {
+    "2048": {
+     "placed": 1,
+     "dud": 0,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 4
+    },
+    "swap": {
+     "placed": 2,
+     "dud": 0,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 0
+    },
+    "nudge": {
+     "placed": 6,
+     "dud": 2,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 25
+    },
+    "bumper": {
+     "placed": 1,
+     "dud": 1,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 0
+    },
+    "lasso": {
+     "placed": 1,
+     "dud": 1,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 0
+    },
+    "mountain": {
+     "placed": 1,
+     "dud": 0,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 0
+    },
+    "turncoat": {
+     "placed": 1,
+     "dud": 1,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 0
+    }
+   }
+  },
+  "bribe": {
+   "n": 10,
+   "won": 8,
+   "full": 2,
+   "turns": 58,
+   "track": {
+    "2048": {
+     "placed": 2,
+     "dud": 0,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 8
+    },
+    "swap": {
+     "placed": 2,
+     "dud": 0,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 0
+    },
+    "bribe": {
+     "placed": 9,
+     "dud": 0,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 10
+    },
+    "bumper": {
+     "placed": 1,
+     "dud": 0,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 0
+    },
+    "lasso": {
+     "placed": 1,
+     "dud": 1,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 0
+    },
+    "mountain": {
+     "placed": 1,
+     "dud": 0,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 0
+    },
+    "magnet": {
+     "placed": 0,
+     "dud": 0,
+     "bite": 0,
+     "restrictTurns": 1,
+     "choices": 0
+    },
+    "beacon": {
+     "placed": 1,
+     "dud": 0,
+     "bite": 2,
+     "restrictTurns": 2,
+     "choices": 2
+    },
+    "turncoat": {
+     "placed": 1,
+     "dud": 1,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 0
+    }
+   }
+  },
+  "muffle": {
+   "n": 10,
+   "won": 0,
+   "full": 0,
+   "turns": 54,
+   "track": {
+    "muffle": {
+     "placed": 7,
+     "dud": 0,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 0
+    },
+    "swap": {
+     "placed": 2,
+     "dud": 0,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 0
+    },
+    "bumper": {
+     "placed": 1,
+     "dud": 1,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 0
+    },
+    "mountain": {
+     "placed": 2,
+     "dud": 0,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 0
+    },
+    "lasso": {
+     "placed": 1,
+     "dud": 1,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 0
+    },
+    "beacon": {
+     "placed": 1,
+     "dud": 0,
+     "bite": 2,
+     "restrictTurns": 2,
+     "choices": 2
+    },
+    "turncoat": {
+     "placed": 1,
+     "dud": 0,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 0
+    }
+   }
+  },
+  "pluck": {
+   "n": 10,
+   "won": 0,
+   "full": 0,
+   "turns": 68,
+   "track": {
+    "2048": {
+     "placed": 2,
+     "dud": 0,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 8
+    },
+    "pluck": {
+     "placed": 10,
+     "dud": 0,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 0
+    },
+    "swap": {
+     "placed": 2,
+     "dud": 0,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 6
+    },
+    "bumper": {
+     "placed": 1,
+     "dud": 1,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 0
+    },
+    "lasso": {
+     "placed": 1,
+     "dud": 1,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 0
+    },
+    "beacon": {
+     "placed": 1,
+     "dud": 0,
+     "bite": 1,
+     "restrictTurns": 2,
+     "choices": 2
+    },
+    "turncoat": {
+     "placed": 1,
+     "dud": 1,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 0
+    }
+   }
+  }
+ }
+}
