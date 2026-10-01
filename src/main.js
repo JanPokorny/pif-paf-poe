@@ -338,11 +338,11 @@ function mapScreen() {
         ? h('span.doodle.foe', {}, h('span.photo', {}, ENEMIES[c.duel.enemyId].emoji),
           c.duel.conds?.length ? h('span.cell-space', { html: icon(`cond-${c.duel.conds[0]}`) }) : null)
         : h('span.doodle', { html: icon(NODE_ICON[kind]) }),
-      kind === 'boss-mark' || kind === 'rock' ? null : h('span.label', {}, c.duel ? shortName(ENEMIES[c.duel.enemyId]) : NODE_NAME[kind]));
-      if (!c.mark && threats.has(k)) el.classList.add('boss-threat');
+      kind === 'boss-mark' || kind === 'rock' ? null : h('span.label', {}, c.mark === 'S' ? t('Burned') : c.duel ? shortName(ENEMIES[c.duel.enemyId]) : NODE_NAME[kind]));
+      if ((!c.mark || c.mark === 'S') && threats.has(k)) el.classList.add('boss-threat');
       if (c.mark === 'X') el.insertAdjacentHTML('beforeend', scribbleX(freshX === k));
       if (c.mark === 'O') el.insertAdjacentHTML('beforeend', scribbleO(lastO === k));
-      if (c.mark === 'S') el.classList.add('scorched');
+      if (c.mark === 'S') { el.classList.add('scorched'); el.insertAdjacentHTML('beforeend', `<span class="burn">${icon('fire')}</span>`); }
       if (kind === 'elite' && !c.mark) el.insertAdjacentHTML('beforeend', `<span class="elite-star">${icon('star')}</span>`);
       grid.push(el);
     }

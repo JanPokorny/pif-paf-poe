@@ -462,6 +462,7 @@ export default {
   "; after each step the boss marks an ": "; po každém tvém kroku dá boss ",
   "Three Xs in a row open the boss's door.": "Tři X v řadě otevřou bossovy dveře.",
   'Rock': 'Skála',
+  'Burned': 'Spálené',
   'A rock: nobody can mark it, and no line runs through it.': 'Skála: nikdo ji nezabere a žádná řada přes ni nevede.',
   'At full strength: it thinks harder, and brings its harder rules from the start.': 'V plné síle: víc přemýšlí a těžší pravidla má hned od začátku.',
   'Tap a rock to break it.': 'Ťukni na skálu a rozbiješ ji.',
