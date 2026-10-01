@@ -352,7 +352,7 @@ def('rehearse', {
 
 def('muffle', {
   name: 'Muffle', rarity: 'common', kind: 'once', once: true,
-  text: 'The enemy\'s next stone does nothing.',
+  text: 'The enemy\'s next special stone does nothing. A Pebble does not use it up.',
   options: (s, pos, cell) => (s.silenced[other(cell.player)] ? [] : [{}]),
   apply(s, pos, a, cell) { s.silenced[other(cell.player)] = 1; },
 });
