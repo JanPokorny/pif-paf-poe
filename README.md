@@ -9,9 +9,10 @@ can be crafted, two into one of a higher tier, along the way. Some duels carry a
 (gravity, a hollow centre, open hands); bosses bring no stones at all, only a rule in their
 favour.
 
-Each of the three acts is Ultimate tic-tac-toe against its boss: nine forest clearings, each a
-3×3 of encounters. Where you step sends the boss to the matching clearing, and where it steps
-sends you; three in a row takes a clearing, and three clearings in a row open the boss's door.
+The whole climb is one game of Ultimate tic-tac-toe against its boss: nine forest clearings,
+each a 3×3 of encounters. Where you step sends the boss to the matching clearing, and where it
+steps sends you; three in a row takes a clearing, and three clearings in a row — or a map nobody
+can win — beat it. If the boss gets three clearings in a row, the climb is over.
 
 It grew out of a physical summer-camp game; the original rules, simulations and print-and-play
 sheets live in [`old/`](old/).

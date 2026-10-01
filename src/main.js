@@ -291,7 +291,7 @@ let mapView = null;   // the clearing on show, until the map moves on
 let mapViewAt = null;
 
 function mapScreen() {
-  if (run.map?.v !== 5) R.makeMap(run);   // a save from an older map: a fresh one
+  if (run.map?.v !== 6) R.makeMap(run);   // a save from an older map: a fresh one
   const map = run.map;
   const reach = new Set(R.reachable(run));
   const playable = R.playableClearings(map);
@@ -313,7 +313,7 @@ function mapScreen() {
       const sq = h(`span.mini-sq.${x.kind}` + (x.mark ? `.m-${x.mark}` : ''));
       if (x.mark === 'X') sq.innerHTML = scribbleX(freshX === R.keyOf(c, i));
       else if (x.mark === 'O') sq.innerHTML = scribbleO(lastO === R.keyOf(c, i));
-      else if (!x.mark && x.kind !== 'boss-mark') sq.innerHTML = x.duel ? '<i></i>' : icon(NODE_ICON[x.kind]);
+      else if (!x.mark && x.kind !== 'boss-mark') sq.innerHTML = x.kind === 'elite' ? icon('star') : x.duel ? '<i></i>' : icon(NODE_ICON[x.kind]);
       return sq;
     }));
     if (won === 'X' || won === 'O') el.insertAdjacentHTML('beforeend', `<span class="big-mark">${won === 'X' ? scribbleX() : scribbleO()}</span>`);
@@ -354,6 +354,7 @@ function mapScreen() {
     if (c.mark === 'X') el.insertAdjacentHTML('beforeend', scribbleX(freshX === k));
     if (c.mark === 'O') el.insertAdjacentHTML('beforeend', scribbleO(lastO === k));
     if (c.mark === 'S') el.classList.add('scorched');
+    if (kind === 'elite' && !c.mark) el.insertAdjacentHTML('beforeend', `<span class="elite-star">${icon('star')}</span>`);
     return el;
   });
   if (freshX) sfx('scribbleX');
@@ -372,9 +373,10 @@ function mapScreen() {
   // What just happened, said once.
   const won = map.result === 'won';
   const n = map.news;
-  const news = map.result === 'lost' ? t('{boss} has three clearings in a row: −1 ❤, and a fresh map.', { boss: boss.name })
-    : map.result === 'draw' ? t('Nobody can win this map any more.')
+  const news = map.result === 'lost' ? t('{boss} has three clearings in a row. The climb is over.', { boss: boss.name })
+    : map.result === 'draw' ? t('Nobody can win the map any more — and a draw is yours. {boss} yields.', { boss: boss.name })
       : won ? t('Three clearings in a row! {boss} is beaten.', { boss: boss.name })
+        : n?.act ? t('Act {n}: {act}. The enemies still waiting grow stronger.', { n: n.act, act: ACTS[n.act - 1].name })
         : n?.lost !== undefined ? t('{boss} took the {where} clearing: −1 ❤.', { boss: boss.name, where: t(CLEARING[n.lost]) })
           : n?.took !== undefined ? t('You took the {where} clearing! +{gold} gold.', { where: t(CLEARING[n.took]), gold: R.CLEARING_GOLD })
             : '';
@@ -385,12 +387,17 @@ function mapScreen() {
     h('div.portrait', {}, h('div.photo', {}, boss.emoji)),
     h('div.door-text', {},
       h('div.door-name', {}, boss.name),
-      won ? h('div', {}, t('Beaten! Three clearings in a row.')) : h('div', {}, t('Map {n}. Take three clearings in a row to beat it.', { n: map.page }))));
-  const turn = map.result === 'lost' || map.result === 'draw'
-    ? h('button.btn.primary.wide.big', { onclick: () => { R.nextPage(run); mapView = null; save(); route(); } }, t('A fresh map'))
-    : won ? h('button.btn.primary.wide.big', {
-      onclick: () => { meta.beaten = { ...(meta.beaten ?? {}), [map.boss]: true }; saveMeta(); R.winAct(run); save(); route(); },
-    }, t('Onward')) : null;
+      won || map.result === 'draw' ? h('div', {}, t('Beaten!')) : h('div', {}, t('Take three clearings in a row to beat it. If it gets three first, the climb is over.'))));
+  const turn = map.result ? h('button.btn.primary.wide.big', {
+    onclick: () => {
+      if (map.result !== 'lost') { meta.beaten = { ...(meta.beaten ?? {}), [map.boss]: true }; saveMeta(); }
+      R.endMap(run); save(); route();
+    },
+  }, map.result === 'lost' ? t('The end') : t('Victory!')) : null;
+  // Map aids won in duels: arm one for the next step.
+  const aids = map.result ? null : h('div.aids', {}, R.AID_TYPES.filter((a) => run.aids?.[a]).map((a) => h('button.aid' + (map.armed === a ? '.armed' : ''), {
+    onclick: () => { R.toggleAid(run, a); sfx('click'); save(); mapScreen(); if (map.armed) toast(t(R.AIDS[a].text)); },
+  }, h('span.aid-ico', { html: icon(a === 'free' ? 'map' : 'rule-headstart') }), `${t(R.AIDS[a].name)} ×${run.aids[a]}`)));
   const where = map.won[view]
     ? t(map.won[view] === 'X' ? 'The {where} clearing is yours.' : map.won[view] === 'O' ? 'The {where} clearing is the boss\'s.' : 'The {where} clearing is a draw.', { where: t(CLEARING[view]) })
     : playable.includes(view) ? t(playable.length > 1 ? 'The {where} clearing — you may step anywhere open.' : 'The {where} clearing — you must step here.', { where: t(CLEARING[view]) })
@@ -402,6 +409,7 @@ function mapScreen() {
       overview,
       h('div.map-news' + (won || n?.took !== undefined ? '.good' : ''), {}, news),
       turn,
+      aids,
       h('div.clearing-title', {}, where),
       sheet,
       map.result ? null : h('div.map-help', {}, !R.xCount(run)
@@ -416,7 +424,7 @@ function actIntro() {
     h('div.act-n', {}, t('Act {n}', { n: act.n })),
     h('h1', {}, act.name),
     h('p', {}, t(['A summer camp. A field of stones that will not stay still.', 'The meadow is behind you. The ground turns to stone.', 'The air thins. Only the best players make it this far.'][act.n - 1])),
-    h('div.rules-note', {}, t('This act is Ultimate tic-tac-toe with {boss}: nine clearings, each its own little board. Where you step in one sends the boss to the matching clearing, and where it steps sends you. Three in a row takes a clearing, and three clearings in a row beat it. Each clearing it takes costs you a heart, and three in a row for it means a fresh map, less friendly than the last. Mini-bosses hold the middles of some clearings.', { boss: ENEMIES[run.map.boss].name })),
+    h('div.rules-note', {}, t('The whole climb is one game of Ultimate tic-tac-toe with {boss}: nine clearings, each its own little board. Where you step in one sends the boss to the matching clearing, and where it steps sends you. Three in a row takes a clearing; three clearings in a row beat it — and so does a map nobody can win. Each clearing it takes costs you a heart, and its three in a row ends the climb. Mini-bosses hold the middles of some clearings; as your marks add up, the climb moves on to harder acts.', { boss: ENEMIES[run.map.boss].name })),
     run.act === 1 ? h('p.dim', {}, t('Somewhere in the middle clearing lies a gift: a special stone, free.')) : null,
     h('button.btn.primary.wide.big', { onclick: () => { run.screen = 'map'; route(); } }, t('Onward'))));
 }
@@ -568,6 +576,15 @@ function pickFromPouch(prompt, cb, { filter = () => true, cancel = t('Cancel') }
   const close = modal(body, { dismissable: false, cls: 'tall' });
 }
 
+// A map aid as a reward card.
+function aidCard(kind, onclick) {
+  return h('button.card.aid-card', { onclick },
+    h('div.trick-token', { html: icon(kind === 'free' ? 'map' : 'rule-headstart') }),
+    h('div.card-name', {}, t(R.AIDS[kind].name)),
+    h('div.card-text', {}, t(R.AIDS[kind].text)),
+    h('div.dim.small', {}, t('map aid')));
+}
+
 function rewardScreen() {
   const rw = run.pending;
   const done = () => { R.leaveNode(run); route(); };
@@ -591,10 +608,11 @@ function rewardScreen() {
       onclick: () => takeTrick(rw.trick, (ok) => { if (ok) { rw.taken.trick = true; sfx('coin'); save(); rewardScreen(); } }),
     })));
   }
-  if (rw.taken.stone && rw.taken.stone !== true) parts.push(h('div.section-label', {}, t('You took the {stone}.', { stone: STONES[rw.taken.stone].name })), h('div.cards.one', {}, stoneCard({ type: rw.taken.stone }, {})));
+  if (rw.taken.stone && rw.taken.stone !== true && !rw.taken.stone.startsWith('aid:')) parts.push(h('div.section-label', {}, t('You took the {stone}.', { stone: STONES[rw.taken.stone].name })), h('div.cards.one', {}, stoneCard({ type: rw.taken.stone }, {})));
+  if (rw.taken.stone?.startsWith?.('aid:')) parts.push(h('div.section-label', {}, t('You took a map aid: {aid}.', { aid: t(R.AIDS[rw.taken.stone.slice(4)].name) })));
   if (rw.stones.length && !rw.taken.stone) {
-    parts.push(h('div.section-label', {}, t('Take a stone')),
-      h('div.cards', {}, rw.stones.map((s) => stoneCard(s, {
+    parts.push(h('div.section-label', {}, rw.aid ? t('Take a stone — or help on the map') : t('Take a stone')),
+      h('div.cards', {}, rw.aid ? aidCard(rw.aid, () => { R.gainAid(run, rw.aid); rw.taken.stone = `aid:${rw.aid}`; sfx('coin'); save(); rewardScreen(); }) : null, rw.stones.map((s) => stoneCard(s, {
         onclick: (e) => {
           const card = e.currentTarget;
           takeStone(s, (ok) => {
@@ -884,9 +902,9 @@ function showHelp(after) {
       h('p', {}, t('Some duels carry a '), h('b', {}, t('condition')), t(' for both sides: gravity, a hollow centre, open hands.')),
       h('p', {}, t('Mini-bosses bring no special stones at all. Instead each has '), h('b', {}, t('a rule in its favour')), t(' — it names the stone you play, closes a column, takes two turns at once… Read it before you choose your stones.'))),
     h('div', {}, h('h2', {}, t('The climb')),
-      h('p', {}, t('Three acts. Each act is Ultimate tic-tac-toe with its boss: nine clearings in a 3×3, each a 3×3 of squares — duels, elites, shops, campfires, treasure and the unknown. The boss opens in the very middle.')),
+      h('p', {}, t('The climb is one game of Ultimate tic-tac-toe with its boss: nine clearings in a 3×3, each a 3×3 of squares — duels, elites, shops, campfires, treasure and the unknown. The boss opens in the very middle.')),
       h('p', {}, t('Wherever you step you mark an '), h('b.blue', {}, 'X'), t(', and the boss must answer in the clearing matching your square; its '), h('b.red', {}, 'O'), t(' sends you on in turn. A lost duel scorches its square — only the boss may take it now — and you choose again.')),
-      h('p', {}, h('b', {}, t('Three in a row takes a clearing; three clearings in a row beat the boss.')), t(' Each clearing the boss takes costs a heart; its three in a row costs another and a fresh map, less friendly than the last.')),
+      h('p', {}, h('b', {}, t('Three in a row takes a clearing; three clearings in a row, or a map nobody can win, beat the boss.')), t(' Each clearing the boss takes costs a heart; its three in a row ends the climb. Duels can also win map aids: a free step anywhere, or a step the boss does not answer.')),
       h('p', {}, t('Before each duel you choose which special stones to bring. Shops sell more slots. Lose and it costs hearts; run out and the climb is over. Mini-bosses cost two hearts.'))),
   ];
   let k = 0;

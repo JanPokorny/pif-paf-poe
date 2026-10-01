@@ -534,7 +534,8 @@ b { font-weight: 400; background: linear-gradient(transparent 55%, var(--hi) 55%
 .trick-row .uses { color: var(--blue); font-size: 1rem; }
 .map-cell .doodle.foe { display: flex; align-items: center; justify-content: center; font-size: 1.7rem; width: auto; height: auto; }
 .map-cell .doodle.foe .photo { filter: grayscale(1) contrast(1.2) sepia(0.3); line-height: 1; }
-.map-cell.elite .doodle.foe { outline: 2px dashed var(--red); outline-offset: 3px; border-radius: 50%; }
+.map-cell .elite-star { position: absolute; top: 6%; right: 8%; width: 24%; height: 24%; color: var(--red); pointer-events: none; }
+.map-cell .elite-star .icon { width: 100%; height: 100%; fill: var(--red); }
 .map-cell .cell-space { position: absolute; right: -12px; bottom: -4px; width: 16px; height: 16px; color: var(--pencil); }
 .map-cell .cell-space .icon { width: 16px; height: 16px; }
 .map-cell .cell-space::after { content: ''; position: absolute; left: -2px; right: -2px; top: 50%; height: 2px; background: var(--red); transform: rotate(-35deg); }
@@ -735,3 +736,9 @@ body:has(.duel) #toast.show { transform: translate(-50%, 0) rotate(-1deg); }
 .logo-board .letter.o { color: var(--red); }
 @keyframes letter-in { to { transform: rotate(var(--tilt)) scale(1); opacity: 1; } }
 @media (prefers-reduced-motion: reduce) { .logo-board .letter { animation: none; transform: rotate(var(--tilt)); opacity: 1; } }
+/* Map aids: tap to arm one for the next step. */
+.aids { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; }
+.aid { display: inline-flex; align-items: center; gap: 6px; font: inherit; font-size: 1rem; padding: 6px 12px; border: 1.5px dashed var(--blue); border-radius: 14px 12px 15px 11px; background: var(--card); color: var(--blue); cursor: pointer; }
+.aid.armed { background: var(--blue); color: #fff; border-style: solid; animation: wiggle 1.4s ease-in-out infinite; }
+.aid-ico, .aid-ico .icon { width: 18px; height: 18px; }
+.mini-sq.elite .icon { width: 80%; height: 80%; }

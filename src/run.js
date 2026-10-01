@@ -6,7 +6,7 @@
 
 import { STONES, TRICKS, TRICK_TYPES, CONDS } from './engine.js';
 import {
-  RELICS, RELIC_TYPES, BOSS_RELICS, ENEMIES, ACTS, EVENTS, enemiesOf, EASY_OPENERS,
+  RELICS, RELIC_TYPES, ENEMIES, ACTS, EVENTS, enemiesOf, EASY_OPENERS,
   STONE_PRICE, TRICK_PRICE, RELIC_PRICE, REWARD_STONES,
 } from './content.js';
 
@@ -56,6 +56,7 @@ export function newRun({ seed = (Math.random() * 2 ** 31) | 0, heat = 0 } = {}) 
     hearts, maxHearts: hearts,
     gold: START.gold, pouch: [], tricks: [...START.tricks], relics: [],
     slots: START.slots,
+    aids: { free: 0, double: 0 },   // map aids won in duels
     lastHand: null, nextUid: 1,
     rematchUsed: {}, phoenixUsed: false,
     stats: { won: 0, lost: 0, elites: 0, bosses: 0, gold: 0, started: Date.now() },
@@ -101,8 +102,8 @@ export function craft(run, uidA, uidB, result) {
 
 // ── The map ─────────────────────────────────────────────────────────────────
 //
-// Each act is a game of Ultimate tic-tac-toe with its boss: nine clearings in
-// a 3x3, each clearing a 3x3 of squares, all on view. The boss opens in the
+// The whole climb is one game of Ultimate tic-tac-toe with its boss: nine
+// clearings in a 3x3, each clearing a 3x3 of squares, all on view. The boss opens in the
 // very middle. Where one side steps inside a clearing decides the clearing the
 // other must answer in (anywhere, if that one is finished or has nothing left
 // for them). Three in a row inside a clearing takes it; three clearings in a
@@ -112,11 +113,15 @@ export function craft(run, uidA, uidB, result) {
 // step there again, but the boss may, and you choose again at once -- the
 // boss answers only once you have really placed a mark.
 //
-// Each clearing the boss takes costs you a heart; its three in a row costs
-// one more and a fresh map, as does a map where nobody can win any more.
-// Every new map in an act is less friendly than the last.
+// Each clearing the boss takes costs you a heart. Its three in a row ends the
+// climb; yours, or a map nobody can win any more, is the victory. The climb
+// goes through three acts as your marks add up: each new act re-rolls the
+// enemies still waiting on the map from its harder cast.
 
-const BOSS_SEES = [0.3, 0.4, 0.5, 0.6];   // the chance it blocks your two in a row, by map
+const BOSS_SEES = [0.3, 0.45, 0.6];       // the chance it blocks your two in a row, by act
+const ACT_EVERY = 7;                      // your marks to each new act
+export const actFor = (marks) => Math.min(3, 1 + Math.floor(marks / ACT_EVERY));
+const GOOD = ['shop', 'rest', 'treasure', 'craft', 'gift'];
 export const CLEARING_GOLD = 15;          // for each clearing you take
 export const LINES = [[0, 1, 2], [3, 4, 5], [6, 7, 8], [0, 3, 6], [1, 4, 7], [2, 5, 8], [0, 4, 8], [2, 4, 6]];
 const CORNERS = [0, 2, 6, 8];
@@ -165,78 +170,115 @@ export function retreat(run) {
   run.screen = 'map';
 }
 
-// A fresh map: the act's boss, and how many maps it has taken so far.
-export function makeMap(run, prev = null) {
+// The map of the climb, and its boss.
+export function makeMap(run) {
   const map = {
-    v: 5,
-    boss: prev?.boss ?? pick(run, ACTS[run.act - 1].bosses),
-    page: (prev?.page ?? 0) + 1,
+    v: 6,
+    boss: pick(run, ACTS.flatMap((a) => a.bosses)),
+    page: 1,
     cells: [],         // cells[c][i] = {kind, mark, duel?}; mark X, O or S (scorched)
     won: Array(9).fill(null),   // per clearing: 'X', 'O', 'draw' or null
     next: 4,           // the clearing you must step in (null: any)
     at: null,          // the square being visited right now
     lastO: keyOf(4, 4),
-    result: null,      // 'won' (the door is open), 'lost' or 'draw' (a fresh map follows)
+    result: null,      // 'won' or 'draw' (the climb is yours), 'lost' (it is over)
     line: null,        // the clearings of the line that ended the map
-    fights: prev?.fights ?? 0,   // duels so far this act, for the gentle first few
+    fights: 0,         // duels laid out so far, for the gentle first few
+    armed: null,       // a map aid about to be used: 'free' or 'double'
   };
   run.map = map;
-  // The very first map of the climb hides a gift where you start.
-  const gift = run.act === 1 && map.page === 1 ? pick(run, [0, 1, 2, 3, 5, 6, 7, 8]) : -1;
-  for (let c = 0; c < 9; c++) {
-    map.cells.push([]);
-    for (let i = 0; i < 9; i++) {
-      if (c === 4 && i === 4) map.cells[c].push({ kind: 'boss-mark', mark: 'O' });
-      else if (c === 4 && i === gift) map.cells[c].push({ kind: 'gift', mark: null });
-      else map.cells[c].push(fillCell(run, c, i));
-    }
-  }
-  // Mini-bosses hold the middles of a few clearings: the squares that matter
-  // most. Two on an act's first map, three after.
-  const minis = minibossesOf(run.act).filter((id) => id !== map.boss);
-  const pool = minis.length ? minis : minibossesOf(run.act);
-  for (const c of shuffle(run, [0, 1, 2, 3, 5, 6, 7, 8]).slice(0, map.page > 1 ? 3 : 2)) {
-    map.cells[c][4] = { kind: 'miniboss', mark: null, duel: prepareDuel(run, pick(run, pool)) };
-  }
+  for (let c = 0; c < 9; c++) map.cells.push(Array(9).fill(null));
+  map.cells[4][4] = { kind: 'boss-mark', mark: 'O' };
+  // Where you start hides a gift.
+  map.cells[4][pick(run, [0, 1, 2, 3, 5, 6, 7, 8])] = { kind: 'gift', mark: null };
+  // Mini-bosses hold the middles of a few clearings: the squares that matter most.
+  for (const c of shuffle(run, [0, 1, 2, 3, 5, 6, 7, 8]).slice(0, 3)) map.cells[c][4] = { kind: 'miniboss', mark: null };
+  // The rest in a random order, so that the spreading-out of good squares
+  // below has no direction to it.
+  const order = [];
+  for (let c = 0; c < 9; c++) for (let i = 0; i < 9; i++) if (!map.cells[c][i]) order.push([c, i]);
+  for (const [c, i] of shuffle(run, order)) map.cells[c][i] = fillCell(run, c, i);
+  rollDuels(run);
   return map;
 }
 const minibossesOf = (act) => enemiesOf(act, 'miniboss');
 
+// The squares around (c, i) across the whole 9x9 sheet, clearing borders and all.
+function aroundOnSheet(c, i) {
+  const gx = (c % 3) * 3 + (i % 3), gy = ((c / 3) | 0) * 3 + ((i / 3) | 0);
+  const out = [];
+  for (let dy = -1; dy <= 1; dy++) {
+    for (let dx = -1; dx <= 1; dx++) {
+      const x = gx + dx, y = gy + dy;
+      if ((!dx && !dy) || x < 0 || y < 0 || x > 8 || y > 8) continue;
+      out.push([((y / 3) | 0) * 3 + ((x / 3) | 0), (y % 3) * 3 + (x % 3)]);
+    }
+  }
+  return out;
+}
+
+// The enemies on the squares still open, for the act the climb is in. Called
+// when the map is made and whenever a new act begins.
+function rollDuels(run) {
+  const map = run.map;
+  const minis = minibossesOf(run.act).filter((id) => id !== map.boss);
+  const minipool = minis.length ? minis : minibossesOf(run.act);
+  for (const cl of map.cells) {
+    for (const cell of cl) {
+      if (cell.mark) continue;
+      if (cell.kind === 'fight') {
+        const easy = run.act === 1 && map.fights < 4;
+        cell.duel = prepareDuel(run, pick(run, easy ? EASY_OPENERS : enemiesOf(run.act, 'normal')), { easy });
+        map.fights++;
+      } else if (cell.kind === 'elite') cell.duel = prepareDuel(run, pick(run, enemiesOf(run.act, 'elite')));
+      else if (cell.kind === 'miniboss') cell.duel = prepareDuel(run, pick(run, minipool));
+    }
+  }
+}
+
 // What a square is. Squares on more lines -- corners and middles, of the
-// clearing and of the map -- hide harder things; each new map of an act is
-// less friendly than the last.
+// clearing and of the map -- hide harder things, and good squares keep their
+// distance from one another: each good neighbour already laid out makes
+// another good square a quarter as likely.
 function fillCell(run, c, i) {
   const map = run.map;
-  const p = map.page - 1;
   const hard = (CORNERS.includes(i) || i === 4 ? 3 : 0) + (CORNERS.includes(c) || c === 4 ? 3 : 0);
-  const soft = (n) => Math.max(2, n - 3 * p);
-  const table = { fight: 40 + 4 * p, elite: 2 + 6 * p + hard, event: 16, treasure: soft(6), rest: soft(12), shop: soft(10), craft: soft(6) };
-  if (run.act === 1 && map.page === 1 && c === 4) delete table.elite;
-  const kind = weighted(run, table);
-  const cell = { kind, mark: null };
-  if (kind === 'fight') {
-    const easy = run.act === 1 && map.fights < 4;
-    const pool = easy ? EASY_OPENERS : enemiesOf(run.act, 'normal');
-    cell.duel = prepareDuel(run, pick(run, pool), { easy });
-    map.fights++;
-  } else if (kind === 'elite') {
-    cell.duel = prepareDuel(run, pick(run, enemiesOf(run.act, 'elite')));
-  }
-  return cell;
+  const table = { fight: 40, elite: 3 + hard, event: 16, treasure: 6, rest: 12, shop: 10, craft: 6 };
+  if (c === 4) delete table.elite;
+  const near = aroundOnSheet(c, i).filter(([cc, ii]) => GOOD.includes(map.cells[cc][ii]?.kind)).length;
+  for (const k of GOOD) if (table[k]) table[k] *= 0.25 ** near;
+  return { kind: weighted(run, table), mark: null };
 }
 
 export const xCount = (run) => (run.map?.cells ?? []).flat().filter((x) => x.mark === 'X').length;
 
-// Where you may step next: open squares of the clearing you were sent to, or
-// the boss once its door is open.
+// Where you may step next: open squares of the clearing you were sent to --
+// or of any clearing, with a Free Step armed.
 export function reachable(run) {
   const map = run.map;
   if (map.result) return [];
   const out = [];
-  for (const c of clearingsFor(map, 'X', map.next)) map.cells[c].forEach((x, i) => { if (!x.mark) out.push(keyOf(c, i)); });
+  for (const c of playableClearings(map)) map.cells[c].forEach((x, i) => { if (!x.mark) out.push(keyOf(c, i)); });
   return out;
 }
-export const playableClearings = (map) => (map.result ? [] : clearingsFor(map, 'X', map.next));
+export const playableClearings = (map) => (map.result ? [] : clearingsFor(map, 'X', map.armed === 'free' ? null : map.next));
+
+// ── Map aids, won in duels ───────────────────────────────────────────────────
+//
+//   free:   step in any open clearing, once, whatever the send rule says
+//   double: the boss does not answer your next step; you go again, sent by
+//           your own square
+export const AIDS = {
+  free: { name: 'Free Step', text: 'Once, step in any open clearing, wherever you were sent.' },
+  double: { name: 'Double Step', text: 'Once, the boss does not answer your step: you go again, in the clearing your own square points to.' },
+};
+export const AID_TYPES = Object.keys(AIDS);
+// Arm an aid for the next step, or put it away again.
+export function toggleAid(run, kind) {
+  const map = run.map;
+  if (map.armed === kind) { map.armed = null; return; }
+  if ((run.aids?.[kind] ?? 0) > 0) map.armed = kind;
+}
 
 // Squares where the boss would take clearing c with its next mark.
 export function bossThreats(map, c) {
@@ -302,9 +344,15 @@ export function settleCell(run, mark) {
   }
   cell.mark = 'X';
   map.freshX = at;
+  const aid = map.armed;
+  if (aid) { run.aids[aid]--; map.armed = null; }
   if (settleClearing(run, c) === 'X') map.news = { took: c };
   if ((map.line = lineIn(bigMarks(map), 'X'))) { map.result = 'won'; return; }
-  bossTurn(run, i);
+  // A new act once enough marks are down: the enemies still waiting grow.
+  const act = actFor(xCount(run));
+  if (act > run.act) { run.act = act; rollDuels(run); map.news = { ...map.news, act }; }
+  if (aid === 'double') map.next = i;
+  else bossTurn(run, i);
   endIfStuck(run);
 }
 
@@ -313,7 +361,7 @@ function bossTurn(run, target) {
   const map = run.map;
   const where = clearingsFor(map, 'O', target);
   if (!where.length) return;
-  const sees = rand(run) < BOSS_SEES[Math.min(BOSS_SEES.length - 1, map.page - 1)];
+  const sees = rand(run) < BOSS_SEES[run.act - 1];
   const value = { treasure: 8, gift: 6, shop: 4, rest: 4, craft: 4, event: 2, elite: 0, miniboss: 0, fight: 1 };
   let best = null, bestScore = -Infinity;
   for (const c of where) {
@@ -333,10 +381,7 @@ function bossTurn(run, target) {
     map.news = { lost: c };
     if (hurt(run, 1)) return;
   }
-  if ((map.line = lineIn(bigMarks(map), 'O'))) {
-    map.result = 'lost';
-    hurt(run, 1);
-  }
+  if ((map.line = lineIn(bigMarks(map), 'O'))) map.result = 'lost';
 }
 
 // A map nobody can win any more, or where you have nowhere left to step, is
@@ -349,10 +394,12 @@ function endIfStuck(run) {
   if (!anyStep || (!alive('X') && !alive('O'))) map.result = 'draw';
 }
 
-// Start a fresh map after a lost or drawn one.
-export function nextPage(run) {
-  makeMap(run, run.map);
-  run.screen = 'map';
+// The map is decided: a win or a draw is the climb's victory, a loss its end.
+export function endMap(run) {
+  run.over = true;
+  run.victory = run.map.result !== 'lost';
+  run.screen = run.victory ? 'victory' : 'gameover';
+  run.pending = null;
 }
 
 // Hearts lost, with the Phoenix's second chance. True if the climb is over.
@@ -398,8 +445,8 @@ export function prepareDuel(run, enemyId, context = {}) {
   const modsO = { ...(enemy.mods ?? {}) };
   let conds = [], rules = [];
   if (tier === 'miniboss') {
-    // From the second map of an act on, a mini-boss brings its harder rules.
-    rules = [...(((run.map?.page ?? 1) > 1 && enemy.rules2) || enemy.rules || [])];
+    // From the second act on, a mini-boss brings its harder rules.
+    rules = [...((run.act >= 2 && enemy.rules2) || enemy.rules || [])];
     if (run.heat >= 4) enemyTricks.push(randomTrick(run));
   } else {
     // A home rule, or sometimes one rolled for the day.
@@ -526,6 +573,8 @@ export function duelWon(run) {
   if (duel.event !== 'thief') reward.stones = stoneChoices(run, duel.tier);
   const trickChance = duel.tier === 'normal' ? 0.3 : duel.tier === 'event' ? 0 : 0.7;
   if (rand(run) < trickChance) reward.trick = randomTrick(run);
+  // Instead of a stone, help on the map.
+  if (duel.event !== 'thief' && rand(run) < (duel.tier === 'normal' ? 0.4 : 1)) reward.aid = pick(run, AID_TYPES);
   const big = duel.tier === 'elite' || duel.tier === 'miniboss';
   if (big || duel.event === 'hermit' || duel.event === 'nightowl') reward.relic = randomRelic(run);
   if (duel.tier === 'elite') run.stats.elites++;
@@ -541,21 +590,6 @@ export function heartsLost(duel) {
   return duel.tier === 'elite' || duel.tier === 'miniboss' ? 2 : 1;
 }
 
-// Three clearings in a row: the act's rival is beaten. A boss relic, gold,
-// hearts and a stone, and then the next act.
-export function winAct(run) {
-  run.atBoss = true;
-  run.stats.acts = (run.stats.acts ?? 0) + 1;
-  const gold = 60 + (has(run, 'lucky-coin') ? 8 : 0);
-  run.gold += gold;
-  run.stats.gold += gold;
-  run.hearts = Math.min(run.maxHearts, run.hearts + 3);
-  run.pending = {
-    kind: 'reward', tier: 'act', gold, stones: stoneChoices(run, 'elite'), trick: null, relic: null, taken: {},
-    relicChoice: run.act < ACTS.length ? shuffle(run, BOSS_RELICS.filter((r) => !has(run, r))).slice(0, 3) : [],
-  };
-  run.screen = 'reward';
-}
 
 export function duelLost(run) {
   const duel = run.pending.duel;
@@ -632,7 +666,7 @@ export function randomTrick(run, rarity = null) {
 }
 
 export function randomRelic(run, rarity = null) {
-  let pool = RELIC_TYPES.filter((r) => !has(run, r) && !BOSS_RELICS.includes(r));
+  let pool = RELIC_TYPES.filter((r) => !has(run, r));
   if (rarity) pool = pool.filter((r) => RELICS[r].rarity === rarity);
   if (!pool.length) pool = RELIC_TYPES.filter((r) => !has(run, r));
   if (!pool.length) return null;
@@ -657,6 +691,7 @@ export function gainStone(run, s) {
   return st;
 }
 
+export function gainAid(run, kind) { run.aids = run.aids ?? { free: 0, double: 0 }; run.aids[kind]++; }
 export const pouchFull = (run) => run.pouch.length >= pouchCap(run);
 export const tricksFull = (run) => run.tricks.length >= trickCap(run);
 

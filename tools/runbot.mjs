@@ -75,8 +75,7 @@ function playRun(spec) {
         run.screen = 'map';
         let opts = R.reachable(run);
         // A page lost or drawn turns; a page won opens the boss's door.
-        if (run.map.result === 'lost' || run.map.result === 'draw') { log.push(run.map.result === 'lost' ? '[O]' : '[=]'); R.nextPage(run); break; }
-        if (run.map.result === 'won') { log.push(`[X p${run.map.page}]`); R.winAct(run); break; }
+        if (run.map.result) { log.push({ won: '[X]', draw: '[=]', lost: '[O]' }[run.map.result]); R.endMap(run); break; }
         if (!opts.length) throw new Error('nowhere to step');
         // Tic-tac-toe first: win, block, fork; then corners; then what the
         // hearts want.
@@ -133,7 +132,7 @@ function playRun(spec) {
   if (!run.over) throw new Error('run did not end: ' + run.screen);
   // JSON round trip must survive (the save format).
   JSON.parse(JSON.stringify(run));
-  return { seed: spec.seed, victory: run.victory, act: run.act, row: run.map.page, hearts: run.hearts, log: log.join(' '), relics: run.relics.join(','), pouch: run.pouch.map((s) => s.type).join(',') + ` slots ${run.slots}` };
+  return { seed: spec.seed, victory: run.victory, act: run.act, row: R.xCount(run), hearts: run.hearts, log: log.join(' '), relics: run.relics.join(','), pouch: run.pouch.map((s) => s.type).join(',') + ` slots ${run.slots}` };
 }
 
 if (!isMainThread) {
@@ -150,7 +149,7 @@ if (!isMainThread) {
   const res = (await Promise.all(chunks.map((c) => new Promise((ok, bad) => { const w = new Worker(new URL(import.meta.url), { workerData: c }); w.on('message', ok); w.on('error', bad); })))).flat();
   for (const r of res) {
     if (r.error) { console.log(`seed ${r.seed}: ERROR ${r.error}`); continue; }
-    console.log(`seed ${r.seed}: ${r.victory ? 'VICTORY' : `died act ${r.act} on page ${r.row}`}  | ${r.log}\n    relics ${r.relics}\n    pouch ${r.pouch}`);
+    console.log(`seed ${r.seed}: ${r.victory ? 'VICTORY' : `died act ${r.act} after ${r.row} marks`}  | ${r.log}\n    relics ${r.relics}\n    pouch ${r.pouch}`);
   }
   const ok = res.filter((r) => !r.error);
   console.log(`\n${ok.filter((r) => r.victory).length}/${ok.length} victories; mean act reached ${(ok.reduce((a, r) => a + r.act, 0) / ok.length).toFixed(2)}; ${((Date.now() - t0) / 1000).toFixed(0)}s`);

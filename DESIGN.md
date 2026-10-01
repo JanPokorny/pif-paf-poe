@@ -63,9 +63,9 @@ duel, and a rule for who wins when someone runs out. The second version slows it
 
 ## The map
 
-Each act is Ultimate tic-tac-toe with its boss: nine clearings in a 3×3, each a 3×3 of squares
-(duels, elites, shops, campfires, treasure, events), all on view. The boss opens in the very
-middle.
+The whole climb is one game of Ultimate tic-tac-toe with its boss: nine clearings in a 3×3, each
+a 3×3 of squares (duels, elites, mini-bosses, shops, campfires, workshops, treasure, events), all
+on view. The boss opens in the very middle.
 
 - **The send rule.** Where you step inside a clearing decides the clearing the boss must answer
   in, and its step sends you. A clearing that is finished, or has nothing left for you, frees
@@ -73,19 +73,26 @@ middle.
 - **Scorching.** A lost duel costs its hearts and scorches the square: you may not step there
   again, but the boss may. You choose again at once — the boss answers only a real X.
 - **Clearings.** Three in a row takes a clearing (+15 gold for you, −1 ❤ if it is the boss's).
-  Three clearings in a row beat the act's rival outright — there is no final duel — for a boss
-  relic, gold, three hearts and a stone.
+- **The end.** Three clearings in a row beat the boss and win the climb — and so does a draw,
+  a map nobody can win any more. The boss's three clearings in a row end the climb, as running
+  out of hearts does.
+- **Acts** are stages of the one map: every seven of your marks the climb moves on (Meadow,
+  Quarry, Summit), and the enemies still waiting on the map are re-rolled from the new act's
+  harder cast. The boss notices your threats more often in later acts.
 - **Mini-bosses.** The stoneless rule-bearers (Tactics, Head Start, Elbow, Clinch, Column, Spy,
-  Reserved, Patience, Double Time) are mini-bosses now, holding the middle square of two
-  clearings on an act's first map and three after; on later maps they bring their harder rule
-  sets. One duel each, two hearts if lost, a relic if won. The boss's three in a row costs another heart
-  and starts a fresh map; so does a map nobody can win any more. Each new map of an act is less
-  friendly than the last.
-- The boss judges a square by what it takes, what it blocks (when it notices: more often map by
-  map) and where it sends you; greed for treasure and shops breaks ties. The run bot plays by
-  the same judgement.
+  Reserved, Patience, Double Time) hold the middle square of three clearings; from the second
+  act on they bring their harder rule sets. One duel each, two hearts if lost, a relic if won.
+- **Map aids.** A duel won may offer, instead of a stone, a *Free Step* (step in any open
+  clearing once) or a *Double Step* (the boss does not answer one step; you go again where your
+  own square points). Elites and mini-bosses always offer one.
+- **Layout.** Squares on more lines (corners and middles, of a clearing and of the map) hide
+  harder things. Good squares — shops, campfires, workshops, chests — keep their distance: each
+  good neighbour already laid out makes another a quarter as likely, so about half of them
+  touch another, against nearly all of them before.
+- The boss judges a square by what it takes, what it blocks (when it notices) and where it
+  sends you; greed for treasure and shops breaks ties. The run bot plays by the same judgement.
 
-Acts are long: a map takes some 25–35 of your steps. Balance for this map is still open.
+Balance for this map is still open.
 
 ## The stones
 
