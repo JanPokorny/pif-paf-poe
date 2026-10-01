@@ -308,7 +308,12 @@ function mapScreen() {
   const x0 = bounds.x0 - 1, y0 = bounds.y0 - 1, x1 = bounds.x1 + 1, y1 = bounds.y1 + 1;
   const cols = x1 - x0 + 1, rows = y1 - y0 + 1;
   const threats = new Set(R.bossThreats(map));
-  const freshX = map.freshX, lastO = map.lastO;
+  const freshX = map.freshX, lastO = map.lastO, freshS = map.freshS;
+  // The turn plays out in order: your X (or the burn), what it reveals, the
+  // boss's O, what that reveals. Delays in seconds.
+  const appear = new Map();
+  (map.revealX ?? []).forEach((k, i) => appear.set(k, 0.75 + i * 0.05));
+  (map.revealO ?? []).forEach((k, i) => appear.set(k, 2.1 + i * 0.05));
   const breaching = map.armed === 'breach';
   const grid = [];
   for (let y = y0; y <= y1; y++) {
@@ -345,6 +350,8 @@ function mapScreen() {
       if (c.mark === 'X') el.insertAdjacentHTML('beforeend', scribbleX(freshX === k));
       if (c.mark === 'O') el.insertAdjacentHTML('beforeend', scribbleO(lastO === k));
       if (c.mark === 'S') el.classList.add('scorched');
+      if (freshS === k) el.classList.add('fresh-burn');
+      if (appear.has(k)) { el.classList.add('appear'); el.style.setProperty('--d', `${appear.get(k)}s`); }
       if (kind === 'elite' && !c.mark) el.insertAdjacentHTML('beforeend', `<span class="elite-star">${icon('star')}</span>`);
       grid.push(el);
     }
@@ -353,6 +360,7 @@ function mapScreen() {
   if (lastO && freshX) sfx('scribbleO');
   map.freshX = null;
   map.lastO = null;
+  map.freshS = null; map.revealX = null; map.revealO = null;
   const news = map.news === 'oline' ? t('{boss} drew three in a row — it grows stronger!', { boss: boss.name })
     : map.news === 'full' ? t('The page is full. {boss} will wait no longer — and it has grown stronger.', { boss: boss.name })
       : lastO && map.cells[lastO] && map.cells[lastO].kind !== 'boss-mark' ? t('{boss} marks the {node} square.', { boss: boss.name, node: NODE_NAME[map.cells[lastO].kind].toLowerCase() }) : '';

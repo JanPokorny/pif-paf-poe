@@ -324,10 +324,10 @@ const around = (map, x, y) => {
 function revealCell(run, x, y, first, broken = false) {
   const map = run.map;
   const k = keyOf(x, y);
-  if (map.cells[k]) return;
+  if (map.cells[k]) return false;
   const mine = reach(map, x, y, 'X');     // how much it would do for your lines
   const theirs = reach(map, x, y, 'O');   // how much it would break the boss's
-  if (!broken && isRock(run, x, y, mine, first)) { map.cells[k] = { kind: 'rock', mark: '#' }; return; }
+  if (!broken && isRock(run, x, y, mine, first)) { map.cells[k] = { kind: 'rock', mark: '#' }; return true; }
   const stake = Math.max(mine, theirs);
   const table = stake >= 2 ? { elite: 40, fight: 50, event: 10 }
     : stake === 1 ? { elite: 5, fight: 50, event: 18, treasure: 8, rest: 10, shop: 9, craft: 6 }
@@ -349,10 +349,14 @@ function revealCell(run, x, y, first, broken = false) {
     cell.duel = prepareDuel(run, pick(run, enemiesOf(run.act, 'elite')));
   }
   map.cells[k] = cell;
+  return true;
 }
 
+// Reveal the squares round (x, y); returns the ones that came into view.
 function reveal(run, x, y, first = false) {
-  for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++) if (dx || dy) revealCell(run, x + dx, y + dy, first);
+  const out = [];
+  for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++) if ((dx || dy) && revealCell(run, x + dx, y + dy, first)) out.push(keyOf(x + dx, y + dy));
+  return out;
 }
 
 export const xCount = (run) => Object.values(run.map?.cells ?? {}).filter((c) => c.mark === 'X').length;
@@ -427,15 +431,18 @@ export function settleCell(run, mark) {
   map.bonus = 0;
   map.news = null;
   map.visited++;
+  // For the page to animate: what was just marked, and what each mark revealed.
+  map.freshS = null; map.revealX = []; map.revealO = [];
   if (mark !== 'X') {
     map.cells[at].mark = 'S';
     map.freshX = null;
+    map.freshS = at;
     if (pageFull(map) && !map.open) { map.open = true; map.power = Math.min(MAX_POWER, map.power + 1); map.news = 'full'; }
     return;
   }
   map.cells[at].mark = 'X';
   map.freshX = at;
-  reveal(run, ...coords(at));
+  map.revealX = reveal(run, ...coords(at));
   if (claimLine(map, at)) map.open = true;
   // Squares cleared past an open door pay a little extra: a reason to press on.
   if (wasOpen) { map.bonus = 10; run.gold += 10; }
@@ -443,7 +450,7 @@ export function settleCell(run, mark) {
   if (aid) { run.aids[aid]--; map.armed = null; }
   if (aid !== 'double') {
     map.lastO = bossMark(run);
-    if (map.lastO) reveal(run, ...coords(map.lastO));
+    if (map.lastO) map.revealO = reveal(run, ...coords(map.lastO));
   }
   // Every new line of Os makes the boss stronger, up to a point.
   if (map.lastO && claimLine(map, map.lastO)) {
