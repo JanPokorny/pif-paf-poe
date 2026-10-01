@@ -131,7 +131,7 @@ export const craftable = (run) => run.pouch.filter((s) => s.type !== 'pebble');
 export const BOSS_LIVES = 2;              // duels a boss must lose
 export const LINE = 3;                     // marks in a row that count
 export const MAX_POWER = 2;
-export const PAGE = 12;                   // your steps before the boss will wait no longer
+export const LINE_DAMAGE = 2;              // hearts a line of the boss's Os costs you
 export const MAPCFG = { sees: 0.75 };     // the chance the boss blocks your two in a row
 // Rocks: a lattice -- (x + 3y) mod 7 in two neighbouring classes -- that cuts
 // every row, column and diagonal into runs between two and five squares long,
@@ -393,13 +393,10 @@ export function bossThreats(map) {
 
 export const lineReach = (map, k, mark = 'X') => reach(map, ...coords(k), mark);
 const openSquares = (map) => Object.entries(map.cells).filter(([, c]) => !c.mark).map(([k]) => k);
-// The page is full only by steps: the boss always makes room (see bossFills).
-export const pageFull = (map) => map.visited >= PAGE;
 
 // Where you may go next: any open square on view, and the boss once its door
 // is open. When the page is full, only the boss.
 export function reachable(run) {
-  if (pageFull(run.map)) return ['boss'];
   const out = openSquares(run.map);
   if (run.map.open) out.push('boss');
   return out;
@@ -457,6 +454,13 @@ function bossTurn(run) {
   return best;
 }
 
+// A line of the boss's Os hurts: two hearts.
+function bossLine(run) {
+  run.map.oLines++;
+  run.map.news = 'oline';
+  hurt(run, LINE_DAMAGE);
+}
+
 // Nowhere left for you to step: the boss moves instead, and its marks reveal
 // more of the page. Only if it cannot move either is the page full.
 function bossFills(run) {
@@ -466,7 +470,7 @@ function bossFills(run) {
     if (!o) break;
     map.lastO = o;
     map.revealO = [...(map.revealO ?? []), ...reveal(run, ...coords(o))];
-    if (claimLine(map, o)) { map.oLines++; if (map.power < MAX_POWER) { map.power++; map.news = 'oline'; } }
+    if (claimLine(map, o)) bossLine(run);
   }
 }
 
@@ -487,7 +491,6 @@ export function settleCell(run, mark) {
     map.freshX = null;
     map.freshS = at;
     bossFills(run);
-    if (pageFull(map) && !map.open) { map.open = true; map.power = Math.min(MAX_POWER, map.power + 1); map.news = 'full'; }
     return;
   }
   map.cells[at].mark = 'X';
@@ -502,18 +505,9 @@ export function settleCell(run, mark) {
     map.lastO = bossTurn(run);
     if (map.lastO) map.revealO = reveal(run, ...coords(map.lastO));
   }
-  // Every new line of Os makes the boss stronger, up to a point.
-  if (map.lastO && claimLine(map, map.lastO)) {
-    map.oLines++;
-    if (map.power < MAX_POWER) { map.power++; map.news = 'oline'; }
-  }
+  // Every new line of Os costs you hearts.
+  if (map.lastO && claimLine(map, map.lastO)) bossLine(run);
   bossFills(run);
-  // A full page: the boss comes for you, and it has had time to prepare.
-  if (pageFull(map) && !map.open) {
-    map.open = true;
-    map.power = Math.min(MAX_POWER, map.power + 1);
-    map.news = 'full';
-  }
 }
 
 // Hearts lost, with the Phoenix's second chance. True if the climb is over.

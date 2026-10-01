@@ -293,6 +293,7 @@ const NODE_NAME = { 'boss-mark': t('Boss'), fight: t('Duel'), elite: t('Elite'),
 function mapScreen() {
   if (run.map?.v !== 7) R.makeMap(run);   // a save from an older map: a fresh one
   const map = run.map;
+  if (map.news === 'oline') flash = 'hurt';   // the hearts in the top bar take the hit
   const reach = new Set(R.reachable(run));
   const boss = ENEMIES[map.boss];
   // One ring of unexplored paper round what is on view: the page goes on.
@@ -359,13 +360,11 @@ function mapScreen() {
   map.freshX = null;
   map.lastO = null;
   map.freshS = null; map.revealX = null; map.revealO = null;
-  if (map.news === 'oline' || map.news === 'full') musicEvent('stronger');
+  if (map.news === 'oline') musicEvent('stronger');
   else if (map.open && !map.doorHeard) musicEvent('door');
   if (map.open) map.doorHeard = true;
-  // The boss growing stronger is news of its own, once the O is drawn.
-  const stronger = map.news === 'oline' ? t('{boss}: three in a row — stronger!', { boss: boss.name })
-    : map.news === 'full' ? t('Page full: {boss} is stronger.', { boss: boss.name }) : null;
-  if (stronger) setTimeout(() => toast(stronger, 'bad'), map.news === 'oline' ? 2200 : 300);
+  // A line of the boss's Os costs you hearts: news of its own, once the O is drawn.
+  if (map.news === 'oline') setTimeout(() => toast(t('{boss}: three in a row — −{n} ❤', { boss: boss.name, n: R.LINE_DAMAGE }), 'bad'), 2200);
   const news = lastO && map.cells[lastO] && map.cells[lastO].kind !== 'boss-mark' ? t('{boss} marks the {node} square.', { boss: boss.name, node: NODE_NAME[map.cells[lastO].kind].toLowerCase() }) : '';
   const bonus = map.bonus;
   map.bonus = 0;
@@ -408,9 +407,7 @@ function mapScreen() {
       scroller,
       h('div.map-news', {}, news),
       h('div.map-help', {}, breaching ? t('Tap a rock to break it.')
-        : !R.xCount(run) ? t('Pick any free square.')
-          : R.pageFull(map) ? t('Page full: face the boss.')
-            : tp(R.PAGE - map.visited, '{n} step left on this page.', '{n} steps left on this page.')),
+        : !R.xCount(run) ? t('Pick any free square.') : ''),
       threats.size ? h('div.map-help.red', {}, t('Dashed circle: the boss wins a line there.')) : null));
   // Keep the newest marks in view, scrolling the sheet only, never the page.
   requestAnimationFrame(() => {
@@ -489,7 +486,6 @@ function preDuel() {
     duel.quirk ? h('div.fact.warn', {}, `${R.QUIRKS[duel.quirk].name}: ${R.QUIRKS[duel.quirk].text}`) : null,
     duel.tier === 'boss' && duel.bossWins === 0 && enemy.rules2 && enemy.rules2.join() !== duel.rules.join()
       ? h('div.fact.dim', {}, t('At moonrise: {rules}', { rules: enemy.rules2.map((r) => RULES[r].name).join(', ') })) : null,
-    duel.tier === 'boss' && run.map?.power ? h('div.fact.warn', {}, run.map.power >= 2 ? t('Full strength: it thinks harder, and brings its harder rules from the start.') : t('Grown stronger: it thinks harder.')) : null,
   ].filter(Boolean);
   const canBack = duel.tier !== 'boss' && !duel.event;
   screen(topBar(),

@@ -76,9 +76,9 @@ its own, with its boss.
   square, which only the boss may take afterwards. You choose again at once — the boss answers
   only a real X.
 - **The door.** Your three in a row opens the boss's door (+10 gold for every square past that).
-  The boss's three in a row adds one to its *power* (up to 2); so does a page filled with twelve
-  marks before you open the door, and then the door opens anyway. Power is search depth, and at
-  full power the boss fights with its moonrise rules from the start.
+  The boss's three in a row costs you two hearts. There is no page limit any more: the door opens
+  only to your line, and when nothing on view is free the boss moves again (into the fog beside
+  the page if it must) until something is.
 - **Spent lines.** Every line of three is crossed through on the page, and its marks are spent:
   no later line may use them, so a fourth mark beside a line, or a fork sharing its square, makes
   nothing new. A mark that finishes two lines at once crosses through only one.

@@ -19,7 +19,7 @@ for (const cfg of cfgs) {
       run.map.at = o.sort((a, b) => score(b) - score(a))[0];
       R.settleCell(run, R.rand(run) < 0.25 ? 'O' : 'X'); n++;
     }
-    if (run.map.open && run.map.visited < R.PAGE) { opened++; steps += run.map.visited; }
+    if (run.map.open && run.map.visited < 12) { opened++; steps += run.map.visited; }
     olines += run.map.power;
     const c = Object.values(run.map.cells); rocks += c.filter((x) => x.kind === 'rock').length; cells += c.length;
   }
