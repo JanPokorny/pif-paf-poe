@@ -151,6 +151,8 @@ const RAW = {
     P('M -4.8 6 A 4.8 3.6 0 0 1 4.8 6 Z', ' fill="currentColor"'),
 
   mountain: P('M -7.6 5.4 L -2.4 -5.2 L 1.2 1.2 L 3.6 -2.2 L 7.6 5.4') + P('M -8 5.4 H 8') + P('M -4.6 -0.7 L -3.4 0.3 L -2.4 -0.9 L -1.4 0.3 L -0.3 -0.8', SW(1.1)),
+  // A rock on the map: a pale mountain in a dark outline, its snowcap left as paper.
+  rock: P('M -7.6 5.4 L -2.4 -5.2 L 1.2 1.2 L 3.6 -2.2 L 7.6 5.4 Z', ' fill="var(--rock-fill, #c9c6c0)"') + P('M -4.6 -0.7 L -2.4 -5.2 L -0.15 -0.8 L -1.4 0.3 L -2.4 -0.9 L -3.4 0.3 Z', ' fill="var(--paper, #fff)"' + SW(1.1)),
 
   '2048': '<text x="0" y="2.3" font-family="Permanent Marker, system-ui, sans-serif" font-size="6.2" text-anchor="middle" fill="currentColor" stroke="none" letter-spacing="-0.1">2048</text>',
 

@@ -334,7 +334,7 @@ function mapScreen() {
           duelState = null;
           route();
         },
-      }, kind === 'boss-mark' || kind === 'rock' ? (kind === 'rock' ? h('span.doodle.rock', { html: icon('mountain') }) : null) : c.duel
+      }, kind === 'boss-mark' || kind === 'rock' ? (kind === 'rock' ? h('span.doodle.rock', { html: icon('rock') }) : null) : c.duel
         ? h('span.doodle.foe', {}, h('span.photo', {}, ENEMIES[c.duel.enemyId].emoji),
           c.duel.conds?.length ? h('span.cell-space', { html: icon(`cond-${c.duel.conds[0]}`) }) : null)
         : h('span.doodle', { html: icon(NODE_ICON[kind]) }),
