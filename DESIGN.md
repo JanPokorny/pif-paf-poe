@@ -81,6 +81,13 @@ its own, with its boss.
   have spread and the more live lines you hold. Rocks take about a third of the page; a bot that
   plays for its line gets one before the page fills 62% of the time, in about seven steps
   (`node tools/maprocks.mjs`). A *Pickaxe* breaks one rock.
+- **No forks at the start.** Within three squares of the boss's first mark, no two open lines of
+  three share a square, so every line there is a single threat the boss can block. The 9×9
+  around the start is laid out when the page is made: the lattice, then greedily the rock that
+  breaks the most overlaps until none are left, then every rock the rule does not need is
+  cleared again (random order). That leaves about 38% rock there, and keeps at least fifteen
+  squares connected to the start. With it the line-building bot opens the door before the page
+  fills 34% of the time, in about nine steps (62% and seven steps without).
 - **Bosses** bring no stones, only their rule (above), and have two lives; the second life adds
   their harder rule. A boss won is a boss relic, three hearts and 60 gold. **Elites** are just
   stronger regular enemies: bigger hands, two hearts if lost, a red star in the corner.

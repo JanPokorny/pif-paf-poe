@@ -129,17 +129,79 @@ export const MAPCFG = { sees: 0.75 };     // the chance the boss blocks your two
 // chance by how far your lines through a square already are, more where a
 // square would sit on several of them. (tools/maprocks.mjs measures it.)
 export const ROCKS = { m: 7, a: 1, b: 3, set: [0, 1], byReach: [0.04, 0.08, 0.15], perLine: 0.05 };
-function isRock(run, x, y, mine, first = false) {
+const onLattice = (map, x, y) => {
   const { m, a, b } = ROCKS;
-  if (m) {
-    const r = ((((a * x + b * y) % m) + m) % m - (run.map.rockShift ?? 0) + m) % m;
-    if (ROCKS.set.includes(r)) return true;
-  }
+  if (!m) return false;
+  const r = ((((a * x + b * y) % m) + m) % m - (map.rockShift ?? 0) + m) % m;
+  return ROCKS.set.includes(r);
+};
+function isRock(run, x, y, mine, first = false) {
+  const map = run.map;
+  // Near the start the rocks are laid out in advance (see layStart).
+  if (map.start && Math.max(Math.abs(x), Math.abs(y)) <= OPENING.lay) return map.start.includes(keyOf(x, y));
+  if (onLattice(map, x, y)) return true;
   if (first) return false;
   // A square on several of your live lines is where a fork would be: likelier still.
   const lines = liveLines(run.map, x, y, 'X');
   return rand(run) < Math.min(0.9, ROCKS.byReach[Math.min(2, mine)] + ROCKS.perLine * Math.max(0, lines - 1));
 }
+// The start of a page leaves no fork lying open: within OPENING.near squares of
+// the boss's first mark no two open lines of three share a square, so every
+// line there is a single threat the boss can block. The squares out to
+// OPENING.lay are laid out in advance -- the lattice, then the fewest extra rocks
+// that break every overlap -- and kept only if enough of the page stays
+// reachable from the start.
+export const OPENING = { near: 3, lay: 4, room: 14 };
+function layStart(run, map) {
+  const R = OPENING.lay, inside = (x, y) => Math.max(Math.abs(x), Math.abs(y)) <= R;
+  const rocks = new Set();
+  for (let y = -R; y <= R; y++) for (let x = -R; x <= R; x++) if (onLattice(map, x, y)) rocks.add(keyOf(x, y));
+  const windows = [];
+  for (let y = -R; y <= R; y++) for (let x = -R; x <= R; x++) for (const [dx, dy] of DIRS4) {
+    const w = [];
+    for (let j = 0; j < LINE; j++) w.push([x + j * dx, y + j * dy]);
+    if (w.every(([wx, wy]) => inside(wx, wy)) && !w.some(([wx, wy]) => !wx && !wy)) windows.push(w.map(([wx, wy]) => keyOf(wx, wy)));
+  }
+  const near = (k) => { const [x, y] = coords(k); return Math.max(Math.abs(x), Math.abs(y)) <= OPENING.near; };
+  const forksOf = () => {
+    const open = windows.filter((w) => !w.some((k) => rocks.has(k)));
+    const forks = [];
+    for (let i = 0; i < open.length; i++) for (let j = i + 1; j < open.length; j++) {
+      if (open[i].some((k) => near(k) && open[j].includes(k))) forks.push([open[i], open[j]]);
+    }
+    return forks;
+  };
+  for (;;) {
+    const forks = forksOf();
+    if (!forks.length) break;
+    // The square that breaks the most forks; the origin's neighbours last.
+    const score = new Map();
+    for (const pair of forks) for (const k of new Set(pair.flat())) score.set(k, (score.get(k) ?? 0) + 1);
+    let best = null, bestScore = -Infinity;
+    for (const [k, n] of score) {
+      const [x, y] = coords(k);
+      const sc = n - (Math.max(Math.abs(x), Math.abs(y)) === 1 ? 0.5 : 0) + rand(run) * 0.4;
+      if (sc > bestScore) { best = k; bestScore = sc; }
+    }
+    rocks.add(best);
+  }
+  // Then clear every rock the rule does not need, in random order.
+  for (const k of shuffle(run, [...rocks])) {
+    rocks.delete(k);
+    if (forksOf().length) rocks.add(k);
+  }
+  // Room to move: open squares reachable from the start without crossing a rock.
+  const seen = new Set(['0,0']), todo = ['0,0'];
+  while (todo.length) {
+    const [x, y] = coords(todo.pop());
+    for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++) {
+      const k = keyOf(x + dx, y + dy);
+      if (!seen.has(k) && inside(x + dx, y + dy) && !rocks.has(k)) { seen.add(k); todo.push(k); }
+    }
+  }
+  return seen.size > OPENING.room ? [...rocks] : null;
+}
+
 // How many unspoiled windows through (x, y) already hold one of `mark`'s marks.
 function liveLines(map, x, y, mark) {
   let n = 0;
@@ -232,6 +294,10 @@ export function makeMap(run) {
   // The lattice, shifted so that it never runs through the boss's first mark.
   const shifts = [...Array(ROCKS.m || 1).keys()].filter((sh) => !ROCKS.set.includes((((0 - sh) % (ROCKS.m || 1)) + (ROCKS.m || 1)) % (ROCKS.m || 1)));
   map.rockShift = shifts.length ? pick(run, shifts) : 0;
+  for (let tries = 0; tries < 20 && !map.start; tries++) {
+    map.start = layStart(run, map) ?? undefined;
+    if (!map.start) map.rockShift = shifts.length ? pick(run, shifts) : 0;
+  }
   reveal(run, 0, 0, true);
   // The very first page hides a gift: a special stone, free.
   if (run.act === 1) {
@@ -250,13 +316,13 @@ const around = (map, x, y) => {
 };
 
 // Decide what a square is, the moment it comes into view.
-function revealCell(run, x, y, first) {
+function revealCell(run, x, y, first, broken = false) {
   const map = run.map;
   const k = keyOf(x, y);
   if (map.cells[k]) return;
   const mine = reach(map, x, y, 'X');     // how much it would do for your lines
   const theirs = reach(map, x, y, 'O');   // how much it would break the boss's
-  if (isRock(run, x, y, mine, first)) { map.cells[k] = { kind: 'rock', mark: '#' }; return; }
+  if (!broken && isRock(run, x, y, mine, first)) { map.cells[k] = { kind: 'rock', mark: '#' }; return; }
   const stake = Math.max(mine, theirs);
   const table = stake >= 2 ? { elite: 40, fight: 50, event: 10 }
     : stake === 1 ? { elite: 5, fight: 50, event: 18, treasure: 8, rest: 10, shop: 9, craft: 6 }
@@ -425,7 +491,7 @@ export function breach(run, k) {
   const map = run.map;
   if (map.armed !== 'breach' || map.cells[k]?.kind !== 'rock') return false;
   delete map.cells[k];
-  revealCell(run, ...coords(k), true);
+  revealCell(run, ...coords(k), true, true);
   run.aids.breach--;
   map.armed = null;
   return true;
