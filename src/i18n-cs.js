@@ -219,7 +219,7 @@ export default {
   'Tap a stone in their hand, up top.': 'Ťukni na kámen v jeho ruce, nahoře.',
   'You win!': 'Vyhráváš!',
   '{enemy} wins': '{enemy} vítězí',
-  '{enemy} is thinking…': '{enemy} přemýšlí…',
+  '{enemy} is thinking': '{enemy} přemýšlí',
   'Undo': 'Vrátit tah',
   'Placed in the centre: the enemy may only use the marked squares.': 'Položený doprostřed: soupeř smí jen na zvýrazněná políčka.',
   'Place it on a glowing square': 'Polož ho na svítící políčko',

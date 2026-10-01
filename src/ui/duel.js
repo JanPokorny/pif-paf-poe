@@ -381,7 +381,7 @@ export function mountDuel(root, opts) {
       return;
     }
     if (busy || state.player !== 'X') {
-      setStatus(t('{enemy} is thinking…', { enemy: enemy.name }), 'enemy');
+      setStatus(t('{enemy} is thinking', { enemy: enemy.name }), 'enemy');   // the dots blink in after it (CSS)
       renderActions([]);
       info.textContent = caption.filter(Boolean).join(', ');
       return;
