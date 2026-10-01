@@ -62,7 +62,7 @@ function recordEnd() {
 
 // ── Chrome ──────────────────────────────────────────────────────────────────
 
-function topBar() {
+function topBar(menu = showMenu) {
   const hearts = h('div.hearts' + (flash ? '.' + flash : ''), {},
     h('span', { html: icon('heart') }), `${run.hearts}/${run.maxHearts}`);
   flash = null;
@@ -71,7 +71,7 @@ function topBar() {
     h('div.gold', {}, h('span', { html: icon('coin') }), run.gold),
     h('div.where', {}, t('Act {n} · {name}', { n: run.act, name: ACTS[run.act - 1].name.replace(/^The /, '') })),
     h('button.icon-btn', { onclick: showPouch, 'aria-label': t('Your pouch') }, h('span', { html: icon('hand') })),
-    h('button.icon-btn', { onclick: showMenu, 'aria-label': t('Menu') }, h('span', { html: icon('gear') })));
+    h('button.icon-btn', { onclick: menu, 'aria-label': t('Menu') }, h('span', { html: icon('gear') })));
 }
 
 // `keep`: a redraw of the same screen, which stays where it was scrolled to.
@@ -515,11 +515,9 @@ function duelScreen() {
   const duel = run.pending.duel;
   const base = ENEMIES[duel.enemyId];
   const enemy = { ...base, name: isUndead(duel) ? undeadName(base) : base.name, undead: isUndead(duel), iters: duel.iters, blunder: duel.blunder, tier: duel.tier };
-  const holder = screen(h('div.duel-host'));
-  const extra = h('div.duel-side', {},
-    h('button.icon-btn.small', { onclick: showDuelMenu, 'aria-label': t('Menu') }, h('span', { html: icon('gear') })),
-    h('div.hearts.small', {}, h('span', { html: icon('heart') }), `${run.hearts}`),
-  );
+  // The same top bar as on the map: your hearts and gold, the menu.
+  const holder = screen(topBar(showDuelMenu), h('div.duel-host'));
+  const extra = null;
   duelView = mountDuel(holder.querySelector('.duel-host'), {
     state: duelState, enemy, extra,
     onSave: (s) => { duelState = s; save(); },

@@ -198,7 +198,7 @@ b { font-weight: 400; background: linear-gradient(transparent 55%, var(--hi) 55%
 /* ── The duel ────────────────────────────────────────────────────────────── */
 .duel-host { flex: 1; display: flex; }
 .duel {
-  --cell: min(calc((100vw - 32px) / 3.9), calc((100dvh - 392px) / 4.04), 112px);
+  --cell: min(calc((100vw - 32px) / 3.9), calc((100dvh - 430px) / 4.04), 112px);
   flex: 1; display: flex; flex-direction: column; align-items: stretch; gap: 6px;
   padding: 8px 12px calc(8px + var(--safe-b)); width: 100%; position: relative;
 }
@@ -818,3 +818,8 @@ body:has(.duel) #toast.show { transform: translate(-50%, 0) rotate(-1deg); }
 @keyframes text-in { from { opacity: 0; transform: translateY(8px); } }
 .undead .photo { filter: grayscale(1) contrast(1.3) brightness(0.85) sepia(0.6) hue-rotate(60deg) !important; }
 .undead .enemy-name { color: #3f6b48; }
+
+/* In the duel the enemy is a slim line under the top bar. */
+.duel .enemy-bar { padding: 2px 10px; }
+.duel .enemy-bar .portrait { width: 38px; height: 44px; font-size: 1.3rem; padding: 3px 3px 8px; }
+.duel { padding-top: 2px; }
