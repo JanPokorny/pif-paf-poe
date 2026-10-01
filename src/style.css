@@ -143,7 +143,6 @@ b { font-weight: 400; background: linear-gradient(transparent 55%, var(--hi) 55%
 .title-foot { color: var(--pencil); font-size: 1rem; text-align: center; }
 .lang-toggle { display: flex; justify-content: center; align-items: center; gap: 2px; font-family: var(--marker); color: var(--pencil); }
 .lang-toggle .lang { background: none; border: 0; min-width: 44px; min-height: 40px; padding: 0 6px; font-size: 1.05rem; color: var(--pencil); opacity: 0.6; }
-.title > .lang-toggle { position: absolute; top: calc(4px + var(--safe-t)); right: 6px; }
 .lang-toggle .lang.on { opacity: 1; color: var(--ink); text-decoration: underline wavy var(--blue); text-underline-offset: 4px; }
 
 .kits { display: flex; flex-direction: column; gap: 14px; }
