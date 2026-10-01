@@ -24,8 +24,6 @@ export default {
   'Sound: on': 'Zvuk: zapnutý',
   'Sound: off': 'Zvuk: vypnutý',
   'Music: on': 'Hudba: zapnutá',
-  'Music on': 'Hudba zapnutá',
-  'Music off': 'Hudba vypnutá',
   'Music: off': 'Hudba: vypnutá',
   'Paused': 'Pauza',
   'Pouch & relics': 'Váček a talismany',

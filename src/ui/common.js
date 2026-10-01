@@ -237,10 +237,12 @@ export function relicCard(id, { onclick, price, sold, dear } = {}) {
 }
 
 // The EN · CS switch. Changing it reloads the page.
-export function langToggle() {
-  return h('div.lang-toggle', { role: 'group', 'aria-label': 'Language / Jazyk' },
-    LANGS.map((l, k) => [k ? h('span.sep', {}, '·') : null,
-      h('button.lang' + (l === lang ? '.on' : ''), { onclick: () => setLang(l), 'aria-pressed': String(l === lang), lang: l }, l.toUpperCase())]));
+// A button like the sound and music ones: it names the language in use, in
+// that language, and a tap switches to the other.
+const LANG_LABEL = { en: 'Language: English', cs: 'Jazyk: čeština' };
+export function langToggle(cls = '') {
+  const next = LANGS[(LANGS.indexOf(lang) + 1) % LANGS.length];
+  return h('button.btn.wide' + cls, { onclick: () => setLang(next), lang, 'aria-label': `${LANG_LABEL[lang]} → ${LANG_LABEL[next]}` }, LANG_LABEL[lang]);
 }
 
 export const sleep = (ms) => new Promise((r) => setTimeout(r, ms));

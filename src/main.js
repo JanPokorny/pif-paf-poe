@@ -114,6 +114,7 @@ function showMenu() {
   const body = h('div.menu', {},
     h('h2', {}, t('Menu')),
     soundButton(() => close()),
+    langToggle(),
     h('button.btn.wide', { onclick: () => { close(); title(); } }, t('Save & quit to title')),
     h('button.btn.wide.danger', {
       onclick: () => {
@@ -122,7 +123,6 @@ function showMenu() {
         run.over = true; recordEnd(); duelState = null; save(); run = null; title();
       },
     }, t('Abandon run')),
-    langToggle(),
     h('button.btn.wide.ghost', { onclick: () => close() }, t('Back')));
   const close = modal(body);
 }
@@ -180,9 +180,9 @@ function title() {
           h('span', {}, t('Continue run')),
           h('span.continue-sub', {}, `${t('Act {n}', { n: saved.run.act })} · ❤ ${saved.run.hearts}`)) : null,
         h('button.btn.wide.big' + (saved?.run ? '' : '.primary'), { onclick: () => { if (saved?.run && !saved.run.over && !confirm(t('Start over? Your run in progress will be lost.'))) return; newRunMenu(); } }, t('New run')),
-        h('button.btn.wide.ghost', { onclick: () => { setSound(!soundOn()); title(); } }, h('span', { html: icon(soundOn() ? 'sound-on' : 'sound-off') }), soundOn() ? t('Sound on') : t('Sound off')),
-        h('button.btn.wide.ghost', { onclick: () => { setMusic(!musicOn()); title(); } }, musicOn() ? t('Music on') : t('Music off')),
-        langToggle()),
+        h('button.btn.wide.ghost', { onclick: () => { setSound(!soundOn()); title(); } }, soundOn() ? t('Sound: on') : t('Sound: off')),
+        h('button.btn.wide.ghost', { onclick: () => { setMusic(!musicOn()); title(); } }, musicOn() ? t('Music: on') : t('Music: off')),
+        langToggle('.ghost')),
     ));
 }
 
@@ -509,8 +509,8 @@ function showDuelMenu() {
     h('h2', {}, t('Paused')),
     h('button.btn.wide', { onclick: () => { close(); showPouch(); } }, t('Pouch & relics')),
     soundButton(() => close()),
-    h('button.btn.wide', { onclick: () => { close(); title(); } }, t('Save & quit to title')),
     langToggle(),
+    h('button.btn.wide', { onclick: () => { close(); title(); } }, t('Save & quit to title')),
     h('button.btn.wide.ghost', { onclick: () => close() }, t('Resume')));
   const close = modal(body);
 }
