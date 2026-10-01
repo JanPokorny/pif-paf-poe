@@ -126,7 +126,16 @@ function showMenu() {
   const close = modal(body);
 }
 
-// Language, music and sound on one line of small buttons.
+// Full screen, where the browser allows it (not on iPhones).
+const canFullscreen = () => !!(document.fullscreenEnabled && document.documentElement.requestFullscreen);
+function toggleFullscreen() {
+  try {
+    if (document.fullscreenElement) document.exitFullscreen();
+    else document.documentElement.requestFullscreen({ navigationUI: 'hide' }).catch(() => {});
+  } catch { /* not allowed here */ }
+}
+
+// Language, music, sound and full screen on one line of small buttons.
 function settingsRow() {
   const row = h('div.settings-row');
   const draw = () => row.replaceChildren(
@@ -134,8 +143,11 @@ function settingsRow() {
     h('button.icon-toggle' + (musicOn() ? '' : '.off'), { 'aria-label': musicOn() ? t('Music: on') : t('Music: off'), 'aria-pressed': String(musicOn()),
       onclick: () => { setMusic(!musicOn()); draw(); } }, h('span', { html: icon(musicOn() ? 'music-on' : 'music-off') })),
     h('button.icon-toggle' + (soundOn() ? '' : '.off'), { 'aria-label': soundOn() ? t('Sound: on') : t('Sound: off'), 'aria-pressed': String(soundOn()),
-      onclick: () => { setSound(!soundOn()); draw(); sfx('click'); } }, h('span', { html: icon(soundOn() ? 'sound-on' : 'sound-off') })));
+      onclick: () => { setSound(!soundOn()); draw(); sfx('click'); } }, h('span', { html: icon(soundOn() ? 'sound-on' : 'sound-off') })),
+    canFullscreen() ? h('button.icon-toggle', { 'aria-label': t('Full screen'), 'aria-pressed': String(!!document.fullscreenElement),
+      onclick: toggleFullscreen }, h('span', { html: icon(document.fullscreenElement ? 'fullscreen-exit' : 'fullscreen') })) : null);
   draw();
+  document.addEventListener('fullscreenchange', () => { if (row.isConnected) draw(); });
   return row;
 }
 

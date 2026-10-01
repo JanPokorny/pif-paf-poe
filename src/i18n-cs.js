@@ -21,6 +21,7 @@ export default {
   'Back': 'Zpět',
   'Sound: on': 'Zvuk: zapnutý',
   'Sound: off': 'Zvuk: vypnutý',
+  'Full screen': 'Celá obrazovka',
   'Music: on': 'Hudba: zapnutá',
   'Music: off': 'Hudba: vypnutá',
   'Paused': 'Pauza',
