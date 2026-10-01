@@ -113,7 +113,7 @@ def('2048', {
 
 def('bumper', {
   name: 'Bumper', rarity: 'uncommon', kind: 'move',
-  text: 'Pushes each enemy stone beside it one step directly away, if there is an empty square to push it to.',
+  text: 'Pushes each enemy stone beside it one step away, onto an empty square.',
   options: () => [{}],
   apply(s, pos, a, cell) {
     const moves = [];
@@ -129,7 +129,7 @@ def('bumper', {
 
 def('lasso', {
   name: 'Lasso', rarity: 'common', kind: 'move',
-  text: 'Pull a stone two squares away in a straight line, diagonals too, one step closer — or all of them.',
+  text: 'Pulls a stone two squares away (diagonals too) one step closer — or all of them.',
   options(s, pos) {
     const pulls = lassoPulls(s, pos);
     if (pulls.length < 2) return [{}];
@@ -176,7 +176,7 @@ def('whirl', {
 
 def('frog', {
   name: 'Frog', rarity: 'uncommon', kind: 'move',
-  text: 'Leaps over a stone beside it into the empty square beyond. An enemy stone leapt over goes back to their hand.',
+  text: 'Leaps over a stone beside it. An enemy stone leapt over goes back to their hand.',
   options(s, pos) {
     const out = [];
     if (isStuck(s, pos)) return out;
@@ -228,7 +228,7 @@ function mirror(s, axis, holds) {
 
 def('firecracker', {
   name: 'Firecracker', rarity: 'rare', kind: 'move',
-  text: 'Blows a stone around it, corners included, back into its owner\'s hand — and burns itself up.',
+  text: 'Blows a stone around it back to its owner\'s hand, and burns itself up.',
   options: (s, pos) => neighbours(pos, true).filter((j) => s.board[j]).map((target) => ({ target })),
   apply(s, pos, a) {
     returnToHand(s, a.target);
@@ -255,7 +255,7 @@ def('parrot', {
 
 def('twin', {
   name: 'Twin', rarity: 'rare', kind: 'move',
-  text: 'A Pebble lands on the square facing this one through the centre, if both that square and the centre are empty.',
+  text: 'A Pebble lands opposite it across the empty centre.',
   options(s, pos) {
     const j = 8 - pos;
     return j !== pos && !s.board[j] && !s.board[4] ? [{ target: j }] : [];
@@ -401,9 +401,9 @@ export const TRICK_TYPES = Object.keys(TRICKS);
 // ── Conditions: a duel's rule for both sides ────────────────────────────────
 
 export const CONDS = {
-  gravity: { name: 'Gravity', text: 'After every turn, every stone falls as far down as it can. Mountains hold, and are stepped over.' },
+  gravity: { name: 'Gravity', text: 'After every turn, stones fall as far down as they can. Mountains hold.' },
   nocentre: { name: 'Hollow', text: 'Nobody may place on the centre square.' },
-  shared: { name: 'Open Hands', text: 'Either side may play a special stone from the other\'s hand; it counts as the player\'s own.' },
+  shared: { name: 'Open Hands', text: 'Either side may play the other\'s special stones.' },
 };
 
 // ── Boss rules: a boss plays only Pebbles, but brings one of these ───────────
@@ -412,10 +412,10 @@ export const RULES = {
   tactics: { name: 'Tactics', text: 'Before each of your turns, the boss picks which stone you must play.', dictate: true },
   headstart: { name: 'Head Start', text: 'The boss plays twice on its first turn.' },
   double: { name: 'Double Time', text: 'Every turn is two stones in a row, for both sides. The boss starts.' },
-  elko: { name: 'Elbow', text: 'Rows do not count: whoever makes an L of three — a 2×2 block missing one square — wins.' },
+  elko: { name: 'Elbow', text: 'Rows do not count: an L of three wins.' },
   clinch: { name: 'Clinch', text: 'You must place next to one of the boss\'s stones, corners included, if you can.' },
-  column: { name: 'Column', text: 'Before each of your turns, the boss closes a column: you may not place in it.', dictate: true },
-  spy: { name: 'Spy', text: 'Before each of your turns, the boss picks the direction your stones must move — those that move up, down, left or right.', dictate: true },
+  column: { name: 'Column', text: 'Each turn the boss closes a column to you.', dictate: true },
+  spy: { name: 'Spy', text: 'Each turn the boss picks which way your stones move.', dictate: true },
   patient: { name: 'Patience', text: 'A full board goes to the boss.' },
   reserved: { name: 'Reserved', text: 'You may not place on the centre square. The boss may.' },
 };

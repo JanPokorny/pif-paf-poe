@@ -220,7 +220,6 @@ const GOOD = ['shop', 'rest', 'treasure', 'craft', 'gift'];
 const DIRS4 = [[1, 0], [0, 1], [1, 1], [1, -1]];
 export const keyOf = (x, y) => `${x},${y}`;
 export const coords = (k) => k.split(',').map(Number);
-const markAt = (map, x, y) => map.cells[keyOf(x, y)]?.mark ?? null;
 // A mark already crossed through in a line of three is spent: no other line
 // may use it, so for lines it counts as a rock.
 const lineMarkAt = (map, x, y) => { const c = map.cells[keyOf(x, y)]; return c?.line ? '#' : c?.mark ?? null; };
@@ -486,8 +485,8 @@ export function hurt(run, n) {
 //   double: the boss does not answer your next step
 //   breach: a rock you choose crumbles, and the square under it comes into view
 export const AIDS = {
-  double: { name: 'Double Step', text: 'Once, the boss does not answer your step: you go again.' },
-  breach: { name: 'Pickaxe', text: 'Once, break a rock on the map: the square under it comes into view.' },
+  double: { name: 'Double Step', text: 'One step the boss does not answer.' },
+  breach: { name: 'Pickaxe', text: 'Break one rock.' },
 };
 export const AID_TYPES = Object.keys(AIDS);
 // Arm an aid for the next step, or put it away again.

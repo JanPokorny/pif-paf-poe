@@ -214,7 +214,7 @@ export function infoTrick(name) {
       h('div.info-name', {}, tr.name), h('div.info-rarity.' + tr.rarity, {}, t('trick') + ' · ' + t(tr.rarity)))),
     h('p', {}, tr.text),
     trickDemo(name),
-    h('p.info-extra', {}, t('Tricks are spent at the end of your own turn, after your stone has done its thing. Each is used up once spent.')),
+    h('p.info-extra', {}, t('Use at the end of your turn. Once.')),
     h('button.btn.wide', { onclick: () => close() }, t('OK')));
   const close = modal(body);
 }

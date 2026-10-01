@@ -1,8 +1,8 @@
 // The app: title, run screens, persistence. One screen at a time, chosen by
 // run.screen, rendered into #app.
 
-import { STONES, TRICKS, STONE_TYPES, TRICK_TYPES, CONDS, RULES, createGame } from './engine.js';
-import { RELICS, RELIC_TYPES, ENEMIES, ACTS, EVENTS } from './content.js';
+import { STONES, TRICKS, CONDS, RULES, createGame } from './engine.js';
+import { RELICS, ENEMIES, ACTS, EVENTS } from './content.js';
 import * as R from './run.js';
 import { h, hideToast, tapeUp, art, relicArt, scribbleX, scribbleO, stoneEl, iconEl, toast, modal, infoStone, infoTrick, infoRelic, ruleChip, stoneCard, trickCard, relicCard, stoneName, langToggle } from './ui/common.js';
 import { icon } from './icons.js';
@@ -107,7 +107,6 @@ function showPouch() {
     run.tricks.length ? h('div.trick-list', {}, run.tricks.map((x) => h('button.trick-btn', { onclick: () => infoTrick(x) }, h('span.trick-ico', { html: icon(x) }), TRICKS[x].name))) : h('p.dim', {}, t('No tricks.')),
     h('h2', {}, t('Relics')),
     run.relics.length ? h('div.relic-list', {}, run.relics.map((r) => h('button.relic-row', { onclick: () => infoRelic(r) }, h('span.relic-token.small', {}, relicArt(r)), h('span', {}, h('b', {}, RELICS[r].name), h('br'), RELICS[r].text)))) : h('p.dim', {}, t('No relics yet.')),
-    h('p.dim', {}, t('You bring {n} special stones into each duel, besides as many Pebbles as you like, and may spend {tricks} per duel.', { n: R.handSize(run), tricks: tp(R.trickUses(run), '{n} trick', '{n} tricks') })),
     h('button.btn.wide', { onclick: () => close() }, t('Close')));
   const close = modal(body, { cls: 'tall' });
 }
@@ -115,8 +114,6 @@ function showPouch() {
 function showMenu() {
   const body = h('div.menu', {},
     h('h2', {}, t('Menu')),
-    h('button.btn.wide', { onclick: () => { close(); showHelp(); } }, t('How to play')),
-    h('button.btn.wide', { onclick: () => { close(); showCodex(); } }, t('Codex')),
     soundButton(() => close()),
     h('button.btn.wide', { onclick: () => { close(); title(); } }, t('Save & quit to title')),
     h('button.btn.wide.danger', {
@@ -184,10 +181,7 @@ function title() {
           h('span', {}, t('Continue run')),
           h('span.continue-sub', {}, `${t('Act {n}', { n: saved.run.act })} · ❤ ${saved.run.hearts}`)) : null,
         h('button.btn.wide.big' + (saved?.run ? '' : '.primary'), { onclick: () => { if (saved?.run && !saved.run.over && !confirm(t('Start over? Your run in progress will be lost.'))) return; newRunMenu(); } }, t('New run')),
-        h('button.btn.wide', { onclick: practiceMenu }, t('Practice duel')),
         meta.runs ? h('button.btn.wide', { onclick: showJournal }, t('Journal')) : null,
-        h('button.btn.wide', { onclick: () => showHelp() }, t('How to play')),
-        h('button.btn.wide', { onclick: showCodex }, t('Codex')),
         h('button.btn.wide.ghost', { onclick: () => { setSound(!soundOn()); title(); } }, h('span', { html: icon(soundOn() ? 'sound-on' : 'sound-off') }), soundOn() ? t('Sound on') : t('Sound off'))),
       h('div.title-foot', {}, best, h('br'), `${tp(meta.runs, '{n} run', '{n} runs')} · ${tp(meta.wins, '{n} win', '{n} wins')}`),
       langToggle()));
@@ -219,8 +213,6 @@ function newRunMenu() {
   const close = modal(body);
 }
 
-// ── Practice: one duel, nothing at stake ────────────────────────────────────
-
 // What you have done across all runs: bosses beaten, records.
 function showJournal() {
   const bosses = Object.keys(ENEMIES).filter((k) => ENEMIES[k].tier === 'boss');
@@ -234,38 +226,6 @@ function showJournal() {
       .replace(/^1 runs/, '1 run').replace(/, 1 duels/, ', 1 duel')),
     h('button.btn.wide', { onclick: () => close() }, t('Close')));
   const close = modal(body, { cls: 'tall' });
-}
-
-function practiceMenu() {
-  const body = h('div.menu', {}, h('h2', {}, t('Practice duel')),
-    h('p', {}, t('One duel with a random hand, against an enemy from the act you pick. Nothing is at stake.')),
-    ACTS.map((a) => h('button.btn.wide', { onclick: () => { close(); practice(a.n); } }, `${a.name} — ${t(['gentle', 'tricky', 'tough'][a.n - 1])}`)),
-    h('button.btn.ghost.wide', { onclick: () => close() }, t('Back')));
-  const close = modal(body);
-}
-
-function practice(act) {
-  duelView?.destroy();
-  const fake = R.newRun({ seed: (Math.random() * 2 ** 31) | 0 });
-  fake.act = act;
-  const pool = Object.keys(ENEMIES).filter((k) => ENEMIES[k].act === act && ENEMIES[k].tier === 'normal');
-  const id = pool[(R.rand(fake) * pool.length) | 0];
-  const duel = R.prepareDuel(fake, id);
-  const handX = R.stoneChoices(fake, 'normal', null, R.handSize(fake));
-  const state = createGame({ ...R.gameConfig(fake, duel, []), handX, tricksX: [R.randomTrick(fake)] });
-  const enemy = { ...ENEMIES[id], iters: duel.iters, blunder: duel.blunder, tier: 'normal', lives: 1, livesLeft: 1 };
-  const holder = screen(h('div.duel-host'));
-  const extra = h('div.duel-side', {},
-    h('button.icon-btn.small', { onclick: () => { duelView?.destroy(); title(); }, 'aria-label': t('Quit') }, h('span', { html: icon('close') })),
-    h('div.small.dim', {}, t('practice')));
-  duelView = mountDuel(holder.querySelector('.duel-host'), {
-    state, enemy, extra,
-    onEnd: () => {
-      const close = modal(h('div.menu', {}, h('h2', {}, t('Another one?')),
-        h('button.btn.primary.wide', { onclick: () => { close(); practice(act); } }, t('Again')),
-        h('button.btn.wide', { onclick: () => { close(); title(); } }, t('Title'))), { dismissable: false });
-    },
-  });
 }
 
 // ── Router ──────────────────────────────────────────────────────────────────
@@ -328,11 +288,11 @@ function mapScreen() {
         onclick: () => {
           if (breaching && kind === 'rock') { R.breach(run, k); sfx('thud'); save(); mapScreen(); return; }
           if (!can) {
-            const why = kind === 'rock' ? t('A rock: nobody can step here or mark it, and it cuts every line through it. A Pickaxe breaks it.')
+            const why = kind === 'rock' ? t('Rock: no step, no line through it.')
               : c.mark === 'X' ? t('You have been here.')
                 : c.mark === 'O' ? t('{boss} took this square.', { boss: boss.name })
-                  : c.mark === 'S' ? t('Burned: a duel was lost here. You cannot step here again, but the boss still can — and an O here counts for its lines.')
-                    : t('The page is full: only the boss is left.');
+                  : c.mark === 'S' ? t('Burned: only the boss may take it.')
+                    : t('Not next to a mark.');
             toast(why);
             return;
           }
@@ -361,25 +321,25 @@ function mapScreen() {
   map.freshX = null;
   map.lastO = null;
   map.freshS = null; map.revealX = null; map.revealO = null;
-  const news = map.news === 'oline' ? t('{boss} drew three in a row — it grows stronger!', { boss: boss.name })
-    : map.news === 'full' ? t('The page is full. {boss} will wait no longer — and it has grown stronger.', { boss: boss.name })
+  const news = map.news === 'oline' ? t('{boss}: three in a row — stronger!', { boss: boss.name })
+    : map.news === 'full' ? t('Page full: {boss} is stronger.', { boss: boss.name })
       : lastO && map.cells[lastO] && map.cells[lastO].kind !== 'boss-mark' ? t('{boss} marks the {node} square.', { boss: boss.name, node: NODE_NAME[map.cells[lastO].kind].toLowerCase() }) : '';
   const bonus = map.bonus;
   map.bonus = 0;
   map.news = null;
-  if (bonus) setTimeout(() => toast(t('+{n} gold for pressing on past the open door.', { n: bonus }), 'good'), 50);
+  if (bonus) setTimeout(() => toast(`+${bonus} 🪙`, 'good'), 50);
   const door = h('button.boss-door' + (map.open ? '.open' : ''), {
     onclick: () => {
-      if (!map.open) { toast(t('Draw three Xs in a row — across, down or diagonal — to open the door.')); return; }
+      if (!map.open) { toast(t('Three Xs in a row open it.')); return; }
       R.enterNode(run, 'boss'); duelState = null; route();
     },
   },
   h('div.portrait', {}, h('div.photo', {}, boss.emoji)),
   h('div.door-text', {},
     h('div.door-name', {}, boss.name),
-    map.open ? h('div', {}, t('The door is open. Tap to face the boss — or keep exploring.')) : h('div', {}, t('Draw three in a row to open the door.')),
+    h('div', {}, map.open ? t('Door open: tap to fight.') : t('Three Xs in a row open the door.')),
     h('div.door-rules', {}, (boss.rules ?? []).map((r) => ruleChip('rule', r, '.small'))),
-    map.power ? h('div.power', {}, map.power >= 2 ? t('At full strength: it thinks harder, and brings its harder rules from the start.') : t('Grown stronger: it thinks harder.')) : null));
+    map.power ? h('div.power', {}, map.power >= 2 ? t('Full strength: harder rules.') : t('Stronger.')) : null));
   // Map aids won in duels: arm one for the next step.
   const aids = R.AID_TYPES.filter((a) => run.aids?.[a]).length ? h('div.aids', {}, R.AID_TYPES.filter((a) => run.aids?.[a]).map((a) => h('button.aid' + (map.armed === a ? '.armed' : ''), {
     onclick: () => { R.toggleAid(run, a); sfx('click'); save(); mapScreen(); if (map.armed) toast(t(R.AIDS[a].text)); },
@@ -411,11 +371,10 @@ function mapScreen() {
       scroller,
       h('div.map-news', {}, news),
       h('div.map-help', {}, breaching ? t('Tap a rock to break it.')
-        : !R.xCount(run)
-          ? t('The boss has made its first mark. Pick any square beside it; every mark reveals the paper around it. Rocks cut every line through them.')
-          : R.pageFull(map) ? t('The page is full: only the boss is left.')
-            : tp(R.PAGE - map.visited, 'Three Xs in a row open the door. {n} square left on this page.', 'Three Xs in a row open the door. {n} squares left on this page.')),
-      threats.size ? h('div.map-help.red', {}, t('Dashed red circle: the boss would finish a line of Os there.')) : null));
+        : !R.xCount(run) ? t('Pick a square next to the O.')
+          : R.pageFull(map) ? t('Page full: face the boss.')
+            : tp(R.PAGE - map.visited, '{n} step left on this page.', '{n} steps left on this page.')),
+      threats.size ? h('div.map-help.red', {}, t('Dashed circle: the boss wins a line there.')) : null));
   // Keep the newest marks in view, scrolling the sheet only, never the page.
   requestAnimationFrame(() => {
     const target = (freshX && scroller.querySelector(`[data-k="${freshX}"]`)) || scroller.querySelector('.map-cell.reach');
@@ -430,9 +389,6 @@ function actIntro() {
   screen(h('div.act-intro', {},
     h('div.act-n', {}, t('Act {n}', { n: act.n })),
     h('h1', {}, act.name),
-    h('p', {}, t(['A summer camp. A field of stones that will not stay still.', 'The meadow is behind you. The ground turns to stone.', 'The air thins. Only the best players make it this far.'][act.n - 1])),
-    h('div.rules-note', {}, t('This act is tic-tac-toe with {boss} on an endless page. It has made the first mark. Wherever you go you mark an X, and it answers with an O; every mark reveals the squares around it, and only those can be stepped on. Three Xs in a row open its door; each line of three Os makes it stronger. Rocks cut every line through them — and they turn up where your lines are about to close.', { boss: ENEMIES[run.map.boss].name })),
-    run.act === 1 ? h('p.dim', {}, t('Somewhere beside it lies a gift: a special stone, free.')) : null,
     h('button.btn.primary.wide.big', { onclick: () => { run.screen = 'map'; route(); } }, t('Onward'))));
 }
 
@@ -453,7 +409,7 @@ function preDuel() {
         onclick: () => {
           if (on) chosen = chosen.filter((u) => u !== s.uid);
           else if (chosen.length < size) chosen.push(s.uid);
-          else { toast(t('You can bring {n}. Tap one to leave it behind.', { n: size })); return; }
+          else { toast(t('Only {n}.', { n: size })); return; }
           sfx('click');
           draw();
         },
@@ -470,8 +426,8 @@ function preDuel() {
 
   const tierLabel = { normal: '', elite: t('Elite'), boss: t('Boss'), event: t('Challenge') }[duel.tier];
   const stakes = duel.tier === 'boss'
-    ? tp(R.BOSS_LIVES - duel.bossWins, 'It has {n} life left: each duel you win takes one, each you lose costs you 1 ❤.', 'It has {n} lives left: each duel you win takes one, each you lose costs you 1 ❤.')
-    : t(duel.event ? 'Lose and it costs {n} ❤.' : 'Lose and it costs {n} ❤ — and the square is scorched.', { n: R.heartsLost(duel) });
+    ? tp(R.BOSS_LIVES - duel.bossWins, '{n} life left · lose: −1 ❤', '{n} lives left · lose: −1 ❤')
+    : t('Lose: −{n} ❤', { n: R.heartsLost(duel) });
   const canBack = duel.tier !== 'boss' && !duel.event;
   screen(topBar(),
     h('div.page', {},
@@ -482,7 +438,7 @@ function preDuel() {
           tierLabel ? h('div.tier.' + duel.tier, {}, tierLabel) : null,
           h('div.enemy-name.big', {}, enemy.name),
           h('div.quote', {}, t('“{quote}”', { quote: enemy.quote })))),
-      h('div.section-label', {}, duel.tier === 'boss' ? t('It brings no special stones — only Pebbles, and its rules') : t('Their stones')),
+      h('div.section-label', {}, t('Their stones')),
       h('div.hand.enemy-hand.show', {},
         h('button.slot-plain', { onclick: () => infoStone({ type: 'pebble' }, 'O') }, stoneEl({ type: 'pebble' }, 'O')),
         duel.handO.map((s) => h('button.slot-plain', { onclick: () => infoStone(s, 'O') }, stoneEl(s, 'O')))),
@@ -490,14 +446,13 @@ function preDuel() {
       h('div.duel-facts.facts-card', {},
         (duel.rules ?? []).map((r) => h('div.fact.warn.rule-fact', {}, ruleChip('rule', r), h('span', {}, RULES[r].text))),
         (duel.conds ?? []).map((c) => h('div.fact.rule-fact', {}, ruleChip('cond', c), h('span', {}, CONDS[c].text))),
-        h('div.fact', {}, (duel.rules ?? []).includes('patient') ? t('{enemy} opens', { enemy: enemy.name }) : t('{enemy} opens — a full board goes to you', { enemy: enemy.name })),
+        h('div.fact', {}, (duel.rules ?? []).includes('patient') ? t('They open') : t('They open · full board is yours')),
         duel.quirk ? h('div.fact.warn', {}, `${R.QUIRKS[duel.quirk].name}: ${R.QUIRKS[duel.quirk].text}`) : null,
         duel.tier === 'boss' && duel.bossWins === 0 && enemy.rules2 && enemy.rules2.join() !== duel.rules.join()
-          ? h('div.fact.dim', {}, t('Once beaten, it rises again with: {rules}.', { rules: enemy.rules2.map((r) => RULES[r].name).join(', ') })) : null,
+          ? h('div.fact.dim', {}, t('Second life: {rules}', { rules: enemy.rules2.map((r) => RULES[r].name).join(', ') })) : null,
         h('div.fact.dim', {}, stakes)),
-      h('div.section-label', {}, t('Bring your special stones '), count),
-      h('div.dim.small', {}, t('Pebbles are always with you, as many as you like.')),
-      run.pouch.length ? grid : h('p.dim', {}, t('Your pouch is empty: this one is Pebbles only. Win duels to find special stones.')),
+      h('div.section-label', {}, t('Your stones '), count),
+      run.pouch.length ? grid : h('p.dim', {}, t('Pebbles only.')),
       run.tricks.length ? h('div.dim.small', {}, t('Tricks: ') + run.tricks.map((x) => TRICKS[x].name).join(', ')) : null,
       h('div.pre-spacer'),
       h('div.sticky-bottom', {}, fight)));
@@ -550,8 +505,6 @@ function duelScreen() {
 function showDuelMenu() {
   const body = h('div.menu', {},
     h('h2', {}, t('Paused')),
-    h('button.btn.wide', { onclick: () => { close(); showHelp(); } }, t('How to play')),
-    h('button.btn.wide', { onclick: () => { close(); showCodex(); } }, t('Codex')),
     h('button.btn.wide', { onclick: () => { close(); showPouch(); } }, t('Pouch & relics')),
     soundButton(() => close()),
     h('button.btn.wide', { onclick: () => { close(); title(); } }, t('Save & quit to title')),
@@ -603,7 +556,6 @@ function rewardScreen() {
   const rw = run.pending;
   const done = () => { R.leaveNode(run); route(); };
   const parts = [h('h1.reward-title', {}, rw.gift ? t('A gift!') : rw.tier === 'boss' ? t('Boss defeated!') : t('Victory!'))];
-  if (rw.gift && !rw.taken.stone) parts.push(h('p.dim', {}, t('Someone left a pouch by the path. Take one of these, free.')));
   if (rw.gold) parts.push(h('div.reward-gold', {}, h('span', { html: icon('coin') }), t('+{n} gold', { n: rw.gold })));
   if (rw.relic && !rw.taken.relic) {
     R.gainRelic(run, rw.relic);
@@ -625,7 +577,7 @@ function rewardScreen() {
   if (rw.taken.stone && rw.taken.stone !== true && !rw.taken.stone.startsWith('aid:')) parts.push(h('div.section-label', {}, t('You took the {stone}.', { stone: STONES[rw.taken.stone].name })), h('div.cards.one', {}, stoneCard({ type: rw.taken.stone }, {})));
   if (rw.taken.stone?.startsWith?.('aid:')) parts.push(h('div.section-label', {}, t('You took a map aid: {aid}.', { aid: t(R.AIDS[rw.taken.stone.slice(4)].name) })));
   if (rw.stones.length && !rw.taken.stone) {
-    parts.push(h('div.section-label', {}, rw.aid ? t('Take a stone — or help on the map') : t('Take a stone')),
+    parts.push(h('div.section-label', {}, t('Take one')),
       h('div.cards', {}, rw.aid ? aidCard(rw.aid, () => { R.gainAid(run, rw.aid); rw.taken.stone = `aid:${rw.aid}`; sfx('coin'); save(); rewardScreen(); }) : null, rw.stones.map((s) => stoneCard(s, {
         onclick: (e) => {
           const card = e.currentTarget;
@@ -655,7 +607,7 @@ function treasureScreen() {
       : tr.choices?.length ? [h('div.section-label', {}, t('Take one')), h('div.cards', {}, tr.choices.map((id) => relicCard(id, {
         onclick: () => { R.gainRelic(run, id); tr.relic = id; sfx('coin'); save(); treasureScreen(); },
       })))]
-        : h('p', {}, t('The chest is otherwise empty.')),
+        : null,
     h('div.sticky-bottom', {}, h('button.btn.wide.big' + (tr.relic || !tr.choices?.length ? '.primary' : ''), { onclick: () => { R.leaveNode(run); route(); } }, tr.relic || !tr.choices?.length ? t('Continue') : t('Skip')))));
 }
 
@@ -668,7 +620,7 @@ function shopScreen(redraw = false) {
     fn(() => { run.gold -= cost; sfx('coin'); save(); shopScreen(true); });
   };
   screen(...(redraw ? [KEEP_SCROLL] : []), topBar(), h('div.page.shop', {},
-    h('div.shop-head', {}, h('span.shop-emoji', { html: icon('shop') }), h('div', {}, h('h2', {}, t('The Travelling Merchant')), h('div.dim', {}, t('“Stones, tricks, trinkets. Gold only.”')))),
+    h('div.shop-head', {}, h('span.shop-emoji', { html: icon('shop') }), h('div', {}, h('h2', {}, t('Shop')))),
     h('div.section-label', {}, t('Stones')),
     h('div.cards.scroll', {}, shop.stones.map((s) => stoneCard(s, {
       price: s.price, sold: s.sold, dear: run.gold < s.price,
@@ -688,9 +640,9 @@ function shopScreen(redraw = false) {
     h('div.services', {},
       h('button.service', {
         disabled: shop.slotted || !R.canAddSlot(run) || undefined,
-        onclick: () => buy(shop.slotPrice, (pay) => { run.slots++; shop.slotted = true; pay(); toast(t('You now bring {n} special stones into each duel.', { n: R.handSize(run) }), 'good'); }),
-      }, h('b', {}, t('A new stone slot')), h('span.price' + (run.gold < shop.slotPrice ? '.dear' : ''), {}, iconEl('coin'), shop.slotPrice ?? '—'),
-      h('span.dim', {}, shop.slotted ? t(' (done)') : R.canAddSlot(run) ? t(' bring {n} into each duel', { n: R.handSize(run) + 1 }) : t(' (as many as there can be)'))),
+        onclick: () => buy(shop.slotPrice, (pay) => { run.slots++; shop.slotted = true; pay(); toast(t('{n} slots', { n: R.handSize(run) }), 'good'); }),
+      }, h('b', {}, t('Stone slot')), h('span.price' + (run.gold < shop.slotPrice ? '.dear' : ''), {}, iconEl('coin'), shop.slotPrice ?? '—'),
+      h('span.dim', {}, shop.slotted || !R.canAddSlot(run) ? '' : ` ${R.handSize(run)} → ${R.handSize(run) + 1}`)),
       h('button.service', {
         disabled: run.hearts >= run.maxHearts || shop.healed >= 2 || undefined,
         onclick: () => buy(shop.healPrice, (pay) => { run.hearts++; shop.healed++; sfx('heal'); pay(); }),
@@ -705,8 +657,7 @@ function restScreen() {
   const leave = () => { R.leaveNode(run); route(); };
   screen(topBar(), h('div.page.rest', {},
     h('div.campfire', { html: icon('fire') }),
-    h('h2', {}, t('A quiet campfire')),
-    h('p.dim', {}, run.hearts >= run.maxHearts ? t('Nothing to mend: you are at full hearts.') : t('Rest a while.')),
+    h('h2', {}, t('Campfire')),
     h('button.btn.wide.big', {
       disabled: run.hearts >= run.maxHearts || undefined,
       onclick: () => { run.hearts = Math.min(run.maxHearts, run.hearts + heal); sfx('heal'); toast(`+${heal} ❤`, 'good'); flash = 'heal'; leave(); },
@@ -730,7 +681,7 @@ function craftFlow(done) {
           sfx('click'); drawPick();
         },
       }, stoneEl(x, 'X'), h('span', {}, stoneName(x)), h('span.slot-info', { onclick: (e) => { e.stopPropagation(); infoStone(x, 'X'); } }, 'ⓘ')))),
-      h('p.dim', {}, b ? t('They become one {tier} stone, of two to choose from.', { tier: t(R.craftTier(a, b)) }) : t('Two stones become one of the next tier up from the humbler of them.')),
+      h('p.dim', {}, b ? t('→ one {tier} stone', { tier: t(R.craftTier(a, b)) }) : t('Two stones → one better.')),
       h('button.btn.primary.wide', {
         disabled: !b || undefined,
         onclick: () => {
@@ -754,8 +705,8 @@ function craftScreen() {
   const made = run.pending.made;
   screen(topBar(), h('div.page.rest', {},
     h('div.campfire', { html: icon('relic-anvil') }),
-    h('h2', {}, t('A workshop in the woods')),
-    h('p.dim', {}, made ?? (run.pouch.length >= 2 ? t('An anvil, a whetstone, and nobody about. Two stones could be worked into one finer.') : t('You would need two stones to work with.'))),
+    h('h2', {}, t('Workshop')),
+    h('p.dim', {}, made ?? (run.pouch.length >= 2 ? t('Two stones → one better.') : t('Needs two stones.'))),
     !made && run.pouch.length >= 2 ? h('button.btn.wide.big', {
       onclick: () => craftFlow((text) => { if (text) { run.pending.made = text; save(); craftScreen(); } }),
     }, t('Trade two stones for one')) : null,
@@ -889,94 +840,6 @@ function endScreen(victory) {
     h('button.btn.primary.wide.big', { onclick: () => { run = null; duelState = null; newRunMenu(); } }, t('New run')),
     h('button.btn.wide', { onclick: () => { run = null; title(); } }, t('Title'))));
   try { localStorage.removeItem(SAVE); } catch { /* ignore */ }
-}
-
-// ── Help & codex ────────────────────────────────────────────────────────────
-
-function showHelp(after) {
-  const s = (x, p = 'X') => stoneEl({ type: x }, p, { mini: true });
-  const pages = [
-    h('div', {}, h('h2', {}, t('The duel')),
-      h('p', {}, t('Tic-tac-toe on a 3×3 board: three of your stones in a row — across, down or diagonal — wins.')),
-      h('p', {}, t('You are '), h('b.blue', {}, t('blue squares')), t(', the enemy is '), h('b.red', {}, t('red circles')), t('. The enemy always opens; then you take turns placing one stone each.')),
-      h('p', {}, s('pebble'), ' ', h('b', {}, t('Pebbles never run out.')), t(' Both sides may always place another. Besides them you bring a few '), h('b', {}, t('special stones')), t(' that do something when placed — mostly move stones already on the board, yours and theirs alike. You start with none: you find them along the way, and bring two into a duel at first.'))),
-    h('div', {}, h('h2', {}, t('A turn')),
-      h('p', {}, t('1. Tap a stone in your hand. Glowing squares show where it may go.')),
-      h('p', {}, t('2. Tap a square. If the stone does something, you will see what — tap again or ✓ to confirm. If it can do it several ways, arrows and targets appear: tap one to preview it.')),
-      h('p', {}, t('3. If you hold tricks, you may spend one before ending your turn.')),
-      h('p', {}, t('Until your turn ends, ↩ Undo takes the whole turn back.'))),
-    h('div', {}, h('h2', {}, t('Some stones')),
-      h('p', {}, s('shift'), ' ', h('b', {}, STONES.shift.name), t(' slides its row or column one step, wrapping around.')),
-      h('p', {}, s('rotate'), ' ', h('b', {}, STONES.rotate.name), t(' turns a 2×2 block clockwise.')),
-      h('p', {}, s('magnet'), ' ', h('b', {}, STONES.magnet.name), t(': the enemy must place next to it. '), s('stinky'), ' ', h('b', {}, STONES.stinky.name), t(': must not.')),
-      h('p', {}, s('mountain'), ' ', h('b', {}, STONES.mountain.name), t(' is never moved: moving stones step over it.')),
-      h('p', {}, t('Tap any stone, anywhere, to read what it does. At a workshop, two stones can be traded for one of a higher tier.'))),
-    h('div', {}, h('h2', {}, t('The rules that decide')),
-      h('p', {}, h('b', {}, t('A full board goes to you')), t(' — the enemy opened, so the tie is yours. Hold out, and you win.')),
-      h('p', {}, t('Some duels carry a '), h('b', {}, t('condition')), t(' for both sides: gravity, a hollow centre, open hands.')),
-      h('p', {}, t('Bosses bring no special stones at all. Instead each has '), h('b', {}, t('a rule in its favour')), t(' — it names the stone you play, closes a column, takes two turns at once… Read it before you choose your stones.'))),
-    h('div', {}, h('h2', {}, t('The climb')),
-      h('p', {}, t('Three acts. Each act is tic-tac-toe with its boss on an endless sheet of paper. It starts with a single O — the boss\'s first mark.')),
-      h('p', {}, t('Wherever you go you mark an '), h('b.blue', {}, 'X'), t('; after each step the boss marks an '), h('b.red', {}, 'O'), t('. Every mark reveals the squares around it: duels, elites, shops, campfires, workshops, treasure, the unknown — and rocks, which nobody can mark and no line runs through.')),
-      h('p', {}, h('b', {}, t('Three Xs in a row open the boss\'s door.')), t(' A lost duel scorches its square — only the boss may take it now — and you choose again. Each line of three Os, and filling the page, makes the boss stronger. Duels can also win map aids: a step the boss does not answer, or a pickaxe for a rock.')),
-      h('p', {}, t('Every line of three is crossed through, and its marks are spent: they never count toward another line.')),
-      h('p', {}, t('Before each duel you choose which special stones to bring. Shops sell more slots. Lose and it costs hearts; run out and the climb is over. Elites cost two hearts.'))),
-  ];
-  let k = 0;
-  const holder = h('div.help-page');
-  const dots = h('div.dots');
-  const next = h('button.btn.primary', {}, t('Next'));
-  const prev = h('button.btn.ghost', {}, t('Back'));
-  const draw = () => {
-    holder.replaceChildren(pages[k]);
-    dots.replaceChildren(...pages.map((_, i) => h('span.dot' + (i === k ? '.on' : ''))));
-    next.textContent = k === pages.length - 1 ? t('Play') : t('Next');
-    prev.style.visibility = k === 0 ? 'hidden' : 'visible';
-  };
-  next.onclick = () => { if (k < pages.length - 1) { k++; draw(); } else { close(); after?.(); } };
-  prev.onclick = () => { if (k > 0) { k--; draw(); } };
-  draw();
-  const close = modal(h('div.help', {}, holder, dots, h('div.help-nav', {}, prev, next)), { cls: 'tall' });
-}
-
-function showCodex() {
-  let tab = 'stones';
-  const body = h('div.codex');
-  const draw = () => {
-    const tabs = h('div.tabs', {}, ['stones', 'tricks', 'relics', 'rules', 'enemies'].map((x) => h('button.tab' + (x === tab ? '.on' : ''), { onclick: () => { tab = x; draw(); } }, t(x))));
-    let list;
-    if (tab === 'stones') {
-      const order = ['pebble', ...STONE_TYPES.filter((x) => x !== 'pebble')];
-      list = order.map((x) => h('div.codex-row', { onclick: () => infoStone({ type: x }, 'X'), style: { cursor: 'pointer' } }, stoneEl({ type: x }, 'X'), h('div', {},
-        h('b', {}, STONES[x].name), h('span.info-rarity.' + STONES[x].rarity, {}, ' ' + t(STONES[x].rarity)),
-        h('div', {}, STONES[x].text))));
-    } else if (tab === 'rules') {
-      list = [
-        h('div.section-label', {}, t('Conditions: for both sides')),
-        ...Object.keys(CONDS).map((c) => h('div.codex-row', {}, h('div.trick-token', { html: icon(`cond-${c}`) }), h('div', {}, h('b', {}, CONDS[c].name), h('div', {}, CONDS[c].text)))),
-        h('div.section-label', {}, t('Boss rules: in the boss\'s favour')),
-        ...Object.keys(RULES).map((r) => h('div.codex-row', {}, h('div.trick-token', { html: icon(`rule-${r}`) }), h('div', {}, h('b', {}, RULES[r].name), h('div', {}, RULES[r].text)))),
-      ];
-    } else if (tab === 'tricks') {
-      list = TRICK_TYPES.map((x) => h('div.codex-row', { onclick: () => infoTrick(x), style: { cursor: 'pointer' } }, h('div.trick-token', { html: icon(x) }), h('div', {},
-        h('b', {}, TRICKS[x].name), h('span.info-rarity.' + TRICKS[x].rarity, {}, ' ' + t(TRICKS[x].rarity)), h('div', {}, TRICKS[x].text))));
-    } else if (tab === 'relics') {
-      list = RELIC_TYPES.map((r) => h('div.codex-row', {}, h('div.relic-token.small', {}, relicArt(r)), h('div', {},
-        h('b', {}, RELICS[r].name), h('span.info-rarity.' + RELICS[r].rarity, {}, ' ' + t(RELICS[r].rarity)), h('div', {}, RELICS[r].text))));
-    } else {
-      list = Object.values(ENEMIES).filter((e) => e.act > 0).map((e) => h('div.codex-row', {}, h('div.relic-token.small', {}, e.emoji), h('div', {},
-        h('b', {}, e.name), h('span.dim', {}, ` · ${t('act {n}', { n: e.act })} ${t(e.tier)}`),
-        e.core ? h('div.hand.show.tiny', {}, e.core.map((x) => stoneEl({ type: x }, 'O', { mini: true }))) : null,
-        e.cond ? h('div.chips.inline', {}, ruleChip('cond', e.cond)) : null,
-        e.rules ? h('div.chips.inline', {}, e.rules.map((r) => ruleChip('rule', r))) : null,
-        e.rules2 && e.rules2.join() !== e.rules.join() ? h('div.dim', {}, t('Once beaten, it rises again with: {rules}.', { rules: e.rules2.map((r) => RULES[r].name).join(', ') })) : null)));
-    }
-    body.replaceChildren(tabs, h('div.codex-list', {}, list), h('button.btn.wide', { onclick: () => close() }, t('Close')));
-    // A new tab starts at its top.
-    for (let el = body; el; el = el.parentElement) el.scrollTop = 0;
-  };
-  draw();
-  const close = modal(body, { cls: 'tall' });
 }
 
 // ── Boot ────────────────────────────────────────────────────────────────────

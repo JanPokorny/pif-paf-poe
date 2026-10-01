@@ -409,9 +409,9 @@ export function mountDuel(root, opts) {
     if (state.phase === 'select') {
       markDangers();
       setStatus(state.half ? t('Your second stone — pick one') : t('Your turn — pick a stone'), 'you');
-      const hint = state.conds.includes('shared') && state.hands.O.length ? t('Open Hands: you may also tap one of their stones, up top, and play it as yours.') : '';
+      const hint = state.conds.includes('shared') && state.hands.O.length ? t('Open Hands: their stones are yours too.') : '';
       info.textContent = caption.length ? `${enemy.name}: ${caption.filter(Boolean).join(', ')}.${hint ? ' ' + hint : ''}`
-        : hint || t('Tap a stone in your hand. Tap any stone on the board to read it.');
+        : hint || t('Pick a stone.');
       if (state.turns >= 2 && state.board.some(Boolean) && cells.some((c) => c.classList.contains('threat'))) coach('enemy'); else coach('select');
       renderActions([]);
     } else if (state.phase === 'place' && !preview) {
@@ -442,8 +442,8 @@ export function mountDuel(root, opts) {
     } else if (state.phase === 'trick') {
       const mine = winningLine(state, 'X'), theirs = !mine && winningLine(state, 'O');
       if (mine || theirs) lineLayer.innerHTML = lineSvg(mine || theirs, mine ? 'X' : 'O', true);
-      setStatus(mine ? t('Three in a row! End your turn to win — or spend a trick first.') : theirs ? t('Careful: this gives them three in a row.') : t('Spend a trick, or end your turn'), mine ? 'win-note' : theirs ? 'lose-note' : 'you');
-      info.textContent = t('Glowing tricks can be used now. A trick resolves before the check for three in a row.');
+      setStatus(mine ? t('Three in a row! End turn to win.') : theirs ? t('Careful: this gives them three in a row.') : t('Spend a trick, or end your turn'), mine ? 'win-note' : theirs ? 'lose-note' : 'you');
+      info.textContent = t('A glowing trick can be used now.');
       coach('trick');
       renderActions([undo, h('button.btn.primary', { onclick: endTurnPass }, t('End turn'))]);
     }
@@ -467,11 +467,11 @@ export function mountDuel(root, opts) {
 
   // First-time tips, one per kind of moment, shown once ever.
   const COACH = {
-    select: 'Tip: three of yours in a row wins. Tap a stone in your hand to pick it up — each one does something different.',
-    place: 'Tip: highlighted squares are where it may go. Striped squares are ones the enemy\'s stones keep you out of.',
-    effect: 'Tip: this stone moves things. Tap a yellow note or dashed square to see the result, then tap it again (or ✓) to confirm.',
-    trick: 'Tip: you may spend a trick now, before the check for three in a row — or just end your turn.',
-    enemy: 'Tip: a dashed red circle marks a square where the enemy could finish a line with one plain stone.',
+    select: 'Three in a row wins.',
+    place: 'Striped: blocked by their stones.',
+    effect: 'Tap an option to preview, again to confirm.',
+    trick: 'Trick now, or end your turn.',
+    enemy: 'Dashed circle: their winning square.',
   };
   function coach(kind) {
     let seen;
