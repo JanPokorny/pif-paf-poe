@@ -64,7 +64,6 @@ export default {
 
   // ── Before a duel ─────────────────────────────────────────────────────────
   'Fight!': 'Do boje!',
-  'Pick {n} more': 'Vyber ještě {n}',
   'Back to the map': 'Zpět na mapu',
   '“{quote}”': '„{quote}“',
   '{enemy}: “{quote}”': '{enemy}: „{quote}“',
@@ -341,7 +340,7 @@ export default {
   'Only {n}.': 'Jen {n}.',
   '{n} life left': ['Zbývá {n} život', 'Zbývají {n} životy', 'Zbývá {n} životů'],
   '{n} lives left': ['Zbývá {n} život', 'Zbývají {n} životy', 'Zbývá {n} životů'],
-  'Lose: −{n} ❤': 'Prohra: −{n} ❤',
+  'Will cost you {n} ❤ on loss.': 'Prohra tě bude stát {n} ❤.',
   'Second life: {rules}': 'Druhý život: {rules}',
   'Your stones ': 'Tvoje kameny ',
   'Pebbles only.': 'Jen oblázky.',

@@ -425,10 +425,7 @@ function preDuel() {
       }, stoneEl(s, 'X'), h('span', {}, stoneName(s)),
       h('span.slot-info', { onclick: (e) => { e.stopPropagation(); infoStone(s, 'X'); } }, 'ⓘ'));
     }));
-    const need = Math.min(size, run.pouch.length);
     count.textContent = `${chosen.length}/${size}`;
-    fight.disabled = chosen.length < need;
-    fight.textContent = chosen.length < need ? t('Pick {n} more', { n: need - chosen.length }) : t('Fight!');
   };
   draw();
 
@@ -446,16 +443,16 @@ function preDuel() {
     h('div.page', {},
       canBack ? h('button.btn.ghost.small.back-map', { onclick: () => { R.retreat(run); route(); } }, h('span', { html: icon('back') }), t('Back to the map')) : null,
       h('div.enemy-card.' + duel.tier, {},
-        h('div.stake', { title: t('Lose: −{n} ❤', { n: R.heartsLost(duel) }) }, `−${R.heartsLost(duel)} `, h('span', { html: icon('heart') })),
+        h('button.stake', { onclick: () => toast(t('Will cost you {n} ❤ on loss.', { n: R.heartsLost(duel) })), 'aria-label': t('Will cost you {n} ❤ on loss.', { n: R.heartsLost(duel) }) },
+          h('span', { html: icon('sword') }), String(R.heartsLost(duel))),
         h('div.portrait.big', {}, h('div.photo', {}, enemy.emoji)),
         h('div', {},
           tierLabel ? h('div.tier.' + duel.tier, {}, tierLabel) : null,
           h('div.enemy-name.big', {}, enemy.name),
           h('div.quote', {}, t('“{quote}”', { quote: enemy.quote })))),
       h('div.section-label', {}, t('Their stones')),
-      h('div.hand.enemy-hand.show', {},
-        h('button.slot-plain', { onclick: () => infoStone({ type: 'pebble' }, 'O') }, stoneEl({ type: 'pebble' }, 'O')),
-        duel.handO.map((s) => h('button.slot-plain', { onclick: () => infoStone(s, 'O') }, stoneEl(s, 'O')))),
+      duel.handO.length ? h('div.stone-grid', {}, duel.handO.map((s) => h('button.pouch-slot', { onclick: () => infoStone(s, 'O') },
+        stoneEl(s, 'O'), h('span', {}, stoneName(s)), h('span.slot-info', {}, 'ⓘ')))) : h('p.dim', {}, t('Pebbles only.')),
       facts.length ? h('div.duel-facts.facts-card', {}, facts) : null,
       h('div.section-label', {}, t('Your stones '), count),
       run.pouch.length ? grid : h('p.dim', {}, t('Pebbles only.')),
