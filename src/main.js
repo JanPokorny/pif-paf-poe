@@ -348,9 +348,11 @@ function mapScreen() {
   if (map.news === 'oline' || map.news === 'full') musicEvent('stronger');
   else if (map.open && !map.doorHeard) musicEvent('door');
   if (map.open) map.doorHeard = true;
-  const news = map.news === 'oline' ? t('{boss}: three in a row — stronger!', { boss: boss.name })
-    : map.news === 'full' ? t('Page full: {boss} is stronger.', { boss: boss.name })
-      : lastO && map.cells[lastO] && map.cells[lastO].kind !== 'boss-mark' ? t('{boss} marks the {node} square.', { boss: boss.name, node: NODE_NAME[map.cells[lastO].kind].toLowerCase() }) : '';
+  // The boss growing stronger is news of its own, once the O is drawn.
+  const stronger = map.news === 'oline' ? t('{boss}: three in a row — stronger!', { boss: boss.name })
+    : map.news === 'full' ? t('Page full: {boss} is stronger.', { boss: boss.name }) : null;
+  if (stronger) setTimeout(() => toast(stronger, 'bad'), map.news === 'oline' ? 2200 : 300);
+  const news = lastO && map.cells[lastO] && map.cells[lastO].kind !== 'boss-mark' ? t('{boss} marks the {node} square.', { boss: boss.name, node: NODE_NAME[map.cells[lastO].kind].toLowerCase() }) : '';
   const bonus = map.bonus;
   map.bonus = 0;
   map.news = null;
@@ -358,9 +360,9 @@ function mapScreen() {
   // The boss's door: a hint while it is shut, a button once it is open.
   const door = map.open
     ? h('button.btn.primary.wide.boss-go', { onclick: () => { R.enterNode(run, 'boss'); duelState = null; route(); } },
-      h('span', { html: icon('crown') }), t('Face the boss'), map.power ? h('span.power-note', {}, map.power >= 2 ? t('Full strength: harder rules.') : t('Stronger.')) : null)
+      h('span', { html: icon('crown') }), t('Face the boss'))
     : h('div.door-hint', {}, h('span', { html: icon('crown') }), t('Three Xs in a row open the boss\'s door.'),
-      map.power ? h('span.power-note', {}, ' ' + (map.power >= 2 ? t('Full strength: harder rules.') : t('Stronger.'))) : null);
+)
   // Map aids won in duels: arm one for the next step.
   const aids = R.AID_TYPES.filter((a) => run.aids?.[a]).length ? h('div.aids', {}, R.AID_TYPES.filter((a) => run.aids?.[a]).map((a) => h('button.aid' + (map.armed === a ? '.armed' : ''), {
     onclick: () => { R.toggleAid(run, a); sfx('click'); save(); mapScreen(); if (map.armed) toast(t(R.AIDS[a].text)); },
@@ -473,6 +475,7 @@ function preDuel() {
     duel.quirk ? h('div.fact.warn', {}, `${R.QUIRKS[duel.quirk].name}: ${R.QUIRKS[duel.quirk].text}`) : null,
     duel.tier === 'boss' && duel.bossWins === 0 && enemy.rules2 && enemy.rules2.join() !== duel.rules.join()
       ? h('div.fact.dim', {}, t('At moonrise: {rules}', { rules: enemy.rules2.map((r) => RULES[r].name).join(', ') })) : null,
+    duel.tier === 'boss' && run.map?.power ? h('div.fact.warn', {}, run.map.power >= 2 ? t('Full strength: it thinks harder, and brings its harder rules from the start.') : t('Grown stronger: it thinks harder.')) : null,
   ].filter(Boolean);
   const canBack = duel.tier !== 'boss' && !duel.event;
   screen(topBar(),
