@@ -127,13 +127,25 @@ function showMenu() {
 }
 
 // Full screen, where the browser allows it (not on iPhones).
+// It sticks: once on, leaving the game (or the back gesture) and coming back
+// puts it back -- at once where the browser allows, else on the next tap.
 const canFullscreen = () => !!(document.fullscreenEnabled && document.documentElement.requestFullscreen);
-function toggleFullscreen() {
-  try {
-    if (document.fullscreenElement) document.exitFullscreen();
-    else document.documentElement.requestFullscreen({ navigationUI: 'hide' }).catch(() => {});
-  } catch { /* not allowed here */ }
+let wantFull = false;
+try { wantFull = localStorage.getItem('ppp-fullscreen') === 'on'; } catch { /* ignore */ }
+function enterFullscreen() {
+  if (!canFullscreen() || document.fullscreenElement) return;
+  try { document.documentElement.requestFullscreen({ navigationUI: 'hide' }).catch(() => {}); } catch { /* not allowed here */ }
 }
+function toggleFullscreen() {
+  wantFull = !document.fullscreenElement;
+  try { localStorage.setItem('ppp-fullscreen', wantFull ? 'on' : 'off'); } catch { /* ignore */ }
+  if (wantFull) enterFullscreen();
+  else try { document.exitFullscreen(); } catch { /* ignore */ }
+}
+const reFullscreen = () => { if (wantFull) enterFullscreen(); };
+document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') reFullscreen(); });
+window.addEventListener('focus', reFullscreen);
+for (const ev of ['pointerup', 'keydown']) document.addEventListener(ev, reFullscreen, { passive: true });
 
 // Language, music, sound and full screen on one line of small buttons.
 function settingsRow() {

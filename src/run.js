@@ -393,7 +393,8 @@ export function bossThreats(map) {
 
 export const lineReach = (map, k, mark = 'X') => reach(map, ...coords(k), mark);
 const openSquares = (map) => Object.entries(map.cells).filter(([, c]) => !c.mark).map(([k]) => k);
-export const pageFull = (map) => map.visited >= PAGE || !openSquares(map).length;
+// The page is full only by steps: the boss always makes room (see bossFills).
+export const pageFull = (map) => map.visited >= PAGE;
 
 // Where you may go next: any open square on view, and the boss once its door
 // is open. When the page is full, only the boss.
@@ -460,7 +461,7 @@ function bossTurn(run) {
 // more of the page. Only if it cannot move either is the page full.
 function bossFills(run) {
   const map = run.map;
-  for (let guard = 0; guard < 6 && !openSquares(map).length && map.visited < PAGE; guard++) {
+  for (let guard = 0; guard < 20 && !openSquares(map).length; guard++) {
     const o = bossTurn(run);
     if (!o) break;
     map.lastO = o;
