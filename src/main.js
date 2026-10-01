@@ -355,18 +355,12 @@ function mapScreen() {
   map.bonus = 0;
   map.news = null;
   if (bonus) setTimeout(() => toast(`+${bonus} 🪙`, 'good'), 50);
-  const door = h('button.boss-door' + (map.open ? '.open' : ''), {
-    onclick: () => {
-      if (!map.open) { toast(t('Three Xs in a row open it.')); return; }
-      R.enterNode(run, 'boss'); duelState = null; route();
-    },
-  },
-  h('div.portrait', {}, h('div.photo', {}, boss.emoji)),
-  h('div.door-text', {},
-    h('div.door-name', {}, boss.name),
-    h('div', {}, map.open ? t('Door open: tap to fight.') : t('Three Xs in a row open the door.')),
-    h('div.door-rules', {}, (boss.rules ?? []).map((r) => ruleChip('rule', r, '.small'))),
-    map.power ? h('div.power', {}, map.power >= 2 ? t('Full strength: harder rules.') : t('Stronger.')) : null));
+  // The boss's door: a hint while it is shut, a button once it is open.
+  const door = map.open
+    ? h('button.btn.primary.wide.boss-go', { onclick: () => { R.enterNode(run, 'boss'); duelState = null; route(); } },
+      h('span', { html: icon('crown') }), t('Face the boss'), map.power ? h('span.power-note', {}, map.power >= 2 ? t('Full strength: harder rules.') : t('Stronger.')) : null)
+    : h('div.door-hint', {}, h('span', { html: icon('crown') }), t('Three Xs in a row open the boss\'s door.'),
+      map.power ? h('span.power-note', {}, ' ' + (map.power >= 2 ? t('Full strength: harder rules.') : t('Stronger.'))) : null);
   // Map aids won in duels: arm one for the next step.
   const aids = R.AID_TYPES.filter((a) => run.aids?.[a]).length ? h('div.aids', {}, R.AID_TYPES.filter((a) => run.aids?.[a]).map((a) => h('button.aid' + (map.armed === a ? '.armed' : ''), {
     onclick: () => { R.toggleAid(run, a); sfx('click'); save(); mapScreen(); if (map.armed) toast(t(R.AIDS[a].text)); },
