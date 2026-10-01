@@ -4,7 +4,7 @@
 import { STONES, TRICKS, STONE_TYPES, TRICK_TYPES, CONDS, RULES, createGame } from './engine.js';
 import { RELICS, RELIC_TYPES, ENEMIES, ACTS, EVENTS } from './content.js';
 import * as R from './run.js';
-import { h, hideToast, art, relicArt, scribbleX, scribbleO, stoneEl, iconEl, toast, modal, infoStone, infoTrick, infoRelic, ruleChip, stoneCard, trickCard, relicCard, stoneName, langToggle } from './ui/common.js';
+import { h, hideToast, tapeUp, art, relicArt, scribbleX, scribbleO, stoneEl, iconEl, toast, modal, infoStone, infoTrick, infoRelic, ruleChip, stoneCard, trickCard, relicCard, stoneName, langToggle } from './ui/common.js';
 import { icon } from './icons.js';
 import { mountDuel } from './ui/duel.js';
 import { sfx, soundOn, setSound } from './sound.js';
@@ -73,14 +73,26 @@ function topBar() {
     h('button.icon-btn', { onclick: showMenu, 'aria-label': t('Menu') }, h('span', { html: icon('gear') })));
 }
 
+// `keep`: a redraw of the same screen, which stays where it was scrolled to.
 function screen(...children) {
+  const keep = children[0] === KEEP_SCROLL;
+  if (keep) children.shift();
+  const y = window.scrollY;
+  const lefts = [...app.querySelectorAll('.cards.scroll')].map((e) => e.scrollLeft);
   hideToast();
   const el = h('div.screen', {}, ...children);
   app.replaceChildren(el);
-  app.scrollTop = 0;
-  window.scrollTo(0, 0);
+  tapeUp(el);
+  if (keep) {
+    window.scrollTo(0, y);
+    el.querySelectorAll('.cards.scroll').forEach((e, k) => { e.scrollLeft = lefts[k] ?? 0; });
+  } else {
+    app.scrollTop = 0;
+    window.scrollTo(0, 0);
+  }
   return el;
 }
+const KEEP_SCROLL = Symbol('keep scroll');
 
 function relicStrip() {
   if (!run.relics.length) return null;
@@ -647,13 +659,13 @@ function treasureScreen() {
 
 // ── Shop ────────────────────────────────────────────────────────────────────
 
-function shopScreen() {
+function shopScreen(redraw = false) {
   const shop = run.pending.shop;
   const buy = (cost, fn) => {
     if (run.gold < cost) { toast(t('Not enough gold.'), 'bad'); return; }
-    fn(() => { run.gold -= cost; sfx('coin'); save(); shopScreen(); });
+    fn(() => { run.gold -= cost; sfx('coin'); save(); shopScreen(true); });
   };
-  screen(topBar(), h('div.page.shop', {},
+  screen(...(redraw ? [KEEP_SCROLL] : []), topBar(), h('div.page.shop', {},
     h('div.shop-head', {}, h('span.shop-emoji', { html: icon('shop') }), h('div', {}, h('h2', {}, t('The Travelling Merchant')), h('div.dim', {}, t('“Stones, tricks, trinkets. Gold only.”')))),
     h('div.section-label', {}, t('Stones')),
     h('div.cards.scroll', {}, shop.stones.map((s) => stoneCard(s, {

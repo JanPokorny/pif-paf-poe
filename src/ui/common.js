@@ -85,10 +85,22 @@ export function toast(msg, kind = '') {
   toastTimer = setTimeout(() => { el.className = ''; }, 2200);
 }
 
+// Tape is never stuck on quite straight: a little off-centre and askew, the
+// same for the same thing every time it is drawn.
+export function tapeUp(root) {
+  for (const el of root.querySelectorAll('.card, .portrait, .rules-note, .result-banner')) {
+    let n = 7;
+    for (const ch of el.textContent) n = (Math.imul(n, 31) + ch.charCodeAt(0)) | 0;
+    el.style.setProperty('--tape-x', `${((n >>> 3) % 21) - 10}px`);
+    el.style.setProperty('--tape-r', `${((n >>> 9) % 9) - 4}deg`);
+  }
+}
+
 // A modal sheet. Returns a close function.
 export function modal(content, { onClose, dismissable = true, cls = '' } = {}) {
   const back = h('div.modal-back');
   const sheet = h(`div.modal.${cls || 'plain'}`, {}, content);
+  tapeUp(sheet);
   back.append(sheet);
   const close = () => {
     back.classList.add('closing');
