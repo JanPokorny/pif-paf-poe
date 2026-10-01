@@ -75,6 +75,9 @@ its own, with its boss.
   The boss's three in a row adds one to its *power* (up to 2); so does a page filled with twelve
   marks before you open the door, and then the door opens anyway. Power is search depth, and at
   full power the boss fights with its second-life rules from the start.
+- **Spent lines.** Every line of three is crossed through on the page, and its marks are spent:
+  no later line may use them, so a fourth mark beside a line, or a fork sharing its square, makes
+  nothing new. A mark that finishes two lines at once crosses through only one.
 - **Rocks.** On an open page two open squares are already a double threat, and a line came in
   about five steps 95% of the time. So the page lays rocks on a lattice — (x + 3y) mod 7 in two
   classes, shifted so you never start on one — plus scattered ones, likelier the further you

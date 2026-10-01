@@ -463,6 +463,7 @@ export default {
   "Three Xs in a row open the boss's door.": "Tři X v řadě otevřou bossovy dveře.",
   'Rock': 'Skála',
   'Burned': 'Spálené',
+  'Every line of three is crossed through, and its marks are spent: they never count toward another line.': 'Každá trojice v řadě se přeškrtne a její značky jsou vypotřebované: do další řady se už nepočítají.',
   'A rock: nobody can mark it, and no line runs through it.': 'Skála: nikdo ji nezabere a žádná řada přes ni nevede.',
   'At full strength: it thinks harder, and brings its harder rules from the start.': 'V plné síle: víc přemýšlí a těžší pravidla má hned od začátku.',
   'Tap a rock to break it.': 'Ťukni na skálu a rozbiješ ji.',

@@ -379,9 +379,20 @@ function mapScreen() {
   let paths = '';
   for (let i = 1; i < cols; i++) { const x = i * 100, w = ((i * 37) % 7) - 3; paths += `<path d="M${x + w} 4 C ${x - w} ${H * 0.33}, ${x + w} ${H * 0.66}, ${x - w / 2} ${H - 4}"/>`; }
   for (let j = 1; j < rows; j++) { const y = j * 100, w = ((j * 53) % 7) - 3; paths += `<path d="M4 ${y + w} C ${W * 0.33} ${y - w}, ${W * 0.66} ${y + w}, ${W - 4} ${y - w / 2}"/>`; }
+  // Lines of three, crossed through: their marks are spent.
+  let strikes = '';
+  for (const { mark, cells } of map.lines ?? []) {
+    const [a, b] = [cells[0], cells[cells.length - 1]].map((k) => { const [x, y] = R.coords(k); return [(x - x0) * 100 + 50, (y - y0) * 100 + 50]; });
+    const len = Math.hypot(b[0] - a[0], b[1] - a[1]), ux = (b[0] - a[0]) / len, uy = (b[1] - a[1]) / len;
+    const p = [a[0] - ux * 34, a[1] - uy * 34], q = [b[0] + ux * 34, b[1] + uy * 34];
+    const bend = 5, mx = (p[0] + q[0]) / 2 - uy * bend, my = (p[1] + q[1]) / 2 + ux * bend;
+    const fresh = cells.includes(freshX) && mark === 'X' || cells.includes(lastO) && mark === 'O';
+    strikes += `<path pathLength="100" class="${mark === 'X' ? 'x' : 'o'}${fresh ? ' fresh' : ''}" d="M${p[0]} ${p[1]} Q ${mx} ${my}, ${q[0]} ${q[1]}"/>`;
+  }
   const sheet = h('div.map-sheet', { style: `--cols: ${cols}; --rows: ${rows}` },
     h('div.board-lines', { html: `<svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" aria-hidden="true">${paths}</svg>` }),
-    h('div.map-cells', {}, grid));
+    h('div.map-cells', {}, grid),
+    strikes ? h('div.map-strikes', { html: `<svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" aria-hidden="true">${strikes}</svg>` }) : null);
   const scroller = h('div.map-scroll', {}, sheet);
   screen(topBar(), relicStrip(),
     h('div.map-page', {},
@@ -898,6 +909,7 @@ function showHelp(after) {
       h('p', {}, t('Three acts. Each act is tic-tac-toe with its boss on an endless sheet of paper. It starts with a single O — the boss\'s first mark.')),
       h('p', {}, t('Wherever you go you mark an '), h('b.blue', {}, 'X'), t('; after each step the boss marks an '), h('b.red', {}, 'O'), t('. Every mark reveals the squares around it: duels, elites, shops, campfires, workshops, treasure, the unknown — and rocks, which nobody can mark and no line runs through.')),
       h('p', {}, h('b', {}, t('Three Xs in a row open the boss\'s door.')), t(' A lost duel scorches its square — only the boss may take it now — and you choose again. Each line of three Os, and filling the page, makes the boss stronger. Duels can also win map aids: a step the boss does not answer, or a pickaxe for a rock.')),
+      h('p', {}, t('Every line of three is crossed through, and its marks are spent: they never count toward another line.')),
       h('p', {}, t('Before each duel you choose which special stones to bring. Shops sell more slots. Lose and it costs hearts; run out and the climb is over. Elites cost two hearts.'))),
   ];
   let k = 0;

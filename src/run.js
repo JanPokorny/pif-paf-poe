@@ -208,7 +208,7 @@ function liveLines(map, x, y, mark) {
   for (const w of windowsThrough(x, y)) {
     let mine = 0, spoiled = false;
     for (const [wx, wy] of w) {
-      const m = markAt(map, wx, wy);
+      const m = lineMarkAt(map, wx, wy);
       if (m === mark) mine++;
       else if (m && !(m === 'S' && mark === 'O')) { spoiled = true; break; }
     }
@@ -221,6 +221,9 @@ const DIRS4 = [[1, 0], [0, 1], [1, 1], [1, -1]];
 export const keyOf = (x, y) => `${x},${y}`;
 export const coords = (k) => k.split(',').map(Number);
 const markAt = (map, x, y) => map.cells[keyOf(x, y)]?.mark ?? null;
+// A mark already crossed through in a line of three is spent: no other line
+// may use it, so for lines it counts as a rock.
+const lineMarkAt = (map, x, y) => { const c = map.cells[keyOf(x, y)]; return c?.line ? '#' : c?.mark ?? null; };
 export const cellAt = (map, k) => map.cells[k];
 
 // Every window of LINE squares through (x, y): lists of [x, y].
@@ -244,7 +247,7 @@ function reach(map, x, y, mark) {
   for (const w of windowsThrough(x, y)) {
     let mine = 0, spoiled = false;
     for (const [wx, wy] of w) {
-      const m = markAt(map, wx, wy);
+      const m = lineMarkAt(map, wx, wy);
       if (m === mark) mine++;
       else if (m && !(m === 'S' && mark === 'O')) { spoiled = true; break; }
     }
@@ -253,19 +256,20 @@ function reach(map, x, y, mark) {
   return best;
 }
 
-function countLines(map, mark) {
-  let lines = 0;
-  for (const [k, c] of Object.entries(map.cells)) {
-    if (c.mark !== mark) continue;
-    const [x, y] = coords(k);
-    for (const [dx, dy] of DIRS4) {
-      if (markAt(map, x - dx, y - dy) === mark) continue;   // count each run once, from its start
-      let n = 1;
-      while (markAt(map, x + n * dx, y + n * dy) === mark) n++;
-      if (n >= LINE) lines++;
+// The new line of three that the mark just made at k completes, if any: its
+// squares are crossed through (map.lines) and spent. Only one line per mark.
+function claimLine(map, k) {
+  const mark = map.cells[k]?.mark;
+  if (!mark || mark === 'S') return null;
+  for (const w of windowsThrough(...coords(k))) {
+    if (w.every(([x, y]) => lineMarkAt(map, x, y) === mark)) {
+      const keys = w.map(([x, y]) => keyOf(x, y));
+      for (const q of keys) map.cells[q].line = true;
+      (map.lines ??= []).push({ mark, cells: keys });
+      return keys;
     }
   }
-  return lines;
+  return null;
 }
 
 // Step back out of a duel you have only looked at.
@@ -285,6 +289,7 @@ export function makeMap(run) {
     open: false,       // the boss's door
     power: 0,          // how much stronger the boss has grown
     oLines: 0,
+    lines: [],         // lines of three, crossed through: {mark, cells}
     visited: 0,
     fights: 0,         // duels revealed so far, for the gentle first few
     armed: null,       // a map aid about to be used
@@ -431,7 +436,7 @@ export function settleCell(run, mark) {
   map.cells[at].mark = 'X';
   map.freshX = at;
   reveal(run, ...coords(at));
-  if (countLines(map, 'X')) map.open = true;
+  if (claimLine(map, at)) map.open = true;
   // Squares cleared past an open door pay a little extra: a reason to press on.
   if (wasOpen) { map.bonus = 10; run.gold += 10; }
   const aid = map.armed;
@@ -441,12 +446,10 @@ export function settleCell(run, mark) {
     if (map.lastO) reveal(run, ...coords(map.lastO));
   }
   // Every new line of Os makes the boss stronger, up to a point.
-  const oLines = countLines(map, 'O');
-  if (oLines > map.oLines && map.power < MAX_POWER) {
-    map.power = Math.min(MAX_POWER, map.power + oLines - map.oLines);
-    map.news = 'oline';
+  if (map.lastO && claimLine(map, map.lastO)) {
+    map.oLines++;
+    if (map.power < MAX_POWER) { map.power++; map.news = 'oline'; }
   }
-  map.oLines = oLines;
   // A full page: the boss comes for you, and it has had time to prepare.
   if (pageFull(map) && !map.open) {
     map.open = true;
