@@ -342,7 +342,7 @@ function mapScreen() {
       if ((!c.mark || c.mark === 'S') && threats.has(k)) el.classList.add('boss-threat');
       if (c.mark === 'X') el.insertAdjacentHTML('beforeend', scribbleX(freshX === k));
       if (c.mark === 'O') el.insertAdjacentHTML('beforeend', scribbleO(lastO === k));
-      if (c.mark === 'S') { el.classList.add('scorched'); el.insertAdjacentHTML('beforeend', `<span class="burn">${icon('fire')}</span>`); }
+      if (c.mark === 'S') el.classList.add('scorched');
       if (kind === 'elite' && !c.mark) el.insertAdjacentHTML('beforeend', `<span class="elite-star">${icon('star')}</span>`);
       grid.push(el);
     }

@@ -627,10 +627,8 @@ b { font-weight: 400; background: linear-gradient(transparent 55%, var(--hi) 55%
 .demo-cap { font-size: 0.9rem; color: var(--pencil); flex: 1; min-width: 120px; }
 .card-info { position: absolute; top: 4px; right: 8px; color: var(--blue); font-size: 1.2rem; padding: 4px; }
 .btn.continue { flex-direction: column; gap: 0; line-height: 1.1; } .continue-sub { font-family: var(--hand); font-size: 0.9rem; opacity: 0.75; }
-.map-cell.scorched::after { content: ''; position: absolute; inset: 10%; border-radius: 46% 38% 52% 41%; background: radial-gradient(ellipse at 50% 58%, rgba(60, 32, 18, 0.55) 0 30%, rgba(120, 62, 28, 0.35) 52%, rgba(192, 98, 26, 0.12) 70%, transparent 74%); filter: url(#pencil); pointer-events: none; }
-.map-cell.scorched .burn { position: absolute; left: 50%; top: 38%; width: 40%; height: 40%; transform: translate(-50%, -50%); color: #c0621a; z-index: 1; pointer-events: none; }
-.map-cell.scorched .burn .icon { width: 100%; height: 100%; filter: url(#ink); }
-.map-cell.scorched .label { position: absolute; bottom: 12%; color: #8a4a22; z-index: 2; visibility: visible; opacity: 1; }
+.map-cell.scorched::after { content: ''; position: absolute; inset: 8%; border-radius: 46% 38% 52% 41% / 40% 50% 44% 54%; background: radial-gradient(ellipse at 48% 52%, rgba(52, 30, 18, 0.62) 0 26%, rgba(96, 52, 24, 0.5) 40%, rgba(150, 84, 34, 0.32) 56%, rgba(196, 128, 52, 0.16) 68%, transparent 75%); filter: url(#pencil); pointer-events: none; }
+.map-cell.scorched .label { position: absolute; bottom: 14%; color: #8a4a22; z-index: 2; visibility: visible; opacity: 1; }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; transition-duration: 0.01ms !important; }
 }
@@ -736,8 +734,9 @@ body:has(.duel) #toast.show { transform: translate(-50%, 0) rotate(-1deg); }
 .aid-ico, .aid-ico .icon { width: 18px; height: 18px; }
 .mini-sq.elite .icon { width: 80%; height: 80%; }
 /* Rocks: nobody marks them, no line runs through them. */
-.map-cell.rock { cursor: default; color: var(--ink); }
-.map-cell.rock::before { content: ''; position: absolute; inset: 9%; border-radius: 38% 44% 35% 47%; background: repeating-linear-gradient(35deg, rgba(43, 42, 51, 0.5) 0 2px, rgba(43, 42, 51, 0.32) 2px 4px); border: 2px solid rgba(43, 42, 51, 0.7); filter: url(#pencil); }
-.map-cell.rock.marked .doodle.rock { width: 52%; height: 52%; opacity: 1; color: var(--paper); }
+.map-cell.rock { cursor: default; color: var(--pencil); }
+.map-cell.rock.marked .doodle.rock { width: 60%; height: 60%; opacity: 0.9; }
+.map-cell .doodle.rock .icon path:first-child { fill: currentColor; }
+.map-cell .doodle.rock .icon path:last-child { stroke: var(--paper); }
 .map-cell.breachable { animation: wiggle 1.2s ease-in-out infinite; cursor: pointer; }
-.map-cell.breachable::before { background: var(--hi); }
+.map-cell.breachable::before { content: ''; position: absolute; inset: 10%; border-radius: 42% 35% 46% 38%; background: var(--hi); }
