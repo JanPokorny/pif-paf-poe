@@ -382,7 +382,8 @@ b { font-weight: 400; background: linear-gradient(transparent 55%, var(--hi) 55%
 .pouch-slot .stone { --size: 42px; }
 .pick .pouch-slot { opacity: 0.4; transition: opacity 0.15s; }
 .pick .pouch-slot.on { opacity: 1; }
-.slot-count { position: absolute; top: 2px; left: 6px; font-family: var(--marker); font-size: 1.1rem; color: var(--red); }
+.info-name-link { cursor: pointer; padding: 2px 0; }
+.info-name-link .i { color: var(--blue); font-size: 0.9em; }
 .slot-info { position: absolute; top: 0; right: 4px; color: var(--blue); font-size: 1rem; padding: 2px; }
 .sticky-bottom { position: sticky; bottom: 0; padding: 12px 0 calc(6px + var(--safe-b)); background: linear-gradient(transparent, var(--paper) 35%); z-index: 3; }
 
@@ -746,6 +747,7 @@ body:has(.duel) #toast.show { transform: translate(-50%, 0) rotate(-1deg); }
 
 /* Several stones of a kind in a hand: one stone and a count. */
 .hand-slot { position: relative; }
-.hand-count { position: absolute; top: -4px; right: -2px; font-family: var(--marker); font-size: 0.95rem; color: var(--ink); background: var(--card); border-radius: 8px; padding: 0 4px; line-height: 1.2; box-shadow: 0 1px 0 rgba(0,0,0,0.12); }
+.hand-count { position: absolute; top: -4px; right: -2px; z-index: 1; font-family: var(--marker); font-size: 0.95rem; color: var(--ink); background: var(--card); border-radius: 8px; padding: 0 4px; line-height: 1.2; box-shadow: 0 1px 0 rgba(0,0,0,0.12); }
 .hand-group { position: relative; display: inline-flex; }
 .hand-group .hand-count { top: -6px; right: -8px; font-size: 0.8rem; }
+.pouch-slot .hand-count { top: 4px; right: 6px; }

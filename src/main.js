@@ -407,6 +407,11 @@ function actIntro() {
     h('button.btn.primary.wide.big', { onclick: () => { run.screen = 'map'; route(); } }, t('Onward'))));
 }
 
+// A stone's name with an (i): tapping the name reads the stone.
+function infoName(s, player) {
+  return h('span.info-name-link', { onclick: (e) => { e.stopPropagation(); infoStone(s, player); } }, stoneName(s), h('span.i', {}, ' ⓘ'));
+}
+
 // ── Before a duel: see the enemy, choose your stones ────────────────────────
 
 function preDuel() {
@@ -429,8 +434,7 @@ function preDuel() {
           draw();
         },
         oncontextmenu: (e) => { e.preventDefault(); infoStone(s, 'X'); },
-      }, stoneEl(s, 'X'), h('span', {}, stoneName(s)),
-      h('span.slot-info', { onclick: (e) => { e.stopPropagation(); infoStone(s, 'X'); } }, 'ⓘ'));
+      }, stoneEl(s, 'X'), infoName(s, 'X'));
     }));
     count.textContent = `${chosen.length}/${size}`;
     const need = R.MIN_HAND - chosen.length;
@@ -464,8 +468,8 @@ function preDuel() {
       h('div.stone-grid', {}, [...new Set(duel.handO.map((s) => s.type))].map((type) => {
         const n = duel.handO.filter((s) => s.type === type).length;
         return h('button.pouch-slot', { onclick: () => infoStone({ type }, 'O') },
-          stoneEl({ type }, 'O'), h('span', {}, stoneName({ type })), h('span.slot-info', {}, 'ⓘ'),
-          n > 1 ? h('span.slot-count', {}, `${n}`) : null);
+          stoneEl({ type }, 'O'), infoName({ type }, 'O'),
+          n > 1 ? h('span.hand-count', {}, `×${n}`) : null);
       })),
       facts.length ? h('div.duel-facts.facts-card', {}, facts) : null,
       h('div.section-label', {}, t('Your stones '), count),
@@ -703,7 +707,7 @@ function craftFlow(done) {
           picked = picked.includes(x.uid) ? picked.filter((u) => u !== x.uid) : picked.length < 2 ? [...picked, x.uid] : [picked[1], x.uid];
           sfx('click'); drawPick();
         },
-      }, stoneEl(x, 'X'), h('span', {}, stoneName(x)), h('span.slot-info', { onclick: (e) => { e.stopPropagation(); infoStone(x, 'X'); } }, 'ⓘ')))),
+      }, stoneEl(x, 'X'), infoName(x, 'X')))),
       h('p.dim', {}, b ? t('→ one {tier} stone', { tier: t(R.craftTier(a, b)) }) : t('Two stones → one better.')),
       h('button.btn.primary.wide', {
         disabled: !b || undefined,
