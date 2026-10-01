@@ -31,18 +31,9 @@ export default {
   'Title': 'Na začátek',
   'OK': 'OK',
 
-  'Tic-tac-toe where the pieces move.': 'Piškvorky, ve kterých se kameny hýbou.',
-  'a roguelike of moving stones': 'roguelike s pohyblivými kameny',
   'Continue run': 'Pokračovat ve výpravě',
   'Start over? Your run in progress will be lost.': 'Začít znovu? Rozehraná výprava se ztratí.',
   'New run': 'Nová výprava',
-  '{n} run': ['{n} výprava', '{n} výpravy', '{n} výprav'],
-  '{n} runs': ['{n} výprava', '{n} výpravy', '{n} výprav'],
-  '{n} win': ['{n} výhra', '{n} výhry', '{n} výher'],
-  '{n} wins': ['{n} výhra', '{n} výhry', '{n} výher'],
-  'Best: conquered the Summit at heat {n}': 'Nejlépe: zdolaný Vrchol na žáru {n}',
-  'Best: conquered the Summit': 'Nejlépe: zdolaný Vrchol',
-  'Best: reached act {n}': 'Nejlépe: dějství {n}',
   'Climb': 'Vyrazit',
 
   'Heat {n}': 'Žár {n}',

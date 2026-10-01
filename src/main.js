@@ -159,11 +159,6 @@ function title() {
   duelView?.destroy();
   duelView = null;
   const saved = loadJSON(SAVE);
-  const best = meta.best
-    ? (meta.best.victory
-      ? (meta.bestHeatWon > 0 ? t('Best: conquered the Summit at heat {n}', { n: meta.bestHeatWon }) : t('Best: conquered the Summit'))
-      : t('Best: reached act {n}', { n: meta.best.act }))
-    : t('Tic-tac-toe where the pieces move.');
   screen(
     h('div.title', {},
       h('div.logo', {},
@@ -175,7 +170,7 @@ function title() {
             'aria-hidden': 'true',
             style: { left: `${(i % 3) * 33.3}%`, top: `${((i / 3) | 0) * 33.3}%`, '--tilt': `${((i * 37) % 11) - 5}deg`, animationDelay: `${0.25 + k * 0.32}s` },
           }, 'PIFPAFPOE'[i]))),
-        h('div.subtitle', {}, t('a roguelike of moving stones'))),
+      ),
       h('div.title-buttons', {},
         saved?.run && !saved.run.over ? h('button.btn.primary.wide.big.continue', { onclick: () => { run = saved.run; duelState = saved.duel; migrate(); route(); } },
           h('span', {}, t('Continue run')),
@@ -183,7 +178,7 @@ function title() {
         h('button.btn.wide.big' + (saved?.run ? '' : '.primary'), { onclick: () => { if (saved?.run && !saved.run.over && !confirm(t('Start over? Your run in progress will be lost.'))) return; newRunMenu(); } }, t('New run')),
         h('button.btn.wide.ghost', { onclick: () => { setSound(!soundOn()); title(); } }, h('span', { html: icon(soundOn() ? 'sound-on' : 'sound-off') }), soundOn() ? t('Sound on') : t('Sound off')),
         langToggle()),
-      h('div.title-foot', {}, best, h('br'), `${tp(meta.runs, '{n} run', '{n} runs')} · ${tp(meta.wins, '{n} win', '{n} wins')}`)));
+    ));
 }
 
 // A new run: straight in, or first a word on the heat once some is unlocked.
