@@ -4,7 +4,7 @@
 import { STONES, CONDS, RULES, createGame } from './engine.js';
 import { RELICS, ENEMIES, ACTS, EVENTS } from './content.js';
 import * as R from './run.js';
-import { h, hideToast, tapeUp, art, relicArt, scribbleX, scribbleO, stoneEl, iconEl, toast, modal, infoStone, infoRelic, ruleChip, stoneCard, relicCard, stoneName, langToggle } from './ui/common.js';
+import { h, hideToast, tapeUp, art, relicArt, scribbleX, scribbleO, stoneEl, iconEl, toast, modal, pressable, infoStone, infoRelic, ruleChip, stoneCard, relicCard, stoneName, langToggle } from './ui/common.js';
 import { icon } from './icons.js';
 import { mountDuel } from './ui/duel.js';
 import { sfx, soundOn, setSound } from './sound.js';
@@ -419,22 +419,22 @@ function preDuel() {
   const enemy = ENEMIES[duel.enemyId];
   const size = R.handSize(run);
   let chosen = R.defaultHand(run);
-  const grid = h('div.stone-grid.pick');
+  const grid = h('div.stone-row.pick');
   const count = h('span.count');
   const fight = h('button.btn.primary.wide.big', { onclick: begin }, t('Fight!'));
   const draw = () => {
     grid.replaceChildren(...run.pouch.map((s) => {
       const on = chosen.includes(s.uid);
-      return h('button.pouch-slot' + (on ? '.on' : ''), {
-        onclick: () => {
+      return pressable(h('button.stone-pick' + (on ? '.on' : ''), { 'aria-label': stoneName(s) }, stoneEl(s, 'X')), {
+        tap: () => {
           if (on) chosen = chosen.filter((u) => u !== s.uid);
           else if (chosen.length < size) chosen.push(s.uid);
           else { toast(t('Only {n}.', { n: size })); return; }
           sfx('click');
           draw();
         },
-        oncontextmenu: (e) => { e.preventDefault(); infoStone(s, 'X'); },
-      }, stoneEl(s, 'X'), infoName(s, 'X'));
+        long: () => infoStone(s, 'X'),
+      });
     }));
     count.textContent = `${chosen.length}/${size}`;
     const need = R.MIN_HAND - chosen.length;
@@ -465,15 +465,15 @@ function preDuel() {
           h('div.enemy-name.big', {}, enemy.name),
           h('div.quote', {}, t('“{quote}”', { quote: enemy.quote })))),
       h('div.section-label', {}, t('Their stones')),
-      h('div.stone-grid', {}, [...new Set(duel.handO.map((s) => s.type))].map((type) => {
+      h('div.stone-row', {}, [...new Set(duel.handO.map((s) => s.type))].map((type) => {
         const n = duel.handO.filter((s) => s.type === type).length;
-        return h('button.pouch-slot', { onclick: () => infoStone({ type }, 'O') },
-          stoneEl({ type }, 'O'), infoName({ type }, 'O'),
-          n > 1 ? h('span.hand-count', {}, `×${n}`) : null);
+        return h('button.stone-pick', { onclick: () => infoStone({ type }, 'O'), 'aria-label': stoneName({ type }) },
+          stoneEl({ type }, 'O'), n > 1 ? h('span.hand-count', {}, `×${n}`) : null);
       })),
       facts.length ? h('div.duel-facts.facts-card', {}, facts) : null,
       h('div.section-label', {}, t('Your stones '), count),
       grid,
+      h('div.press-hint', {}, t('Long press stone for info.')),
       h('div.pre-spacer'),
       h('div.sticky-bottom', {}, fight)));
 

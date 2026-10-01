@@ -69,6 +69,24 @@ export function updateStone(el, s, player, opts = {}) {
   }
 }
 
+// Tap for one thing, hold for another: long press reads a stone without
+// picking it up. The click that ends a long press is swallowed.
+export function pressable(el, { tap, long }) {
+  let timer = null, fired = false;
+  const cancel = () => { clearTimeout(timer); timer = null; };
+  el.addEventListener('pointerdown', () => {
+    fired = false; cancel();
+    timer = setTimeout(() => { fired = true; timer = null; try { navigator.vibrate?.(12); } catch { /* no haptics */ } long(); }, 450);
+  });
+  for (const ev of ['pointerup', 'pointerleave', 'pointercancel']) el.addEventListener(ev, cancel);
+  el.addEventListener('click', (e) => {
+    if (fired) { fired = false; e.preventDefault(); e.stopPropagation(); return; }
+    tap?.(e);
+  });
+  el.addEventListener('contextmenu', (e) => { e.preventDefault(); if (!fired) { cancel(); fired = true; long(); } });
+  return el;
+}
+
 export function stoneName(s) { return STONES[s.type]?.name ?? s.type; }
 export function stoneText(s) { return STONES[s.type]?.text ?? ''; }
 

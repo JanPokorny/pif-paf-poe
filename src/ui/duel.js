@@ -7,9 +7,9 @@
 
 import {
   STONES, CONDS, RULES, legalActions, applyAction, cloneState, allowedSquares,
-  winningLine, active, other, row, col, LINES, ELS,
+  winningLine, active, row, col, LINES, ELS,
 } from '../engine.js';
-import { h, stoneEl, updateStone, toast, infoStone, ruleChip, stoneName, stoneText, sleep } from './common.js';
+import { h, stoneEl, updateStone, toast, pressable, infoStone, ruleChip, stoneName, stoneText, sleep } from './common.js';
 import { icon } from '../icons.js';
 import { t } from '../i18n.js';
 import { think } from '../brain.js';
@@ -110,9 +110,10 @@ export function mountDuel(root, opts) {
     h('div.enemy-meta', {}, h('div.enemy-name', {}, enemy.name,
       enemy.lives ? h('span.boss-lives', { title: t('Enemy lives') }, Array.from({ length: enemy.lives }, (_, k) => h('span' + (k < enemy.livesLeft ? '.alive' : ''), { html: icon('heart') }))) : null,
       enemy.tier && enemy.tier !== 'normal' ? h('span.tier.' + enemy.tier, {}, t(enemy.tier === 'event' ? 'challenge' : enemy.tier)) : null),
-    h('div.enemy-row', {}, enemyHand)), extra);
+    ), extra);
 
-  const el = h('div.duel', {}, header, chips, status, h('div.board-wrap', {}, board), actions, hand, info);
+  const el = h('div.duel', {}, header, chips, status, enemyHand, h('div.board-wrap', {}, board), actions, hand,
+    h('div.press-hint', {}, t('Long press stone for info.')), info);
   root.replaceChildren(el);
 
   // ── Rendering ─────────────────────────────────────────────────────────────
@@ -173,29 +174,28 @@ export function mountDuel(root, opts) {
     // Enemy hand, as the preview would leave it: one stone per kind, with a count.
     const theirs = inTurn && typeof selKey === 'string' && selKey.startsWith('O:') ? base.hands.O : shown.hands.O;
     const kinds = groupHand(theirs);
-    enemyHand.classList.toggle('crowded', kinds.length > 6);
     enemyHand.replaceChildren(...kinds.map(({ st, n }) => {
-      const e = stoneEl(st, 'O', { mini: true });
+      const e = stoneEl(st, 'O');
       const key = `O:${st.type}`;
       if (shared && selecting && st.type !== 'pebble') { if (slotAction(s, key)) e.classList.add('borrow'); else e.classList.add('forbidden'); }
       if (shared && inTurn && selKey === key && s.phase === 'place') e.classList.add('selected');
       e.addEventListener('click', () => { if (!e.classList.contains('target')) tapEnemyStone(st); });
-      return n > 1 ? h('span.hand-group', {}, e, h('span.hand-count', {}, `×${n}`)) : e;
+      return h('div.hand-slot.enemy-slot', {}, e, n > 1 ? h('span.hand-count', {}, `×${n}`) : null);
     }));
+    if (!theirs.length) enemyHand.append(h('span.dim.small', {}, t('No stones left.')));
 
-    // Player hand, a slot per stone. During a turn in progress,
-    // show the hand as it was.
-    const slot = (key, st, label, n = 1) => {
+    // Player hand, one stone per kind with a count. During a turn in
+    // progress, show the hand as it was. A long press reads a stone.
+    const slot = (key, st, n = 1) => {
       const e = stoneEl(st, 'X');
-      const b = h('button.hand-slot', { onclick: () => tapHand(key) }, e,
-        n > 1 ? h('span.hand-count', {}, `×${n}`) : null,
-        h('span.slot-name', {}, label));
+      const b = pressable(h('button.hand-slot', { 'aria-label': STONES[st.type].name }, e,
+        n > 1 ? h('span.hand-count', {}, `×${n}`) : null), { tap: () => tapHand(key), long: () => infoStone(st, 'X') });
       if (inTurn && key === selKey) b.classList.add(s.phase === 'place' ? 'selected' : 'placed');
       if (selecting && !slotAction(s, key)) b.classList.add('forbidden');
       if (!selecting && !(inTurn && s.phase === 'place')) b.classList.add('idle');
       return b;
     };
-    hand.replaceChildren(...base.hands.X.map((st, k) => slot(k, st, STONES[st.type].name)));
+    hand.replaceChildren(...groupHand(base.hands.X).map(({ st, k, n }) => slot(k, st, n)));
     if (!base.hands.X.length) hand.append(h('span.dim.small', {}, t('No stones left: you pass.')));
 
   }
@@ -204,8 +204,6 @@ export function mountDuel(root, opts) {
     const items = [];
     for (const c of s.conds) items.push(ruleChip('cond', c));
     for (const r of s.rules) items.push(ruleChip('rule', r));
-    const tie = s.rules.includes('patient') ? 'O' : other(s.first);
-    items.push(h('span.chip.opener', { title: t('Who takes a full board') }, t(tie === 'X' ? 'Full board → you' : 'Full board → them')));
     if (s.dictate?.kind === 'column') items.push(h('span.chip.bad', {}, t(['Left column closed', 'Middle column closed', 'Right column closed'][s.dictate.value])));
     if (s.dictate?.kind === 'spy') items.push(h('span.chip.bad', {}, t(`Moves go ${s.dictate.value}`)));
     if (s.silenced.X) items.push(h('button.chip.bad', { onclick: () => toast(t('Your next special stone will do nothing. Pebbles do not use it up.')) }, t('Hushed: next special')));
@@ -394,7 +392,7 @@ export function mountDuel(root, opts) {
 
     if (state.phase === 'select') {
       markDangers();
-      setStatus(state.half ? t('Your second stone — pick one') : t('Your turn — pick a stone'), 'you');
+      setStatus(state.half ? t('Your second stone — pick one') : '', 'you');
       const hint = state.conds.includes('shared') && state.hands.O.length ? t('Open Hands: their stones are yours too.') : '';
       info.textContent = caption.length ? `${enemy.name}: ${caption.filter(Boolean).join(', ')}.${hint ? ' ' + hint : ''}`
         : hint || t('Pick a stone.');
@@ -648,9 +646,9 @@ export function mountDuel(root, opts) {
         info.textContent = caption.filter(Boolean).join(', ');
         // Show which stone it took.
         renderHands(state);
-        const lifted = stoneEl(state.selected, 'O', { mini: true });
+        const lifted = stoneEl(state.selected, 'O');
         lifted.classList.add('lifted');
-        enemyHand.append(lifted);
+        enemyHand.append(h('div.hand-slot.enemy-slot', {}, lifted));
         sfx('select');
         await sleep(Math.max(120, 420 - waited));
         continue;
