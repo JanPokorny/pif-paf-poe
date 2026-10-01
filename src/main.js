@@ -311,6 +311,11 @@ function mapScreen() {
       if (c.mark === 'O') el.insertAdjacentHTML('beforeend', scribbleO(lastO === k));
       if (c.mark === 'S') el.classList.add('scorched');
       if (freshS === k) el.classList.add('fresh-burn');
+      // The square's own picture stays a moment and fades as the mark is drawn.
+      if (c.mark && (k === freshX || k === lastO || k === freshS) && kind !== 'boss-mark') {
+        el.classList.add('fading');
+        el.style.setProperty('--fd', k === lastO && k !== freshX ? '1.4s' : '0s');
+      }
       if (appear.has(k)) { el.classList.add('appear'); el.style.setProperty('--d', `${appear.get(k)}s`); }
       if (kind === 'elite' && !c.mark) el.insertAdjacentHTML('beforeend', `<span class="elite-star">${icon('star')}</span>`);
       grid.push(el);
