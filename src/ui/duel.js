@@ -392,7 +392,7 @@ export function mountDuel(root, opts) {
 
     if (state.phase === 'select') {
       markDangers();
-      setStatus(state.half ? t('Your second stone — pick one') : '', 'you');
+      setStatus(state.half ? t('Your second stone — pick one') : t('Your turn — pick a stone'), 'you');
       const hint = state.conds.includes('shared') && state.hands.O.length ? t('Open Hands: their stones are yours too.') : '';
       info.textContent = caption.length ? `${enemy.name}: ${caption.filter(Boolean).join(', ')}.${hint ? ' ' + hint : ''}`
         : hint || t('Pick a stone.');

@@ -290,6 +290,7 @@ export default {
   'Moves go right': 'Tahy jen doprava',
   'took your {stone}': 'vzal ti {stone}',
   'You took the {stone}.': 'Vzal(a) sis: {stone}.',
+  'Your turn — pick a stone': 'Jsi na tahu — vyber kámen',
   'Your second stone — pick one': 'Tvůj druhý kámen — vyber si',
   'then {what}': 'pak {what}',
   'middle': 'prostřední',
