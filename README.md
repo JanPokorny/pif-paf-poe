@@ -42,5 +42,5 @@ npx http-server -c-1 .
 Design notes and the measurements behind the numbers: [`DESIGN.md`](DESIGN.md). The game is in
 English and Czech.
 
-Fonts are self-hosted in `fonts/`: Patrick Hand and Caveat Brush (SIL OFL) and Permanent Marker (Apache 2.0).
+Fonts are self-hosted in `fonts/`: Patrick Hand and Caveat Brush (SIL OFL).
 The first, glossy look is kept in `old/style-glossy.css` as a record of what not to do.

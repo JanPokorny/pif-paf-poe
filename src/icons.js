@@ -154,9 +154,9 @@ const RAW = {
   // A rock on the map: a pale mountain in a dark outline, its snowcap left as paper.
   rock: P('M -7.6 5.4 L -2.4 -5.2 L 1.2 1.2 L 3.6 -2.2 L 7.6 5.4 Z', ' fill="var(--rock-fill, #c9c6c0)"') + P('M -4.6 -0.7 L -2.4 -5.2 L -0.15 -0.8 L -1.4 0.3 L -2.4 -0.9 L -3.4 0.3 Z', ' fill="var(--paper, #fff)"' + SW(1.1)),
 
-  '2048': '<text x="0" y="2.3" font-family="Permanent Marker, system-ui, sans-serif" font-size="6.2" text-anchor="middle" fill="currentColor" stroke="none" letter-spacing="-0.1">2048</text>',
+  '2048': '<text x="0" y="2.3" font-family="Caveat Brush, system-ui, sans-serif" font-size="6.2" text-anchor="middle" fill="currentColor" stroke="none" letter-spacing="-0.1">2048</text>',
 
-  '4096': '<text x="0" y="2.3" font-family="Permanent Marker, system-ui, sans-serif" font-size="6.2" text-anchor="middle" fill="currentColor" stroke="none" letter-spacing="-0.1">4096</text>',
+  '4096': '<text x="0" y="2.3" font-family="Caveat Brush, system-ui, sans-serif" font-size="6.2" text-anchor="middle" fill="currentColor" stroke="none" letter-spacing="-0.1">4096</text>',
 
   bumper: DOT(0, 0, 2) + arrow(0, -3.4, 0, -7.4) + arrow(0, 3.4, 0, 7.4) + arrow(-3.4, 0, -7.4, 0) + arrow(3.4, 0, 7.4, 0),
 

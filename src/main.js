@@ -181,7 +181,7 @@ function title() {
           h('span.continue-sub', {}, `${t('Act {n}', { n: saved.run.act })} · ❤ ${saved.run.hearts}`)) : null,
         h('button.btn.wide.big' + (saved?.run ? '' : '.primary'), { onclick: () => { if (saved?.run && !saved.run.over && !confirm(t('Start over? Your run in progress will be lost.'))) return; newRunMenu(); } }, t('New run')),
         h('button.btn.wide.ghost', { onclick: () => { setSound(!soundOn()); title(); } }, h('span', { html: icon(soundOn() ? 'sound-on' : 'sound-off') }), soundOn() ? t('Sound on') : t('Sound off')),
-        h('button.btn.wide.ghost', { onclick: () => { setMusic(!musicOn()); title(); } }, musicOn() ? t('Music: on') : t('Music: off')),
+        h('button.btn.wide.ghost', { onclick: () => { setMusic(!musicOn()); title(); } }, musicOn() ? t('Music on') : t('Music off')),
         langToggle()),
     ));
 }
