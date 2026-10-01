@@ -848,8 +848,8 @@ function endScreen(victory) {
 // ── Boot ────────────────────────────────────────────────────────────────────
 
 title();
-// Browsers start audio only from a tap: the music begins with the first one.
-document.addEventListener('pointerdown', unlockMusic);
+// Browsers start audio only from a tap (on phones, its lift): the music begins with the first one.
+for (const ev of ['pointerup', 'click', 'touchend', 'keydown']) document.addEventListener(ev, unlockMusic, { passive: true });
 window.addEventListener('pagehide', save);
 document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'hidden') save(); });
 if ('serviceWorker' in navigator && location.protocol === 'https:') {

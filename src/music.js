@@ -59,6 +59,7 @@ const bus = {};
 let timer = null;
 let scene = 'title', act = 0;
 let nextBar = 0, barIndex = 0;
+let grid = [];             // the bars scheduled so far: {t0, beat}, for events to land on the beat
 let seed = 1;
 let pending = [];          // events waiting for the next beat
 let current = null;        // the harmony in force: {root, mode, prog, bpm}
@@ -87,6 +88,7 @@ const triad = (h, chord) => [chord, chord + 2, chord + 4].map((d) => degree(h, d
 // ── Instruments ─────────────────────────────────────────────────────────────
 
 function env(g, t, a, peak, d, sustain = 0.0001, release = 0.05) {
+  a = Math.max(a, 0.006);   // anything quicker reads as a click on a phone speaker
   g.gain.setValueAtTime(0.0001, t);
   g.gain.exponentialRampToValueAtTime(peak, t + a);
   g.gain.exponentialRampToValueAtTime(Math.max(0.0001, sustain), t + a + d);
@@ -214,17 +216,23 @@ let lastLead = 7;
 function composeBar(t0) {
   const h = current = harmony();
   const beat = 60 / h.bpm, step = beat / 4, bar = beat * 4;
+  grid = [...grid.slice(-3), { t0, beat }];
+  // The echo follows the tempo: a dotted eighth.
+  if (Math.abs(delay.delayTime.value - beat * 0.75) > 0.002) delay.delayTime.setTargetAtTime(beat * 0.75, t0, 0.08);
   const chord = h.prog[barIndex % h.prog.length];
   const notes = triad(h, chord);
   const dens = h.density;
   const L = (k) => bus[k];
+  // Only layers the scene plays get notes: silent ones would only cost the phone.
+  const sc = SCENES[scene] ?? SCENES.map;
+  const on = (k) => (sc[k] ?? 0) > 0;
 
   // Pad: the chord, held.
-  VOICES[PAD[h.pad]](t0, notes.map((m) => m - 12), bar, 1, L('pad'));
+  if (on('pad')) VOICES[PAD[h.pad]](t0, notes.map((m) => m - 12), bar, 1, L('pad'));
   // Bass: root on the one, then a figure that grows with the density.
   const root = degree(h, chord, -2);
   const fig = dens > 0.7 ? [0, 3, 6, 8, 10, 12, 14] : dens > 0.5 ? [0, 6, 8, 12] : [0, 8];
-  for (const s of fig) {
+  for (const s of on('bass') ? fig : []) {
     const m = s === 0 || rnd() < 0.6 ? root : rnd() < 0.5 ? root + 7 : root + 12;
     VOICES[h.bass](t0 + s * step, m, step * (s === 0 ? 4 : 2), s === 0 ? 1 : 0.7, L('bass'));
   }
@@ -232,14 +240,14 @@ function composeBar(t0) {
   const every = dens > 0.6 ? 1 : 2;
   const shape = pick([[0, 1, 2, 1], [0, 1, 2, 3], [2, 1, 0, 1], [0, 2, 1, 3]]);
   const arpNotes = [...notes, notes[0] + 12];
-  for (let s = 0; s < 16; s += every) {
+  for (let s = 0; s < 16 && on('arp'); s += every) {
     if (rnd() > 0.55 + dens * 0.45) continue;
     const m = arpNotes[shape[(s / every) % shape.length]] + (h.arp === 'glass' ? 12 : 0);
     VOICES[h.arp](t0 + s * step, m, step * every, s % 4 === 0 ? 1 : 0.7, L('arp'));
   }
   // Lead: a random walk on the scale that leans toward chord tones.
   let s = rnd() < 0.5 ? 0 : 2;
-  while (s < 16) {
+  while (s < 16 && on('lead')) {
     const len = pick(dens > 0.6 ? [2, 2, 4, 1, 3] : [4, 4, 2, 6, 8]);
     if (rnd() < 0.25 + (1 - dens) * 0.3) { s += len; continue; }   // a rest
     lastLead += pick([-2, -1, -1, 0, 1, 1, 2, 3, -3]);
@@ -252,14 +260,14 @@ function composeBar(t0) {
     s += len;
   }
   // Bells: now and then, a high chord tone that rings over the bar.
-  for (const at of [0, 8]) if (rnd() < 0.55) VOICES.bell(t0 + at * step, pick(notes) + 12, bar, 0.8, L('bell'));
+  for (const at of [0, 8]) if (on('bell') && rnd() < 0.55) VOICES.bell(t0 + at * step, pick(notes) + 12, bar, 0.8, L('bell'));
   // Drums.
   for (let k = 0; k < 16; k++) {
     const t = t0 + k * step;
     const four = dens > 0.8;
-    if (k % (four ? 4 : 8) === 0 || (!four && k === 10 && rnd() < 0.5)) VOICES.kick(t, 1, L('kick'));
-    if (k % 2 === 0 || (dens > 0.7 && rnd() < 0.3)) VOICES.hat(t, k % 4 === 2 ? 1 : 0.55, L('hat'));
-    if (k === 4 || k === 12 || (k === 15 && rnd() < 0.3)) VOICES.snare(t, k === 15 ? 0.5 : 1, L('snare'));
+    if (on('kick') && (k % (four ? 4 : 8) === 0 || (!four && k === 10 && rnd() < 0.5))) VOICES.kick(t, 1, L('kick'));
+    if (on('hat') && (k % 2 === 0 || (dens > 0.7 && rnd() < 0.3))) VOICES.hat(t, k % 4 === 2 ? 1 : 0.55, L('hat'));
+    if (on('snare') && (k === 4 || k === 12 || (k === 15 && rnd() < 0.3))) VOICES.snare(t, k === 15 ? 0.5 : 1, L('snare'));
   }
   barIndex++;
   return bar;
@@ -278,10 +286,12 @@ function playEvent(kind, t) {
   ph.forEach((d, i) => VOICES[voice](t + i * beat * 0.5, degree(h, d, 1), beat, 1, bus.event));
   if (kind === 'win' || kind === 'door') VOICES.kick(t, 0.8, bus.event);
   if (kind === 'lose') VOICES.round(t, degree(h, 0, -2), beat * 3, 1, bus.event);
-  // Duck the band a little under the phrase.
-  const g = master.gain, now = ctx.currentTime;
-  g.cancelScheduledValues(now); g.setValueAtTime(g.value, now);
-  g.linearRampToValueAtTime(VOLUME * 0.55, t + 0.05); g.linearRampToValueAtTime(VOLUME, t + ph.length * beat * 0.5 + beat);
+  // Duck the band a little under the phrase. setTargetAtTime glides from
+  // wherever the gain really is, so nothing jumps.
+  const g = master.gain;
+  g.cancelScheduledValues(ctx.currentTime);
+  g.setTargetAtTime(VOLUME * 0.55, t - 0.05, 0.04);
+  g.setTargetAtTime(VOLUME, t + ph.length * beat * 0.5 + beat * 0.5, 0.25);
 }
 
 // ── Mixing and the clock ────────────────────────────────────────────────────
@@ -294,7 +304,7 @@ function build() {
   const comp = ctx.createDynamicsCompressor();
   master.connect(comp).connect(ctx.destination);
   // A soft echo for the melodic layers.
-  delay = ctx.createDelay(1); delay.delayTime.value = 0.33;
+  delay = ctx.createDelay(2); delay.delayTime.value = 0.45;
   const fb = ctx.createGain(); fb.gain.value = 0.28;
   const wet = ctx.createGain(); wet.gain.value = 0.22;
   delay.connect(fb).connect(delay); delay.connect(wet).connect(master);
@@ -313,19 +323,25 @@ function mix(fade = 2) {
   const now = ctx.currentTime;
   for (const k of LAYERS) {
     const g = bus[k].gain;
-    g.cancelScheduledValues(now); g.setValueAtTime(g.value, now);
-    g.linearRampToValueAtTime(sc[k] ?? 0, now + fade);
+    g.cancelScheduledValues(now);
+    g.setTargetAtTime(sc[k] ?? 0, now, fade / 3);
   }
 }
 
+// Bars are written well ahead (LOOKAHEAD seconds), so a busy moment on the
+// page never makes notes land late. If the page did stall past the next bar,
+// the music picks up afresh from now rather than playing the backlog at once.
+const LOOKAHEAD = 1.5;
 function tick() {
   if (!ctx || ctx.state !== 'running') return;
   const now = ctx.currentTime;
-  if (nextBar < now) nextBar = now + 0.1;
-  while (nextBar < now + 0.6) nextBar += composeBar(nextBar);
+  if (nextBar < now + 0.05) { nextBar = now + 0.15; grid = []; }
+  while (nextBar < now + LOOKAHEAD) nextBar += composeBar(nextBar);
   if (pending.length) {
-    const beat = 60 / (current?.bpm ?? 96);
-    const t = Math.max(now + 0.05, Math.ceil((now + 0.05) / beat) * beat);
+    // The next beat of the bar that is playing.
+    const from = now + 0.08;
+    const bar = [...grid].reverse().find((b) => b.t0 <= from) ?? grid[0];
+    const t = bar ? bar.t0 + Math.ceil((from - bar.t0) / bar.beat) * bar.beat : from;
     for (const k of pending) playEvent(k, t);
     pending = [];
   }
@@ -344,7 +360,7 @@ function stop() {
   if (!ctx) return;
   window.clearInterval(timer); timer = null;
   const now = ctx.currentTime;
-  for (const k of LAYERS) { const g = bus[k].gain; g.cancelScheduledValues(now); g.setValueAtTime(g.value, now); g.linearRampToValueAtTime(0, now + 0.4); }
+  for (const k of LAYERS) { const g = bus[k].gain; g.cancelScheduledValues(now); g.setTargetAtTime(0, now, 0.15); }
 }
 
 export function setScene(name, a = act) {
@@ -356,8 +372,13 @@ export function setScene(name, a = act) {
 }
 export function musicEvent(kind) { if (enabled && timer) pending.push(kind); }
 
-// Browsers only let audio start from a tap: begin with the first one.
-export function unlockMusic() { if (enabled && !timer) start(); }
+// Browsers only let audio start from a tap -- on phones, from the lift of a
+// finger, not the touch -- so every tap tries until the audio is running.
+export function unlockMusic() {
+  if (!enabled) return;
+  if (!timer) start();
+  else if (ctx && ctx.state !== 'running') ctx.resume?.();
+}
 
 document.addEventListener('visibilitychange', () => {
   if (!ctx) return;
