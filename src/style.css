@@ -198,7 +198,7 @@ b { font-weight: 400; background: linear-gradient(transparent 55%, var(--hi) 55%
 /* ── The duel ────────────────────────────────────────────────────────────── */
 .duel-host { flex: 1; display: flex; }
 .duel {
-  --cell: min(calc((100vw - 32px) / 3.9), calc((100dvh - 362px) / 4.04), 112px);
+  --cell: min(calc((100vw - 32px) / 3.9), calc((100dvh - 392px) / 4.04), 112px);
   flex: 1; display: flex; flex-direction: column; align-items: stretch; gap: 6px;
   padding: 8px 12px calc(8px + var(--safe-b)); width: 100%; position: relative;
 }
@@ -368,7 +368,7 @@ b { font-weight: 400; background: linear-gradient(transparent 55%, var(--hi) 55%
 .rules-note::before { content: ''; position: absolute; top: -10px; left: calc(50% + var(--tape-x, 0px)); width: 70px; height: 20px; margin-left: -35px; background: var(--tape); transform: rotate(calc(-3deg + var(--tape-r, 0deg))); }
 
 /* ── Before a duel ───────────────────────────────────────────────────────── */
-.enemy-card { display: flex; gap: 16px; align-items: center; padding: 16px 14px; position: relative; }
+.enemy-card { display: flex; gap: 14px; align-items: center; padding: 10px 12px; position: relative; }
 .enemy-card .stake { position: absolute; top: 6px; right: 8px; display: flex; align-items: center; gap: 3px; padding: 4px 6px; background: none; border: 0; font-family: var(--marker); font-size: 1.3rem; color: var(--red); }
 .enemy-card .stake .icon { width: 20px; height: 20px; }
 .quote { color: var(--pencil); font-size: 1.05rem; }
@@ -388,12 +388,13 @@ b { font-weight: 400; background: linear-gradient(transparent 55%, var(--hi) 55%
 .sticky-bottom { position: sticky; bottom: 0; padding: 12px 0 calc(6px + var(--safe-b)); background: linear-gradient(transparent, var(--paper) 35%); z-index: 3; }
 
 /* ── Index cards: rewards and the shop ───────────────────────────────────── */
-.cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 18px 12px; padding-top: 10px; }
-.cards.one { grid-template-columns: minmax(140px, 175px); justify-content: center; }
-.cards.scroll { display: flex; overflow-x: auto; gap: 12px; padding: 14px 4px 8px; scroll-snap-type: x mandatory; }
-.cards.scroll .card { flex: 0 0 150px; scroll-snap-align: start; }
+.cards { display: flex; flex-wrap: wrap; justify-content: center; gap: 14px 8px; padding-top: 8px; }
+.cards > .card { flex: 1 1 72px; max-width: 96px; min-width: 0; }
+.cards.one > .card { flex: 0 0 96px; }
+.cards.scroll { display: flex; flex-wrap: nowrap; justify-content: flex-start; overflow-x: auto; gap: 12px; padding: 14px 4px 8px; scroll-snap-type: x mandatory; }
+.cards.scroll .card { flex: 0 0 96px; scroll-snap-align: start; }
 .card {
-  position: relative; display: flex; flex-direction: column; align-items: center; gap: 4px; text-align: center; padding: 16px 10px 10px;
+  position: relative; display: flex; flex-direction: column; align-items: center; gap: 2px; text-align: center; padding: 14px 4px 8px; -webkit-touch-callout: none; user-select: none;
   background-color: var(--card); border: 0; border-radius: 2px;
   background-image: linear-gradient(transparent 30px, var(--margin) 30px, var(--margin) 31.5px, transparent 31.5px),
     repeating-linear-gradient(transparent 0 23px, var(--grid) 23px 24px);
@@ -405,7 +406,7 @@ b { font-weight: 400; background: linear-gradient(transparent 55%, var(--hi) 55%
 .card.sold { opacity: 0.5; pointer-events: none; }
 .card.sold::after { content: 'SOLD'; position: absolute; top: 40%; left: 12%; right: 12%; font-family: var(--marker); color: var(--red); font-size: 1.5rem; border: 3px solid var(--red); transform: rotate(-14deg); border-radius: 4px; }
 .card .stone { --size: 50px; margin: 4px 0; }
-.card-name { font-family: var(--marker); font-size: 1.05rem; }
+.card-name { font-family: var(--marker); font-size: 0.95rem; line-height: 1.05; }
 .card.rare .card-name { color: var(--rare); } .card.uncommon .card-name { color: var(--uncommon); }
 .card-text { font-size: 0.95rem; color: var(--pencil); flex: 1; line-height: 1.15; }
 .price { display: inline-flex; align-items: center; gap: 4px; font-family: var(--marker); color: var(--rare); }
@@ -414,13 +415,13 @@ b { font-weight: 400; background: linear-gradient(transparent 55%, var(--hi) 55%
 .trick-token .icon { width: 100%; height: 100%; filter: url(#ink); }
 .relic-token { width: 54px; height: 54px; font-size: 2.2rem; display: flex; align-items: center; justify-content: center; flex: none; }
 .relic-token.small { width: 40px; height: 40px; font-size: 1.6rem; }
-.reward-title { text-align: center; color: var(--blue); font-size: 2.4rem; transform: rotate(-2deg); }
+.reward-title { text-align: center; color: var(--blue); font-size: 2rem; margin: 0; transform: rotate(-2deg); }
 .reward-gold { display: flex; align-items: center; justify-content: center; gap: 6px; font-size: 1.4rem; font-family: var(--marker); color: var(--rare); }
 .reward-gold .icon { width: 26px; height: 26px; }
 
 .shop-head { display: flex; gap: 12px; align-items: center; }
 .shop-emoji { font-size: 3rem; }
-.services { display: flex; flex-direction: column; gap: 8px; }
+.services { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
 .service { display: flex; align-items: center; gap: 8px; justify-content: space-between; padding: 10px 12px; text-align: left; font-size: 1.05rem; }
 .service:disabled { opacity: 0.4; }
 
@@ -440,8 +441,8 @@ b { font-weight: 400; background: linear-gradient(transparent 55%, var(--hi) 55%
 
 .end { text-align: center; align-items: center; min-height: 100dvh; justify-content: center; }
 .stats { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; width: 100%; }
-.stats > div { padding: 8px; color: var(--pencil); }
-.stats b { color: var(--ink); font-size: 1.5rem; background: none; }
+.stats > div { padding: 4px 8px; color: var(--pencil); }
+.stats b { color: var(--ink); font-size: 1.2rem; background: none; }
 .end .hand { justify-content: center; }
 
 /* ── Sheets that slide up: index cards ───────────────────────────────────── */
@@ -520,7 +521,6 @@ b { font-weight: 400; background: linear-gradient(transparent 55%, var(--hi) 55%
 .rot.turn span:first-child { width: 70%; height: 70%; }
 .rot.axis { font-size: 1.6rem; }
 .btn.primary:disabled { background: #e8e2cf; color: var(--faint); box-shadow: none; }
-.pre-spacer { height: 70px; }
 .enemy-hand { flex-wrap: nowrap; }
 .map-cell .doodle.foe { display: flex; align-items: center; justify-content: center; font-size: 2.3rem; width: auto; height: auto; }
 .map-cell .doodle.foe .photo { filter: grayscale(1) contrast(1.2) sepia(0.3); line-height: 1; }
@@ -772,3 +772,35 @@ body:has(.duel) #toast.show { transform: translate(-50%, 0) rotate(-1deg); }
 .door-hint .power-note { color: var(--red); }
 .boss-go { display: flex; align-items: center; justify-content: center; gap: 8px; flex-wrap: wrap; animation: wiggle 1.4s ease-in-out infinite; }
 .boss-go .power-note { width: 100%; font-size: 0.85rem; color: var(--red); font-family: var(--hand); }
+
+/* Pages fill the screen; a bottom button sits at the bottom, no spacer. */
+.screen > .page { flex: 1; }
+.page:has(> .sticky-bottom) { padding-bottom: 0; }
+.page > .sticky-bottom { margin-top: auto; }
+
+.enemy-card .portrait.big { font-size: 2.2rem; width: 66px; height: 76px; padding: 5px 5px 14px; }
+.end-emoji { font-size: 3rem; }
+.page.end h1 { margin: 0; font-size: 1.7rem; }
+.page.end { gap: 8px; }
+
+.page.shop { gap: 4px; }
+.page.shop .cards.scroll { padding: 12px 4px 6px; gap: 8px; }
+.page.shop .cards.scroll .card { flex: 0 0 84px; }
+.page.shop .card .stone { --size: 40px; }
+.page.shop .relic-token { width: 44px; height: 44px; font-size: 1.8rem; }
+.services .service { flex-direction: column; align-items: center; text-align: center; gap: 2px; }
+.facts-card { line-height: 22px; background-image: repeating-linear-gradient(transparent 0 21px, var(--grid) 21px 22px); padding: 6px 10px 4px 14px; }
+.fact { padding: 4px 8px; font-size: 0.95rem; }
+.page.reward { gap: 6px; }
+.service-card .relic-token .icon { width: 30px; height: 30px; color: var(--red); }
+.card.service-card.sold::after { content: none; }
+
+/* Short phones: a little less air everywhere. */
+@media (max-height: 700px) {
+  .page { gap: 6px; padding-top: 4px; }
+  .topbar { padding-top: 6px; }
+  .section-label { margin: 0; }
+  .card .stone { --size: 42px; margin: 2px 0; }
+  .relic-token { width: 44px; height: 44px; font-size: 1.8rem; }
+  .back-map { padding-top: 2px; padding-bottom: 2px; }
+}

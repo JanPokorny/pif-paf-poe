@@ -232,25 +232,22 @@ export function ruleChip(kind, id, cls = '') {
 }
 
 // A card for reward and shop screens.
+// Cards are small: picture, name, price. Tap takes or buys; a long press reads.
 export function stoneCard(s, { onclick, price, sold, dear, footer } = {}) {
   const st = STONES[s.type];
-  return h(`button.card.stone-card.${st.rarity}${sold ? '.sold' : dear ? '.dear' : ''}`, { onclick, disabled: sold || undefined },
+  return pressable(h(`button.card.stone-card.${st.rarity}${sold ? '.sold' : dear ? '.dear' : ''}`, { disabled: sold || undefined, 'aria-label': stoneName(s) },
     stoneEl(s, 'X'),
     h('div.card-name', {}, stoneName(s)),
-    h('div.card-text', {}, stoneText(s)),
-    st.once ? h('div.dim.small', {}, t('one-shot')) : null,
     price !== undefined ? h('div.price', {}, iconEl('coin'), price) : null,
-    h('span.card-info', { role: 'button', 'aria-label': t('Example'), onclick: (e) => { e.stopPropagation(); infoStone(s, 'X'); } }, 'ⓘ'),
-    footer ?? null);
+    footer ?? null), { tap: onclick, long: () => infoStone(s, 'X') });
 }
 
 export function relicCard(id, { onclick, price, sold, dear } = {}) {
   const r = RELICS[id];
-  return h(`button.card.relic-card.${r.rarity}${sold ? '.sold' : dear ? '.dear' : ''}`, { onclick, disabled: sold || undefined },
+  return pressable(h(`button.card.relic-card.${r.rarity}${sold ? '.sold' : dear ? '.dear' : ''}`, { disabled: sold || undefined, 'aria-label': r.name },
     h('div.relic-token', {}, relicArt(id)),
     h('div.card-name', {}, r.name),
-    h('div.card-text', {}, r.text),
-    price !== undefined ? h('div.price', {}, iconEl('coin'), price) : null);
+    price !== undefined ? h('div.price', {}, iconEl('coin'), price) : null), { tap: onclick, long: () => infoRelic(id) });
 }
 
 // The EN · CS switch. Changing it reloads the page.

@@ -480,7 +480,6 @@ function preDuel() {
       h('div.section-label', {}, t('Your stones '), count),
       grid,
       h('div.press-hint', {}, t('Long press stone for info.')),
-      h('div.pre-spacer'),
       h('div.sticky-bottom', {}, fight)));
 
   function begin() {
@@ -579,12 +578,11 @@ function pickCard(card, after) {
 
 // A map aid as a reward card.
 function aidCard(kind, onclick) {
-  return h('button.card.aid-card', { onclick },
+  return pressable(h('button.card.aid-card', { 'aria-label': t(R.AIDS[kind].name) },
     h('div.trick-token', { html: icon(kind === 'breach' ? 'mountain' : 'rule-headstart') }),
-    h('div.card-name', {}, t(R.AIDS[kind].name)),
-    h('div.card-text', {}, t(R.AIDS[kind].text)),
-    h('div.dim.small', {}, t('map aid')));
+    h('div.card-name', {}, t(R.AIDS[kind].name))), { tap: onclick, long: () => toast(t(R.AIDS[kind].text)) });
 }
+const pressHint = () => h('div.press-hint', {}, t('Long press for info.'));
 
 function rewardScreen() {
   const rw = run.pending;
@@ -596,18 +594,21 @@ function rewardScreen() {
     rw.taken.relic = true;
     save();
   }
-  if (rw.relic) parts.push(h('div.section-label', {}, t('Relic found')), relicCard(rw.relic, { onclick: () => infoRelic(rw.relic) }));
+  // What it left behind, in one row: a relic (already yours) and a one-shot stone to take.
+  const found = [];
+  if (rw.relic) found.push(relicCard(rw.relic, { onclick: () => infoRelic(rw.relic) }));
+  if (rw.once && !rw.taken.once) {
+    found.push(stoneCard(rw.once, {
+      onclick: () => takeStone(rw.once, (ok) => { if (ok) { rw.taken.once = true; save(); rewardScreen(); } }),
+    }));
+  }
+  if (found.length) parts.push(h('div.section-label', {}, rw.relic ? t('Found') : t('A one-shot stone')), h('div.cards', {}, found));
   if (rw.relicChoice?.length && !rw.taken.boss) {
     parts.push(h('div.section-label', {}, t('Choose a boss relic')),
       h('div.cards', {}, rw.relicChoice.map((id) => relicCard(id, {
         onclick: (e) => { R.gainRelic(run, id); rw.taken.boss = id; sfx('coin'); save(); pickCard(e.currentTarget, rewardScreen); },
       }))));
   } else if (rw.taken.boss) parts.push(h('div.section-label', {}, t('Boss relic')), relicCard(rw.taken.boss, { onclick: () => infoRelic(rw.taken.boss) }));
-  if (rw.once && !rw.taken.once) {
-    parts.push(h('div.section-label', {}, t('A one-shot stone')), h('div.cards.one', {}, stoneCard(rw.once, {
-      onclick: () => takeStone(rw.once, (ok) => { if (ok) { rw.taken.once = true; save(); rewardScreen(); } }),
-    })));
-  }
   if (rw.taken.stone && rw.taken.stone !== true && !rw.taken.stone.startsWith('aid:')) parts.push(h('div.section-label', {}, t('You took the {stone}.', { stone: STONES[rw.taken.stone].name })), h('div.cards.one', {}, stoneCard({ type: rw.taken.stone }, {})));
   if (rw.taken.stone?.startsWith?.('aid:')) parts.push(h('div.section-label', {}, t('You took a map aid: {aid}.', { aid: t(R.AIDS[rw.taken.stone.slice(4)].name) })));
   if (rw.stones.length && !rw.taken.stone) {
@@ -624,6 +625,7 @@ function rewardScreen() {
         },
       }))));
   }
+  parts.push(pressHint());
   const pendingBoss = rw.relicChoice?.length && !rw.taken.boss;
   parts.push(h('div.sticky-bottom', {}, h('button.btn.wide.big' + (pendingBoss ? '' : '.primary'), {
     onclick: () => { if (pendingBoss && !confirm(t('Leave without a boss relic?'))) return; done(); },
@@ -641,10 +643,17 @@ function treasureScreen() {
         onclick: (e) => { R.gainRelic(run, id); tr.relic = id; sfx('coin'); save(); pickCard(e.currentTarget, treasureScreen); },
       })))]
         : null,
+    pressHint(),
     h('div.sticky-bottom', {}, h('button.btn.wide.big' + (tr.relic || !tr.choices?.length ? '.primary' : ''), { onclick: () => { R.leaveNode(run); route(); } }, tr.relic || !tr.choices?.length ? t('Continue') : t('Skip')))));
 }
 
 // ── Shop ────────────────────────────────────────────────────────────────────
+
+// A shop service as a card like the wares.
+function serviceCard(ico, name, price, off, onclick) {
+  return h('button.card.service-card' + (off ? '.sold' : run.gold < price ? '.dear' : ''), { onclick, disabled: off || undefined },
+    h('div.relic-token', { html: icon(ico) }), h('div.card-name', {}, name), h('div.price', {}, iconEl('coin'), price));
+}
 
 function shopScreen(redraw = false) {
   const shop = run.pending.shop;
@@ -653,7 +662,6 @@ function shopScreen(redraw = false) {
     fn(() => { run.gold -= cost; sfx('coin'); save(); shopScreen(true); });
   };
   screen(...(redraw ? [KEEP_SCROLL] : []), topBar(), h('div.page.shop', {},
-    h('div.shop-head', {}, h('span.shop-emoji', { html: icon('shop') }), h('div', {}, h('h2', {}, t('Shop')))),
     h('div.section-label', {}, t('Stones')),
     h('div.cards.scroll', {}, shop.stones.map((s) => stoneCard(s, {
       price: s.price, sold: s.sold, dear: run.gold < s.price,
@@ -664,23 +672,19 @@ function shopScreen(redraw = false) {
       price: x.price, sold: x.sold, dear: run.gold < x.price,
       onclick: () => buy(x.price, (pay) => takeStone(x, (ok) => { if (ok) { x.sold = true; pay(); } })),
     }))),
-    shop.relics.length ? [h('div.section-label', {}, t('Relics')),
-      h('div.cards.scroll', {}, shop.relics.map((r) => relicCard(r.relic, {
+    // Relics and services share a row of cards.
+    h('div.section-label', {}, t('Relics and services')),
+    h('div.cards.scroll', {},
+      shop.relics.map((r) => relicCard(r.relic, {
         price: r.price, sold: r.sold || R.has(run, r.relic), dear: run.gold < r.price,
         onclick: () => buy(r.price, (pay) => { R.gainRelic(run, r.relic); r.sold = true; pay(); }),
-      })))] : null,
-    h('div.section-label', {}, t('Services')),
-    h('div.services', {},
-      h('button.service', {
-        disabled: shop.slotted || !R.canAddSlot(run) || undefined,
-        onclick: () => buy(shop.slotPrice, (pay) => { run.slots++; shop.slotted = true; pay(); toast(t('{n} slots', { n: R.handSize(run) }), 'good'); }),
-      }, h('b', {}, t('Stone slot')), h('span.price' + (run.gold < shop.slotPrice ? '.dear' : ''), {}, iconEl('coin'), shop.slotPrice ?? '—'),
-      h('span.dim', {}, shop.slotted || !R.canAddSlot(run) ? '' : ` ${R.handSize(run)} → ${R.handSize(run) + 1}`)),
-      h('button.service', {
-        disabled: run.hearts >= run.maxHearts || shop.healed >= 2 || undefined,
-        onclick: () => buy(shop.healPrice, (pay) => { run.hearts++; shop.healed++; sfx('heal'); pay(); }),
-      }, h('b', {}, t('Bandage (+1 ❤)')), h('span.price' + (run.gold < shop.healPrice ? '.dear' : ''), {}, iconEl('coin'), shop.healPrice), h('span.dim', {}, t(' {n} left', { n: 2 - shop.healed })))),
-    h('button.btn.primary.wide.big', { onclick: () => { R.leaveNode(run); route(); } }, t('Leave shop'))));
+      })),
+      serviceCard('hand', t('+1 slot'), shop.slotPrice,
+        shop.slotted || !R.canAddSlot(run), () => buy(shop.slotPrice, (pay) => { run.slots++; shop.slotted = true; pay(); toast(t('{n} slots', { n: R.handSize(run) }), 'good'); })),
+      serviceCard('heart', '+1 ❤', shop.healPrice,
+        run.hearts >= run.maxHearts || shop.healed >= 2, () => buy(shop.healPrice, (pay) => { run.hearts++; shop.healed++; sfx('heal'); pay(); }))),
+    pressHint(),
+    h('div.sticky-bottom', {}, h('button.btn.primary.wide.big', { onclick: () => { R.leaveNode(run); route(); } }, t('Leave shop')))));
 }
 
 // ── Rest ────────────────────────────────────────────────────────────────────
