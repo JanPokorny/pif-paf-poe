@@ -145,15 +145,35 @@ const onLattice = (map, x, y) => {
   const r = ((((a * x + b * y) % m) + m) % m - (map.rockShift ?? 0) + m) % m;
   return ROCKS.set.includes(r);
 };
+// How far a square is from the boss's first mark: the rings of the page.
+export const ringOf = (x, y) => Math.max(Math.abs(x), Math.abs(y));
+// The page by distance. Near the start obstacles are laid out against forks
+// (layStart); beyond, they thin out ring by ring, while empty squares grow
+// until, from MAPGEN.end on, the page is nothing but empty ground: there is a
+// finite number of everything. Elites and the stronger enemies lie further out.
+export const MAPGEN = {
+  rock: 0.34, rockFall: 0.05, rockMin: 0.06,   // the obstacle chance past the start, ring by ring
+  forkRock: 0.12,                              // and more where a square would sit on two live lines of yours
+  empty: 0.13, emptyFrom: 2, end: 10,          // empty squares from ring 2, everything empty from ring 10
+  spread: { fight: 0.5, other: 0.15, good: 0.5 }, // each of the same kind within 2 multiplies the chance
+  sameEnemy: 3,                                // the same enemy never within this many squares
+  strength: 6,                                 // how sharply the stronger enemies gather further out
+};
+const emptyChance = (d) => (d >= MAPGEN.end ? 1 : Math.max(0, Math.min(1, (d - MAPGEN.emptyFrom + 1) * MAPGEN.empty)));
 function isRock(run, x, y, mine, first = false) {
   const map = run.map;
+  const d = ringOf(x, y);
   // Near the start the rocks are laid out in advance (see layStart).
-  if (map.start && Math.max(Math.abs(x), Math.abs(y)) <= OPENING.lay) return map.start.includes(keyOf(x, y));
-  if (onLattice(map, x, y)) return true;
-  if (first) return false;
-  // A square on several of your live lines is where a fork would be: likelier still.
+  // Near the start the obstacles are laid out in advance (see layStart); the
+  // outer ring of that layout only adds the ones it needs to the usual chance.
+  if (map.start && d <= OPENING.near) return map.start.includes(keyOf(x, y));
+  if (map.start && d <= OPENING.lay && map.start.includes(keyOf(x, y))) return true;
+  if (!map.start && onLattice(map, x, y)) return true;   // an old save's map
+  if (first || d >= MAPGEN.end) return false;
+  // A square on two or more of your live lines is where a fork would be.
   const lines = liveLines(run.map, x, y, 'X');
-  return rand(run) < Math.min(0.9, ROCKS.byReach[Math.min(2, mine)] + ROCKS.perLine * Math.max(0, lines - 1));
+  const p = Math.max(MAPGEN.rockMin, MAPGEN.rock - MAPGEN.rockFall * (d - OPENING.lay - 1)) + MAPGEN.forkRock * Math.max(0, lines - 1) + (mine >= 2 ? 0.1 : 0);
+  return rand(run) < Math.min(0.9, p);
 }
 // The start of a page leaves no fork lying open: within OPENING.near squares of
 // the boss's first mark no two open lines of three share a square, so every
@@ -322,12 +342,22 @@ export function makeMap(run) {
   return map;
 }
 
-// The revealed squares around (x, y).
-const around = (map, x, y) => {
+// The revealed squares within r of (x, y), (x, y) itself not included.
+function within(map, x, y, r) {
   const out = [];
-  for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++) if (dx || dy) { const c = map.cells[keyOf(x + dx, y + dy)]; if (c) out.push(c); }
+  for (let dy = -r; dy <= r; dy++) for (let dx = -r; dx <= r; dx++) if (dx || dy) { const c = map.cells[keyOf(x + dx, y + dy)]; if (c) out.push(c); }
   return out;
-};
+}
+// An enemy from the pool, the stronger (by how hard it thinks) the further out.
+function pickByStrength(run, pool, d) {
+  const sorted = [...pool].sort((a, b) => ENEMIES[a].iters - ENEMIES[b].iters);
+  const far = Math.min(1, d / (MAPGEN.end - 2));
+  const w = sorted.map((_, i) => { const r = sorted.length > 1 ? i / (sorted.length - 1) : 0.5; return Math.exp(MAPGEN.strength * (far - 0.5) * (r - 0.5)); });
+  let roll = rand(run) * w.reduce((a, b) => a + b, 0);
+  for (let i = 0; i < sorted.length; i++) if ((roll -= w[i]) < 0) return sorted[i];
+  return sorted[sorted.length - 1];
+}
+
 
 // Decide what a square is, the moment it comes into view.
 function revealCell(run, x, y, first, broken = false) {
@@ -337,25 +367,33 @@ function revealCell(run, x, y, first, broken = false) {
   const mine = reach(map, x, y, 'X');     // how much it would do for your lines
   const theirs = reach(map, x, y, 'O');   // how much it would break the boss's
   if (!broken && isRock(run, x, y, mine, first)) { map.cells[k] = { kind: 'rock', mark: '#' }; return true; }
+  const d = ringOf(x, y);
+  // Empty ground, more of it the further out; nothing else past MAPGEN.end.
+  if (!first && rand(run) < emptyChance(d)) { map.cells[k] = { kind: 'empty', mark: null }; return true; }
   const stake = Math.max(mine, theirs);
-  const table = stake >= 2 ? { elite: 40, fight: 50, event: 10 }
-    : stake === 1 ? { elite: 5, fight: 50, event: 18, treasure: 8, rest: 10, shop: 9, craft: 6 }
-      : { fight: 36, event: 20, treasure: 14, rest: 15, shop: 15, craft: 8 };
+  const table = { fight: 40, elite: 1 + 2.2 * d, event: 14, treasure: 10, rest: 10, shop: 9, craft: 6 };
+  if (stake >= 2) table.elite *= 3;   // a square that matters for a line is guarded
   if (run.act === 1 && map.visited < 2) delete table.elite;
   // One unopened chest on view at a time.
   if (Object.values(map.cells).some((c) => c.kind === 'treasure' && !c.mark)) delete table.treasure;
-  // Good squares keep their distance: each good neighbour makes another a quarter as likely.
-  const near = around(map, x, y).filter((c) => GOOD.includes(c.kind)).length;
-  for (const g of GOOD) if (table[g]) table[g] *= 0.25 ** near;
+  // Kinds keep their distance: each of the same kind within two squares makes another less likely.
+  const nearby = within(map, x, y, 2);
+  const goodNear = nearby.filter((c) => GOOD.includes(c.kind)).length;
+  for (const kind of Object.keys(table)) {
+    const same = nearby.filter((c) => c.kind === kind).length;
+    table[kind] *= (kind === 'fight' ? MAPGEN.spread.fight : MAPGEN.spread.other) ** same;
+    if (GOOD.includes(kind)) table[kind] *= MAPGEN.spread.good ** goodNear;   // good squares keep apart from each other too
+  }
   const kind = weighted(run, table);
   const cell = { kind, mark: null };
-  if (kind === 'fight') {
-    const easy = run.act === 1 && map.fights < 3;
-    const pool = easy ? EASY_OPENERS : enemiesOf(run.act, 'normal');
-    cell.duel = prepareDuel(run, pick(run, pool), { easy });
-    map.fights++;
-  } else if (kind === 'elite') {
-    cell.duel = prepareDuel(run, pick(run, enemiesOf(run.act, 'elite')));
+  if (kind === 'fight' || kind === 'elite') {
+    const easy = kind === 'fight' && run.act === 1 && map.fights < 3;
+    // Never the same face twice close together; the stronger ones further out.
+    const seen = new Set(within(map, x, y, MAPGEN.sameEnemy).map((c) => c.duel?.enemyId).filter(Boolean));
+    let pool = easy ? EASY_OPENERS : enemiesOf(run.act, kind === 'elite' ? 'elite' : 'normal');
+    if (pool.some((e) => !seen.has(e))) pool = pool.filter((e) => !seen.has(e));
+    cell.duel = prepareDuel(run, easy ? pick(run, pool) : pickByStrength(run, pool, d), { easy });
+    if (kind === 'fight') map.fights++;
   }
   map.cells[k] = cell;
   return true;
@@ -662,6 +700,7 @@ export function enterNode(run, key) {
       run.pending = { kind: 'duel', duel: JSON.parse(JSON.stringify(node.duel)) };
       run.screen = 'predual';
       break;
+    case 'empty': settleCell(run, 'X'); if (!run.over) run.screen = 'map'; break;   // nothing here: just the X
     case 'shop': run.pending = { kind: 'shop', shop: makeShop(run) }; run.screen = 'shop'; break;
     case 'rest': run.pending = { kind: 'rest' }; run.screen = 'rest'; break;
     case 'craft': run.pending = { kind: 'craft' }; run.screen = 'craft'; break;

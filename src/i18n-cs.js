@@ -309,7 +309,11 @@ export default {
   'One step the boss does not answer.': 'Jeden krok, na který boss neodpoví.',
   'Break one rock.': 'Rozbij jednu skálu.',
   // ── Short hints ─────────────────────────────────────────────────────────
-  'Rock: no step, no line through it.': 'Skála: nedá se sem vstoupit a řadu přetne.',
+  '{what}: no step, no line through it.': '{what}: sem nevstoupíš a řadu to přetne.',
+  'Thicket': 'Houští',
+  'Boulders': 'Balvany',
+  'Crag': 'Útes',
+  'Empty': 'Prázdno',
   'Burned: only the boss may take it.': 'Spálené: zabrat ho může jen boss.',
   'Not next to a mark.': 'Není vedle žádné značky.',
   'Face the boss': 'Na bosse',

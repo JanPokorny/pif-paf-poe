@@ -101,10 +101,18 @@ its own, with its boss.
   stronger regular enemies: bigger hands, two hearts if lost, a red star in the corner.
 - **Map aids.** A duel won may offer, instead of a stone, a *Double Step* (the boss does not
   answer one step) or a *Pickaxe*. Elites always offer one.
-- **Layout.** Good squares — shops, campfires, workshops, chests — keep their distance: each good
-  neighbour already laid out makes another a quarter as likely. The boss judges a square by what
-  it takes and what it blocks (when it notices — more often in later acts); the run bot plays by
-  the same judgement.
+- **The page by distance** (`node tools/mapgen.mjs`, measured over whole explored pages):
+  obstacles are densest near the start, where the fork-free layout holds (about half of rings
+  1–4), and thin out ring by ring (a quarter by ring 9). Empty squares — nothing on them, just the
+  X — grow from ring 2, and from ring 10 the page is nothing else, so a page holds a finite number
+  of everything: about sixty encounters, none past ring 8. Elites grow from 2% of encounters next
+  to the start to a quarter far out, and the act's stronger enemies (by how hard they think) gather
+  further out (strength rank 0.3 near, 0.7 far). Kinds keep apart: each of the same kind within two
+  squares makes another much less likely (a third for duels, a seventh for the rest), good squares
+  avoid each other too, and the same enemy never appears within three squares. A line-building
+  bot opens the door on every page, in about sixteen steps.
+- **Terrain by act.** The Meadow's obstacles are firs and its empty ground tiny shrubs; the
+  Quarry's are boulders and gravel; the Summit's crags and tufts of grass in the snow.
 
 Balance is still open: bosses are hard for the bots (2 runs of 32 won).
 

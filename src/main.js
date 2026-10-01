@@ -286,7 +286,11 @@ function route() {
 // ── Map ─────────────────────────────────────────────────────────────────────
 
 const NODE_ICON = { fight: 'sword', elite: 'skull', rock: 'mountain', shop: 'shop', rest: 'fire', event: 'question', treasure: 'chest', boss: 'crown', gift: 'star', craft: 'relic-anvil' };
-const NODE_NAME = { 'boss-mark': t('Boss'), fight: t('Duel'), elite: t('Elite'), shop: t('Shop'), rest: t('Campfire'), event: t('Unknown'), treasure: t('Treasure'), boss: t('Boss'), rock: t('Rock'), gift: t('Gift'), craft: t('Workshop') };
+const NODE_NAME = { 'boss-mark': t('Boss'), fight: t('Duel'), elite: t('Elite'), shop: t('Shop'), rest: t('Campfire'), event: t('Unknown'), treasure: t('Treasure'), boss: t('Boss'), rock: t('Rock'), gift: t('Gift'), craft: t('Workshop'), empty: t('Empty') };
+
+// Each act's ground: what blocks the way (trees, boulders, crags), and empty ground.
+const terrain = () => Math.min(3, Math.max(1, run?.act ?? 1));
+const blockName = () => t(['Thicket', 'Boulders', 'Crag'][terrain() - 1]);
 
 // The act's map: tic-tac-toe against its boss on an endless sheet, revealed
 // a mark at a time.
@@ -323,7 +327,7 @@ function mapScreen() {
         onclick: () => {
           if (breaching && kind === 'rock') { R.breach(run, k); sfx('thud'); save(); mapScreen(); return; }
           if (!can) {
-            const why = kind === 'rock' ? t('Rock: no step, no line through it.')
+            const why = kind === 'rock' ? t('{what}: no step, no line through it.', { what: blockName() })
               : c.mark === 'X' ? t('You have been here.')
                 : c.mark === 'O' ? t('{boss} took this square.', { boss: boss.name })
                   : c.mark === 'S' ? t('Burned: only the boss may take it.')
@@ -336,10 +340,11 @@ function mapScreen() {
           duelState = null;
           route();
         },
-      }, kind === 'boss-mark' || kind === 'rock' ? (kind === 'rock' ? h('span.doodle.rock', { html: icon('rock') }) : null) : c.duel
+      }, kind === 'boss-mark' ? null : kind === 'rock' ? h('span.doodle.rock', { html: icon(`block-${terrain()}`) })
+        : kind === 'empty' ? h('span.doodle.empty', { html: icon(`empty-${terrain()}`) }) : c.duel
         ? h('span.doodle.foe', {}, h('span.photo', {}, ENEMIES[c.duel.enemyId].emoji))
         : h('span.doodle', { html: icon(NODE_ICON[kind]) }),
-      kind === 'boss-mark' || kind === 'rock' ? null : h('span.label', {}, c.duel ? shortName(ENEMIES[c.duel.enemyId]) : NODE_NAME[kind]));
+      kind === 'boss-mark' || kind === 'rock' || kind === 'empty' ? null : h('span.label', {}, c.duel ? shortName(ENEMIES[c.duel.enemyId]) : NODE_NAME[kind]));
       if ((!c.mark || c.mark === 'S') && threats.has(k)) el.classList.add('boss-threat');
       if (c.mark === 'X') el.insertAdjacentHTML('beforeend', scribbleX(freshX === k));
       if (c.mark === 'O') el.insertAdjacentHTML('beforeend', scribbleO(lastO === k).replace('<svg ', `<svg style="--o-at: ${oAt}s" `));
