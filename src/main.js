@@ -464,7 +464,8 @@ function preDuel() {
       h('div.stone-grid', {}, [...new Set(duel.handO.map((s) => s.type))].map((type) => {
         const n = duel.handO.filter((s) => s.type === type).length;
         return h('button.pouch-slot', { onclick: () => infoStone({ type }, 'O') },
-          stoneEl({ type }, 'O'), h('span', {}, stoneName({ type }) + (n > 1 ? ` ×${n}` : '')), h('span.slot-info', {}, 'ⓘ'));
+          stoneEl({ type }, 'O'), h('span', {}, stoneName({ type })), h('span.slot-info', {}, 'ⓘ'),
+          n > 1 ? h('span.slot-count', {}, `${n}`) : null);
       })),
       facts.length ? h('div.duel-facts.facts-card', {}, facts) : null,
       h('div.section-label', {}, t('Your stones '), count),

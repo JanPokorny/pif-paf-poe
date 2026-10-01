@@ -382,6 +382,7 @@ b { font-weight: 400; background: linear-gradient(transparent 55%, var(--hi) 55%
 .pouch-slot .stone { --size: 42px; }
 .pick .pouch-slot { opacity: 0.4; transition: opacity 0.15s; }
 .pick .pouch-slot.on { opacity: 1; }
+.slot-count { position: absolute; top: 2px; left: 6px; font-family: var(--marker); font-size: 1.1rem; color: var(--red); }
 .slot-info { position: absolute; top: 0; right: 4px; color: var(--blue); font-size: 1rem; padding: 2px; }
 .sticky-bottom { position: sticky; bottom: 0; padding: 12px 0 calc(6px + var(--safe-b)); background: linear-gradient(transparent, var(--paper) 35%); z-index: 3; }
 

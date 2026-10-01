@@ -183,7 +183,7 @@ export function mountDuel(root, opts) {
       return n > 1 ? h('span.hand-group', {}, e, h('span.hand-count', {}, `×${n}`)) : e;
     }));
 
-    // Player hand, one slot per kind with a count. During a turn in progress,
+    // Player hand, a slot per stone. During a turn in progress,
     // show the hand as it was.
     const slot = (key, st, label, n = 1) => {
       const e = stoneEl(st, 'X');
@@ -195,7 +195,7 @@ export function mountDuel(root, opts) {
       if (!selecting && !(inTurn && s.phase === 'place')) b.classList.add('idle');
       return b;
     };
-    hand.replaceChildren(...groupHand(base.hands.X).map(({ st, k, n }) => slot(k, st, STONES[st.type].name, n)));
+    hand.replaceChildren(...base.hands.X.map((st, k) => slot(k, st, STONES[st.type].name)));
     if (!base.hands.X.length) hand.append(h('span.dim.small', {}, t('No stones left: you pass.')));
 
   }
