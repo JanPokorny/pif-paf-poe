@@ -303,7 +303,9 @@ function mapScreen() {
   const map = run.map;
   const reach = new Set(R.reachable(run));
   const boss = ENEMIES[map.boss];
-  const { x0, y0, x1, y1 } = R.mapBounds(map);
+  // One ring of unexplored paper round what is on view: the page goes on.
+  const bounds = R.mapBounds(map);
+  const x0 = bounds.x0 - 1, y0 = bounds.y0 - 1, x1 = bounds.x1 + 1, y1 = bounds.y1 + 1;
   const cols = x1 - x0 + 1, rows = y1 - y0 + 1;
   const threats = new Set(R.bossThreats(map));
   const freshX = map.freshX, lastO = map.lastO;
@@ -313,7 +315,7 @@ function mapScreen() {
     for (let x = x0; x <= x1; x++) {
       const k = R.keyOf(x, y);
       const c = map.cells[k];
-      if (!c) { grid.push(h('div.map-fog')); continue; }
+      if (!c) { grid.push(h('div.map-fog', { 'aria-hidden': 'true' }, '?')); continue; }
       const can = reach.has(k);
       const kind = c.kind;
       const el = h(`button.map-cell.${kind}` + (can ? '.reach' : '') + (c.mark ? '.marked' : '') + (breaching && kind === 'rock' ? '.breachable' : ''), {
@@ -326,7 +328,7 @@ function mapScreen() {
                 : c.mark === 'O' ? t('{boss} took this square.', { boss: boss.name })
                   : c.mark === 'S' ? t('Burned: a duel was lost here. You cannot step here again, but the boss still can — and an O here counts for its lines.')
                     : t('The page is full: only the boss is left.');
-            toast(why, '', kind === 'rock' || c.mark === 'S' ? 4500 : 2200);
+            toast(why);
             return;
           }
           sfx('click');

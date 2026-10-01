@@ -75,14 +75,14 @@ let toastTimer = null;
 let toastAt = 0;
 // Clear a note left over from the last screen, but not one just raised for this one.
 export function hideToast() { const el = document.getElementById('toast'); if (el && Date.now() - toastAt > 400) el.className = ''; }
-export function toast(msg, kind = '', ms = 2200) {
+export function toast(msg, kind = '') {
   let el = document.getElementById('toast');
   if (!el) { el = h('div'); el.id = 'toast'; document.body.append(el); }
   toastAt = Date.now();
   el.className = 'show ' + kind;
   el.textContent = msg;
   clearTimeout(toastTimer);
-  toastTimer = setTimeout(() => { el.className = ''; }, ms);
+  toastTimer = setTimeout(() => { el.className = ''; }, 2200);
 }
 
 // Tape is never stuck on quite straight: a little off-centre and askew, the

@@ -651,7 +651,12 @@ b { font-weight: 400; background: linear-gradient(transparent 55%, var(--hi) 55%
 .map-strikes path.o { stroke: var(--red); }
 .map-strikes path.fresh { stroke-dasharray: 100; stroke-dashoffset: 100; animation: draw 0.5s ease-out 0.7s forwards; }
 .map-strikes path.o.fresh { animation-delay: 1.6s; }
-.map-fog { background: radial-gradient(circle, rgba(246, 241, 228, 0.9) 40%, transparent 72%); }
+.map-fog { display: flex; align-items: center; justify-content: center; font-family: var(--hand); font-size: 1.3rem; color: var(--pencil); opacity: 0.18; }
+/* The edge of what is known fades out into the paper: the page goes on. */
+.map-sheet { --fade: calc(var(--cell) * 0.85);
+  -webkit-mask-image: linear-gradient(to right, transparent, #000 var(--fade), #000 calc(100% - var(--fade)), transparent), linear-gradient(to bottom, transparent, #000 var(--fade), #000 calc(100% - var(--fade)), transparent);
+  -webkit-mask-composite: source-in; mask-image: linear-gradient(to right, transparent, #000 var(--fade), #000 calc(100% - var(--fade)), transparent), linear-gradient(to bottom, transparent, #000 var(--fade), #000 calc(100% - var(--fade)), transparent);
+  mask-composite: intersect; }
 .map-cell.boss-mark .scribble { inset: 4%; width: 92%; height: 92%; }
 .boss-lives { display: flex; gap: 1px; }
 .boss-lives span { width: 15px; height: 15px; color: var(--red); opacity: 0.3; }
