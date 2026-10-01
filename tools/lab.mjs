@@ -11,6 +11,7 @@
 //   bosses    every boss phase against a set of builds: which build each needs
 //   pairs     the strongest stones two by two (+ 2 Pebbles)
 //   conds     each condition, typical pouch against a typical enemy
+//   slots     each stone in a hand of four and of five: what the fifth slot changes
 //   effects   how often each stone does nothing, and how many choices it asks for
 //
 // The player's brain is `--iters` (250) with a 5% blunder: a fair, careful player.
@@ -37,7 +38,7 @@ function duel(t) {
   const rng = makeRng(t.seed);
   const s = createGame({ handX: t.handX, handO: t.handO, first: t.first ?? 'O', conds: t.conds ?? [], rules: t.rules ?? [], modsO: t.modsO ?? {}, log: false });
   const track = {};
-  const bump = (type, k, n = 1) => { (track[type] ??= { placed: 0, dud: 0, bite: 0, restrictTurns: 0, choices: 0 })[k] += n; };
+  const bump = (type, k, n = 1) => { (track[type] ??= { placed: 0, dud: 0, bite: 0, restrictTurns: 0, choices: 0, hushed: 0, hushedPebble: 0 })[k] += n; };
   let n = 0;
   while (!s.over && n++ < 400) {
     const me = s.player === 'X';
@@ -64,7 +65,9 @@ function duel(t) {
     if (!me && s.phase === 'place') {
       const free = s.board.filter((c) => !c).length;
       const allowed = allowedSquares(s).length;
-      for (const c of s.board) if (c && c.player === 'X' && STONES[c.type].restrict) { bump(c.type, 'restrictTurns'); if (allowed < free) bump(c.type, 'bite'); }
+      for (const c of s.board) if (c && c.player === 'X' && c.hushed !== true && STONES[c.type].restrict) { bump(c.type, 'restrictTurns'); if (allowed < free) bump(c.type, 'bite'); }
+      // What a Muffle of ours caught: often just a Pebble, as the enemy sees it coming.
+      if (s.silenced.O > 0) { bump('muffle', 'hushed'); if (s.selected.type === 'pebble') bump('muffle', 'hushedPebble'); }
     }
     applyAction(s, a);
   }
@@ -132,6 +135,14 @@ const EXPERIMENTS = {
     for (const type of STONE_TYPES) for (const id of cast) for (let i = 0; i < g; i++) {
       const d = enemyDuel(1, id, i * 31 + 7);
       out.push({ key: `${type}|${id}`, handX: [type, ...P(3)], handO: d.handO.map((x) => x.type), conds: d.conds, rules: d.rules, modsO: d.modsO, itersO: d.iters, blunderO: d.blunder, seed: i + 1 });
+    }
+    return out;
+  },
+  slots(g) {
+    // Each stone with three Pebbles and with four, against a Shift hand: what a fifth slot changes.
+    const out = [];
+    for (const type of STONE_TYPES) for (const n of [3, 4]) for (let i = 0; i < g; i++) {
+      out.push({ key: `${type}|${n + 1} stones`, handX: [type, ...P(n)], handO: ['shift', ...P(4)], seed: i + 1 });
     }
     return out;
   },
@@ -234,7 +245,7 @@ if (!isMainThread) {
     const a = (by[r.key] ??= { n: 0, won: 0, full: 0, turns: 0, track: {} });
     a.n++; a.won += r.won; a.turns += r.turns; if (r.reason === 'full') a.full++;
     for (const [type, tr] of Object.entries(r.track)) {
-      const b = (a.track[type] ??= { placed: 0, dud: 0, bite: 0, restrictTurns: 0, choices: 0 });
+      const b = (a.track[type] ??= { placed: 0, dud: 0, bite: 0, restrictTurns: 0, choices: 0, hushed: 0, hushedPebble: 0 });
       for (const k of Object.keys(b)) b[k] += tr[k];
     }
   }
