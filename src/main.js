@@ -517,6 +517,23 @@ function pickFromPouch(prompt, cb, { filter = () => true, cancel = t('Cancel') }
   const close = modal(body, { dismissable: false, cls: 'tall' });
 }
 
+// The card you pick glides to the middle of its row; the others fly off.
+function pickCard(card, after) {
+  const row = card.parentElement;
+  const rr = row.getBoundingClientRect(), cr = card.getBoundingClientRect();
+  card.style.setProperty('--dx', `${rr.left + rr.width / 2 - (cr.left + cr.width / 2)}px`);
+  card.classList.add('picked');
+  [...row.children].forEach((c, k) => {
+    if (c === card) return;
+    const side = c.getBoundingClientRect().left < cr.left ? -1 : 1;
+    c.style.setProperty('--fx', `${side * (40 + 10 * k)}vw`);
+    c.style.setProperty('--fr', `${side * (14 + 6 * k)}deg`);
+    c.classList.add('unpicked');
+  });
+  row.style.pointerEvents = 'none';
+  setTimeout(after, 480);
+}
+
 // A map aid as a reward card.
 function aidCard(kind, onclick) {
   return h('button.card.aid-card', { onclick },
@@ -540,7 +557,7 @@ function rewardScreen() {
   if (rw.relicChoice?.length && !rw.taken.boss) {
     parts.push(h('div.section-label', {}, t('Choose a boss relic')),
       h('div.cards', {}, rw.relicChoice.map((id) => relicCard(id, {
-        onclick: () => { R.gainRelic(run, id); rw.taken.boss = id; sfx('coin'); save(); rewardScreen(); },
+        onclick: (e) => { R.gainRelic(run, id); rw.taken.boss = id; sfx('coin'); save(); pickCard(e.currentTarget, rewardScreen); },
       }))));
   } else if (rw.taken.boss) parts.push(h('div.section-label', {}, t('Boss relic')), relicCard(rw.taken.boss, { onclick: () => infoRelic(rw.taken.boss) }));
   if (rw.once && !rw.taken.once) {
@@ -552,15 +569,14 @@ function rewardScreen() {
   if (rw.taken.stone?.startsWith?.('aid:')) parts.push(h('div.section-label', {}, t('You took a map aid: {aid}.', { aid: t(R.AIDS[rw.taken.stone.slice(4)].name) })));
   if (rw.stones.length && !rw.taken.stone) {
     parts.push(h('div.section-label', {}, t('Take one')),
-      h('div.cards', {}, rw.aid ? aidCard(rw.aid, () => { R.gainAid(run, rw.aid); rw.taken.stone = `aid:${rw.aid}`; sfx('coin'); save(); rewardScreen(); }) : null, rw.stones.map((s) => stoneCard(s, {
+      h('div.cards', {}, rw.aid ? aidCard(rw.aid, (e) => { R.gainAid(run, rw.aid); rw.taken.stone = `aid:${rw.aid}`; sfx('coin'); save(); pickCard(e.currentTarget, rewardScreen); }) : null, rw.stones.map((s) => stoneCard(s, {
         onclick: (e) => {
           const card = e.currentTarget;
           takeStone(s, (ok) => {
             if (!ok) return;
             rw.taken.stone = s.type;
             save();
-            card.classList.add('taken');
-            setTimeout(() => { if (run?.pending === rw) rewardScreen(); }, 420);
+            pickCard(card, () => { if (run?.pending === rw) rewardScreen(); });
           });
         },
       }))));
@@ -579,7 +595,7 @@ function treasureScreen() {
     h('div.reward-gold', {}, h('span', { html: icon('coin') }), t('+{n} gold', { n: tr.gold })),
     tr.relic ? [h('div.section-label', {}, t('Inside the chest')), relicCard(tr.relic, { onclick: () => infoRelic(tr.relic) })]
       : tr.choices?.length ? [h('div.section-label', {}, t('Take one')), h('div.cards', {}, tr.choices.map((id) => relicCard(id, {
-        onclick: () => { R.gainRelic(run, id); tr.relic = id; sfx('coin'); save(); treasureScreen(); },
+        onclick: (e) => { R.gainRelic(run, id); tr.relic = id; sfx('coin'); save(); pickCard(e.currentTarget, treasureScreen); },
       })))]
         : null,
     h('div.sticky-bottom', {}, h('button.btn.wide.big' + (tr.relic || !tr.choices?.length ? '.primary' : ''), { onclick: () => { R.leaveNode(run); route(); } }, tr.relic || !tr.choices?.length ? t('Continue') : t('Skip')))));
