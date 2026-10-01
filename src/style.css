@@ -732,3 +732,13 @@ body:has(.duel) #toast.show { transform: translate(-50%, 0) rotate(-1deg); }
 .map-cell.rock.marked .doodle.rock { width: 60%; height: 60%; opacity: 0.4; }
 .map-cell.breachable { animation: wiggle 1.2s ease-in-out infinite; cursor: pointer; }
 .map-cell.breachable::before { content: ''; position: absolute; inset: 10%; border-radius: 42% 35% 46% 38%; background: var(--hi); }
+
+/* Language, music and sound: one line of small buttons. */
+.settings-row { display: flex; justify-content: center; align-items: center; gap: 6px; margin-top: 4px; }
+.lang-toggle { display: flex; align-items: center; gap: 2px; font-family: var(--marker); color: var(--pencil); margin-right: 6px; }
+.lang-toggle .sep { opacity: 0.5; }
+.lang-toggle .lang { background: none; border: 0; min-width: 40px; min-height: 44px; padding: 0 4px; font-size: 1.1rem; color: var(--pencil); opacity: 0.55; }
+.lang-toggle .lang.on { opacity: 1; color: var(--ink); text-decoration: underline wavy var(--blue); text-underline-offset: 4px; }
+.icon-toggle { width: 44px; height: 44px; display: inline-flex; align-items: center; justify-content: center; background: none; border: 1.5px dashed var(--pencil); border-radius: 50%; color: var(--ink); padding: 0; }
+.icon-toggle .icon { width: 24px; height: 24px; }
+.icon-toggle.off { opacity: 0.5; }

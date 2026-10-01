@@ -113,8 +113,7 @@ function showPouch() {
 function showMenu() {
   const body = h('div.menu', {},
     h('h2', {}, t('Menu')),
-    soundButton(() => close()),
-    langToggle(),
+    settingsRow(),
     h('button.btn.wide', { onclick: () => { close(); title(); } }, t('Save & quit to title')),
     h('button.btn.wide.danger', {
       onclick: () => {
@@ -127,14 +126,17 @@ function showMenu() {
   const close = modal(body);
 }
 
-function soundButton(close) {
-  let fast = false;
-  try { fast = localStorage.getItem('ppp-fast') === 'on'; } catch { /* ignore */ }
-  return [
-    h('button.btn.wide', { onclick: () => { setSound(!soundOn()); close(); toast(soundOn() ? t('Sound on') : t('Sound off')); } }, soundOn() ? t('Sound: on') : t('Sound: off')),
-    h('button.btn.wide', { onclick: () => { setMusic(!musicOn()); close(); } }, musicOn() ? t('Music: on') : t('Music: off')),
-    h('button.btn.wide', { onclick: () => { try { localStorage.setItem('ppp-fast', fast ? 'off' : 'on'); } catch { /* ignore */ } close(); } }, fast ? t('Enemy speed: fast') : t('Enemy speed: normal')),
-  ];
+// Language, music and sound on one line of small buttons.
+function settingsRow() {
+  const row = h('div.settings-row');
+  const draw = () => row.replaceChildren(
+    langToggle(),
+    h('button.icon-toggle' + (musicOn() ? '' : '.off'), { 'aria-label': musicOn() ? t('Music: on') : t('Music: off'), 'aria-pressed': String(musicOn()),
+      onclick: () => { setMusic(!musicOn()); draw(); } }, h('span', { html: icon(musicOn() ? 'music-on' : 'music-off') })),
+    h('button.icon-toggle' + (soundOn() ? '' : '.off'), { 'aria-label': soundOn() ? t('Sound: on') : t('Sound: off'), 'aria-pressed': String(soundOn()),
+      onclick: () => { setSound(!soundOn()); draw(); sfx('click'); } }, h('span', { html: icon(soundOn() ? 'sound-on' : 'sound-off') })));
+  draw();
+  return row;
 }
 
 // Saves from before the evolved stones were retired: back to their plain forms.
@@ -180,9 +182,7 @@ function title() {
           h('span', {}, t('Continue run')),
           h('span.continue-sub', {}, `${t('Act {n}', { n: saved.run.act })} · ❤ ${saved.run.hearts}`)) : null,
         h('button.btn.wide.big' + (saved?.run ? '' : '.primary'), { onclick: () => { if (saved?.run && !saved.run.over && !confirm(t('Start over? Your run in progress will be lost.'))) return; newRunMenu(); } }, t('New run')),
-        h('button.btn.wide.ghost', { onclick: () => { setSound(!soundOn()); title(); } }, soundOn() ? t('Sound: on') : t('Sound: off')),
-        h('button.btn.wide.ghost', { onclick: () => { setMusic(!musicOn()); title(); } }, musicOn() ? t('Music: on') : t('Music: off')),
-        langToggle('.ghost')),
+        settingsRow()),
     ));
 }
 
@@ -508,8 +508,7 @@ function showDuelMenu() {
   const body = h('div.menu', {},
     h('h2', {}, t('Paused')),
     h('button.btn.wide', { onclick: () => { close(); showPouch(); } }, t('Pouch & relics')),
-    soundButton(() => close()),
-    langToggle(),
+    settingsRow(),
     h('button.btn.wide', { onclick: () => { close(); title(); } }, t('Save & quit to title')),
     h('button.btn.wide.ghost', { onclick: () => close() }, t('Resume')));
   const close = modal(body);
