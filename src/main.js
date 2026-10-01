@@ -293,7 +293,9 @@ function mapScreen() {
   // boss's O, what that reveals. Delays in seconds.
   const appear = new Map();
   (map.revealX ?? []).forEach((k, i) => appear.set(k, 0.75 + i * 0.05));
-  (map.revealO ?? []).forEach((k, i) => appear.set(k, 2.1 + i * 0.05));
+  // With no X of yours first (a fresh page), the O comes at once.
+  const oAt = freshX ? 1.4 : 0.15;
+  (map.revealO ?? []).forEach((k, i) => appear.set(k, oAt + 0.7 + i * 0.05));
   const breaching = map.armed === 'breach';
   const grid = [];
   for (let y = y0; y <= y1; y++) {
@@ -327,13 +329,13 @@ function mapScreen() {
       kind === 'boss-mark' || kind === 'rock' ? null : h('span.label', {}, c.duel ? shortName(ENEMIES[c.duel.enemyId]) : NODE_NAME[kind]));
       if ((!c.mark || c.mark === 'S') && threats.has(k)) el.classList.add('boss-threat');
       if (c.mark === 'X') el.insertAdjacentHTML('beforeend', scribbleX(freshX === k));
-      if (c.mark === 'O') el.insertAdjacentHTML('beforeend', scribbleO(lastO === k));
+      if (c.mark === 'O') el.insertAdjacentHTML('beforeend', scribbleO(lastO === k).replace('<svg ', `<svg style="--o-at: ${oAt}s" `));
       if (c.mark === 'S') el.classList.add('scorched');
       if (freshS === k) el.classList.add('fresh-burn');
       // The square's own picture stays a moment and fades as the mark is drawn.
       if (c.mark && (k === freshX || k === lastO || k === freshS) && kind !== 'boss-mark') {
         el.classList.add('fading');
-        el.style.setProperty('--fd', k === lastO && k !== freshX ? '1.4s' : '0s');
+        el.style.setProperty('--fd', k === lastO && k !== freshX ? `${oAt}s` : '0s');
       }
       if (appear.has(k)) { el.classList.add('appear'); el.style.setProperty('--d', `${appear.get(k)}s`); }
       if (kind === 'elite' && !c.mark) el.insertAdjacentHTML('beforeend', `<span class="elite-star">${icon('star')}</span>`);

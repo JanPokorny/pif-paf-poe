@@ -350,7 +350,7 @@ b { font-weight: 400; background: linear-gradient(transparent 55%, var(--hi) 55%
 .scribble.o path { stroke: var(--red); stroke-width: 8; }
 .scribble.fresh path { stroke-dasharray: 100; stroke-dashoffset: 100; animation: draw 0.4s ease-out forwards; }
 .scribble.fresh path.second { animation-delay: 0.3s; }
-.scribble.o.fresh path { animation-delay: 1.4s; animation-duration: 0.6s; }
+.scribble.o.fresh path { animation-delay: var(--o-at, 1.4s); animation-duration: 0.6s; }
 /* A turn on the map, in order (delays set from mapScreen): new squares pop into view. */
 .map-sheet .map-cell.marked.fading:not(.rock) .doodle, .map-sheet .map-cell.marked.fading:not(.rock) .label { display: block; visibility: visible; animation: fade-out 0.6s ease-in var(--fd, 0s) both; }
 .map-sheet .map-cell.marked.fading:not(.rock) .doodle.foe { display: flex; }
