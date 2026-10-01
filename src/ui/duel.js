@@ -38,6 +38,16 @@ function stageOf(cands) {
   return { kind: 'single' };
 }
 
+// A hand as one entry per kind of stone: {st, k (its first index), n}.
+function groupHand(hand) {
+  const out = [];
+  hand.forEach((st, k) => {
+    const g = out.find((x) => x.st.type === st.type);
+    if (g) g.n++; else out.push({ st, k, n: 1 });
+  });
+  return out;
+}
+
 const SPEED = { enemyPause: 380, move: 360 };
 const SQUARE = ['top-left', 'top', 'top-right', 'left', 'centre', 'right', 'bottom-left', 'bottom', 'bottom-right'];
 const BLOCK = { TL: 'top-left', TR: 'top-right', BL: 'bottom-left', BR: 'bottom-right' };
@@ -145,11 +155,10 @@ export function mountDuel(root, opts) {
     }
   }
 
-  // Which select action a hand slot stands for: 'pebble', a hand index, or
-  // 'O:type' for a stone taken from the enemy's hand (Open Hands).
+  // Which select action a hand slot stands for: a hand index, or 'O:type'
+  // for a stone taken from the enemy's hand (Open Hands).
   const slotAction = (s, key) => {
     const acts = legalActions(s);
-    if (key === 'pebble') return acts.find((a) => a.stone === 'pebble');
     if (typeof key === 'string' && key.startsWith('O:')) return acts.find((a) => a.from === 'O' && a.stone === key.slice(2));
     const st = s.hands.X[key];
     return st && acts.find((a) => a.stone === st.type && !a.from);
@@ -161,34 +170,33 @@ export function mountDuel(root, opts) {
     const inTurn = base !== s;
     const shared = s.conds.includes('shared');
 
-    // Enemy hand, as the preview would leave it. Pebbles are always there.
+    // Enemy hand, as the preview would leave it: one stone per kind, with a count.
     const theirs = inTurn && typeof selKey === 'string' && selKey.startsWith('O:') ? base.hands.O : shown.hands.O;
-    enemyHand.classList.toggle('crowded', theirs.length > 6);
-    enemyHand.replaceChildren(
-      h('span.pebble-mini', { title: t('Pebbles: as many as they like') }, stoneEl({ type: 'pebble' }, 'O', { mini: true })),
-      ...theirs.map((st, k) => {
-        const e = stoneEl(st, 'O', { mini: true });
-        const key = `O:${st.type}`;
-        const firstOfType = theirs.findIndex((x) => x.type === st.type) === k;
-        if (shared && selecting) { if (slotAction(s, key)) e.classList.add('borrow'); else e.classList.add('forbidden'); }
-        if (shared && inTurn && selKey === key && s.phase === 'place' && firstOfType) e.classList.add('selected');
-        e.addEventListener('click', () => { if (!e.classList.contains('target')) tapEnemyStone(st); });
-        return e;
-      }));
+    const kinds = groupHand(theirs);
+    enemyHand.classList.toggle('crowded', kinds.length > 6);
+    enemyHand.replaceChildren(...kinds.map(({ st, n }) => {
+      const e = stoneEl(st, 'O', { mini: true });
+      const key = `O:${st.type}`;
+      if (shared && selecting && st.type !== 'pebble') { if (slotAction(s, key)) e.classList.add('borrow'); else e.classList.add('forbidden'); }
+      if (shared && inTurn && selKey === key && s.phase === 'place') e.classList.add('selected');
+      e.addEventListener('click', () => { if (!e.classList.contains('target')) tapEnemyStone(st); });
+      return n > 1 ? h('span.hand-group', {}, e, h('span.hand-count', {}, `×${n}`)) : e;
+    }));
 
-    // Player hand: the Pebble, then the specials. During a turn in progress,
+    // Player hand, one slot per kind with a count. During a turn in progress,
     // show the hand as it was.
-    const slot = (key, st, label) => {
+    const slot = (key, st, label, n = 1) => {
       const e = stoneEl(st, 'X');
-      const b = h('button.hand-slot' + (key === 'pebble' ? '.pebble-slot' : ''), { onclick: () => tapHand(key) }, e,
+      const b = h('button.hand-slot', { onclick: () => tapHand(key) }, e,
+        n > 1 ? h('span.hand-count', {}, `×${n}`) : null,
         h('span.slot-name', {}, label));
       if (inTurn && key === selKey) b.classList.add(s.phase === 'place' ? 'selected' : 'placed');
       if (selecting && !slotAction(s, key)) b.classList.add('forbidden');
       if (!selecting && !(inTurn && s.phase === 'place')) b.classList.add('idle');
       return b;
     };
-    hand.replaceChildren(slot('pebble', { type: 'pebble' }, STONES.pebble.name),
-      ...base.hands.X.map((st, k) => slot(k, st, STONES[st.type].name)));
+    hand.replaceChildren(...groupHand(base.hands.X).map(({ st, k, n }) => slot(k, st, STONES[st.type].name, n)));
+    if (!base.hands.X.length) hand.append(h('span.dim.small', {}, t('No stones left: you pass.')));
 
   }
 
@@ -467,8 +475,7 @@ export function mountDuel(root, opts) {
   // ── Player input ──────────────────────────────────────────────────────────
   function myMove() { return !busy && !ended && !state.over && state.player === 'X'; }
 
-  const slotStone = (key) => (key === 'pebble' ? { type: 'pebble' }
-    : typeof key === 'string' ? { type: key.slice(2) } : (snapshot ?? state).hands.X[key]);
+  const slotStone = (key) => (typeof key === 'string' ? { type: key.slice(2) } : (snapshot ?? state).hands.X[key]);
 
   function tapHand(key) {
     if (!myMove()) return;
@@ -610,6 +617,8 @@ export function mountDuel(root, opts) {
       if (l === 'silenced') toast(t(me ? 'Hushed! Your stone does nothing.' : 'Hushed! {enemy}\'s stone does nothing.', v), me ? 'bad' : 'good');
       else if (l === 'echo') toast(t('Echo! It goes again.'), 'good');
       else if (l.startsWith('parrot:')) toast(t('The {parrot} copies {stone}!', { parrot: STONES.parrot.name, stone: STONES[l.slice(7)].name }));
+      else if (l === 'pass:X') toast(t('No stones left: you pass.'), 'bad');
+      else if (l === 'pass:O') toast(t('{enemy} has no stones left and passes.', v), 'good');
       else if (l === 'cond:gravity') { /* shown as a step of its own */ }
       else if (l === 'rule:double' && !me) { /* the caption says it */ }
       else if (l === 'rule:headstart') toast(t('{rule}: {enemy} goes again!', { ...v, rule: RULES.headstart.name }), 'bad');
@@ -736,7 +745,7 @@ export function mountDuel(root, opts) {
   // An old save from the middle of a turn: put a chosen stone back in hand,
   // or pick up the choice it was waiting on.
   if (!state.over && state.player === 'X' && state.phase === 'place' && state.selected) {
-    if (state.selected.type !== 'pebble') state.hands[state.from ?? 'X'].push(state.selected);
+    state.hands[state.from ?? 'X'].push(state.selected);
     state.selected = null;
     state.from = null;
     state.phase = 'select';

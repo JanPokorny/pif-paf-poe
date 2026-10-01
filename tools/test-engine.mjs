@@ -29,7 +29,9 @@ function test(name, fn) {
 // ── Helpers ─────────────────────────────────────────────────────────────────
 
 // X opens unless told otherwise: most tests are about what X's stone does.
-function G(o = {}) { return createGame({ first: 'X', log: false, ...o }); }
+// Plenty of Pebbles each, unless a test says otherwise.
+const PEBBLES = Array(9).fill('pebble');
+function G(o = {}) { return createGame({ first: 'X', log: false, ...o, handX: [...(o.handX ?? []), ...(o.pebblesX ?? PEBBLES)], handO: [...(o.handO ?? []), ...(o.pebblesO ?? PEBBLES)] }); }
 
 // 'O shift' / 'X pebble!' (! = stuck) -> parts
 function parse(str) {
@@ -59,7 +61,7 @@ function expectAt(s, map, msg = '') {
 // missing). Returns the id the placed stone gets.
 function play(s, type, pos) {
   const hand = s.hands[s.player];
-  if (type !== 'pebble' && !hand.some((h) => h.type === type)) hand.push({ type });
+  if (!hand.some((h) => h.type === type)) hand.push({ type });
   const id = s.nextId;
   applyAction(s, { type: 'select', stone: type });
   applyAction(s, { type: 'place', pos });
@@ -95,23 +97,28 @@ function allowedFor(spec, o = {}) {
 group('core');
 
 test('the enemy opens by default', () => {
-  const s = createGame({ log: false });
+  const s = createGame({ log: false, handX: PEBBLES, handO: PEBBLES });
   assert.equal(s.first, 'O');
   assert.equal(s.player, 'O');
   assert.equal(s.phase, 'select');
   assert.ok(s.board.every((c) => c === null));
 });
-test('Pebbles are always there, and never in the hand', () => {
-  const s = G({ handX: ['pebble', 'shift', 'pebble'] });
-  assert.deepEqual(s.hands.X, [{ type: 'shift' }]);
-  const sel = legalActions(s).map((a) => a.stone);
-  assert.deepEqual(sel, ['pebble', 'shift']);
+test('Pebbles are stones in the hand like any other, and run out', () => {
+  const s = G({ handX: ['pebble', 'shift', 'pebble'], pebblesX: [] });
+  assert.deepEqual(legalActions(s).map((a) => a.stone), ['pebble', 'shift']);
+  play(s, 'pebble', 0); play(s, 'pebble', 8);
+  play(s, 'pebble', 2); play(s, 'pebble', 6);
+  assert.deepEqual(legalActions(s).map((a) => a.stone), ['shift']);
 });
-test('placing a Pebble costs nothing: you always have another', () => {
-  const s = G({ handX: ['shift'] });
-  for (const pos of [0, 2]) { play(s, 'pebble', pos); play(s, 'pebble', pos + 6); }
-  assert.deepEqual(s.hands.X, [{ type: 'shift' }]);
-  assert.ok(legalActions(s).some((a) => a.stone === 'pebble'));
+test('a side with no stones left passes; when neither can place, the duel ends as a full board', () => {
+  const s = G({ handX: ['pebble'], pebblesX: [], handO: ['pebble', 'pebble'], pebblesO: [] });
+  play(s, 'pebble', 0);
+  play(s, 'pebble', 8);
+  turnPassedTo(s, 'O');   // X has nothing left: O again
+  play(s, 'pebble', 2);
+  assert.equal(s.over, true);
+  assert.equal(s.reason, 'full');
+  assert.equal(s.winner, 'O');   // X opened here, so the tie goes to O
 });
 test('a special stone leaves the hand when placed', () => {
   const s = G({ handX: ['mountain', 'mountain'] });
@@ -120,7 +127,7 @@ test('a special stone leaves the hand when placed', () => {
 });
 test('select actions are de-duplicated by type', () => {
   const s = G({ handX: ['shift', 'shift', 'rotate'] });
-  assert.deepEqual(legalActions(s).map((a) => a.stone), ['pebble', 'shift', 'rotate']);
+  assert.deepEqual(legalActions(s).map((a) => a.stone), ['shift', 'rotate', 'pebble']);
 });
 test('selecting a stone you do not hold throws; acting after the end throws', () => {
   const s = G();
@@ -154,7 +161,7 @@ test('a line an effect makes only for the opponent wins for the opponent', () =>
   assert.equal(s.winner, 'O');
 });
 test('a full board goes to the second player: you, when the enemy opened', () => {
-  const s = createGame({ log: false });
+  const s = createGame({ log: false, handX: PEBBLES, handO: PEBBLES });
   lay(s, { 0: 'O pebble', 1: 'X pebble', 2: 'O pebble', 3: 'O pebble', 4: 'X pebble', 5: 'O pebble', 6: 'X pebble', 7: 'O pebble' });
   s.player = 'X';
   play(s, 'pebble', 8);
@@ -162,14 +169,14 @@ test('a full board goes to the second player: you, when the enemy opened', () =>
   assert.equal(s.reason, 'full');
 });
 test('forty turns end the duel as a full board would', () => {
-  const s = createGame({ log: false });
+  const s = createGame({ log: false, handX: PEBBLES, handO: PEBBLES });
   s.turns = 40;
   play(s, 'pebble', 0);
   assert.equal(s.over, true);
   assert.equal(s.winner, 'X');
 });
 test('there is no running out: the player to move always has a Pebble', () => {
-  const s = createGame({ log: false });
+  const s = createGame({ log: false, handX: PEBBLES, handO: PEBBLES });
   let n = 0;
   while (!s.over && n++ < 20) { const a = legalActions(s); assert.ok(a.length); applyAction(s, a[0]); }
   assert.ok(s.over);
@@ -281,7 +288,7 @@ test('Bumper never pushes a stone off the board', () => {
   lay(s, { 1: 'O shift', 3: 'O pebble' });
   play(s, 'bumper', 4);
   expectAt(s, { 1: 101, 3: 103 });
-  assert.equal(s.hands.O.length, 0);
+  assert.equal(count(s, 'O', 'shift'), 0);
 });
 test('Bumper does not push a Mountain', () => {
   const s = G();
@@ -405,14 +412,16 @@ test('Magpie steals a special stone from the enemy\'s hand', () => {
   play(s, 'magpie', 4);
   eff(s, { stone: 'rotate' });
   assert.equal(count(s, 'X', 'rotate'), 1);
-  assert.deepEqual(s.hands.O, [{ type: 'shift' }]);
+  assert.equal(count(s, 'O', 'rotate'), 0);
+  assert.equal(count(s, 'O', 'shift'), 1);
+  assert.ok(!legalActions(G({ handX: ['magpie'] })).some((a) => a.stone === 'pebble' && a.type === 'effect'));
 });
-test('A Pebble sent back to hand is simply gone', () => {
+test('A Pebble sent back goes back into its owner\'s hand', () => {
   const s = G();
   lay(s, { 1: 'O pebble' });
   play(s, 'firecracker', 4);   // one target: it goes off on its own
   assert.equal(s.board[1], null);
-  assert.equal(s.hands.O.length, 0);
+  assert.equal(count(s, 'O', 'pebble'), 10);
 });
 
 // ── One-shot stones ─────────────────────────────────────────────────────────
@@ -510,13 +519,13 @@ test('Gravity: after every turn, every stone falls; Mountains hold', () => {
   expectAt(s, { 7: 107 });
 });
 test('Gravity acts after the enemy\'s turns too', () => {
-  const s = createGame({ conds: ['gravity'], log: false });
+  const s = createGame({ conds: ['gravity'], log: false, handX: PEBBLES, handO: PEBBLES });
   play(s, 'pebble', 2);
   assert.equal(s.board[8]?.player, 'O');
 });
 test('Hollow: nobody may place on the centre', () => {
   sameSet(allowedFor({}, { conds: ['nocentre'] }), [0, 1, 2, 3, 5, 6, 7, 8]);
-  const s = createGame({ conds: ['nocentre'], log: false });
+  const s = createGame({ conds: ['nocentre'], log: false, handX: PEBBLES, handO: PEBBLES });
   applyAction(s, { type: 'select', stone: 'pebble' });
   assert.ok(!allowedSquares(s).includes(4));
 });
@@ -527,7 +536,7 @@ test('Open Hands: play the other side\'s special stone as your own', () => {
   applyAction(s, a);
   applyAction(s, { type: 'place', pos: 4 });
   assert.equal(s.board[4].player, 'X');
-  assert.equal(s.hands.O.length, 0);
+  assert.equal(count(s, 'O', 'shift'), 0);
 });
 test('without Open Hands the other side\'s stones are not on offer', () => {
   const s = G({ handO: ['shift'] });
@@ -539,7 +548,7 @@ test('without Open Hands the other side\'s stones are not on offer', () => {
 group('boss rules');
 
 // Boss duels: the boss (O) opens and plays only Pebbles.
-const B = (rules, o = {}) => createGame({ rules, log: false, ...o });
+const B = (rules, o = {}) => createGame({ rules, log: false, ...o, handX: [...(o.handX ?? []), ...PEBBLES], handO: [...(o.handO ?? []), ...PEBBLES] });
 
 test('every rule has a name and text', () => { for (const r of Object.values(RULES)) assert.ok(r.name && r.text); });
 test('Tactics: after its turn the boss names your stone', () => {
@@ -547,7 +556,7 @@ test('Tactics: after its turn the boss names your stone', () => {
   play(s, 'pebble', 4);
   assert.equal(s.phase, 'dictate');
   assert.equal(s.player, 'O');
-  sameSet(legalActions(s).map((a) => a.value), ['pebble', 'shift', 'rotate'].map(String));
+  assert.deepEqual(legalActions(s).map((a) => a.value).sort(), ['pebble', 'rotate', 'shift']);
   act(s, { type: 'dictate', value: 'rotate' });
   turnPassedTo(s, 'X');
   assert.deepEqual(legalActions(s).map((a) => a.stone), ['rotate']);
@@ -720,7 +729,6 @@ function invariants(s, where) {
   if (s.over !== (s.phase === 'over')) fuzzFail('over <=> phase over', where);
   if (s.over && !['X', 'O'].includes(s.winner)) fuzzFail('a finished duel has a winner', where);
   for (const c of s.board) if (c && (!STONES[c.type] || !['X', 'O'].includes(c.player))) fuzzFail('cells are well-formed', where + ' ' + JSON.stringify(c));
-  for (const p of ['X', 'O']) if (s.hands[p].some((h) => h.type === 'pebble')) fuzzFail('no Pebble in a hand', where);
   if (s.phase === 'dictate' && s.player !== 'O') fuzzFail('only the boss dictates', where);
   if (!s.over && legalActions(s).length === 0) fuzzFail('legalActions non-empty unless over', `${where} phase=${s.phase}\n${render(s)}`);
 }
@@ -735,7 +743,7 @@ for (let g = 0; g < GAMES; g++) {
   const mods = () => ({ echo: r() < 0.2, freeFirst: r() < 0.2 });
   const boss = r() < 0.4;
   const cfg = {
-    handX: hand(), handO: boss ? [] : hand(), first: r() < 0.8 ? 'O' : 'X',
+    handX: [...hand(), ...Array(4).fill('pebble')], handO: [...(boss ? [] : hand()), ...Array(5).fill('pebble')], first: r() < 0.8 ? 'O' : 'X',
     modsX: mods(), modsO: mods(),
     conds: !boss && r() < 0.5 ? [pick(COND_KEYS)] : [],
     rules: boss ? [...new Set([pick(RULE_KEYS), ...(r() < 0.4 ? [pick(RULE_KEYS)] : [])])] : [],

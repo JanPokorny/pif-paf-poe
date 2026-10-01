@@ -742,3 +742,9 @@ body:has(.duel) #toast.show { transform: translate(-50%, 0) rotate(-1deg); }
 .icon-toggle { width: 44px; height: 44px; display: inline-flex; align-items: center; justify-content: center; background: none; border: 1.5px dashed var(--pencil); border-radius: 50%; color: var(--ink); padding: 0; }
 .icon-toggle .icon { width: 24px; height: 24px; }
 .icon-toggle.off { opacity: 0.5; }
+
+/* Several stones of a kind in a hand: one stone and a count. */
+.hand-slot { position: relative; }
+.hand-count { position: absolute; top: -4px; right: -2px; font-family: var(--marker); font-size: 0.95rem; color: var(--ink); background: var(--card); border-radius: 8px; padding: 0 4px; line-height: 1.2; box-shadow: 0 1px 0 rgba(0,0,0,0.12); }
+.hand-group { position: relative; display: inline-flex; }
+.hand-group .hand-count { top: -6px; right: -8px; font-size: 0.8rem; }

@@ -182,7 +182,6 @@ export function infoStone(s, player = 'X', extra = '') {
     h('p', {}, stoneText(s)),
     stoneDemo(s),
     st.once ? h('p.info-plus', {}, t('One use: once played, it is gone from your pouch.')) : null,
-    s.type === 'pebble' ? h('p.info-plus', {}, t('Pebbles never run out: you may always place another.')) : null,
     extra ? h('p.info-extra', {}, extra) : null,
     h('button.btn.wide', { onclick: () => close() }, t('OK')));
   const close = modal(body);

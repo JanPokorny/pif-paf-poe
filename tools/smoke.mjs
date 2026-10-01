@@ -10,7 +10,7 @@ const wins = { X: 0, O: 0 }, reasons = {};
 for (let g = 0; g < 3000; g++) {
   const boss = g % 3 === 0;
   const s = createGame({
-    handX: hand(), handO: boss ? [] : hand(),
+    handX: [...hand(), ...Array(4).fill('pebble')], handO: [...(boss ? [] : hand()), ...Array(5).fill('pebble')],
     modsX: { echo: g % 5 === 0, freeFirst: g % 4 === 0 },
     conds: !boss && g % 2 ? [COND[g % COND.length]] : [], rules: boss ? [RULE[g % RULE.length]] : [],
   });

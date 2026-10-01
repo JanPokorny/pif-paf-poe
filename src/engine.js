@@ -67,7 +67,7 @@ const def = (id, spec) => { STONES[id] = { id, ...spec }; };
 
 def('pebble', {
   name: 'Pebble', rarity: 'starter', kind: 'plain',
-  text: 'Does nothing. You always have another one.',
+  text: 'Does nothing: just a mark on the board.',
 });
 
 def('shift', {
@@ -270,7 +270,7 @@ def('magpie', {
   name: 'Magpie', rarity: 'rare', kind: 'curse',
   text: 'Steals a special stone of your choice from the enemy\'s hand into yours.',
   options(s, pos, cell) {
-    return [...new Set(s.hands[other(cell.player)].map((h) => h.type))].map((stone) => ({ stone }));
+    return [...new Set(s.hands[other(cell.player)].filter((h) => h.type !== 'pebble').map((h) => h.type))].map((stone) => ({ stone }));
   },
   apply(s, pos, a, cell) {
     const hand = s.hands[other(cell.player)];
@@ -327,7 +327,7 @@ def('nudge', {
 def('mind-control', {
   name: 'Mind Control', rarity: 'uncommon', kind: 'once', once: true,
   text: 'Name a stone for the enemy — one of theirs, or a Pebble. That is what they must play next.',
-  options: (s, pos, cell) => ['pebble', ...new Set(s.hands[other(cell.player)].map((h) => h.type))].map((stone) => ({ stone })),
+  options: (s, pos, cell) => [...new Set(s.hands[other(cell.player)].map((h) => h.type))].map((stone) => ({ stone })),
   apply(s, pos, a, cell) { s.forced = { player: other(cell.player), stone: a.stone }; },
 });
 
@@ -468,7 +468,7 @@ function move(s, from, to) {
 // Back into its owner's hand -- or, for a Pebble, simply off the board.
 function returnToHand(s, i) {
   const c = s.board[i];
-  if (c.type !== 'pebble') s.hands[c.player].push({ type: c.type });
+  s.hands[c.player].push({ type: c.type });
   s.board[i] = null;
 }
 
@@ -512,9 +512,9 @@ export function createGame({
   handX = [], handO = [], first = 'O',
   modsX = noMods(), modsO = noMods(), conds = [], rules = [], log = true,
 }) {
-  return {
+  const g = {
     board: Array(9).fill(null),     // {player, type, id, line?, hushed?} | null
-    hands: { X: handX.map(norm).filter((h) => h.type !== 'pebble'), O: handO.map(norm).filter((h) => h.type !== 'pebble') },
+    hands: { X: handX.map(norm), O: handO.map(norm) },
     spent: { X: [], O: [] },        // one-shot stones each side has played from its own hand
     mods: { X: { ...modsX }, O: { ...modsO } },
     conds: [...conds],              // rules for both sides
@@ -536,6 +536,8 @@ export function createGame({
     turns: 0, nextId: 1,
     log: log ? [] : null,
   };
+  settle(g);
+  return g;
 }
 
 export function cloneState(s) {
@@ -569,7 +571,7 @@ const note = (s, msg) => { if (s.log) s.log.push(msg); };
 
 function selectActions(s) {
   const p = s.player;
-  const out = [{ type: 'select', stone: 'pebble' }];
+  const out = [];
   const seen = new Set();
   for (const h of s.hands[p]) {
     if (seen.has(h.type)) continue;
@@ -580,7 +582,7 @@ function selectActions(s) {
   if (s.conds.includes('shared')) {
     const theirs = new Set();
     for (const h of s.hands[other(p)]) {
-      if (theirs.has(h.type)) continue;
+      if (theirs.has(h.type) || h.type === 'pebble') continue;
       theirs.add(h.type);
       out.push({ type: 'select', stone: h.type, from: other(p) });
     }
@@ -609,7 +611,7 @@ function effectOptions(s) {
 // The boss's word on your next turn.
 function dictateOptions(s) {
   const kind = RULES_DICTATING.find((r) => s.rules.includes(r));
-  if (kind === 'tactics') return ['pebble', ...new Set(s.hands.X.map((h) => h.type))].map((value) => ({ type: 'dictate', kind, value }));
+  if (kind === 'tactics') return [...new Set(s.hands.X.map((h) => h.type))].map((value) => ({ type: 'dictate', kind, value }));
   if (kind === 'column') {
     const cols = new Set(freeSquares(s.board).map(col));
     return [...cols].map((value) => ({ type: 'dictate', kind, value }));
@@ -657,10 +659,10 @@ function endTurn(s) {
   if (s.board.every(Boolean) || s.turns >= 40) return finish(s, s.rules.includes('patient') ? 'O' : other(s.first), 'full');
 
   // Double Time: every turn is two stones.
-  if (s.rules.includes('double') && !s.half) { s.half = true; s.turns++; note(s, 'rule:double'); return; }
+  if (s.rules.includes('double') && !s.half) { s.half = true; s.turns++; note(s, 'rule:double'); settle(s); return; }
   s.half = false;
   // The Head Start: the boss's first turn is two.
-  if (p === 'O' && s.extra > 0) { s.extra--; s.turns++; note(s, 'rule:headstart'); return; }
+  if (p === 'O' && s.extra > 0) { s.extra--; s.turns++; note(s, 'rule:headstart'); settle(s); return; }
   // The boss's word lasts one whole turn of yours.
   if (p === 'X') s.dictate = null;
 
@@ -673,6 +675,21 @@ function passTurn(s) {
   s.player = other(s.player);
   s.turns++;
   s.phase = 'select';
+  settle(s);
+}
+
+// Stones run out. A side with nothing left to place passes; when neither can
+// place, the duel ends as a full board does.
+export function canMove(s, p) {
+  return s.hands[p].length > 0 || (s.conds.includes('shared') && s.hands[other(p)].some((h) => h.type !== 'pebble'));
+}
+function settle(s) {
+  if (s.over || s.phase !== 'select' || canMove(s, s.player)) return;
+  if (!canMove(s, other(s.player))) { finish(s, s.rules.includes('patient') ? 'O' : other(s.first), 'full'); return; }
+  note(s, `pass:${s.player}`);
+  s.player = other(s.player);
+  s.turns++;
+  s.half = false;
 }
 
 function afterEffect(s) {
@@ -721,15 +738,11 @@ export function applyAction(s, a) {
   const p = s.player;
   switch (a.type) {
     case 'select': {
-      if (a.stone === 'pebble') {
-        s.selected = { type: 'pebble' };
-      } else {
-        const owner = a.from ?? p;
-        const hand = s.hands[owner];
-        const k = hand.findIndex((h) => h.type === a.stone);
-        if (k < 0) throw new Error(`${owner} holds no ${a.stone}`);
-        s.selected = hand.splice(k, 1)[0];
-      }
+      const owner = a.from ?? p;
+      const hand = s.hands[owner];
+      const k = hand.findIndex((h) => h.type === a.stone);
+      if (k < 0) throw new Error(`${owner} holds no ${a.stone}`);
+      s.selected = hand.splice(k, 1)[0];
       s.from = a.from ?? null;
       s.phase = 'place';
       break;

@@ -145,6 +145,13 @@ const RETIRED = { rail: 'shift', pivot: 'rotate', electromagnet: 'magnet', stenc
 function migrate() {
   for (const st of run.pouch) st.type = RETIRED[st.type] ?? st.type;
   run.pouch = run.pouch.filter((st) => STONES[st.type]);
+  // Pebbles in the pouch, and slots counted with them.
+  if ((run.v ?? 2) < 3) {
+    run.v = 3;
+    run.slots = (run.slots ?? 2) + 2;
+    for (let k = 0; k < R.MIN_HAND; k++) run.pouch.push({ type: 'pebble', uid: run.nextUid++ });
+    if (duelState) { duelState = null; if (run.screen === 'duel') run.screen = 'predual'; }
+  }
   // Tricks are one-shot stones now: into the pouch they go.
   for (const x of run.tricks ?? []) if (STONES[x]?.once) run.pouch.push({ type: x, uid: run.nextUid++ });
   delete run.tricks;
@@ -426,6 +433,9 @@ function preDuel() {
       h('span.slot-info', { onclick: (e) => { e.stopPropagation(); infoStone(s, 'X'); } }, 'ⓘ'));
     }));
     count.textContent = `${chosen.length}/${size}`;
+    const need = R.MIN_HAND - chosen.length;
+    fight.disabled = need > 0;
+    fight.textContent = need > 0 ? t('Pick {n} more', { n: need }) : t('Fight!');
   };
   draw();
 
@@ -451,11 +461,14 @@ function preDuel() {
           h('div.enemy-name.big', {}, enemy.name),
           h('div.quote', {}, t('“{quote}”', { quote: enemy.quote })))),
       h('div.section-label', {}, t('Their stones')),
-      duel.handO.length ? h('div.stone-grid', {}, duel.handO.map((s) => h('button.pouch-slot', { onclick: () => infoStone(s, 'O') },
-        stoneEl(s, 'O'), h('span', {}, stoneName(s)), h('span.slot-info', {}, 'ⓘ')))) : h('p.dim', {}, t('Pebbles only.')),
+      h('div.stone-grid', {}, [...new Set(duel.handO.map((s) => s.type))].map((type) => {
+        const n = duel.handO.filter((s) => s.type === type).length;
+        return h('button.pouch-slot', { onclick: () => infoStone({ type }, 'O') },
+          stoneEl({ type }, 'O'), h('span', {}, stoneName({ type }) + (n > 1 ? ` ×${n}` : '')), h('span.slot-info', {}, 'ⓘ'));
+      })),
       facts.length ? h('div.duel-facts.facts-card', {}, facts) : null,
       h('div.section-label', {}, t('Your stones '), count),
-      run.pouch.length ? grid : h('p.dim', {}, t('Pebbles only.')),
+      grid,
       h('div.pre-spacer'),
       h('div.sticky-bottom', {}, fight)));
 
@@ -684,7 +697,7 @@ function craftFlow(done) {
     const [a, b] = picked.map((u) => run.pouch.find((x) => x.uid === u));
     pickBody.replaceChildren(
       h('h2', {}, t('Trade which two stones?')),
-      h('div.stone-grid.pick', {}, run.pouch.map((x) => h('button.pouch-slot' + (picked.includes(x.uid) ? '.on' : ''), {
+      h('div.stone-grid.pick', {}, R.craftable(run).map((x) => h('button.pouch-slot' + (picked.includes(x.uid) ? '.on' : ''), {
         onclick: () => {
           picked = picked.includes(x.uid) ? picked.filter((u) => u !== x.uid) : picked.length < 2 ? [...picked, x.uid] : [picked[1], x.uid];
           sfx('click'); drawPick();
@@ -715,8 +728,8 @@ function craftScreen() {
   screen(topBar(), h('div.page.rest', {},
     h('div.campfire', { html: icon('relic-anvil') }),
     h('h2', {}, t('Workshop')),
-    h('p.dim', {}, made ?? (run.pouch.length >= 2 ? t('Two stones → one better.') : t('Needs two stones.'))),
-    !made && run.pouch.length >= 2 ? h('button.btn.wide.big', {
+    h('p.dim', {}, made ?? (R.craftable(run).length >= 2 ? t('Two stones → one better.') : t('Needs two special stones.'))),
+    !made && R.craftable(run).length >= 2 ? h('button.btn.wide.big', {
       onclick: () => craftFlow((text) => { if (text) { run.pending.made = text; save(); craftScreen(); } }),
     }, t('Trade two stones for one')) : null,
     h('button.btn.wide' + (made ? '.primary.big' : '.ghost'), { onclick: leave }, t('Move on'))));
@@ -754,7 +767,7 @@ function eventScreen() {
     },
     transmute: () => new Promise((resolve) => pickFromPouch(t('Transmute which stone?'), (s) => {
       if (!s) return resolve(t('You change your mind.'));
-      const up = { common: 'uncommon', uncommon: 'rare', rare: 'rare' }[STONES[s.type].rarity];
+      const up = { starter: 'common', common: 'uncommon', uncommon: 'rare', rare: 'rare' }[STONES[s.type].rarity];
       let n;
       for (let g = 0; g < 20; g++) { n = R.randomStone(run, up); if (n.type !== s.type) break; }
       s.type = n.type;

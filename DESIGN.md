@@ -23,13 +23,15 @@ numbers. The camp game's own reasoning is in `old/adr/`.
 The first version ran fast: a hand of five or six stones, all of them spent by the end of a
 duel, and a rule for who wins when someone runs out. The second version slows it down.
 
-- **Pebbles never run out.** Both sides may always place another Pebble; it is not in the hand
-  and needs no slot. A Pebble sent back to hand simply leaves the board. There is no rule for
-  running out any more: a full board (or forty turns) goes to whoever moved second.
-- **No stones to start with.** A run begins with an empty pouch: the first duels are Pebbles
-  against an enemy with a single special stone, and everything else is found along the way.
-- **Two slots.** You bring two special stones into a duel at first. Shops sell more slots (up to
-  five; Deep Pockets adds one). The pouch holds six.
+- **Pebbles run out.** Pebbles are stones in the pouch like any other. A run starts with four
+  of them and nothing else, and the pouch never holds fewer than four: Pebbles top it up when a
+  one-shot stone is spent or a workshop trades two stones for one (Pebbles cannot be traded).
+  A stone sent back off the board, a Pebble too, goes back into its owner's hand. A full board
+  (or forty turns) goes to whoever moved second.
+- **Four stones a duel, at least.** You bring between four and your hand size (four at first;
+  shops sell more slots, up to seven, and Deep Pockets adds one). The pouch holds ten. The enemy
+  opens, so it brings enough for a full board: its stones and Pebbles, five or more. A side with
+  nothing left to place passes; when neither can place, the duel ends as a full board does.
 - **The enemy always opens**, so a full board is always yours: hold out and you win. Plain
   tic-tac-toe is a draw, so the opener's specials are what make a duel winnable for it.
 - **No spaces, no vetoes.** The spaces that switched a stone type off are gone. Regular enemies

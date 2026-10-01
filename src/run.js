@@ -43,15 +43,20 @@ export const HEAT = [
   { n: 5, text: 'Enemies never blunder.' },
 ];
 
-export const START = { pouch: [], hearts: 6, gold: 30, slots: 2 };
-export const MAX_SLOTS = 5;
+// Pebbles are stones like any other now, and they run out: you start with
+// four, bring at least four into every duel, and never own fewer.
+export const MIN_HAND = 4;
+export const START = { pouch: Array(MIN_HAND).fill('pebble'), hearts: 6, gold: 30, slots: MIN_HAND };
+export const MAX_SLOTS = 7;
+// The enemy opens, so a full board takes five of its stones.
+const ENEMY_STONES = 5;
 
 const stone = (run, type) => ({ type, uid: run.nextUid++ });
 
 export function newRun({ seed = (Math.random() * 2 ** 31) | 0, heat = 0 } = {}) {
   const hearts = START.hearts - (heat >= 3 ? 1 : 0);
   const run = {
-    v: 2, seed, rs: seed, heat,
+    v: 3, seed, rs: seed, heat,
     act: 1, atBoss: false, map: null,
     hearts, maxHearts: hearts,
     gold: START.gold, pouch: [], relics: [],
@@ -68,9 +73,11 @@ export function newRun({ seed = (Math.random() * 2 ** 31) | 0, heat = 0 } = {}) 
 }
 
 export const has = (run, relic) => run.relics.includes(relic);
-export const pouchCap = (run) => 6 + (has(run, 'satchel') ? 2 : 0);
-// How many special stones you bring into a duel. Pebbles are always there.
-export const handSize = (run) => Math.min(MAX_SLOTS + 1, (run.slots ?? 2) + (has(run, 'deep-pockets') ? 1 : 0));
+export const pouchCap = (run) => 10 + (has(run, 'satchel') ? 2 : 0);
+// How many stones you may bring into a duel, Pebbles included.
+export const handSize = (run) => Math.min(MAX_SLOTS + 1, (run.slots ?? MIN_HAND) + (has(run, 'deep-pockets') ? 1 : 0));
+// Never fewer than four stones: Pebbles fill the gap.
+export function topUp(run) { while (run.pouch.length < MIN_HAND) run.pouch.push(stone(run, 'pebble')); }
 export const stoneName = (s) => STONES[s.type].name;
 export const isOnce = (s) => !!STONES[s.type]?.once;
 
@@ -96,8 +103,12 @@ export function craftChoices(run, a, b) {
 // Trade the two stones (by uid) for the one chosen.
 export function craft(run, uidA, uidB, result) {
   run.pouch = run.pouch.filter((s) => s.uid !== uidA && s.uid !== uidB);
-  return gainStone(run, result);
+  const made = gainStone(run, result);
+  topUp(run);
+  return made;
 }
+// The stones a workshop will take: anything but Pebbles.
+export const craftable = (run) => run.pouch.filter((s) => s.type !== 'pebble');
 
 // ── The map ─────────────────────────────────────────────────────────────────
 //
@@ -528,6 +539,8 @@ export function prepareDuel(run, enemyId, context = {}) {
   // hard by nature; they are eased a little, as an act is several pages of them.
   let heatIters = (tier === 'boss' ? 1 : [1, 0.8, 0.6][Math.max(0, run.act - 1)]) * (run.heat >= 1 ? 1.5 : 1);
   for (const type of enemy.once ?? []) handO.push({ type });
+  // Pebbles to fill its hand: enough for a full board, and one to spare.
+  for (let k = Math.max(1, ENEMY_STONES - handO.length); k > 0; k--) handO.push({ type: 'pebble' });
   const modsO = { ...(enemy.mods ?? {}) };
   let conds = [], rules = [];
   if (tier === 'boss') {
@@ -548,7 +561,7 @@ export function prepareDuel(run, enemyId, context = {}) {
   if (tier === 'elite' && run.act >= 2) {
     quirk = pick(run, Object.keys(QUIRKS));
     if (quirk === 'tricky') handO.push(randomOnce(run));
-    if (quirk === 'stocked') handO.push({ type: pick(run, enemy.pool) });
+    if (quirk === 'stocked') handO.unshift({ type: pick(run, enemy.pool) });
     if (quirk === 'keen') heatIters *= 1.5;
   }
   return {
@@ -588,7 +601,7 @@ export function gameConfig(run, duel, uids) {
 export function defaultHand(run) {
   const size = handSize(run);
   const owned = new Set(run.pouch.map((s) => s.uid));
-  const rank = (s) => ({ common: 0, uncommon: 0.2, rare: 0.4 }[STONES[s.type].rarity] ?? 0);
+  const rank = (s) => ({ starter: -1, common: 0, uncommon: 0.2, rare: 0.4 }[STONES[s.type].rarity] ?? 0);
   const chosen = (run.lastHand ?? []).filter((u) => owned.has(u)).slice(0, size);
   const rest = run.pouch.filter((s) => !chosen.includes(s.uid)).sort((a, b) => rank(b) - rank(a));
   while (chosen.length < Math.min(size, run.pouch.length)) chosen.push(rest.shift().uid);
@@ -780,6 +793,7 @@ export function spendOnce(run, uids, spent) {
     left.splice(k, 1);
     run.pouch = run.pouch.filter((x) => x !== st);
   }
+  topUp(run);
 }
 
 export function randomRelic(run, rarity = null) {

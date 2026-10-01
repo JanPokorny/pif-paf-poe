@@ -12,7 +12,7 @@ import * as R from '../src/run.js';
 
 const arg = (k, d) => { const i = process.argv.indexOf('--' + k); return i > 0 ? process.argv[i + 1] : d; };
 // Roughly how much each stone wins, from tools/stones.mjs.
-const STRENGTH = { stinky: 74, magnet: 73, beacon: 69, magpie: 68, twin: 64, shift: 57, '2048': 53, swap: 50, mountain: 49, turncoat: 46, flip: 44, parrot: 44, bumper: 43, rotate: 39, whirl: 39, frog: 30, lasso: 25, firecracker: 25 };
+const STRENGTH = { pebble: 14, stinky: 74, magnet: 73, beacon: 69, magpie: 68, twin: 64, shift: 57, '2048': 53, swap: 50, mountain: 49, turncoat: 46, flip: 44, parrot: 44, bumper: 43, rotate: 39, whirl: 39, frog: 30, lasso: 25, firecracker: 25 };
 const value = (s) => (STRENGTH[s.type] ?? 45) / 50;
 
 function playDuel(run, cfg, piters, pblunder, rng) {
@@ -48,7 +48,7 @@ const api = (run) => ({
   pouchRoom: () => !R.pouchFull(run),
   // Trade the two weakest stones, if that yields something better than both.
   craft: () => {
-    const [a, b] = run.pouch.slice().sort((x, y) => value(x) - value(y));
+    const [a, b] = R.craftable(run).sort((x, y) => value(x) - value(y));
     if (!b) return 'no';
     const [c] = R.craftChoices(run, a, b).sort((x, y) => value(y) - value(x));
     if (c && value(c) > value(b)) R.craft(run, a.uid, b.uid, c);
