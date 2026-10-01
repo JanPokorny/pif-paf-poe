@@ -430,6 +430,19 @@ function bossMark(run) {
 // A square is done with. Yours if you came through it: then the paper round
 // it comes into view, the boss answers, and the lines are counted. Scorched
 // if you lost the duel there: then you choose again.
+// Nowhere left for you to step: the boss moves instead, and its marks reveal
+// more of the page. Only if it cannot move either is the page full.
+function bossFills(run) {
+  const map = run.map;
+  for (let guard = 0; guard < 6 && !openSquares(map).length && map.visited < PAGE; guard++) {
+    const o = bossMark(run);
+    if (!o) break;
+    map.lastO = o;
+    map.revealO = [...(map.revealO ?? []), ...reveal(run, ...coords(o))];
+    if (claimLine(map, o)) { map.oLines++; if (map.power < MAX_POWER) { map.power++; map.news = 'oline'; } }
+  }
+}
+
 export function settleCell(run, mark) {
   const map = run.map;
   if (map.at === null) return;
@@ -446,6 +459,7 @@ export function settleCell(run, mark) {
     map.cells[at].mark = 'S';
     map.freshX = null;
     map.freshS = at;
+    bossFills(run);
     if (pageFull(map) && !map.open) { map.open = true; map.power = Math.min(MAX_POWER, map.power + 1); map.news = 'full'; }
     return;
   }
@@ -466,6 +480,7 @@ export function settleCell(run, mark) {
     map.oLines++;
     if (map.power < MAX_POWER) { map.power++; map.news = 'oline'; }
   }
+  bossFills(run);
   // A full page: the boss comes for you, and it has had time to prepare.
   if (pageFull(map) && !map.open) {
     map.open = true;
