@@ -688,7 +688,6 @@ b { font-weight: 400; background: linear-gradient(transparent 55%, var(--hi) 55%
 body:has(.duel) #toast { bottom: auto; top: calc(10px + var(--safe-t)); transform: translate(-50%, -30px) rotate(-2deg); }
 body:has(.duel) #toast.show { transform: translate(-50%, 0) rotate(-1deg); }
 /* The 3x3 page: bigger squares, and the line that ended it. */
-.map-sheet { --cell: max(84px, min(120px, calc((min(100vw, 520px) - 40px) / var(--cols)))); }
 .map-cell.in-line::after { content: ''; position: absolute; inset: 10%; border-radius: 40% 34% 44% 38%; pointer-events: none; }
 .map-cell.line-x::after { background: rgba(31, 79, 176, 0.14); box-shadow: 0 0 0 3px rgba(31, 79, 176, 0.35); }
 .map-cell.line-o::after { background: rgba(200, 55, 45, 0.14); box-shadow: 0 0 0 3px rgba(200, 55, 45, 0.35); }
@@ -719,12 +718,6 @@ body:has(.duel) #toast.show { transform: translate(-50%, 0) rotate(-1deg); }
 .mini-sq .scribble path { stroke-width: 12; }
 .mini-sq.m-S { background: repeating-linear-gradient(-45deg, transparent 0 3px, rgba(43, 42, 51, 0.35) 3px 5px); border-radius: 3px; }
 .clearing-title { text-align: center; font-size: 1rem; color: var(--pencil); margin-top: 2px; }
-.map-sheet { --cell: max(80px, min(110px, calc((min(100vw, 520px) - 60px) / 3))); }
-.map-sheet.elsewhere { opacity: 0.55; }
-.tier.miniboss { background: var(--sticky); outline: 1.5px solid var(--ink); }
-.map-cell.miniboss { color: var(--red); }
-.map-cell.miniboss .doodle.foe { outline: 2.5px solid var(--red); outline-offset: 3px; border-radius: 50%; }
-.mini-sq.miniboss { color: var(--red); } .mini-sq.miniboss i { width: 52%; height: 52%; opacity: 1; }
 /* The title: PIF / PAF / POE as a game of tic-tac-toe, a letter a turn. */
 .logo-board { position: relative; width: min(230px, 62vw); aspect-ratio: 1; margin: 0 auto 4px; transform: rotate(-2deg); font-size: 1rem; }
 .logo-board .board-lines { position: absolute; inset: 0; }
@@ -741,3 +734,9 @@ body:has(.duel) #toast.show { transform: translate(-50%, 0) rotate(-1deg); }
 .aid.armed { background: var(--blue); color: #fff; border-style: solid; animation: wiggle 1.4s ease-in-out infinite; }
 .aid-ico, .aid-ico .icon { width: 18px; height: 18px; }
 .mini-sq.elite .icon { width: 80%; height: 80%; }
+/* Rocks: nobody marks them, no line runs through them. */
+.map-cell.rock { cursor: default; color: var(--pencil); }
+.map-cell.rock::before { content: ''; position: absolute; inset: 10%; border-radius: 38% 44% 35% 47%; background: repeating-linear-gradient(35deg, rgba(79, 78, 84, 0.18) 0 3px, transparent 3px 7px); }
+.map-cell .doodle.rock { width: 52%; height: 52%; opacity: 0.85; }
+.map-cell.breachable { animation: wiggle 1.2s ease-in-out infinite; cursor: pointer; }
+.map-cell.breachable::before { background: var(--hi); }

@@ -74,13 +74,17 @@ function playRun(spec) {
       case 'map': case 'actintro': {
         run.screen = 'map';
         let opts = R.reachable(run);
-        // A page lost or drawn turns; a page won opens the boss's door.
-        if (run.map.result) { log.push({ won: '[X]', draw: '[=]', lost: '[O]' }[run.map.result]); R.endMap(run); break; }
+        // Take the boss once the door is open and a few squares have paid.
+        if (opts.includes('boss') && (run.map.visited >= 8 || opts.length === 1)) { log.push(`[p${run.map.power} v${run.map.visited}]`); R.enterNode(run, 'boss'); break; }
+        opts = opts.filter((k) => k !== 'boss');
         if (!opts.length) throw new Error('nowhere to step');
-        // Tic-tac-toe first: win, block, fork; then corners; then what the
-        // hearts want.
+        // Finish a line, block the boss's, build towards one; then what the hearts want.
         const want = run.hearts <= 2 ? { rest: 3, shop: 2, event: 1 } : run.hearts >= run.maxHearts - 1 ? { elite: 1, treasure: 2, fight: 1 } : { treasure: 2, fight: 1, event: 1 };
-        const score = (k) => R.judge(run.map, k, 'X') + (want[R.cellAt(run.map, k).kind] ?? 0) * 5 + R.rand(run);
+        const score = (k) => {
+          const mine = R.lineReach(run.map, k), theirs = R.lineReach(run.map, k, 'O');
+          return (mine >= 2 ? 100 : 0) + (theirs >= 2 ? 50 : 0) + mine * 4 + theirs * 2 + (want[R.cellAt(run.map, k).kind] ?? 0) * 2 + R.rand(run);
+        };
+        if (run.aids?.double && R.lineReach(run.map, opts.sort((a, b) => score(b) - score(a))[0]) >= 1) R.toggleAid(run, 'double');
         R.enterNode(run, opts.sort((a, b) => score(b) - score(a))[0]);
         break;
       }
@@ -132,7 +136,7 @@ function playRun(spec) {
   if (!run.over) throw new Error('run did not end: ' + run.screen);
   // JSON round trip must survive (the save format).
   JSON.parse(JSON.stringify(run));
-  return { seed: spec.seed, victory: run.victory, act: run.act, row: R.xCount(run), hearts: run.hearts, log: log.join(' '), relics: run.relics.join(','), pouch: run.pouch.map((s) => s.type).join(',') + ` slots ${run.slots}` };
+  return { seed: spec.seed, victory: run.victory, act: run.act, row: run.map.visited, hearts: run.hearts, log: log.join(' '), relics: run.relics.join(','), pouch: run.pouch.map((s) => s.type).join(',') + ` slots ${run.slots}` };
 }
 
 if (!isMainThread) {
@@ -149,7 +153,7 @@ if (!isMainThread) {
   const res = (await Promise.all(chunks.map((c) => new Promise((ok, bad) => { const w = new Worker(new URL(import.meta.url), { workerData: c }); w.on('message', ok); w.on('error', bad); })))).flat();
   for (const r of res) {
     if (r.error) { console.log(`seed ${r.seed}: ERROR ${r.error}`); continue; }
-    console.log(`seed ${r.seed}: ${r.victory ? 'VICTORY' : `died act ${r.act} after ${r.row} marks`}  | ${r.log}\n    relics ${r.relics}\n    pouch ${r.pouch}`);
+    console.log(`seed ${r.seed}: ${r.victory ? 'VICTORY' : `died act ${r.act} after ${r.row} squares`}  | ${r.log}\n    relics ${r.relics}\n    pouch ${r.pouch}`);
   }
   const ok = res.filter((r) => !r.error);
   console.log(`\n${ok.filter((r) => r.victory).length}/${ok.length} victories; mean act reached ${(ok.reduce((a, r) => a + r.act, 0) / ok.length).toFixed(2)}; ${((Date.now() - t0) / 1000).toFixed(0)}s`);

@@ -6,7 +6,7 @@
 
 import { STONES, TRICKS, TRICK_TYPES, CONDS } from './engine.js';
 import {
-  RELICS, RELIC_TYPES, ENEMIES, ACTS, EVENTS, enemiesOf, EASY_OPENERS,
+  RELICS, RELIC_TYPES, BOSS_RELICS, ENEMIES, ACTS, EVENTS, enemiesOf, EASY_OPENERS,
   STONE_PRICE, TRICK_PRICE, RELIC_PRICE, REWARD_STONES,
 } from './content.js';
 
@@ -56,7 +56,7 @@ export function newRun({ seed = (Math.random() * 2 ** 31) | 0, heat = 0 } = {}) 
     hearts, maxHearts: hearts,
     gold: START.gold, pouch: [], tricks: [...START.tricks], relics: [],
     slots: START.slots,
-    aids: { free: 0, double: 0 },   // map aids won in duels
+    aids: { double: 0, breach: 0 },   // map aids won in duels
     lastHand: null, nextUid: 1,
     rematchUsed: {}, phoenixUsed: false,
     stats: { won: 0, lost: 0, elites: 0, bosses: 0, gold: 0, started: Date.now() },
@@ -102,65 +102,108 @@ export function craft(run, uidA, uidB, result) {
 
 // ── The map ─────────────────────────────────────────────────────────────────
 //
-// The whole climb is one game of Ultimate tic-tac-toe with its boss: nine
-// clearings in a 3x3, each clearing a 3x3 of squares, all on view. The boss opens in the
-// very middle. Where one side steps inside a clearing decides the clearing the
-// other must answer in (anywhere, if that one is finished or has nothing left
-// for them). Three in a row inside a clearing takes it; three clearings in a
-// row win the map.
+// Each act is a game of tic-tac-toe with its boss on an endless sheet of graph
+// paper. At first there is only the boss's opening O. Every mark reveals the
+// squares around it, and only those can be stepped on -- and a square is
+// decided the moment it comes into view, by how much it matters: one that
+// would extend your line, or break the boss's, turns up as a hard duel; one
+// off to the side as a campfire, a shop or treasure.
 //
-// You mark X wherever you step. A duel lost scorches its square: you may not
-// step there again, but the boss may, and you choose again at once -- the
-// boss answers only once you have really placed a mark.
+// Rocks are squares nobody can mark, and they cut every line through them.
+// They turn up most where your lines are about to close, so that three in a
+// row has to be worked for, not just walked into.
 //
-// Each clearing the boss takes costs you a heart. Its three in a row ends the
-// climb; yours, or a map nobody can win any more, is the victory. The climb
-// goes through three acts as your marks add up: each new act re-rolls the
-// enemies still waiting on the map from its harder cast.
+// Three Xs in a row open the boss's door. Each line of three Os makes the
+// boss stronger, and so does filling the page. A duel lost scorches its
+// square -- only the boss may take it now -- and you choose again at once:
+// the boss answers only a real X.
 
-const BOSS_SEES = [0.3, 0.45, 0.6];       // the chance it blocks your two in a row, by act
-const ACT_EVERY = 7;                      // your marks to each new act
-export const actFor = (marks) => Math.min(3, 1 + Math.floor(marks / ACT_EVERY));
-const GOOD = ['shop', 'rest', 'treasure', 'craft', 'gift'];
-export const CLEARING_GOLD = 15;          // for each clearing you take
-export const LINES = [[0, 1, 2], [3, 4, 5], [6, 7, 8], [0, 3, 6], [1, 4, 7], [2, 5, 8], [0, 4, 8], [2, 4, 6]];
-const CORNERS = [0, 2, 6, 8];
-
-// Squares are keyed "c:i": clearing c (0..8), square i (0..8), both row-major.
-export const keyOf = (c, i) => `${c}:${i}`;
-export const parseKey = (k) => k.split(':').map(Number);
-export const cellAt = (map, k) => { const [c, i] = parseKey(k); return map.cells[c][i]; };
-
-// Three in a row among `marks` (an array of 9) for `who`, as the line, or null.
-const lineIn = (marks, who) => LINES.find((l) => l.every((i) => marks[i] === who)) ?? null;
-// The most of `who`'s marks in a line through i that the other side has not
-// spoiled (for the boss, scorched squares are no obstacle).
-function reach(marks, i, who) {
-  let best = 0;
-  for (const l of LINES) {
-    if (!l.includes(i)) continue;
-    let n = 0, dead = false;
-    for (const j of l) {
-      const m = marks[j];
-      if (m === who) n++;
-      else if (m && !(m === 'S' && who === 'O')) { dead = true; break; }
+export const BOSS_LIVES = 2;              // duels a boss must lose
+export const LINE = 3;                     // marks in a row that count
+export const MAX_POWER = 2;
+export const PAGE = 12;                   // your steps before the boss will wait no longer
+export const MAPCFG = { sees: 0.75 };     // the chance the boss blocks your two in a row
+// Rocks: a lattice -- (x + 3y) mod 7 in two neighbouring classes -- that cuts
+// every row, column and diagonal into runs between two and five squares long,
+// so an open two is rarely a double threat and a line has to be set up; plus a
+// chance by how far your lines through a square already are, more where a
+// square would sit on several of them. (tools/maprocks.mjs measures it.)
+export const ROCKS = { m: 7, a: 1, b: 3, set: [0, 1], byReach: [0.04, 0.08, 0.15], perLine: 0.05 };
+function isRock(run, x, y, mine, first = false) {
+  const { m, a, b } = ROCKS;
+  if (m) {
+    const r = ((((a * x + b * y) % m) + m) % m - (run.map.rockShift ?? 0) + m) % m;
+    if (ROCKS.set.includes(r)) return true;
+  }
+  if (first) return false;
+  // A square on several of your live lines is where a fork would be: likelier still.
+  const lines = liveLines(run.map, x, y, 'X');
+  return rand(run) < Math.min(0.9, ROCKS.byReach[Math.min(2, mine)] + ROCKS.perLine * Math.max(0, lines - 1));
+}
+// How many unspoiled windows through (x, y) already hold one of `mark`'s marks.
+function liveLines(map, x, y, mark) {
+  let n = 0;
+  for (const w of windowsThrough(x, y)) {
+    let mine = 0, spoiled = false;
+    for (const [wx, wy] of w) {
+      const m = markAt(map, wx, wy);
+      if (m === mark) mine++;
+      else if (m && !(m === 'S' && mark === 'O')) { spoiled = true; break; }
     }
-    if (!dead) best = Math.max(best, n);
+    if (!spoiled && mine) n++;
+  }
+  return n;
+}
+const GOOD = ['shop', 'rest', 'treasure', 'craft', 'gift'];
+const DIRS4 = [[1, 0], [0, 1], [1, 1], [1, -1]];
+export const keyOf = (x, y) => `${x},${y}`;
+export const coords = (k) => k.split(',').map(Number);
+const markAt = (map, x, y) => map.cells[keyOf(x, y)]?.mark ?? null;
+export const cellAt = (map, k) => map.cells[k];
+
+// Every window of LINE squares through (x, y): lists of [x, y].
+function windowsThrough(x, y) {
+  const out = [];
+  for (const [dx, dy] of DIRS4) {
+    for (let k = 0; k < LINE; k++) {
+      const w = [];
+      for (let j = 0; j < LINE; j++) w.push([x + (j - k) * dx, y + (j - k) * dy]);
+      out.push(w);
+    }
+  }
+  return out;
+}
+
+// How far along a mark's lines are through this square: the most of `mark`
+// in any window through it that nothing spoils. Rocks spoil every line; a
+// scorched square spoils yours but not the boss's.
+function reach(map, x, y, mark) {
+  let best = 0;
+  for (const w of windowsThrough(x, y)) {
+    let mine = 0, spoiled = false;
+    for (const [wx, wy] of w) {
+      const m = markAt(map, wx, wy);
+      if (m === mark) mine++;
+      else if (m && !(m === 'S' && mark === 'O')) { spoiled = true; break; }
+    }
+    if (!spoiled) best = Math.max(best, mine);
   }
   return best;
 }
-const marksOf = (map, c) => map.cells[c].map((x) => x.mark);
-const bigMarks = (map) => map.won.map((w) => (w === 'X' || w === 'O' ? w : w === 'draw' ? 'S' : null));
 
-// Can this side still step anywhere in clearing c?
-function openFor(map, c, who) {
-  if (map.won[c]) return false;
-  return map.cells[c].some((x) => !x.mark || (who === 'O' && x.mark === 'S'));
-}
-// The clearings a side may step in now.
-function clearingsFor(map, who, target) {
-  if (target !== null && target !== undefined && openFor(map, target, who)) return [target];
-  return [0, 1, 2, 3, 4, 5, 6, 7, 8].filter((c) => openFor(map, c, who));
+function countLines(map, mark) {
+  let lines = 0;
+  for (const [k, c] of Object.entries(map.cells)) {
+    if (c.mark !== mark) continue;
+    const [x, y] = coords(k);
+    for (const [dx, dy] of DIRS4) {
+      if (markAt(map, x - dx, y - dy) === mark) continue;   // count each run once, from its start
+      let n = 1;
+      while (markAt(map, x + n * dx, y + n * dy) === mark) n++;
+      if (n >= LINE) lines++;
+    }
+  }
+  return lines;
 }
 
 // Step back out of a duel you have only looked at.
@@ -170,236 +213,180 @@ export function retreat(run) {
   run.screen = 'map';
 }
 
-// The map of the climb, and its boss.
 export function makeMap(run) {
   const map = {
-    v: 6,
-    boss: pick(run, ACTS.flatMap((a) => a.bosses)),
-    page: 1,
-    cells: [],         // cells[c][i] = {kind, mark, duel?}; mark X, O or S (scorched)
-    won: Array(9).fill(null),   // per clearing: 'X', 'O', 'draw' or null
-    next: 4,           // the clearing you must step in (null: any)
+    v: 7,
+    cells: {},         // "x,y" -> {kind, mark, duel?}; only revealed squares exist. Marks: X, O, S (scorched), # (rock)
+    boss: pick(run, ACTS[run.act - 1].bosses),
     at: null,          // the square being visited right now
-    lastO: keyOf(4, 4),
-    result: null,      // 'won' or 'draw' (the climb is yours), 'lost' (it is over)
-    line: null,        // the clearings of the line that ended the map
-    fights: 0,         // duels laid out so far, for the gentle first few
-    armed: null,       // a map aid about to be used: 'free' or 'double'
+    lastO: '0,0',      // the boss's latest mark, for the page to draw in
+    open: false,       // the boss's door
+    power: 0,          // how much stronger the boss has grown
+    oLines: 0,
+    visited: 0,
+    fights: 0,         // duels revealed so far, for the gentle first few
+    armed: null,       // a map aid about to be used
   };
+  map.cells['0,0'] = { kind: 'boss-mark', mark: 'O' };
   run.map = map;
-  for (let c = 0; c < 9; c++) map.cells.push(Array(9).fill(null));
-  map.cells[4][4] = { kind: 'boss-mark', mark: 'O' };
-  // Where you start hides a gift.
-  map.cells[4][pick(run, [0, 1, 2, 3, 5, 6, 7, 8])] = { kind: 'gift', mark: null };
-  // Mini-bosses hold the middles of a few clearings: the squares that matter most.
-  for (const c of shuffle(run, [0, 1, 2, 3, 5, 6, 7, 8]).slice(0, 3)) map.cells[c][4] = { kind: 'miniboss', mark: null };
-  // The rest in a random order, so that the spreading-out of good squares
-  // below has no direction to it.
-  const order = [];
-  for (let c = 0; c < 9; c++) for (let i = 0; i < 9; i++) if (!map.cells[c][i]) order.push([c, i]);
-  for (const [c, i] of shuffle(run, order)) map.cells[c][i] = fillCell(run, c, i);
-  rollDuels(run);
+  // The lattice, shifted so that it never runs through the boss's first mark.
+  const shifts = [...Array(ROCKS.m || 1).keys()].filter((sh) => !ROCKS.set.includes((((0 - sh) % (ROCKS.m || 1)) + (ROCKS.m || 1)) % (ROCKS.m || 1)));
+  map.rockShift = shifts.length ? pick(run, shifts) : 0;
+  reveal(run, 0, 0, true);
+  // The very first page hides a gift: a special stone, free.
+  if (run.act === 1) {
+    const ring = Object.entries(map.cells).filter(([, c]) => !c.mark && c.kind !== 'elite');
+    const [k] = pick(run, ring);
+    map.cells[k] = { kind: 'gift', mark: null };
+  }
   return map;
 }
-const minibossesOf = (act) => enemiesOf(act, 'miniboss');
 
-// The squares around (c, i) across the whole 9x9 sheet, clearing borders and all.
-function aroundOnSheet(c, i) {
-  const gx = (c % 3) * 3 + (i % 3), gy = ((c / 3) | 0) * 3 + ((i / 3) | 0);
+// The revealed squares around (x, y).
+const around = (map, x, y) => {
   const out = [];
-  for (let dy = -1; dy <= 1; dy++) {
-    for (let dx = -1; dx <= 1; dx++) {
-      const x = gx + dx, y = gy + dy;
-      if ((!dx && !dy) || x < 0 || y < 0 || x > 8 || y > 8) continue;
-      out.push([((y / 3) | 0) * 3 + ((x / 3) | 0), (y % 3) * 3 + (x % 3)]);
-    }
-  }
+  for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++) if (dx || dy) { const c = map.cells[keyOf(x + dx, y + dy)]; if (c) out.push(c); }
   return out;
-}
-
-// The enemies on the squares still open, for the act the climb is in. Called
-// when the map is made and whenever a new act begins.
-function rollDuels(run) {
-  const map = run.map;
-  const minis = minibossesOf(run.act).filter((id) => id !== map.boss);
-  const minipool = minis.length ? minis : minibossesOf(run.act);
-  for (const cl of map.cells) {
-    for (const cell of cl) {
-      if (cell.mark) continue;
-      if (cell.kind === 'fight') {
-        const easy = run.act === 1 && map.fights < 4;
-        cell.duel = prepareDuel(run, pick(run, easy ? EASY_OPENERS : enemiesOf(run.act, 'normal')), { easy });
-        map.fights++;
-      } else if (cell.kind === 'elite') cell.duel = prepareDuel(run, pick(run, enemiesOf(run.act, 'elite')));
-      else if (cell.kind === 'miniboss') cell.duel = prepareDuel(run, pick(run, minipool));
-    }
-  }
-}
-
-// What a square is. Squares on more lines -- corners and middles, of the
-// clearing and of the map -- hide harder things, and good squares keep their
-// distance from one another: each good neighbour already laid out makes
-// another good square a quarter as likely.
-function fillCell(run, c, i) {
-  const map = run.map;
-  const hard = (CORNERS.includes(i) || i === 4 ? 3 : 0) + (CORNERS.includes(c) || c === 4 ? 3 : 0);
-  const table = { fight: 40, elite: 3 + hard, event: 16, treasure: 6, rest: 12, shop: 10, craft: 6 };
-  if (c === 4) delete table.elite;
-  const near = aroundOnSheet(c, i).filter(([cc, ii]) => GOOD.includes(map.cells[cc][ii]?.kind)).length;
-  for (const k of GOOD) if (table[k]) table[k] *= 0.25 ** near;
-  return { kind: weighted(run, table), mark: null };
-}
-
-export const xCount = (run) => (run.map?.cells ?? []).flat().filter((x) => x.mark === 'X').length;
-
-// Where you may step next: open squares of the clearing you were sent to --
-// or of any clearing, with a Free Step armed.
-export function reachable(run) {
-  const map = run.map;
-  if (map.result) return [];
-  const out = [];
-  for (const c of playableClearings(map)) map.cells[c].forEach((x, i) => { if (!x.mark) out.push(keyOf(c, i)); });
-  return out;
-}
-export const playableClearings = (map) => (map.result ? [] : clearingsFor(map, 'X', map.armed === 'free' ? null : map.next));
-
-// ── Map aids, won in duels ───────────────────────────────────────────────────
-//
-//   free:   step in any open clearing, once, whatever the send rule says
-//   double: the boss does not answer your next step; you go again, sent by
-//           your own square
-export const AIDS = {
-  free: { name: 'Free Step', text: 'Once, step in any open clearing, wherever you were sent.' },
-  double: { name: 'Double Step', text: 'Once, the boss does not answer your step: you go again, in the clearing your own square points to.' },
 };
-export const AID_TYPES = Object.keys(AIDS);
-// Arm an aid for the next step, or put it away again.
-export function toggleAid(run, kind) {
+
+// Decide what a square is, the moment it comes into view.
+function revealCell(run, x, y, first) {
   const map = run.map;
-  if (map.armed === kind) { map.armed = null; return; }
-  if ((run.aids?.[kind] ?? 0) > 0) map.armed = kind;
-}
-
-// Squares where the boss would take clearing c with its next mark.
-export function bossThreats(map, c) {
-  if (map.result || map.won[c]) return [];
-  const m = marksOf(map, c);
-  return [0, 1, 2, 3, 4, 5, 6, 7, 8].filter((i) => (!m[i] || m[i] === 'S') && reach(m, i, 'O') >= 2).map((i) => keyOf(c, i));
-}
-
-// How good a square is for `who`: taking its clearing, and the map; stopping
-// the other side doing so; and where it sends them. Both the boss and the run
-// bot judge by it. `sees` is whether the other side's threats are noticed.
-export function judge(map, k, who, sees = true) {
-  const [c, i] = parseKey(k);
-  const them = who === 'X' ? 'O' : 'X';
-  const m = marksOf(map, c), big = bigMarks(map);
-  let score = 0;
-  const takes = reach(m, i, who) >= 2, blocks = reach(m, i, them) >= 2;
-  if (takes) {
-    big[c] = who;
-    score += lineIn(big, who) ? 10000 : 200 + 60 * reach(bigMarks(map), c, who);
-    big[c] = null;
+  const k = keyOf(x, y);
+  if (map.cells[k]) return;
+  const mine = reach(map, x, y, 'X');     // how much it would do for your lines
+  const theirs = reach(map, x, y, 'O');   // how much it would break the boss's
+  if (isRock(run, x, y, mine, first)) { map.cells[k] = { kind: 'rock', mark: '#' }; return; }
+  const stake = Math.max(mine, theirs);
+  const table = stake >= 2 ? { elite: 40, fight: 50, event: 10 }
+    : stake === 1 ? { elite: 5, fight: 50, event: 18, treasure: 8, rest: 10, shop: 9, craft: 6 }
+      : { fight: 36, event: 20, treasure: 14, rest: 15, shop: 15, craft: 8 };
+  if (run.act === 1 && map.visited < 2) delete table.elite;
+  // One unopened chest on view at a time.
+  if (Object.values(map.cells).some((c) => c.kind === 'treasure' && !c.mark)) delete table.treasure;
+  // Good squares keep their distance: each good neighbour makes another a quarter as likely.
+  const near = around(map, x, y).filter((c) => GOOD.includes(c.kind)).length;
+  for (const g of GOOD) if (table[g]) table[g] *= 0.25 ** near;
+  const kind = weighted(run, table);
+  const cell = { kind, mark: null };
+  if (kind === 'fight') {
+    const easy = run.act === 1 && map.fights < 3;
+    const pool = easy ? EASY_OPENERS : enemiesOf(run.act, 'normal');
+    cell.duel = prepareDuel(run, pick(run, pool), { easy });
+    map.fights++;
+  } else if (kind === 'elite') {
+    cell.duel = prepareDuel(run, pick(run, enemiesOf(run.act, 'elite')));
   }
-  if (blocks && sees) score += 150 + 60 * reach(big, c, them);
-  score += 8 * reach(m, i, who) + 4 * reach(big, c, who);
-  // Where it sends them: into a clearing they could take at once is bad; a
-  // finished one lets them go anywhere, which is nearly as bad.
-  const t = i;
-  const after = { ...map, cells: map.cells.map((cl, cc) => (cc === c ? cl.map((x, ii) => (ii === i ? { ...x, mark: who } : x)) : cl)) };
-  if (takes) after.won = map.won.map((w, cc) => (cc === c ? who : w));
-  if (!openFor(after, t, them)) score -= 60;
-  else {
-    const tm = marksOf(after, t);
-    if (tm.some((x, j) => (!x || (them === 'O' && x === 'S')) && reach(tm, j, them) >= 2)) score -= 120 + 60 * reach(bigMarks(after), t, them);
-  }
-  return score;
+  map.cells[k] = cell;
 }
 
-// Settle a clearing after a mark: taken, drawn or still open. Returns what changed.
-function settleClearing(run, c) {
+function reveal(run, x, y, first = false) {
+  for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++) if (dx || dy) revealCell(run, x + dx, y + dy, first);
+}
+
+export const xCount = (run) => Object.values(run.map?.cells ?? {}).filter((c) => c.mark === 'X').length;
+
+// The squares on view, as a box: {x0, y0, x1, y1}.
+export function mapBounds(map) {
+  let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;
+  for (const k of Object.keys(map.cells)) {
+    const [x, y] = coords(k);
+    x0 = Math.min(x0, x); y0 = Math.min(y0, y); x1 = Math.max(x1, x); y1 = Math.max(y1, y);
+  }
+  return { x0, y0, x1, y1 };
+}
+
+// Where the boss would finish a line with its next mark.
+export function bossThreats(map) {
+  const out = [];
+  for (const [k, c] of Object.entries(map.cells)) {
+    if (c.mark && c.mark !== 'S') continue;
+    const [x, y] = coords(k);
+    if (reach(map, x, y, 'O') >= LINE - 1) out.push(k);
+  }
+  return out;
+}
+
+export const lineReach = (map, k, mark = 'X') => reach(map, ...coords(k), mark);
+const openSquares = (map) => Object.entries(map.cells).filter(([, c]) => !c.mark).map(([k]) => k);
+export const pageFull = (map) => map.visited >= PAGE || !openSquares(map).length;
+
+// Where you may go next: any open square on view, and the boss once its door
+// is open. When the page is full, only the boss.
+export function reachable(run) {
+  if (pageFull(run.map)) return ['boss'];
+  const out = openSquares(run.map);
+  if (run.map.open) out.push('boss');
+  return out;
+}
+
+// The boss's reply: finish a line if it can, block yours if it sees it coming,
+// otherwise build its own and spoil yours, with a little noise. It may take a
+// square you scorched.
+function bossMark(run) {
   const map = run.map;
-  const m = marksOf(map, c);
-  if (lineIn(m, 'X')) { map.won[c] = 'X'; run.gold += CLEARING_GOLD; return 'X'; }
-  if (lineIn(m, 'O')) { map.won[c] = 'O'; return 'O'; }
-  if (m.every((x) => x === 'X' || x === 'O')) { map.won[c] = 'draw'; return 'draw'; }
-  return null;
+  const free = Object.entries(map.cells).filter(([, c]) => !c.mark || c.mark === 'S');
+  if (!free.length) return null;
+  const sees = rand(run) < MAPCFG.sees;
+  const value = { treasure: 6, gift: 5, shop: 3, rest: 3, craft: 3, event: 2, elite: 1, fight: 1 };
+  let best = null, bestScore = -Infinity;
+  for (const [k, c] of free) {
+    const [x, y] = coords(k);
+    const mine = reach(map, x, y, 'O'), yours = reach(map, x, y, 'X');
+    let score = (c.mark ? 0 : value[c.kind] ?? 0) + rand(run) * 6;
+    if (mine >= LINE - 1) score += 1000;
+    if (yours >= LINE - 1 && sees) score += 500;
+    score += [0, 8, 20][Math.min(2, yours)] + [0, 6, 16][Math.min(2, mine)];
+    if (score > bestScore) { bestScore = score; best = k; }
+  }
+  map.cells[best].mark = 'O';
+  return best;
 }
 
-// A square is done with. Yours if you came through it -- then the boss
-// answers. Scorched if you lost the duel there -- then you choose again.
+// A square is done with. Yours if you came through it: then the paper round
+// it comes into view, the boss answers, and the lines are counted. Scorched
+// if you lost the duel there: then you choose again.
 export function settleCell(run, mark) {
   const map = run.map;
   if (map.at === null) return;
+  const wasOpen = map.open;
   const at = map.at;
-  const [c, i] = parseKey(at);
-  const cell = map.cells[c][i];
   map.at = null;
   map.lastO = null;
+  map.bonus = 0;
   map.news = null;
+  map.visited++;
   if (mark !== 'X') {
-    cell.mark = 'S';
-    endIfStuck(run);
+    map.cells[at].mark = 'S';
+    map.freshX = null;
+    if (pageFull(map) && !map.open) { map.open = true; map.power = Math.min(MAX_POWER, map.power + 1); map.news = 'full'; }
     return;
   }
-  cell.mark = 'X';
+  map.cells[at].mark = 'X';
   map.freshX = at;
+  reveal(run, ...coords(at));
+  if (countLines(map, 'X')) map.open = true;
+  // Squares cleared past an open door pay a little extra: a reason to press on.
+  if (wasOpen) { map.bonus = 10; run.gold += 10; }
   const aid = map.armed;
   if (aid) { run.aids[aid]--; map.armed = null; }
-  if (settleClearing(run, c) === 'X') map.news = { took: c };
-  if ((map.line = lineIn(bigMarks(map), 'X'))) { map.result = 'won'; return; }
-  // A new act once enough marks are down: the enemies still waiting grow.
-  const act = actFor(xCount(run));
-  if (act > run.act) { run.act = act; rollDuels(run); map.news = { ...map.news, act }; }
-  if (aid === 'double') map.next = i;
-  else bossTurn(run, i);
-  endIfStuck(run);
-}
-
-// The boss's step, in the clearing it was sent to.
-function bossTurn(run, target) {
-  const map = run.map;
-  const where = clearingsFor(map, 'O', target);
-  if (!where.length) return;
-  const sees = rand(run) < BOSS_SEES[run.act - 1];
-  const value = { treasure: 8, gift: 6, shop: 4, rest: 4, craft: 4, event: 2, elite: 0, miniboss: 0, fight: 1 };
-  let best = null, bestScore = -Infinity;
-  for (const c of where) {
-    map.cells[c].forEach((x, i) => {
-      if (x.mark && x.mark !== 'S') return;
-      const k = keyOf(c, i);
-      const score = judge(map, k, 'O', sees) + (x.mark ? 0 : value[x.kind] ?? 0) + rand(run) * 10;
-      if (score > bestScore) { bestScore = score; best = k; }
-    });
+  if (aid !== 'double') {
+    map.lastO = bossMark(run);
+    if (map.lastO) reveal(run, ...coords(map.lastO));
   }
-  const [c, i] = parseKey(best);
-  const cell = map.cells[c][i];
-  map.next = i;
-  cell.mark = 'O';
-  map.lastO = best;
-  if (settleClearing(run, c) === 'O') {
-    map.news = { lost: c };
-    if (hurt(run, 1)) return;
+  // Every new line of Os makes the boss stronger, up to a point.
+  const oLines = countLines(map, 'O');
+  if (oLines > map.oLines && map.power < MAX_POWER) {
+    map.power = Math.min(MAX_POWER, map.power + oLines - map.oLines);
+    map.news = 'oline';
   }
-  if ((map.line = lineIn(bigMarks(map), 'O'))) map.result = 'lost';
-}
-
-// A map nobody can win any more, or where you have nowhere left to step, is
-// a draw.
-function endIfStuck(run) {
-  const map = run.map;
-  if (map.result || run.over) return;
-  const alive = (who) => LINES.some((l) => l.every((c) => map.won[c] === who || !map.won[c]));
-  const anyStep = [0, 1, 2, 3, 4, 5, 6, 7, 8].some((c) => openFor(map, c, 'X'));
-  if (!anyStep || (!alive('X') && !alive('O'))) map.result = 'draw';
-}
-
-// The map is decided: a win or a draw is the climb's victory, a loss its end.
-export function endMap(run) {
-  run.over = true;
-  run.victory = run.map.result !== 'lost';
-  run.screen = run.victory ? 'victory' : 'gameover';
-  run.pending = null;
+  map.oLines = oLines;
+  // A full page: the boss comes for you, and it has had time to prepare.
+  if (pageFull(map) && !map.open) {
+    map.open = true;
+    map.power = Math.min(MAX_POWER, map.power + 1);
+    map.news = 'full';
+  }
 }
 
 // Hearts lost, with the Phoenix's second chance. True if the climb is over.
@@ -418,10 +405,36 @@ export function hurt(run, n) {
   return true;
 }
 
+// ── Map aids, won in duels ───────────────────────────────────────────────────
+//
+//   double: the boss does not answer your next step
+//   breach: a rock you choose crumbles, and the square under it comes into view
+export const AIDS = {
+  double: { name: 'Double Step', text: 'Once, the boss does not answer your step: you go again.' },
+  breach: { name: 'Pickaxe', text: 'Once, break a rock on the map: the square under it comes into view.' },
+};
+export const AID_TYPES = Object.keys(AIDS);
+// Arm an aid for the next step, or put it away again.
+export function toggleAid(run, kind) {
+  const map = run.map;
+  if (map.armed === kind) { map.armed = null; return; }
+  if ((run.aids?.[kind] ?? 0) > 0) map.armed = kind;
+}
+// With the Pickaxe armed, break the rock at k.
+export function breach(run, k) {
+  const map = run.map;
+  if (map.armed !== 'breach' || map.cells[k]?.kind !== 'rock') return false;
+  delete map.cells[k];
+  revealCell(run, ...coords(k), true);
+  run.aids.breach--;
+  map.armed = null;
+  return true;
+}
+
 // ── Duels ───────────────────────────────────────────────────────────────────
 
 function rollEnemyHand(run, enemy, tier, context) {
-  if (tier === 'miniboss') return [];
+  if (tier === 'boss') return [];
   const act = ACTS[Math.max(0, (enemy.act || run.act) - 1)];
   let size = enemy.size ?? act.size;
   if (run.heat >= 4 && tier === 'elite') size++;
@@ -439,14 +452,17 @@ export function prepareDuel(run, enemyId, context = {}) {
   const handO = rollEnemyHand(run, enemy, tier, context);
   // Heat makes everyone think harder. Later acts' rank and file already think
   // hard by nature; they are eased a little, as an act is several pages of them.
-  let heatIters = (tier === 'miniboss' ? 1 : [1, 0.8, 0.6][Math.max(0, run.act - 1)]) * (run.heat >= 1 ? 1.5 : 1);
+  let heatIters = (tier === 'boss' ? 1 : [1, 0.8, 0.6][Math.max(0, run.act - 1)]) * (run.heat >= 1 ? 1.5 : 1);
   const enemyTricks = [...(enemy.tricks ?? [])];
   const usesO = 1;
   const modsO = { ...(enemy.mods ?? {}) };
   let conds = [], rules = [];
-  if (tier === 'miniboss') {
-    // From the second act on, a mini-boss brings its harder rules.
-    rules = [...((run.act >= 2 && enemy.rules2) || enemy.rules || [])];
+  if (tier === 'boss') {
+    // Its second life brings its harder rules. Grown stronger on the map, it
+    // thinks harder; at full strength it brings the harder rules from the first.
+    const power = run.map?.power ?? 0;
+    rules = [...(((context.bossWins ?? 0) > 0 || power >= 2) && enemy.rules2 || enemy.rules || [])];
+    heatIters *= 1 + 0.25 * power;
     if (run.heat >= 4) enemyTricks.push(randomTrick(run));
   } else {
     // A home rule, or sometimes one rolled for the day.
@@ -468,6 +484,7 @@ export function prepareDuel(run, enemyId, context = {}) {
     tricksO: enemyTricks, usesO,
     modsO,
     iters: Math.round(enemy.iters * heatIters), blunder: run.heat >= 5 ? 0 : enemy.blunder * 0.7,
+    bossRound: context.bossRound ?? 0, bossWins: context.bossWins ?? 0,
     event: context.event ?? null,
   };
 }
@@ -511,12 +528,17 @@ export function defaultHand(run) {
 // ── Entering nodes ──────────────────────────────────────────────────────────
 
 export function enterNode(run, key) {
+  if (key === 'boss') {
+    run.atBoss = true;
+    run.pending = { kind: 'duel', duel: prepareDuel(run, run.map.boss, { bossRound: 0, bossWins: 0 }) };
+    run.screen = 'predual';
+    return;
+  }
   run.map.at = key;
   const node = cellAt(run.map, key);
   switch (node.kind) {
     case 'fight':
     case 'elite':
-    case 'miniboss':
       node.duel ??= prepareDuel(run, pick(run, enemiesOf(run.act, node.kind === 'elite' ? 'elite' : 'normal')));
       run.pending = { kind: 'duel', duel: JSON.parse(JSON.stringify(node.duel)) };
       run.screen = 'predual';
@@ -560,10 +582,16 @@ export function enterNode(run, key) {
 export function duelWon(run) {
   const duel = run.pending.duel;
   run.stats.won++;
+  if (duel.tier === 'boss' && duel.bossWins + 1 < BOSS_LIVES) {
+    // A boss is beaten twice, and rises again with its harder rules.
+    run.pending = { kind: 'duel', duel: prepareDuel(run, duel.enemyId, { bossRound: duel.bossRound + 1, bossWins: duel.bossWins + 1 }) };
+    run.screen = 'predual';
+    return { kind: 'boss-continue' };
+  }
   const act = ACTS[run.act - 1];
   let gold = int(run, ...act.gold);
   if (duel.tier === 'elite') gold += 20;
-  if (duel.tier === 'miniboss') gold += 35;
+  if (duel.tier === 'boss') gold += 60;
   if (duel.event === 'thief') gold += 45;
   if (duel.event === 'nightowl') gold += 30;
   if (has(run, 'lucky-coin')) gold += 8;
@@ -574,11 +602,15 @@ export function duelWon(run) {
   const trickChance = duel.tier === 'normal' ? 0.3 : duel.tier === 'event' ? 0 : 0.7;
   if (rand(run) < trickChance) reward.trick = randomTrick(run);
   // Instead of a stone, help on the map.
-  if (duel.event !== 'thief' && rand(run) < (duel.tier === 'normal' ? 0.4 : 1)) reward.aid = pick(run, AID_TYPES);
-  const big = duel.tier === 'elite' || duel.tier === 'miniboss';
-  if (big || duel.event === 'hermit' || duel.event === 'nightowl') reward.relic = randomRelic(run);
+  if (duel.event !== 'thief' && duel.tier !== 'boss' && rand(run) < (duel.tier === 'normal' ? 0.4 : 1)) reward.aid = pick(run, AID_TYPES);
+  const big = duel.tier === 'elite' || duel.tier === 'boss';
+  if (duel.tier === 'elite' || duel.event === 'hermit' || duel.event === 'nightowl') reward.relic = randomRelic(run);
   if (duel.tier === 'elite') run.stats.elites++;
-  if (duel.tier === 'miniboss') run.stats.bosses++;
+  if (duel.tier === 'boss') {
+    run.stats.bosses++;
+    reward.relicChoice = shuffle(run, BOSS_RELICS.filter((r) => !has(run, r))).slice(0, 3);
+    run.hearts = Math.min(run.maxHearts, run.hearts + 3);
+  }
   if (big && has(run, 'herbs')) run.hearts = Math.min(run.maxHearts, run.hearts + 1);
   if (big && has(run, 'bell') && !reward.trick) reward.trick = randomTrick(run);
   run.pending = reward;
@@ -587,7 +619,7 @@ export function duelWon(run) {
 }
 
 export function heartsLost(duel) {
-  return duel.tier === 'elite' || duel.tier === 'miniboss' ? 2 : 1;
+  return duel.tier === 'elite' ? 2 : 1;
 }
 
 
@@ -596,11 +628,16 @@ export function duelLost(run) {
   run.stats.lost++;
   if (has(run, 'rematch') && !run.rematchUsed[run.act]) {
     run.rematchUsed[run.act] = true;
-    run.pending = { kind: 'duel', duel: prepareDuel(run, duel.enemyId, { tier: duel.tier, event: duel.event }) };
+    run.pending = { kind: 'duel', duel: prepareDuel(run, duel.enemyId, { tier: duel.tier, bossRound: duel.bossRound + (duel.tier === 'boss' ? 1 : 0), bossWins: duel.bossWins, event: duel.event }) };
     run.screen = 'predual';
     return { kind: 'rematch' };
   }
   if (hurt(run, heartsLost(duel))) return { kind: 'dead' };
+  if (duel.tier === 'boss') {
+    run.pending = { kind: 'duel', duel: prepareDuel(run, duel.enemyId, { bossRound: duel.bossRound + 1, bossWins: duel.bossWins }) };
+    run.screen = 'predual';
+    return { kind: 'boss-retry' };
+  }
   run.pending = null;
   settleCell(run, 'O');
   if (!run.over) run.screen = 'map';
@@ -666,7 +703,7 @@ export function randomTrick(run, rarity = null) {
 }
 
 export function randomRelic(run, rarity = null) {
-  let pool = RELIC_TYPES.filter((r) => !has(run, r));
+  let pool = RELIC_TYPES.filter((r) => !has(run, r) && !BOSS_RELICS.includes(r));
   if (rarity) pool = pool.filter((r) => RELICS[r].rarity === rarity);
   if (!pool.length) pool = RELIC_TYPES.filter((r) => !has(run, r));
   if (!pool.length) return null;
@@ -691,7 +728,7 @@ export function gainStone(run, s) {
   return st;
 }
 
-export function gainAid(run, kind) { run.aids = run.aids ?? { free: 0, double: 0 }; run.aids[kind]++; }
+export function gainAid(run, kind) { run.aids = run.aids ?? { double: 0, breach: 0 }; run.aids[kind] = (run.aids[kind] ?? 0) + 1; }
 export const pouchFull = (run) => run.pouch.length >= pouchCap(run);
 export const tricksFull = (run) => run.tricks.length >= trickCap(run);
 

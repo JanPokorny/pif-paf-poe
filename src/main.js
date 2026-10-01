@@ -223,7 +223,7 @@ function newRunMenu() {
 
 // What you have done across all runs: bosses beaten, records.
 function showJournal() {
-  const bosses = Object.keys(ENEMIES).filter((k) => ENEMIES[k].tier === 'miniboss');
+  const bosses = Object.keys(ENEMIES).filter((k) => ENEMIES[k].tier === 'boss');
   const body = h('div.menu.journal', {},
     h('h2', {}, t('Journal')),
     h('div.section-label', {}, t('Bosses beaten')),
@@ -293,141 +293,115 @@ function route() {
 
 // ── Map ─────────────────────────────────────────────────────────────────────
 
-const NODE_ICON = { fight: 'sword', elite: 'skull', miniboss: 'crown', shop: 'shop', rest: 'fire', event: 'question', treasure: 'chest', boss: 'crown', gift: 'star', craft: 'relic-anvil' };
-const NODE_NAME = { 'boss-mark': t('Boss'), fight: t('Duel'), elite: t('Elite'), shop: t('Shop'), rest: t('Campfire'), event: t('Unknown'), treasure: t('Treasure'), boss: t('Boss'), miniboss: t('Mini-boss'), gift: t('Gift'), craft: t('Workshop') };
+const NODE_ICON = { fight: 'sword', elite: 'skull', rock: 'mountain', shop: 'shop', rest: 'fire', event: 'question', treasure: 'chest', boss: 'crown', gift: 'star', craft: 'relic-anvil' };
+const NODE_NAME = { 'boss-mark': t('Boss'), fight: t('Duel'), elite: t('Elite'), shop: t('Shop'), rest: t('Campfire'), event: t('Unknown'), treasure: t('Treasure'), boss: t('Boss'), rock: t('Rock'), gift: t('Gift'), craft: t('Workshop') };
 
-// The act's map: Ultimate tic-tac-toe against its boss. Nine clearings on
-// top, the one you are looking at, large, below.
-const CLEARING = ['top-left', 'top', 'top-right', 'left', 'middle', 'right', 'bottom-left', 'bottom', 'bottom-right'];
-let mapView = null;   // the clearing on show, until the map moves on
-let mapViewAt = null;
-
+// The act's map: tic-tac-toe against its boss on an endless sheet, revealed
+// a mark at a time.
 function mapScreen() {
-  if (run.map?.v !== 6) R.makeMap(run);   // a save from an older map: a fresh one
+  if (run.map?.v !== 7) R.makeMap(run);   // a save from an older map: a fresh one
   const map = run.map;
   const reach = new Set(R.reachable(run));
-  const playable = R.playableClearings(map);
   const boss = ENEMIES[map.boss];
+  const { x0, y0, x1, y1 } = R.mapBounds(map);
+  const cols = x1 - x0 + 1, rows = y1 - y0 + 1;
+  const threats = new Set(R.bossThreats(map));
   const freshX = map.freshX, lastO = map.lastO;
-  // After every step, show where you must step next; between steps, whatever you tapped.
-  const moment = `${map.page}:${map.cells.flat().filter((x) => x.mark).length}`;
-  if (mapView === null || mapViewAt !== moment) mapView = playable.includes(map.next) ? map.next : playable[0] ?? 4;
-  mapViewAt = moment;
-  const view = mapView;
-
-  // The overview: every clearing, small.
-  const overview = h('div.ult', {}, map.cells.map((cl, c) => {
-    const won = map.won[c];
-    const el = h('button.clear-mini' + (playable.includes(c) ? '.playable' : '') + (c === view ? '.viewing' : '') + (won ? `.won-${won}` : ''), {
-      'aria-label': t(CLEARING[c]),
-      onclick: () => { mapView = c; sfx('click'); mapScreen(); },
-    }, cl.map((x, i) => {
-      const sq = h(`span.mini-sq.${x.kind}` + (x.mark ? `.m-${x.mark}` : ''));
-      if (x.mark === 'X') sq.innerHTML = scribbleX(freshX === R.keyOf(c, i));
-      else if (x.mark === 'O') sq.innerHTML = scribbleO(lastO === R.keyOf(c, i));
-      else if (!x.mark && x.kind !== 'boss-mark') sq.innerHTML = x.kind === 'elite' ? icon('star') : x.duel ? '<i></i>' : icon(NODE_ICON[x.kind]);
-      return sq;
-    }));
-    if (won === 'X' || won === 'O') el.insertAdjacentHTML('beforeend', `<span class="big-mark">${won === 'X' ? scribbleX() : scribbleO()}</span>`);
-    if (map.line?.includes(c)) el.classList.add('in-line', map.result === 'won' ? 'line-x' : 'line-o');
-    return el;
-  }));
-
-  // The clearing on show, large.
-  const threats = new Set(R.bossThreats(map, view));
-  const grid = map.cells[view].map((c, i) => {
-    const k = R.keyOf(view, i);
-    const can = reach.has(k);
-    const kind = c.kind;
-    const el = h(`button.map-cell.${kind}` + (can ? '.reach' : '') + (c.mark ? '.marked' : ''), {
-      'aria-label': NODE_NAME[kind] ?? boss.name, dataset: { k },
-      onclick: () => {
-        if (!can) {
-          const why = map.result ? t('This map is over.')
-            : c.mark === 'X' ? t('You have been here.')
-              : c.mark === 'O' ? t('{boss} took this square.', { boss: boss.name })
-                : c.mark === 'S' ? t('A duel was lost here: the square is scorched. Only the boss may still take it.')
-                  : map.won[view] ? t('This clearing is decided.')
-                    : t('Not this clearing: you were sent to the {where} one.', { where: t(CLEARING[map.next]) });
-          toast(why);
-          return;
-        }
-        sfx('click');
-        R.enterNode(run, k);
-        duelState = null;
-        route();
-      },
-    }, kind === 'boss-mark' ? null : c.duel
-      ? h('span.doodle.foe', {}, h('span.photo', {}, ENEMIES[c.duel.enemyId].emoji),
-        c.duel.conds?.length ? h('span.cell-space', { html: icon(`cond-${c.duel.conds[0]}`) }) : null)
-      : h('span.doodle', { html: icon(NODE_ICON[kind]) }),
-    kind === 'boss-mark' ? null : h('span.label', {}, c.duel ? shortName(ENEMIES[c.duel.enemyId]) : NODE_NAME[kind]));
-    if (!c.mark && threats.has(k)) el.classList.add('boss-threat');
-    if (c.mark === 'X') el.insertAdjacentHTML('beforeend', scribbleX(freshX === k));
-    if (c.mark === 'O') el.insertAdjacentHTML('beforeend', scribbleO(lastO === k));
-    if (c.mark === 'S') el.classList.add('scorched');
-    if (kind === 'elite' && !c.mark) el.insertAdjacentHTML('beforeend', `<span class="elite-star">${icon('star')}</span>`);
-    return el;
-  });
+  const breaching = map.armed === 'breach';
+  const grid = [];
+  for (let y = y0; y <= y1; y++) {
+    for (let x = x0; x <= x1; x++) {
+      const k = R.keyOf(x, y);
+      const c = map.cells[k];
+      if (!c) { grid.push(h('div.map-fog')); continue; }
+      const can = reach.has(k);
+      const kind = c.kind;
+      const el = h(`button.map-cell.${kind}` + (can ? '.reach' : '') + (c.mark ? '.marked' : '') + (breaching && kind === 'rock' ? '.breachable' : ''), {
+        'aria-label': NODE_NAME[kind] ?? boss.name, dataset: { k },
+        onclick: () => {
+          if (breaching && kind === 'rock') { R.breach(run, k); sfx('thud'); save(); mapScreen(); return; }
+          if (!can) {
+            const why = kind === 'rock' ? t('A rock: nobody can mark it, and no line runs through it.')
+              : c.mark === 'X' ? t('You have been here.')
+                : c.mark === 'O' ? t('{boss} took this square.', { boss: boss.name })
+                  : c.mark === 'S' ? t('A duel was lost here: the square is scorched. Only the boss may still take it.')
+                    : t('The page is full: only the boss is left.');
+            toast(why);
+            return;
+          }
+          sfx('click');
+          R.enterNode(run, k);
+          duelState = null;
+          route();
+        },
+      }, kind === 'boss-mark' || kind === 'rock' ? (kind === 'rock' ? h('span.doodle.rock', { html: icon('mountain') }) : null) : c.duel
+        ? h('span.doodle.foe', {}, h('span.photo', {}, ENEMIES[c.duel.enemyId].emoji),
+          c.duel.conds?.length ? h('span.cell-space', { html: icon(`cond-${c.duel.conds[0]}`) }) : null)
+        : h('span.doodle', { html: icon(NODE_ICON[kind]) }),
+      kind === 'boss-mark' || kind === 'rock' ? null : h('span.label', {}, c.duel ? shortName(ENEMIES[c.duel.enemyId]) : NODE_NAME[kind]));
+      if (!c.mark && threats.has(k)) el.classList.add('boss-threat');
+      if (c.mark === 'X') el.insertAdjacentHTML('beforeend', scribbleX(freshX === k));
+      if (c.mark === 'O') el.insertAdjacentHTML('beforeend', scribbleO(lastO === k));
+      if (c.mark === 'S') el.classList.add('scorched');
+      if (kind === 'elite' && !c.mark) el.insertAdjacentHTML('beforeend', `<span class="elite-star">${icon('star')}</span>`);
+      grid.push(el);
+    }
+  }
   if (freshX) sfx('scribbleX');
   if (lastO && freshX) sfx('scribbleO');
   map.freshX = null;
   map.lastO = null;
-
-  const W = 300, H = 300;
+  const news = map.news === 'oline' ? t('{boss} drew three in a row — it grows stronger!', { boss: boss.name })
+    : map.news === 'full' ? t('The page is full. {boss} will wait no longer — and it has grown stronger.', { boss: boss.name })
+      : lastO && map.cells[lastO] && map.cells[lastO].kind !== 'boss-mark' ? t('{boss} marks the {node} square.', { boss: boss.name, node: NODE_NAME[map.cells[lastO].kind].toLowerCase() }) : '';
+  const bonus = map.bonus;
+  map.bonus = 0;
+  map.news = null;
+  if (bonus) setTimeout(() => toast(t('+{n} gold for pressing on past the open door.', { n: bonus }), 'good'), 50);
+  const door = h('button.boss-door' + (map.open ? '.open' : ''), {
+    onclick: () => {
+      if (!map.open) { toast(t('Draw three Xs in a row — across, down or diagonal — to open the door.')); return; }
+      R.enterNode(run, 'boss'); duelState = null; route();
+    },
+  },
+  h('div.portrait', {}, h('div.photo', {}, boss.emoji)),
+  h('div.door-text', {},
+    h('div.door-name', {}, boss.name),
+    map.open ? h('div', {}, t('The door is open. Tap to face the boss — or keep exploring.')) : h('div', {}, t('Draw three in a row to open the door.')),
+    h('div.door-rules', {}, (boss.rules ?? []).map((r) => ruleChip('rule', r, '.small'))),
+    map.power ? h('div.power', {}, map.power >= 2 ? t('At full strength: it thinks harder, and brings its harder rules from the start.') : t('Grown stronger: it thinks harder.')) : null));
+  // Map aids won in duels: arm one for the next step.
+  const aids = R.AID_TYPES.filter((a) => run.aids?.[a]).length ? h('div.aids', {}, R.AID_TYPES.filter((a) => run.aids?.[a]).map((a) => h('button.aid' + (map.armed === a ? '.armed' : ''), {
+    onclick: () => { R.toggleAid(run, a); sfx('click'); save(); mapScreen(); if (map.armed) toast(t(R.AIDS[a].text)); },
+  }, h('span.aid-ico', { html: icon(a === 'breach' ? 'mountain' : 'rule-headstart') }), `${t(R.AIDS[a].name)} ×${run.aids[a]}`))) : null;
+  // Lines of pencil between the squares on view, each a little crooked.
+  const W = cols * 100, H = rows * 100;
   let paths = '';
-  for (let i = 1; i < 3; i++) { const x = i * 100, w = ((i * 37) % 7) - 3; paths += `<path d="M${x + w} 4 C ${x - w} ${H * 0.33}, ${x + w} ${H * 0.66}, ${x - w / 2} ${H - 4}"/>`; }
-  for (let j = 1; j < 3; j++) { const y = j * 100, w = ((j * 53) % 7) - 3; paths += `<path d="M4 ${y + w} C ${W * 0.33} ${y - w}, ${W * 0.66} ${y + w}, ${W - 4} ${y - w / 2}"/>`; }
-  const sheet = h('div.map-sheet' + (playable.includes(view) ? '' : '.elsewhere'), { style: '--cols: 3; --rows: 3' },
+  for (let i = 1; i < cols; i++) { const x = i * 100, w = ((i * 37) % 7) - 3; paths += `<path d="M${x + w} 4 C ${x - w} ${H * 0.33}, ${x + w} ${H * 0.66}, ${x - w / 2} ${H - 4}"/>`; }
+  for (let j = 1; j < rows; j++) { const y = j * 100, w = ((j * 53) % 7) - 3; paths += `<path d="M4 ${y + w} C ${W * 0.33} ${y - w}, ${W * 0.66} ${y + w}, ${W - 4} ${y - w / 2}"/>`; }
+  const sheet = h('div.map-sheet', { style: `--cols: ${cols}; --rows: ${rows}` },
     h('div.board-lines', { html: `<svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" aria-hidden="true">${paths}</svg>` }),
     h('div.map-cells', {}, grid));
-
-  // What just happened, said once.
-  const won = map.result === 'won';
-  const n = map.news;
-  const news = map.result === 'lost' ? t('{boss} has three clearings in a row. The climb is over.', { boss: boss.name })
-    : map.result === 'draw' ? t('Nobody can win the map any more — and a draw is yours. {boss} yields.', { boss: boss.name })
-      : won ? t('Three clearings in a row! {boss} is beaten.', { boss: boss.name })
-        : n?.act ? t('Act {n}: {act}. The enemies still waiting grow stronger.', { n: n.act, act: ACTS[n.act - 1].name })
-        : n?.lost !== undefined ? t('{boss} took the {where} clearing: −1 ❤.', { boss: boss.name, where: t(CLEARING[n.lost]) })
-          : n?.took !== undefined ? t('You took the {where} clearing! +{gold} gold.', { where: t(CLEARING[n.took]), gold: R.CLEARING_GOLD })
-            : '';
-  if (n?.lost !== undefined || map.result === 'lost') { flash = 'hurt'; sfx('lose'); }
-  map.news = null;
-
-  const door = h('div.boss-door' + (won ? '.open' : ''), {},
-    h('div.portrait', {}, h('div.photo', {}, boss.emoji)),
-    h('div.door-text', {},
-      h('div.door-name', {}, boss.name),
-      won || map.result === 'draw' ? h('div', {}, t('Beaten!')) : h('div', {}, t('Take three clearings in a row to beat it. If it gets three first, the climb is over.'))));
-  const turn = map.result ? h('button.btn.primary.wide.big', {
-    onclick: () => {
-      if (map.result !== 'lost') { meta.beaten = { ...(meta.beaten ?? {}), [map.boss]: true }; saveMeta(); }
-      R.endMap(run); save(); route();
-    },
-  }, map.result === 'lost' ? t('The end') : t('Victory!')) : null;
-  // Map aids won in duels: arm one for the next step.
-  const aids = map.result ? null : h('div.aids', {}, R.AID_TYPES.filter((a) => run.aids?.[a]).map((a) => h('button.aid' + (map.armed === a ? '.armed' : ''), {
-    onclick: () => { R.toggleAid(run, a); sfx('click'); save(); mapScreen(); if (map.armed) toast(t(R.AIDS[a].text)); },
-  }, h('span.aid-ico', { html: icon(a === 'free' ? 'map' : 'rule-headstart') }), `${t(R.AIDS[a].name)} ×${run.aids[a]}`)));
-  const where = map.won[view]
-    ? t(map.won[view] === 'X' ? 'The {where} clearing is yours.' : map.won[view] === 'O' ? 'The {where} clearing is the boss\'s.' : 'The {where} clearing is a draw.', { where: t(CLEARING[view]) })
-    : playable.includes(view) ? t(playable.length > 1 ? 'The {where} clearing — you may step anywhere open.' : 'The {where} clearing — you must step here.', { where: t(CLEARING[view]) })
-      : t('The {where} clearing. You were sent elsewhere.', { where: t(CLEARING[view]) });
-
+  const scroller = h('div.map-scroll', {}, sheet);
   screen(topBar(), relicStrip(),
     h('div.map-page', {},
       door,
-      overview,
-      h('div.map-news' + (won || n?.took !== undefined ? '.good' : ''), {}, news),
-      turn,
       aids,
-      h('div.clearing-title', {}, where),
-      sheet,
-      map.result ? null : h('div.map-help', {}, !R.xCount(run)
-        ? t('The boss has opened in the middle. Where you step inside a clearing sends the boss to the matching clearing — and where it steps sends you. Three in a row takes a clearing; the boss taking one costs a heart.')
-        : t('Where you step sends the boss to that clearing. A lost duel scorches its square: choose again.')),
-      threats.size ? h('div.map-help.red', {}, t('Dashed red circle: the boss would take this clearing there.')) : null));
+      scroller,
+      h('div.map-news', {}, news),
+      h('div.map-help', {}, breaching ? t('Tap a rock to break it.')
+        : !R.xCount(run)
+          ? t('The boss has made its first mark. Pick any square beside it; every mark reveals the paper around it. Rocks cut every line through them.')
+          : R.pageFull(map) ? t('The page is full: only the boss is left.')
+            : tp(R.PAGE - map.visited, 'Three Xs in a row open the door. {n} square left on this page.', 'Three Xs in a row open the door. {n} squares left on this page.')),
+      threats.size ? h('div.map-help.red', {}, t('Dashed red circle: the boss would finish a line of Os there.')) : null));
+  // Keep the newest marks in view, scrolling the sheet only, never the page.
+  requestAnimationFrame(() => {
+    const target = (freshX && scroller.querySelector(`[data-k="${freshX}"]`)) || scroller.querySelector('.map-cell.reach');
+    if (!target) return;
+    scroller.scrollLeft = target.offsetLeft - scroller.clientWidth / 2 + target.offsetWidth / 2;
+    scroller.scrollTop = target.offsetTop - scroller.clientHeight / 2 + target.offsetHeight / 2;
+  });
 }
 
 function actIntro() {
@@ -436,8 +410,8 @@ function actIntro() {
     h('div.act-n', {}, t('Act {n}', { n: act.n })),
     h('h1', {}, act.name),
     h('p', {}, t(['A summer camp. A field of stones that will not stay still.', 'The meadow is behind you. The ground turns to stone.', 'The air thins. Only the best players make it this far.'][act.n - 1])),
-    h('div.rules-note', {}, t('The whole climb is one game of Ultimate tic-tac-toe with {boss}: nine clearings, each its own little board. Where you step in one sends the boss to the matching clearing, and where it steps sends you. Three in a row takes a clearing; three clearings in a row beat it — and so does a map nobody can win. Each clearing it takes costs you a heart, and its three in a row ends the climb. Mini-bosses hold the middles of some clearings; as your marks add up, the climb moves on to harder acts.', { boss: ENEMIES[run.map.boss].name })),
-    run.act === 1 ? h('p.dim', {}, t('Somewhere in the middle clearing lies a gift: a special stone, free.')) : null,
+    h('div.rules-note', {}, t('This act is tic-tac-toe with {boss} on an endless page. It has made the first mark. Wherever you go you mark an X, and it answers with an O; every mark reveals the squares around it, and only those can be stepped on. Three Xs in a row open its door; each line of three Os makes it stronger. Rocks cut every line through them — and they turn up where your lines are about to close.', { boss: ENEMIES[run.map.boss].name })),
+    run.act === 1 ? h('p.dim', {}, t('Somewhere beside it lies a gift: a special stone, free.')) : null,
     h('button.btn.primary.wide.big', { onclick: () => { run.screen = 'map'; route(); } }, t('Onward'))));
 }
 
@@ -473,9 +447,11 @@ function preDuel() {
   };
   draw();
 
-  const tierLabel = { normal: '', elite: t('Elite'), miniboss: t('Mini-boss'), event: t('Challenge') }[duel.tier];
-  const stakes = t(duel.event ? 'Lose and it costs {n} ❤.' : 'Lose and it costs {n} ❤ — and the square is scorched.', { n: R.heartsLost(duel) });
-  const canBack = !duel.event;
+  const tierLabel = { normal: '', elite: t('Elite'), boss: t('Boss'), event: t('Challenge') }[duel.tier];
+  const stakes = duel.tier === 'boss'
+    ? tp(R.BOSS_LIVES - duel.bossWins, 'It has {n} life left: each duel you win takes one, each you lose costs you 1 ❤.', 'It has {n} lives left: each duel you win takes one, each you lose costs you 1 ❤.')
+    : t(duel.event ? 'Lose and it costs {n} ❤.' : 'Lose and it costs {n} ❤ — and the square is scorched.', { n: R.heartsLost(duel) });
+  const canBack = duel.tier !== 'boss' && !duel.event;
   screen(topBar(),
     h('div.page', {},
       canBack ? h('button.btn.ghost.small.back-map', { onclick: () => { R.retreat(run); route(); } }, h('span', { html: icon('back') }), t('Back to the map')) : null,
@@ -485,7 +461,7 @@ function preDuel() {
           tierLabel ? h('div.tier.' + duel.tier, {}, tierLabel) : null,
           h('div.enemy-name.big', {}, enemy.name),
           h('div.quote', {}, t('“{quote}”', { quote: enemy.quote })))),
-      h('div.section-label', {}, duel.tier === 'miniboss' ? t('It brings no special stones — only Pebbles, and its rules') : t('Their stones')),
+      h('div.section-label', {}, duel.tier === 'boss' ? t('It brings no special stones — only Pebbles, and its rules') : t('Their stones')),
       h('div.hand.enemy-hand.show', {},
         h('button.slot-plain', { onclick: () => infoStone({ type: 'pebble' }, 'O') }, stoneEl({ type: 'pebble' }, 'O')),
         duel.handO.map((s) => h('button.slot-plain', { onclick: () => infoStone(s, 'O') }, stoneEl(s, 'O')))),
@@ -495,6 +471,8 @@ function preDuel() {
         (duel.conds ?? []).map((c) => h('div.fact.rule-fact', {}, ruleChip('cond', c), h('span', {}, CONDS[c].text))),
         h('div.fact', {}, (duel.rules ?? []).includes('patient') ? t('{enemy} opens', { enemy: enemy.name }) : t('{enemy} opens — a full board goes to you', { enemy: enemy.name })),
         duel.quirk ? h('div.fact.warn', {}, `${R.QUIRKS[duel.quirk].name}: ${R.QUIRKS[duel.quirk].text}`) : null,
+        duel.tier === 'boss' && duel.bossWins === 0 && enemy.rules2 && enemy.rules2.join() !== duel.rules.join()
+          ? h('div.fact.dim', {}, t('Once beaten, it rises again with: {rules}.', { rules: enemy.rules2.map((r) => RULES[r].name).join(', ') })) : null,
         h('div.fact.dim', {}, stakes)),
       h('div.section-label', {}, t('Bring your special stones '), count),
       h('div.dim.small', {}, t('Pebbles are always with you, as many as you like.')),
@@ -515,7 +493,8 @@ function preDuel() {
 
 function duelScreen() {
   const duel = run.pending.duel;
-  const enemy = { ...ENEMIES[duel.enemyId], iters: duel.iters, blunder: duel.blunder, tier: duel.tier, lives: 1, livesLeft: 1 };
+  const lives = duel.tier === 'boss' ? R.BOSS_LIVES : 1;
+  const enemy = { ...ENEMIES[duel.enemyId], iters: duel.iters, blunder: duel.blunder, tier: duel.tier, lives, livesLeft: duel.tier === 'boss' ? lives - duel.bossWins : 1 };
   const holder = screen(h('div.duel-host'));
   const extra = h('div.duel-side', {},
     h('button.icon-btn.small', { onclick: showDuelMenu, 'aria-label': t('Menu') }, h('span', { html: icon('gear') })),
@@ -530,7 +509,8 @@ function duelScreen() {
       duelState = null;
       if (winner === 'X') {
         const res = R.duelWon(run);
-        if (duel.tier === 'miniboss') {
+        if (res.kind === 'boss-continue') toast(t('One down. It rises again!'));
+        if (res.kind === 'reward' && duel.tier === 'boss') {
           meta.beaten = { ...(meta.beaten ?? {}), [duel.enemyId]: true };
           saveMeta();
         }
@@ -539,6 +519,7 @@ function duelScreen() {
         if (res.kind === 'rematch') toast(t('🎟️ {relic}: try again!', { relic: RELICS.rematch.name }));
         else if (res.kind === 'dead') { /* recorded by the end screen */ }
         else if (res.kind === 'lost') { toast(`−${R.heartsLost(duel)} ❤`, 'bad'); flash = 'hurt'; }
+        else if (res.kind === 'boss-retry') { toast(t('−1 ❤. Again!'), 'bad'); flash = 'hurt'; }
       }
       route();
     },
@@ -591,7 +572,7 @@ function pickFromPouch(prompt, cb, { filter = () => true, cancel = t('Cancel') }
 // A map aid as a reward card.
 function aidCard(kind, onclick) {
   return h('button.card.aid-card', { onclick },
-    h('div.trick-token', { html: icon(kind === 'free' ? 'map' : 'rule-headstart') }),
+    h('div.trick-token', { html: icon(kind === 'breach' ? 'mountain' : 'rule-headstart') }),
     h('div.card-name', {}, t(R.AIDS[kind].name)),
     h('div.card-text', {}, t(R.AIDS[kind].text)),
     h('div.dim.small', {}, t('map aid')));
@@ -600,7 +581,7 @@ function aidCard(kind, onclick) {
 function rewardScreen() {
   const rw = run.pending;
   const done = () => { R.leaveNode(run); route(); };
-  const parts = [h('h1.reward-title', {}, rw.gift ? t('A gift!') : rw.tier === 'act' ? t('The act is yours!') : t('Victory!'))];
+  const parts = [h('h1.reward-title', {}, rw.gift ? t('A gift!') : rw.tier === 'boss' ? t('Boss defeated!') : t('Victory!'))];
   if (rw.gift && !rw.taken.stone) parts.push(h('p.dim', {}, t('Someone left a pouch by the path. Take one of these, free.')));
   if (rw.gold) parts.push(h('div.reward-gold', {}, h('span', { html: icon('coin') }), t('+{n} gold', { n: rw.gold })));
   if (rw.relic && !rw.taken.relic) {
@@ -912,12 +893,12 @@ function showHelp(after) {
     h('div', {}, h('h2', {}, t('The rules that decide')),
       h('p', {}, h('b', {}, t('A full board goes to you')), t(' — the enemy opened, so the tie is yours. Hold out, and you win.')),
       h('p', {}, t('Some duels carry a '), h('b', {}, t('condition')), t(' for both sides: gravity, a hollow centre, open hands.')),
-      h('p', {}, t('Mini-bosses bring no special stones at all. Instead each has '), h('b', {}, t('a rule in its favour')), t(' — it names the stone you play, closes a column, takes two turns at once… Read it before you choose your stones.'))),
+      h('p', {}, t('Bosses bring no special stones at all. Instead each has '), h('b', {}, t('a rule in its favour')), t(' — it names the stone you play, closes a column, takes two turns at once… Read it before you choose your stones.'))),
     h('div', {}, h('h2', {}, t('The climb')),
-      h('p', {}, t('The climb is one game of Ultimate tic-tac-toe with its boss: nine clearings in a 3×3, each a 3×3 of squares — duels, elites, shops, campfires, treasure and the unknown. The boss opens in the very middle.')),
-      h('p', {}, t('Wherever you step you mark an '), h('b.blue', {}, 'X'), t(', and the boss must answer in the clearing matching your square; its '), h('b.red', {}, 'O'), t(' sends you on in turn. A lost duel scorches its square — only the boss may take it now — and you choose again.')),
-      h('p', {}, h('b', {}, t('Three in a row takes a clearing; three clearings in a row, or a map nobody can win, beat the boss.')), t(' Each clearing the boss takes costs a heart; its three in a row ends the climb. Duels can also win map aids: a free step anywhere, or a step the boss does not answer.')),
-      h('p', {}, t('Before each duel you choose which special stones to bring. Shops sell more slots. Lose and it costs hearts; run out and the climb is over. Mini-bosses cost two hearts.'))),
+      h('p', {}, t('Three acts. Each act is tic-tac-toe with its boss on an endless sheet of paper. It starts with a single O — the boss\'s first mark.')),
+      h('p', {}, t('Wherever you go you mark an '), h('b.blue', {}, 'X'), t('; after each step the boss marks an '), h('b.red', {}, 'O'), t('. Every mark reveals the squares around it: duels, elites, shops, campfires, workshops, treasure, the unknown — and rocks, which nobody can mark and no line runs through.')),
+      h('p', {}, h('b', {}, t('Three Xs in a row open the boss\'s door.')), t(' A lost duel scorches its square — only the boss may take it now — and you choose again. Each line of three Os, and filling the page, makes the boss stronger. Duels can also win map aids: a step the boss does not answer, or a pickaxe for a rock.')),
+      h('p', {}, t('Before each duel you choose which special stones to bring. Shops sell more slots. Lose and it costs hearts; run out and the climb is over. Elites cost two hearts.'))),
   ];
   let k = 0;
   const holder = h('div.help-page');
@@ -962,7 +943,7 @@ function showCodex() {
         h('b', {}, RELICS[r].name), h('span.info-rarity.' + RELICS[r].rarity, {}, ' ' + t(RELICS[r].rarity)), h('div', {}, RELICS[r].text))));
     } else {
       list = Object.values(ENEMIES).filter((e) => e.act > 0).map((e) => h('div.codex-row', {}, h('div.relic-token.small', {}, e.emoji), h('div', {},
-        h('b', {}, e.name), h('span.dim', {}, ` · ${t('act {n}', { n: e.act })} ${t(e.tier === 'miniboss' ? 'mini-boss' : e.tier)}`),
+        h('b', {}, e.name), h('span.dim', {}, ` · ${t('act {n}', { n: e.act })} ${t(e.tier)}`),
         e.core ? h('div.hand.show.tiny', {}, e.core.map((x) => stoneEl({ type: x }, 'O', { mini: true }))) : null,
         e.cond ? h('div.chips.inline', {}, ruleChip('cond', e.cond)) : null,
         e.rules ? h('div.chips.inline', {}, e.rules.map((r) => ruleChip('rule', r))) : null,

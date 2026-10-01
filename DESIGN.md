@@ -35,18 +35,18 @@ duel, and a rule for who wins when someone runs out. The second version slows it
   stone falls as far as it can), **Hollow** (nobody plays the centre), **Open Hands** (either side
   may play a special stone from the other's hand, as its own). Some enemies have one as a home
   rule; others roll one (25% in act 1, 35% in act 2, 40% in act 3, more for elites).
-- **Mini-bosses bring no stones.** Only Pebbles, and rules in their favour: **Tactics** (it names the
+- **Bosses bring no stones.** Only Pebbles, and rules in their favour: **Tactics** (it names the
   stone you play), **Head Start** (it plays twice on its first turn), **Elbow** (rows do not
   count: an L of three wins), **Clinch** (you must place next to one of its stones, corners included — so a threat can always be blocked), **Column**
   (it closes a column to you each turn), **Spy** (it names the direction your stones move),
   **Reserved** (the centre is its alone), **Patience** (a full board is its), **Double Time**
   (every turn is two stones in a row, for both sides, the boss first). The dictating rules
   are a phase of their own after the boss's turn, searched by the same AI as every other choice.
-  They are mini-bosses on the map now (below), one duel each.
+  They are the bosses at the end of each act (below).
   Double Time is the hard one, and it wants a particular loadout. Bot duels, 20 each: Pebbles
   only or two Mountains win 0%, movers (Shift and Rotate, Rail/Pivot/Teleport, 2048/4096)
   20–40%, restrictions (Magnet and Stinky, and their evolved forms of the time)
-  95–100%. The Twin Kings' second life adds Reserved, and then restrictions alone drop to
+  95–100%. A boss's second life adds Reserved, and then restrictions alone drop to
   0–15%: it takes a restriction *and* a mover (Magnet and Shift: 95%).
   The sheet's Sloup had the boss choose the column you *must* play in; measured against the bot
   that won 96% for the boss, so here the boss closes a column instead. OOTB (playing outside
@@ -63,36 +63,35 @@ duel, and a rule for who wins when someone runs out. The second version slows it
 
 ## The map
 
-The whole climb is one game of Ultimate tic-tac-toe with its boss: nine clearings in a 3×3, each
-a 3×3 of squares (duels, elites, mini-bosses, shops, campfires, workshops, treasure, events), all
-on view. The boss opens in the very middle.
+Back to the endless page, after a detour through Ultimate tic-tac-toe: nested clearings were a
+second game on top of the duels and took the attention away from them. Each act is a page of
+its own, with its boss.
 
-- **The send rule.** Where you step inside a clearing decides the clearing the boss must answer
-  in, and its step sends you. A clearing that is finished, or has nothing left for you, frees
-  you to step in any open one.
-- **Scorching.** A lost duel costs its hearts and scorches the square: you may not step there
-  again, but the boss may. You choose again at once — the boss answers only a real X.
-- **Clearings.** Three in a row takes a clearing (+15 gold for you, −1 ❤ if it is the boss's).
-- **The end.** Three clearings in a row beat the boss and win the climb — and so does a draw,
-  a map nobody can win any more. The boss's three clearings in a row end the climb, as running
-  out of hearts does.
-- **Acts** are stages of the one map: every seven of your marks the climb moves on (Meadow,
-  Quarry, Summit), and the enemies still waiting on the map are re-rolled from the new act's
-  harder cast. The boss notices your threats more often in later acts.
-- **Mini-bosses.** The stoneless rule-bearers (Tactics, Head Start, Elbow, Clinch, Column, Spy,
-  Reserved, Patience, Double Time) hold the middle square of three clearings; from the second
-  act on they bring their harder rule sets. One duel each, two hearts if lost, a relic if won.
-- **Map aids.** A duel won may offer, instead of a stone, a *Free Step* (step in any open
-  clearing once) or a *Double Step* (the boss does not answer one step; you go again where your
-  own square points). Elites and mini-bosses always offer one.
-- **Layout.** Squares on more lines (corners and middles, of a clearing and of the map) hide
-  harder things. Good squares — shops, campfires, workshops, chests — keep their distance: each
-  good neighbour already laid out makes another a quarter as likely, so about half of them
-  touch another, against nearly all of them before.
-- The boss judges a square by what it takes, what it blocks (when it notices) and where it
-  sends you; greed for treasure and shops breaks ties. The run bot plays by the same judgement.
+- **Fog.** You start on one square; you see and may step only next to your marks (X) and the
+  boss's (O). Every square you step on is an X; a duel lost costs its hearts and scorches the
+  square, which only the boss may take afterwards. You choose again at once — the boss answers
+  only a real X.
+- **The door.** Your three in a row opens the boss's door (+10 gold for every square past that).
+  The boss's three in a row adds one to its *power* (up to 2); so does a page filled with twelve
+  marks before you open the door, and then the door opens anyway. Power is search depth, and at
+  full power the boss fights with its second-life rules from the start.
+- **Rocks.** On an open page two open squares are already a double threat, and a line came in
+  about five steps 95% of the time. So the page lays rocks on a lattice — (x + 3y) mod 7 in two
+  classes, shifted so you never start on one — plus scattered ones, likelier the further you
+  have spread and the more live lines you hold. Rocks take about a third of the page; a bot that
+  plays for its line gets one before the page fills 62% of the time, in about seven steps
+  (`node tools/maprocks.mjs`). A *Pickaxe* breaks one rock.
+- **Bosses** bring no stones, only their rule (above), and have two lives; the second life adds
+  their harder rule. A boss won is a boss relic, three hearts and 60 gold. **Elites** are just
+  stronger regular enemies: bigger hands, two hearts if lost, a red star in the corner.
+- **Map aids.** A duel won may offer, instead of a stone, a *Double Step* (the boss does not
+  answer one step) or a *Pickaxe*. Elites always offer one.
+- **Layout.** Good squares — shops, campfires, workshops, chests — keep their distance: each good
+  neighbour already laid out makes another a quarter as likely. The boss judges a square by what
+  it takes and what it blocks (when it notices — more often in later acts); the run bot plays by
+  the same judgement.
 
-Balance for this map is still open.
+Balance is still open: bosses are hard for the bots (2 runs of 32 won).
 
 ## The stones
 
