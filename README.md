@@ -33,6 +33,7 @@ npx http-server -c-1 .
 |---|---|
 | `src/engine.js` | the duel rules: stones, one-shot stones, conditions, boss rules. Pure, shared by UI and AI |
 | `src/ai.js` | the enemy: Monte Carlo tree search over the engine (runs in a worker via `src/brain.js`) |
+| `src/sound.js`, `src/music.js` | sound effects, and endless music composed live a bar at a time: the act sets key, tempo and instruments, the screen sets the layers, events add a phrase |
 | `src/content.js` | relics, enemies, acts, events |
 | `src/run.js` | a run: the act maps, duel setup, rewards, shops. Pure, JSON-serialisable |
 | `src/main.js`, `src/ui/` | the screens |

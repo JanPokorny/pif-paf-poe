@@ -23,6 +23,8 @@ export default {
   'Sound off': 'Zvuk vypnutý',
   'Sound: on': 'Zvuk: zapnutý',
   'Sound: off': 'Zvuk: vypnutý',
+  'Music: on': 'Hudba: zapnutá',
+  'Music: off': 'Hudba: vypnutá',
   'Paused': 'Pauza',
   'Pouch & relics': 'Váček a talismany',
   'Resume': 'Pokračovat',

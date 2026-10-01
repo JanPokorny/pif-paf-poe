@@ -5,6 +5,16 @@ let enabled = true;
 try { enabled = localStorage.getItem('ppp-sound') !== 'off'; } catch { /* private mode */ }
 
 export const soundOn = () => enabled;
+// The music shares the context; while it plays, it answers wins and losses
+// itself, in its own key.
+let musicActive = false;
+export function setMusicActive(on) { musicActive = on; }
+export function audioContext() {
+  try {
+    ctx ??= new (window.AudioContext || window.webkitAudioContext)();
+    return ctx;
+  } catch { return null; }
+}
 export function setSound(on) {
   enabled = on;
   try { localStorage.setItem('ppp-sound', on ? 'on' : 'off'); } catch { /* ignore */ }
@@ -69,6 +79,7 @@ export function sfx(name) {
   try {
     ctx ??= new (window.AudioContext || window.webkitAudioContext)();
     if (ctx.state === 'suspended') ctx.resume();
+    if (musicActive && (name === 'win' || name === 'lose')) return;
     SOUNDS[name]?.();
   } catch { /* no audio */ }
 }

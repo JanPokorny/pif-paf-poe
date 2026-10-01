@@ -8,6 +8,7 @@ import { h, hideToast, tapeUp, art, relicArt, scribbleX, scribbleO, stoneEl, ico
 import { icon } from './icons.js';
 import { mountDuel } from './ui/duel.js';
 import { sfx, soundOn, setSound } from './sound.js';
+import { setScene, musicEvent, musicOn, setMusic, unlockMusic } from './music.js';
 import { t, tp, lang, localizeData } from './i18n.js';
 
 localizeData({
@@ -131,6 +132,7 @@ function soundButton(close) {
   try { fast = localStorage.getItem('ppp-fast') === 'on'; } catch { /* ignore */ }
   return [
     h('button.btn.wide', { onclick: () => { setSound(!soundOn()); close(); toast(soundOn() ? t('Sound on') : t('Sound off')); } }, soundOn() ? t('Sound: on') : t('Sound: off')),
+    h('button.btn.wide', { onclick: () => { setMusic(!musicOn()); close(); } }, musicOn() ? t('Music: on') : t('Music: off')),
     h('button.btn.wide', { onclick: () => { try { localStorage.setItem('ppp-fast', fast ? 'off' : 'on'); } catch { /* ignore */ } close(); } }, fast ? t('Enemy speed: fast') : t('Enemy speed: normal')),
   ];
 }
@@ -159,6 +161,7 @@ function migrate() {
 function title() {
   duelView?.destroy();
   duelView = null;
+  setScene('title', 0);
   const saved = loadJSON(SAVE);
   screen(
     h('div.title', {},
@@ -178,6 +181,7 @@ function title() {
           h('span.continue-sub', {}, `${t('Act {n}', { n: saved.run.act })} · ❤ ${saved.run.hearts}`)) : null,
         h('button.btn.wide.big' + (saved?.run ? '' : '.primary'), { onclick: () => { if (saved?.run && !saved.run.over && !confirm(t('Start over? Your run in progress will be lost.'))) return; newRunMenu(); } }, t('New run')),
         h('button.btn.wide.ghost', { onclick: () => { setSound(!soundOn()); title(); } }, h('span', { html: icon(soundOn() ? 'sound-on' : 'sound-off') }), soundOn() ? t('Sound on') : t('Sound off')),
+        h('button.btn.wide.ghost', { onclick: () => { setMusic(!musicOn()); title(); } }, musicOn() ? t('Music: on') : t('Music: off')),
         langToggle()),
     ));
 }
@@ -210,10 +214,27 @@ function newRunMenu() {
 
 // ── Router ──────────────────────────────────────────────────────────────────
 
+// The music for where you are: the act's palette, the screen's layers.
+function sceneOf(r) {
+  switch (r.screen) {
+    case 'map': case 'actintro': return 'map';
+    case 'predual': case 'duel': {
+      const tier = r.pending?.duel?.tier;
+      return tier === 'boss' ? 'boss' : tier === 'elite' ? 'elite' : 'duel';
+    }
+    case 'shop': case 'rest': case 'craft': case 'treasure': case 'reward': return 'calm';
+    case 'event': return 'event';
+    case 'gameover': return 'defeat';
+    case 'victory': return 'victory';
+    default: return 'map';
+  }
+}
+
 function route() {
   duelView?.destroy();
   duelView = null;
   save();
+  setScene(sceneOf(run), run.act);
   switch (run.screen) {
     case 'map': return mapScreen();
     case 'actintro': return actIntro();
@@ -305,6 +326,9 @@ function mapScreen() {
   map.freshX = null;
   map.lastO = null;
   map.freshS = null; map.revealX = null; map.revealO = null;
+  if (map.news === 'oline' || map.news === 'full') musicEvent('stronger');
+  else if (map.open && !map.doorHeard) musicEvent('door');
+  if (map.open) map.doorHeard = true;
   const news = map.news === 'oline' ? t('{boss}: three in a row — stronger!', { boss: boss.name })
     : map.news === 'full' ? t('Page full: {boss} is stronger.', { boss: boss.name })
       : lastO && map.cells[lastO] && map.cells[lastO].kind !== 'boss-mark' ? t('{boss} marks the {node} square.', { boss: boss.name, node: NODE_NAME[map.cells[lastO].kind].toLowerCase() }) : '';
@@ -649,7 +673,7 @@ function restScreen() {
     h('h2', {}, t('Campfire')),
     h('button.btn.wide.big', {
       disabled: run.hearts >= run.maxHearts || undefined,
-      onclick: () => { run.hearts = Math.min(run.maxHearts, run.hearts + heal); sfx('heal'); toast(`+${heal} ❤`, 'good'); flash = 'heal'; leave(); },
+      onclick: () => { run.hearts = Math.min(run.maxHearts, run.hearts + heal); sfx('heal'); musicEvent('heal'); toast(`+${heal} ❤`, 'good'); flash = 'heal'; leave(); },
     }, t('Rest: heal {n} ❤', { n: heal })),
     h('button.btn.wide.ghost', { onclick: leave }, t('Move on'))));
 }
@@ -828,6 +852,8 @@ function endScreen(victory) {
 // ── Boot ────────────────────────────────────────────────────────────────────
 
 title();
+// Browsers start audio only from a tap: the music begins with the first one.
+document.addEventListener('pointerdown', unlockMusic);
 window.addEventListener('pagehide', save);
 document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'hidden') save(); });
 if ('serviceWorker' in navigator && location.protocol === 'https:') {

@@ -14,6 +14,7 @@ import { icon } from '../icons.js';
 import { t } from '../i18n.js';
 import { think } from '../brain.js';
 import { sfx } from '../sound.js';
+import { musicEvent } from '../music.js';
 
 const FIELD_ORDER = ['pos', 'from', 'a', 'to', 'target', 'dir', 'block', 'turn', 'axis', 'line', 'ring', 'stone', 'hold', 'only'];
 const DIR_ARROW = { up: 'arrow-up', down: 'arrow-down', left: 'arrow-left', right: 'arrow-right' };
@@ -716,6 +717,7 @@ export function mountDuel(root, opts) {
     const won = state.winner === 'X';
     if (won) [...header.querySelectorAll('.boss-lives span.alive')].pop()?.classList.replace('alive', 'lost-life');
     sfx(won ? 'win' : 'lose');
+    musicEvent(won ? 'win' : 'lose');
     await sleep(900);
     const v = { enemy: enemy.name };
     const elko = state.rules.includes('elko');
