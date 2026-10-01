@@ -753,9 +753,11 @@ body:has(.duel) #toast.show { transform: translate(-50%, 0) rotate(-1deg); }
 .pouch-slot .hand-count { top: 4px; right: 6px; }
 
 /* Stones on their own, no cards: before a duel and in its hands alike. */
-.stone-row { display: flex; flex-wrap: wrap; gap: 10px 8px; padding: 6px 2px; }
-.stone-pick { position: relative; background: none; border: 0; padding: 4px; -webkit-touch-callout: none; user-select: none; }
-.stone-pick .stone { --size: 50px; }
+/* The same stones, size, spacing and tilt as in the duel's hands. */
+.stone-row { display: flex; flex-wrap: wrap; justify-content: center; gap: 2px; padding: 4px 0; }
+.stone-pick { position: relative; background: none; border: 0; padding: 5px; -webkit-touch-callout: none; user-select: none; }
+.stone-pick .stone { --size: min(54px, calc((100vw - 64px) / 7.3)); }
+.stone-pick:nth-child(odd) .stone { --tilt: -3deg; } .stone-pick:nth-child(even) .stone { --tilt: 2deg; }
 .stone-row.pick .stone-pick { opacity: 0.35; transition: opacity 0.15s, transform 0.15s; }
 .stone-row.pick .stone-pick.on { opacity: 1; }
 .stone-pick .hand-count, .hand-slot .hand-count { top: -2px; right: -4px; }
