@@ -628,7 +628,6 @@ b { font-weight: 400; background: linear-gradient(transparent 55%, var(--hi) 55%
 .card-info { position: absolute; top: 4px; right: 8px; color: var(--blue); font-size: 1.2rem; padding: 4px; }
 .btn.continue { flex-direction: column; gap: 0; line-height: 1.1; } .continue-sub { font-family: var(--hand); font-size: 0.9rem; opacity: 0.75; }
 .map-cell.scorched::after { content: ''; position: absolute; inset: 8%; border-radius: 46% 38% 52% 41% / 40% 50% 44% 54%; background: radial-gradient(ellipse at 48% 52%, rgba(52, 30, 18, 0.62) 0 26%, rgba(96, 52, 24, 0.5) 40%, rgba(150, 84, 34, 0.32) 56%, rgba(196, 128, 52, 0.16) 68%, transparent 75%); filter: url(#pencil); pointer-events: none; }
-.map-cell.scorched .label { position: absolute; bottom: 14%; color: #8a4a22; z-index: 2; visibility: visible; opacity: 1; }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; transition-duration: 0.01ms !important; }
 }
@@ -666,7 +665,7 @@ b { font-weight: 400; background: linear-gradient(transparent 55%, var(--hi) 55%
 
 /* A busy sheet reads better small: marked squares show only their mark. */
 .map-sheet { --cell: max(58px, min(90px, calc((min(100vw, 520px) - 32px) / var(--cols)))); }
-.map-sheet .map-cell.marked:not(.rock) .doodle, .map-sheet .map-cell.marked:not(.scorched) .label, .map-sheet .map-cell.marked .cell-space { display: none; }
+.map-sheet .map-cell.marked:not(.rock) .doodle, .map-sheet .map-cell.marked .label, .map-sheet .map-cell.marked .cell-space { display: none; }
 .map-sheet .map-cell .label { font-size: 0.72rem; }
 .map-scroll { max-height: calc(100dvh - 250px); }
 

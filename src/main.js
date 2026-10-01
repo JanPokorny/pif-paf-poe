@@ -321,12 +321,12 @@ function mapScreen() {
         onclick: () => {
           if (breaching && kind === 'rock') { R.breach(run, k); sfx('thud'); save(); mapScreen(); return; }
           if (!can) {
-            const why = kind === 'rock' ? t('A rock: nobody can mark it, and no line runs through it.')
+            const why = kind === 'rock' ? t('A rock: nobody can step here or mark it, and it cuts every line through it. A Pickaxe breaks it.')
               : c.mark === 'X' ? t('You have been here.')
                 : c.mark === 'O' ? t('{boss} took this square.', { boss: boss.name })
-                  : c.mark === 'S' ? t('A duel was lost here: the square is scorched. Only the boss may still take it.')
+                  : c.mark === 'S' ? t('Burned: a duel was lost here. You cannot step here again, but the boss still can — and an O here counts for its lines.')
                     : t('The page is full: only the boss is left.');
-            toast(why);
+            toast(why, '', kind === 'rock' || c.mark === 'S' ? 4500 : 2200);
             return;
           }
           sfx('click');
@@ -338,7 +338,7 @@ function mapScreen() {
         ? h('span.doodle.foe', {}, h('span.photo', {}, ENEMIES[c.duel.enemyId].emoji),
           c.duel.conds?.length ? h('span.cell-space', { html: icon(`cond-${c.duel.conds[0]}`) }) : null)
         : h('span.doodle', { html: icon(NODE_ICON[kind]) }),
-      kind === 'boss-mark' || kind === 'rock' ? null : h('span.label', {}, c.mark === 'S' ? t('Burned') : c.duel ? shortName(ENEMIES[c.duel.enemyId]) : NODE_NAME[kind]));
+      kind === 'boss-mark' || kind === 'rock' ? null : h('span.label', {}, c.duel ? shortName(ENEMIES[c.duel.enemyId]) : NODE_NAME[kind]));
       if ((!c.mark || c.mark === 'S') && threats.has(k)) el.classList.add('boss-threat');
       if (c.mark === 'X') el.insertAdjacentHTML('beforeend', scribbleX(freshX === k));
       if (c.mark === 'O') el.insertAdjacentHTML('beforeend', scribbleO(lastO === k));
