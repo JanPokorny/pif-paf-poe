@@ -30,7 +30,7 @@ function playDuel(run, cfg, piters, pblunder, rng) {
     applyAction(s, chooseAction(s, me ? { iterations: piters, blunder: pblunder, rng } : { iterations: duel.iters, blunder: duel.blunder, rng }));
   }
   if (!s.over) throw new Error('duel did not end');
-  run.tricks = [...s.tricks.X];
+  R.spendOnce(run, hand, s.spent.X);
   return s.winner === 'X';
 }
 
@@ -46,7 +46,6 @@ function takeStone(run, st) {
 const api = (run) => ({
   rng: () => R.rand(run),
   pouchRoom: () => !R.pouchFull(run),
-  trickRoom: () => !R.tricksFull(run),
   // Trade the two weakest stones, if that yields something better than both.
   craft: () => {
     const [a, b] = run.pouch.slice().sort((x, y) => value(x) - value(y));
@@ -55,9 +54,9 @@ const api = (run) => ({
     if (c && value(c) > value(b)) R.craft(run, a.uid, b.uid, c);
     return 'ok';
   },
-  pickTrick: () => 0,
+  pickOnce: () => run.pouch.find((x) => R.isOnce(x)) ?? null,
   chooseStone: (r, pay) => { pay?.(); const c = R.stoneChoices(run, 'elite', r); takeStone(run, c[0]); return 'ok'; },
-  gainRandomTrick: (r) => { if (!R.tricksFull(run)) run.tricks.push(R.randomTrick(run, r)); return 'ok'; },
+  gainRandomOnce: (r) => { if (!R.pouchFull(run)) R.gainStone(run, R.randomOnce(run, r)); return 'ok'; },
   gainRandomRelic: (t) => { R.gainRelic(run, R.randomRelic(run)); return t; },
   transmute: () => { const p = run.pouch[0]; const n = R.randomStone(run, 'uncommon'); p.type = n.type; return 'ok'; },
   duplicate: () => { const b = run.pouch.slice().sort((a, b) => value(b) - value(a))[0]; R.gainStone(run, { type: b.type }); return 'ok'; },
@@ -99,7 +98,7 @@ function playRun(spec) {
         const rw = run.pending;
         if (rw.relic) R.gainRelic(run, rw.relic);
         if (rw.relicChoice?.length) R.gainRelic(run, rw.relicChoice[0]);
-        if (rw.trick && !R.tricksFull(run)) run.tricks.push(rw.trick);
+        if (rw.once && !R.pouchFull(run)) R.gainStone(run, rw.once);
         if (rw.stones.length) takeStone(run, rw.stones.slice().sort((a, b) => value(b) - value(a))[0]);
         R.leaveNode(run);
         break;

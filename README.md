@@ -5,7 +5,8 @@
 Tic-tac-toe where the pieces move, as a mobile-friendly browser roguelike drawn on a notebook
 page. Duel a cast of enemies on a 3×3 board. Pebbles never run out; beside them you bring a few
 special stones that *do something* when placed — two at first, more as you buy slots — and they
-can be crafted, two into one of a higher tier, along the way. Some duels carry a condition for both sides
+can be crafted, two into one of a higher tier, along the way. One-shot stones do one strong
+thing and are gone from the pouch once played. Some duels carry a condition for both sides
 (gravity, a hollow centre, open hands); bosses bring no stones at all, only a rule in their
 favour.
 
@@ -30,7 +31,7 @@ npx http-server -c-1 .
 
 | path | what |
 |---|---|
-| `src/engine.js` | the duel rules: stones, tricks, conditions, boss rules. Pure, shared by UI and AI |
+| `src/engine.js` | the duel rules: stones, one-shot stones, conditions, boss rules. Pure, shared by UI and AI |
 | `src/ai.js` | the enemy: Monte Carlo tree search over the engine (runs in a worker via `src/brain.js`) |
 | `src/content.js` | relics, enemies, acts, events |
 | `src/run.js` | a run: the act maps, duel setup, rewards, shops. Pure, JSON-serialisable |

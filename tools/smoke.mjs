@@ -1,6 +1,6 @@
-// Random duels with every stone, trick, condition and boss rule, then a
+// Random duels with every stone, condition and boss rule, then a
 // timing of the enemy's search.
-import { createGame, legalActions, applyAction, STONE_TYPES, TRICK_TYPES, CONDS, RULES, render } from '../src/engine.js';
+import { createGame, legalActions, applyAction, STONE_TYPES, CONDS, RULES, render } from '../src/engine.js';
 import { chooseAction, makeRng } from '../src/ai.js';
 const rng = makeRng(7);
 const SPECIALS = STONE_TYPES.filter((t) => t !== 'pebble');
@@ -11,7 +11,6 @@ for (let g = 0; g < 3000; g++) {
   const boss = g % 3 === 0;
   const s = createGame({
     handX: hand(), handO: boss ? [] : hand(),
-    tricksX: [TRICK_TYPES[g % TRICK_TYPES.length]], tricksO: [TRICK_TYPES[(g * 7) % TRICK_TYPES.length]],
     modsX: { echo: g % 5 === 0, freeFirst: g % 4 === 0 },
     conds: !boss && g % 2 ? [COND[g % COND.length]] : [], rules: boss ? [RULE[g % RULE.length]] : [],
   });

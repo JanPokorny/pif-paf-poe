@@ -1,6 +1,6 @@
 // Small DOM helpers shared by every screen.
 
-import { STONES, TRICKS, CONDS, RULES, createGame, legalActions, applyAction, cloneState, allowedSquares } from '../engine.js';
+import { STONES, CONDS, RULES, createGame, legalActions, applyAction, cloneState, allowedSquares } from '../engine.js';
 import { RELICS } from '../content.js';
 import { icon, ICONS } from '../icons.js';
 import { t, lang, setLang, LANGS } from '../i18n.js';
@@ -62,6 +62,7 @@ export function updateStone(el, s, player, opts = {}) {
   el.classList.toggle('stuck', !!opts.stuck);
   el.classList.toggle('dead', !!opts.dead);
   el.classList.toggle('mini', !!opts.mini);
+  el.classList.toggle('once', !!STONES[s.type]?.once);
   if (el.dataset.type !== s.type || !el.firstChild) {
     el.dataset.type = s.type;
     el.innerHTML = icon(s.type, 'glyph') + STAR + '<span class="tape"></span>';
@@ -140,7 +141,6 @@ function stoneDemo(s) {
       applyAction(g, { type: 'select', stone: s.type });
       applyAction(g, { type: 'place', pos: 4 });
       if (g.phase === 'effect') applyAction(g, legalActions(g)[0]);
-      if (g.phase === 'trick') applyAction(g, { type: 'trick', use: 'pass' });
       g.phase = 'place';
       const ok = new Set(allowedSquares(g));
       const marks = {};
@@ -173,48 +173,17 @@ function stoneDemo(s) {
   } catch { return null; }
 }
 
-function trickDemo(name) {
-  try {
-    const g = createGame({ handO: ['shift'], first: 'X', tricksX: [name], log: false });
-    let id = 50;
-    for (const [i, p] of Object.entries({ ...DEMO_BOARD, 4: 'O', 0: 'X' })) g.board[+i] = { player: p, type: i === '0' ? 'shift' : 'pebble', id: id++ };
-    g.lastSpecial.X = 'shift';
-    g.phase = 'trick';
-    let best = null;
-    for (const a of legalActions(g)) {
-      if (a.use !== name) continue;
-      const after = cloneState(g);
-      applyAction(after, a);
-      const moved = after.board.reduce((n, c, i) => n + ((c?.id ?? 0) !== (g.board[i]?.id ?? 0) || c?.player !== g.board[i]?.player ? 1 : 0), 0);
-      if (!best || moved > best.moved) best = { moved, after: after.board };
-    }
-    if (!best || !best.moved) return null;
-    return h('div.demo', {}, demoBoard(g.board), h('div.demo-arrow', {}, '→'), demoBoard(best.after));
-  } catch { return null; }
-}
-
 export function infoStone(s, player = 'X', extra = '') {
   const st = STONES[s.type];
   const body = h('div.info-stone', {},
     h('div.info-head', {}, stoneEl(s, player), h('div', {},
       h('div.info-name', {}, stoneName(s)),
-      h('div.info-rarity.' + st.rarity, {}, t(st.rarity)))),
+      h('div.info-rarity.' + st.rarity, {}, st.once ? `${t('one-shot')} · ${t(st.rarity)}` : t(st.rarity)))),
     h('p', {}, stoneText(s)),
     stoneDemo(s),
+    st.once ? h('p.info-plus', {}, t('One use: once played, it is gone from your pouch.')) : null,
     s.type === 'pebble' ? h('p.info-plus', {}, t('Pebbles never run out: you may always place another.')) : null,
     extra ? h('p.info-extra', {}, extra) : null,
-    h('button.btn.wide', { onclick: () => close() }, t('OK')));
-  const close = modal(body);
-}
-
-export function infoTrick(name) {
-  const tr = TRICKS[name];
-  const body = h('div.info-stone', {},
-    h('div.info-head', {}, h('div.trick-token', { html: icon(name) }), h('div', {},
-      h('div.info-name', {}, tr.name), h('div.info-rarity.' + tr.rarity, {}, t('trick') + ' · ' + t(tr.rarity)))),
-    h('p', {}, tr.text),
-    trickDemo(name),
-    h('p.info-extra', {}, t('Use at the end of your turn. Once.')),
     h('button.btn.wide', { onclick: () => close() }, t('OK')));
   const close = modal(body);
 }
@@ -252,18 +221,10 @@ export function stoneCard(s, { onclick, price, sold, dear, footer } = {}) {
     stoneEl(s, 'X'),
     h('div.card-name', {}, stoneName(s)),
     h('div.card-text', {}, stoneText(s)),
+    st.once ? h('div.dim.small', {}, t('one-shot')) : null,
     price !== undefined ? h('div.price', {}, iconEl('coin'), price) : null,
     h('span.card-info', { role: 'button', 'aria-label': t('Example'), onclick: (e) => { e.stopPropagation(); infoStone(s, 'X'); } }, 'ⓘ'),
     footer ?? null);
-}
-
-export function trickCard(name, { onclick, price, sold, dear } = {}) {
-  const tr = TRICKS[name];
-  return h(`button.card.trick-card.${tr.rarity}${sold ? '.sold' : dear ? '.dear' : ''}`, { onclick, disabled: sold || undefined },
-    h('div.trick-token', { html: icon(name) }),
-    h('div.card-name', {}, tr.name),
-    h('div.card-text', {}, tr.text),
-    price !== undefined ? h('div.price', {}, iconEl('coin'), price) : null);
 }
 
 export function relicCard(id, { onclick, price, sold, dear } = {}) {

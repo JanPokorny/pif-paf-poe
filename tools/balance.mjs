@@ -19,8 +19,8 @@ function typicalRun(seed, act) {
   const gains = [0, 2, 4][act - 1];
   for (let i = 0; i < gains; i++) R.gainStone(run, R.randomStone(run));
   run.slots += act - 1;
-  if (act > 1) run.tricks.push(R.randomTrick(run));
-  if (act > 2) run.tricks.push(R.randomTrick(run));
+  if (act > 1) R.gainStone(run, R.randomOnce(run));
+  if (act > 2) R.gainStone(run, R.randomOnce(run));
   return run;
 }
 

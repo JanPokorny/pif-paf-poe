@@ -12,8 +12,8 @@
 // branches it, and everything else is a pure function of it. The AI and the UI
 // run the very same code, so what you see is what the enemy reasons about.
 //
-// A turn is select -> place -> effect -> trick -> check. Effects and tricks with
-// a single possible outcome resolve on their own.
+// A turn is select -> place -> effect -> check. An effect with a single
+// possible outcome resolves on its own.
 
 export const LINES = [
   [0, 1, 2], [3, 4, 5], [6, 7, 8],
@@ -101,7 +101,7 @@ def('stinky', {
 
 def('mountain', {
   name: 'Mountain', rarity: 'common', kind: 'static', immovable: true,
-  text: 'No stone ever moves it: moving stones step over it. Tricks can still move it.',
+  text: 'No stone ever moves it: moving stones step over it. One-shot stones still can.',
 });
 
 def('2048', {
@@ -279,124 +279,103 @@ def('magpie', {
   },
 });
 
+// One-shot stones: placed like any other, then they do their one thing. Once
+// played in a duel, one is gone from your pouch for good.
+const mine = (s, p) => [...Array(9).keys()].filter((i) => s.board[i]?.player === p);
+const theirs = (s, p) => [...Array(9).keys()].filter((i) => s.board[i] && s.board[i].player !== p);
+const empties = (s) => [...Array(9).keys()].filter((i) => !s.board[i]);
+
+def('overtake', {
+  name: 'Overtake', rarity: 'common', kind: 'once', once: true,
+  text: 'If the enemy holds the centre, that stone goes back to their hand.',
+  options: (s, pos, cell) => (s.board[4] && s.board[4].player !== cell.player ? [{ target: 4 }] : []),
+  apply(s, pos, a) { returnToHand(s, a.target); },
+});
+
+def('relocate', {
+  name: 'Relocate', rarity: 'common', kind: 'once', once: true,
+  text: 'Move one of your stones, this one too, to any empty square.',
+  options: (s, pos, cell) => mine(s, cell.player).flatMap((from) => empties(s).map((to) => ({ from, to }))),
+  apply(s, pos, a) { move(s, a.from, a.to); },
+});
+
+def('mirror', {
+  name: 'Mirror', rarity: 'common', kind: 'once', once: true,
+  text: 'Swap what stands on two squares facing each other through the centre.',
+  options: (s) => SYMMETRIC.filter(([a, b]) => s.board[a] || s.board[b]).map(([a, b]) => ({ a, b })),
+  apply(s, pos, t) {
+    const held = s.board[t.a];
+    s.board[t.a] = s.board[t.b];
+    s.board[t.b] = held;
+  },
+});
+
+def('nudge', {
+  name: 'Nudge', rarity: 'common', kind: 'once', once: true,
+  text: 'Move any stone one step into an empty square beside it.',
+  options(s) {
+    const out = [];
+    for (let i = 0; i < 9; i++) {
+      if (!s.board[i] || isStuck(s, i)) continue;
+      for (const to of empties(s)) if (adjacent(i, to)) out.push({ from: i, to });
+    }
+    return out;
+  },
+  apply(s, pos, a) { move(s, a.from, a.to); },
+});
+
+def('mind-control', {
+  name: 'Mind Control', rarity: 'uncommon', kind: 'once', once: true,
+  text: 'Name a stone for the enemy — one of theirs, or a Pebble. That is what they must play next.',
+  options: (s, pos, cell) => ['pebble', ...new Set(s.hands[other(cell.player)].map((h) => h.type))].map((stone) => ({ stone })),
+  apply(s, pos, a, cell) { s.forced = { player: other(cell.player), stone: a.stone }; },
+});
+
+def('rehearse', {
+  name: 'Rehearse', rarity: 'uncommon', kind: 'once', once: true,
+  text: 'Another of your stones on the board does its thing again, from where it stands.',
+  options(s, pos, cell) {
+    const out = [];
+    for (const i of mine(s, cell.player)) {
+      const c = s.board[i];
+      const st = STONES[c.type];
+      if (i === pos || !active(s, c) || !st.apply || st.once || st.id === 'twin') continue;
+      for (const o of st.options(s, i, c)) out.push({ pos: i, ...o });
+    }
+    return out;
+  },
+  apply(s, pos, a) {
+    const c = s.board[a.pos];
+    STONES[c.type].apply(s, a.pos, a, c);
+  },
+});
+
+def('muffle', {
+  name: 'Muffle', rarity: 'common', kind: 'once', once: true,
+  text: 'The enemy\'s next stone does nothing.',
+  options: (s, pos, cell) => (s.silenced[other(cell.player)] ? [] : [{}]),
+  apply(s, pos, a, cell) { s.silenced[other(cell.player)] = 1; },
+});
+
+def('pluck', {
+  name: 'Pluck', rarity: 'rare', kind: 'once', once: true,
+  text: 'Any enemy stone goes back to their hand.',
+  options: (s, pos, cell) => theirs(s, cell.player).map((target) => ({ target })),
+  apply(s, pos, a) { returnToHand(s, a.target); },
+});
+
+def('bribe', {
+  name: 'Bribe', rarity: 'rare', kind: 'once', once: true,
+  text: 'An enemy stone off the centre becomes yours.',
+  options: (s, pos, cell) => theirs(s, cell.player).filter((i) => i !== 4).map((target) => ({ target })),
+  apply(s, pos, a, cell) { s.board[a.target].player = cell.player; },
+});
+
 export const STONE_TYPES = Object.keys(STONES);
 // Stones you can find: everything but the Pebble.
 export const BASE_STONES = STONE_TYPES.filter((t) => t !== 'pebble');
+export const ONCE_STONES = STONE_TYPES.filter((t) => STONES[t].once);
 
-// ── Tricks ──────────────────────────────────────────────────────────────────
-//
-// Tricks are spent at the end of your own turn, after your stone has resolved
-// and before the check for three in a row, so any of them can finish a line.
-
-export const TRICKS = {
-  overtake: {
-    name: 'Overtake', rarity: 'common',
-    text: 'If the enemy holds the centre, that stone goes back to their hand.',
-    options(s, p) {
-      const c = s.board[4];
-      return c && c.player !== p ? [{ pos: 4 }] : [];
-    },
-    apply(s, p, a) { returnToHand(s, a.pos); },
-  },
-  relocate: {
-    name: 'Relocate', rarity: 'common',
-    text: 'Move one of your stones to any empty square.',
-    options(s, p) {
-      const out = [];
-      for (let i = 0; i < 9; i++) {
-        if (s.board[i]?.player !== p) continue;
-        for (let to = 0; to < 9; to++) if (!s.board[to]) out.push({ from: i, to });
-      }
-      return out;
-    },
-    apply(s, p, a) { move(s, a.from, a.to); },
-  },
-  mirror: {
-    name: 'Mirror', rarity: 'common',
-    text: 'Swap what stands on two squares facing each other through the centre.',
-    options(s) {
-      return SYMMETRIC.filter(([a, b]) => s.board[a] || s.board[b]).map(([a, b]) => ({ a, b }));
-    },
-    apply(s, p, t) {
-      const held = s.board[t.a];
-      s.board[t.a] = s.board[t.b];
-      s.board[t.b] = held;
-    },
-  },
-  nudge: {
-    name: 'Nudge', rarity: 'common',
-    text: 'Move any stone one step into an empty square beside it.',
-    options(s) {
-      const out = [];
-      for (let i = 0; i < 9; i++) {
-        if (!s.board[i] || isStuck(s, i)) continue;
-        for (let to = 0; to < 9; to++) if (!s.board[to] && adjacent(i, to)) out.push({ from: i, to });
-      }
-      return out;
-    },
-    apply(s, p, a) { move(s, a.from, a.to); },
-  },
-  'mind-control': {
-    name: 'Mind Control', rarity: 'uncommon',
-    text: 'Name a stone for the enemy — one of theirs, or a Pebble. That is what they must play next.',
-    options(s, p) {
-      return ['pebble', ...new Set(s.hands[other(p)].map((h) => h.type))].map((stone) => ({ stone }));
-    },
-    apply(s, p, a) { s.forced = { player: other(p), stone: a.stone }; },
-  },
-  rehearse: {
-    name: 'Rehearse', rarity: 'uncommon',
-    text: 'One of your stones on the board does its thing again, from where it stands.',
-    options(s, p) {
-      const out = [];
-      for (let i = 0; i < 9; i++) {
-        const c = s.board[i];
-        if (c?.player !== p || !active(s, c)) continue;
-        const st = STONES[c.type];
-        if (!st.apply || st.id === 'twin') continue;
-        for (const o of st.options(s, i, c)) out.push({ pos: i, ...o });
-      }
-      return out;
-    },
-    apply(s, p, a) {
-      const c = s.board[a.pos];
-      STONES[c.type].apply(s, a.pos, a, c);
-    },
-  },
-  muffle: {
-    name: 'Muffle', rarity: 'common',
-    text: 'The enemy\'s next stone does nothing.',
-    options: (s, p) => (s.silenced[other(p)] ? [] : [{}]),
-    apply(s, p) { s.silenced[other(p)] = 1; },
-  },
-  pluck: {
-    name: 'Pluck', rarity: 'rare',
-    text: 'Any enemy stone goes back to their hand.',
-    options(s, p) {
-      const out = [];
-      for (let i = 0; i < 9; i++) if (s.board[i] && s.board[i].player !== p) out.push({ pos: i });
-      return out;
-    },
-    apply(s, p, a) { returnToHand(s, a.pos); },
-  },
-  bribe: {
-    name: 'Bribe', rarity: 'rare',
-    text: 'An enemy stone off the centre becomes yours.',
-    options(s, p) {
-      const out = [];
-      for (let i = 0; i < 9; i++) if (i !== 4 && s.board[i] && s.board[i].player !== p) out.push({ pos: i });
-      return out;
-    },
-    apply(s, p, a) { s.board[a.pos].player = p; },
-  },
-  reinforce: {
-    name: 'Encore', rarity: 'common',
-    text: 'The last special stone you played comes back into your hand.',
-    options: (s, p) => (s.lastSpecial[p] ? [{}] : []),
-    apply(s, p) { s.hands[p].push({ type: s.lastSpecial[p] }); s.lastSpecial[p] = null; },
-  },
-};
-export const TRICK_TYPES = Object.keys(TRICKS);
 
 // ── Conditions: a duel's rule for both sides ────────────────────────────────
 
@@ -531,14 +510,12 @@ const noMods = () => ({});
 
 export function createGame({
   handX = [], handO = [], first = 'O',
-  tricksX = [], tricksO = [], usesX = 1, usesO = 1,
   modsX = noMods(), modsO = noMods(), conds = [], rules = [], log = true,
 }) {
   return {
     board: Array(9).fill(null),     // {player, type, id, line?, hushed?} | null
     hands: { X: handX.map(norm).filter((h) => h.type !== 'pebble'), O: handO.map(norm).filter((h) => h.type !== 'pebble') },
-    tricks: { X: [...tricksX], O: [...tricksO] },
-    uses: { X: usesX, O: usesO },   // tricks each side may still spend this duel
+    spent: { X: [], O: [] },        // one-shot stones each side has played from its own hand
     mods: { X: { ...modsX }, O: { ...modsO } },
     conds: [...conds],              // rules for both sides
     rules: [...rules],              // the boss's rules, for O
@@ -565,8 +542,7 @@ export function cloneState(s) {
   return {
     board: s.board.map((c) => (c ? { ...c } : null)),
     hands: { X: s.hands.X.map((h) => ({ ...h })), O: s.hands.O.map((h) => ({ ...h })) },
-    tricks: { X: [...s.tricks.X], O: [...s.tricks.O] },
-    uses: { ...s.uses },
+    spent: { X: [...s.spent.X], O: [...s.spent.O] },
     mods: s.mods,                   // never mutated during play
     conds: s.conds, rules: s.rules,
     first: s.first, player: s.player, phase: s.phase,
@@ -630,19 +606,6 @@ function effectOptions(s) {
   return opts;
 }
 
-function trickOptions(s) {
-  const p = s.player;
-  const out = [];
-  if (s.uses[p] <= 0) return out;
-  const seen = new Set();
-  s.tricks[p].forEach((name) => {
-    if (seen.has(name)) return;
-    seen.add(name);
-    for (const o of TRICKS[name].options(s, p)) out.push({ type: 'trick', use: name, ...o });
-  });
-  return out;
-}
-
 // The boss's word on your next turn.
 function dictateOptions(s) {
   const kind = RULES_DICTATING.find((r) => s.rules.includes(r));
@@ -661,10 +624,6 @@ export function legalActions(s) {
     case 'select': return selectActions(s);
     case 'place': return allowedSquares(s).map((pos) => ({ type: 'place', pos }));
     case 'effect': return effectOptions(s).map((o) => ({ type: 'effect', ...o }));
-    case 'trick': {
-      const t = trickOptions(s);
-      return t.length ? [{ type: 'trick', use: 'pass' }, ...t] : [];
-    }
     case 'dictate': return dictateOptions(s);
     default: return [];
   }
@@ -716,11 +675,6 @@ function passTurn(s) {
   s.phase = 'select';
 }
 
-function toTrickPhase(s) {
-  s.phase = 'trick';
-  if (!trickOptions(s).length) endTurn(s);
-}
-
 function afterEffect(s) {
   const c = s.board.find((x) => x?.id === s.placedId);
   // Echo Chamber: the first stone of the duel that resolved something does it
@@ -738,7 +692,7 @@ function afterEffect(s) {
     }
   }
   s.repeat = false;
-  toTrickPhase(s);
+  endTurn(s);
 }
 
 function afterPlacement(s) {
@@ -754,10 +708,10 @@ function afterPlacement(s) {
   }
   s.lastPlaced[p] = { type: c.type };
   if (c.type !== 'pebble') s.lastSpecial[p] = c.type;
-  if (dud || !STONES[c.type].apply) return toTrickPhase(s);
+  if (dud || !STONES[c.type].apply) return endTurn(s);
 
   const opts = effectOptions(s);
-  if (!opts.length) return toTrickPhase(s);
+  if (!opts.length) return endTurn(s);
   s.phase = 'effect';
   if (opts.length === 1) applyAction(s, { type: 'effect', ...opts[0] });
 }
@@ -782,6 +736,7 @@ export function applyAction(s, a) {
     }
     case 'place': {
       let stone = s.selected;
+      if (STONES[stone.type].once && !s.from) s.spent[p].push(stone.type);
       // A Parrot turns into what the enemy last placed, before it does anything.
       if (stone.type === 'parrot') {
         const last = s.lastSpecial[other(p)];
@@ -801,19 +756,6 @@ export function applyAction(s, a) {
       const c = s.board[s.placedAt];
       STONES[c.type].apply(s, s.placedAt, a, c);
       afterEffect(s);
-      break;
-    }
-    case 'trick': {
-      if (a.use !== 'pass') {
-        const k = s.tricks[p].indexOf(a.use);
-        s.tricks[p].splice(k, 1);
-        s.uses[p]--;
-        TRICKS[a.use].apply(s, p, a);
-        note(s, `trick:${a.use}`);
-        // More than one trick a turn is allowed if you have the uses for it.
-        if (s.uses[p] > 0 && trickOptions(s).length && !hasLine(s, p)) { s.phase = 'trick'; break; }
-      }
-      endTurn(s);
       break;
     }
     case 'dictate': {

@@ -1,17 +1,17 @@
 // The app: title, run screens, persistence. One screen at a time, chosen by
 // run.screen, rendered into #app.
 
-import { STONES, TRICKS, CONDS, RULES, createGame } from './engine.js';
+import { STONES, CONDS, RULES, createGame } from './engine.js';
 import { RELICS, ENEMIES, ACTS, EVENTS } from './content.js';
 import * as R from './run.js';
-import { h, hideToast, tapeUp, art, relicArt, scribbleX, scribbleO, stoneEl, iconEl, toast, modal, infoStone, infoTrick, infoRelic, ruleChip, stoneCard, trickCard, relicCard, stoneName, langToggle } from './ui/common.js';
+import { h, hideToast, tapeUp, art, relicArt, scribbleX, scribbleO, stoneEl, iconEl, toast, modal, infoStone, infoRelic, ruleChip, stoneCard, relicCard, stoneName, langToggle } from './ui/common.js';
 import { icon } from './icons.js';
 import { mountDuel } from './ui/duel.js';
 import { sfx, soundOn, setSound } from './sound.js';
 import { t, tp, lang, localizeData } from './i18n.js';
 
 localizeData({
-  stones: STONES, tricks: TRICKS, conds: CONDS, rules: RULES, relics: RELICS, enemies: ENEMIES, acts: ACTS, events: EVENTS,
+  stones: STONES, conds: CONDS, rules: RULES, relics: RELICS, enemies: ENEMIES, acts: ACTS, events: EVENTS,
   heat: R.HEAT, quirks: R.QUIRKS,
 });
 document.documentElement.lang = lang;
@@ -103,8 +103,6 @@ function showPouch() {
   const body = h('div.pouch-view', {},
     h('h2', {}, t('Pouch · {n}/{cap}', { n: run.pouch.length, cap: R.pouchCap(run) })),
     h('div.stone-grid', {}, run.pouch.map((s) => h('button.pouch-slot', { onclick: () => infoStone(s, 'X') }, stoneEl(s, 'X'), h('span', {}, stoneName(s))))),
-    h('h2', {}, t('Tricks · {n}/{cap}', { n: run.tricks.length, cap: R.trickCap(run) })),
-    run.tricks.length ? h('div.trick-list', {}, run.tricks.map((x) => h('button.trick-btn', { onclick: () => infoTrick(x) }, h('span.trick-ico', { html: icon(x) }), TRICKS[x].name))) : h('p.dim', {}, t('No tricks.')),
     h('h2', {}, t('Relics')),
     run.relics.length ? h('div.relic-list', {}, run.relics.map((r) => h('button.relic-row', { onclick: () => infoRelic(r) }, h('span.relic-token.small', {}, relicArt(r)), h('span', {}, h('b', {}, RELICS[r].name), h('br'), RELICS[r].text)))) : h('p.dim', {}, t('No relics yet.')),
     h('button.btn.wide', { onclick: () => close() }, t('Close')));
@@ -143,7 +141,10 @@ const RETIRED = { rail: 'shift', pivot: 'rotate', electromagnet: 'magnet', stenc
 function migrate() {
   for (const st of run.pouch) st.type = RETIRED[st.type] ?? st.type;
   run.pouch = run.pouch.filter((st) => STONES[st.type]);
-  run.tricks = run.tricks.filter((x) => TRICKS[x]);
+  // Tricks are one-shot stones now: into the pouch they go.
+  for (const x of run.tricks ?? []) if (STONES[x]?.once) run.pouch.push({ type: x, uid: run.nextUid++ });
+  delete run.tricks;
+  if (duelState && (!duelState.spent || duelState.phase === 'trick')) { duelState = null; if (run.screen === 'duel') run.screen = 'predual'; }
   run.relics = run.relics.filter((x) => RELICS[x]);
   // A duel in progress with a retired stone in it starts over.
   const known = (h) => STONES[h.type];
@@ -425,7 +426,6 @@ function preDuel() {
       h('div.hand.enemy-hand.show', {},
         h('button.slot-plain', { onclick: () => infoStone({ type: 'pebble' }, 'O') }, stoneEl({ type: 'pebble' }, 'O')),
         duel.handO.map((s) => h('button.slot-plain', { onclick: () => infoStone(s, 'O') }, stoneEl(s, 'O')))),
-      duel.tricksO.length ? h('div.enemy-tricks-pre', {}, t('Tricks: '), duel.tricksO.map((x) => h('button.link', { onclick: () => infoTrick(x) }, TRICKS[x].name))) : null,
       h('div.duel-facts.facts-card', {},
         (duel.rules ?? []).map((r) => h('div.fact.warn.rule-fact', {}, ruleChip('rule', r), h('span', {}, RULES[r].text))),
         (duel.conds ?? []).map((c) => h('div.fact.rule-fact', {}, ruleChip('cond', c), h('span', {}, CONDS[c].text))),
@@ -436,7 +436,6 @@ function preDuel() {
         h('div.fact.dim', {}, stakes)),
       h('div.section-label', {}, t('Your stones '), count),
       run.pouch.length ? grid : h('p.dim', {}, t('Pebbles only.')),
-      run.tricks.length ? h('div.dim.small', {}, t('Tricks: ') + run.tricks.map((x) => TRICKS[x].name).join(', ')) : null,
       h('div.pre-spacer'),
       h('div.sticky-bottom', {}, fight)));
 
@@ -463,8 +462,8 @@ function duelScreen() {
     state: duelState, enemy, extra,
     onSave: (s) => { duelState = s; save(); },
     onEnd: (winner) => {
-      // Tricks spent in the duel are gone from the run.
-      run.tricks = [...duelState.tricks.X].filter((x) => TRICKS[x]);
+      // One-shot stones played in the duel are gone from the pouch.
+      R.spendOnce(run, run.lastHand, duelState.spent.X);
       duelState = null;
       if (winner === 'X') {
         const res = R.duelWon(run);
@@ -509,14 +508,6 @@ function takeStone(s, done) {
   }, { cancel: t('Keep my pouch') });
 }
 
-function takeTrick(tr, done) {
-  if (!R.tricksFull(run)) { run.tricks.push(tr); done(true); return; }
-  const body = h('div.menu', {}, h('h2', {}, t('Too many tricks')), h('p', {}, t('Drop one to take {trick}?', { trick: TRICKS[tr].name })),
-    run.tricks.map((x, k) => h('button.btn.wide', { onclick: () => { run.tricks.splice(k, 1); run.tricks.push(tr); close(); done(true); } }, t('Drop {trick}', { trick: TRICKS[x].name }))),
-    h('button.btn.wide.ghost', { onclick: () => { close(); done(false); } }, t('Keep mine')));
-  const close = modal(body, { dismissable: false });
-}
-
 function pickFromPouch(prompt, cb, { filter = () => true, cancel = t('Cancel') } = {}) {
   const list = run.pouch.filter(filter);
   const body = h('div.pouch-view', {}, h('h2', {}, prompt),
@@ -552,9 +543,9 @@ function rewardScreen() {
         onclick: () => { R.gainRelic(run, id); rw.taken.boss = id; sfx('coin'); save(); rewardScreen(); },
       }))));
   } else if (rw.taken.boss) parts.push(h('div.section-label', {}, t('Boss relic')), relicCard(rw.taken.boss, { onclick: () => infoRelic(rw.taken.boss) }));
-  if (rw.trick && !rw.taken.trick) {
-    parts.push(h('div.section-label', {}, t('A trick')), h('div.cards.one', {}, trickCard(rw.trick, {
-      onclick: () => takeTrick(rw.trick, (ok) => { if (ok) { rw.taken.trick = true; sfx('coin'); save(); rewardScreen(); } }),
+  if (rw.once && !rw.taken.once) {
+    parts.push(h('div.section-label', {}, t('A one-shot stone')), h('div.cards.one', {}, stoneCard(rw.once, {
+      onclick: () => takeStone(rw.once, (ok) => { if (ok) { rw.taken.once = true; save(); rewardScreen(); } }),
     })));
   }
   if (rw.taken.stone && rw.taken.stone !== true && !rw.taken.stone.startsWith('aid:')) parts.push(h('div.section-label', {}, t('You took the {stone}.', { stone: STONES[rw.taken.stone].name })), h('div.cards.one', {}, stoneCard({ type: rw.taken.stone }, {})));
@@ -577,7 +568,7 @@ function rewardScreen() {
   const pendingBoss = rw.relicChoice?.length && !rw.taken.boss;
   parts.push(h('div.sticky-bottom', {}, h('button.btn.wide.big' + (pendingBoss ? '' : '.primary'), {
     onclick: () => { if (pendingBoss && !confirm(t('Leave without a boss relic?'))) return; done(); },
-  }, (rw.stones.length && !rw.taken.stone) || (rw.trick && !rw.taken.trick) ? t('Skip') : t('Continue'))));
+  }, (rw.stones.length && !rw.taken.stone) || (rw.once && !rw.taken.once) ? t('Skip') : t('Continue'))));
   screen(topBar(), h('div.page.reward', {}, parts));
 }
 
@@ -609,10 +600,10 @@ function shopScreen(redraw = false) {
       price: s.price, sold: s.sold, dear: run.gold < s.price,
       onclick: () => buy(s.price, (pay) => takeStone(s, (ok) => { if (ok) { s.sold = true; pay(); } })),
     }))),
-    h('div.section-label', {}, t('Tricks')),
-    h('div.cards.scroll', {}, shop.tricks.map((x) => trickCard(x.trick, {
+    h('div.section-label', {}, t('One-shot stones')),
+    h('div.cards.scroll', {}, (shop.once ?? []).map((x) => stoneCard(x, {
       price: x.price, sold: x.sold, dear: run.gold < x.price,
-      onclick: () => buy(x.price, (pay) => takeTrick(x.trick, (ok) => { if (ok) { x.sold = true; pay(); } })),
+      onclick: () => buy(x.price, (pay) => takeStone(x, (ok) => { if (ok) { x.sold = true; pay(); } })),
     }))),
     shop.relics.length ? [h('div.section-label', {}, t('Relics')),
       h('div.cards.scroll', {}, shop.relics.map((r) => relicCard(r.relic, {
@@ -704,15 +695,9 @@ function eventScreen() {
   const api = {
     rng: () => R.rand(run),
     pouchRoom: () => !R.pouchFull(run),
-    trickRoom: () => !R.tricksFull(run),
     // `pay` is charged on the first pick, so backing out costs nothing.
     craft: () => new Promise((resolve) => craftFlow((text) => resolve(text ?? t('You change your mind.')))),
-    pickTrick: (text) => new Promise((resolve) => {
-      const body = h('div.menu', {}, h('h2', {}, text),
-        run.tricks.map((x, k) => h('button.btn.wide', { onclick: () => { close(); resolve(k); } }, TRICKS[x].name)),
-        h('button.btn.wide.ghost', { onclick: () => { close(); resolve(-1); } }, t('Never mind')));
-      const close = modal(body, { dismissable: false });
-    }),
+    pickOnce: (text) => new Promise((resolve) => pickFromPouch(text, resolve, { filter: (x) => STONES[x.type].once, cancel: t('Never mind') })),
     chooseStone: (rarity, pay = null) => new Promise((resolve) => {
       const opts = R.stoneChoices(run, 'elite', rarity);
       const body = h('div.pouch-view', {}, h('h2', {}, t('Choose a stone')),
@@ -720,11 +705,11 @@ function eventScreen() {
         h('button.btn.wide.ghost', { onclick: () => { close(); resolve(t('You take nothing.')); } }, t('None')));
       const close = modal(body, { dismissable: false, cls: 'tall' });
     }),
-    gainRandomTrick: (rarity) => {
-      const tr = R.randomTrick(run, rarity);
-      if (R.tricksFull(run)) return t('You find {trick}, but have no room for it.', { trick: TRICKS[tr].name });
-      run.tricks.push(tr);
-      return t('You gain the trick {trick}.', { trick: TRICKS[tr].name });
+    gainRandomOnce: (rarity) => {
+      const s = R.randomOnce(run, rarity);
+      if (R.pouchFull(run)) return t('You find a {stone}, but your pouch is full.', { stone: stoneName(s) });
+      R.gainStone(run, s);
+      return t('You gain a {stone}.', { stone: stoneName(s) });
     },
     gainRandomRelic: (text) => {
       const id = R.randomRelic(run);

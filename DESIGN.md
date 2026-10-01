@@ -9,10 +9,12 @@ numbers. The camp game's own reasoning is in `old/adr/`.
   row wins; a line only your opponent has wins for them.
 - **Restrictions compose.** Every enemy Magnet, Stinky and Beacon pulls at once and you place
   where you satisfy as many as any square can (`old/adr/2026-08-18-…`).
-- **Counterattacks → tricks.** Spent at the end of your own turn, before the line check, so any
-  of them can finish a line. Overtake, Relocate, Mirror, Mind Control and Rehearse are the five
-  the ADR kept; five more were added (Nudge, Muffle, Pluck, Bribe, Encore). An Anchor trick that
-  fixed a stone in place was cut: the Mountain is the only thing nothing moves.
+- **Counterattacks → one-shot stones.** The camp game's counterattacks became tricks, spent
+  at the end of a turn; now they are stones like any other, brought in a slot and placed on the
+  board, that then do their one thing (Overtake, Relocate, Mirror, Mind Control, Rehearse, Nudge,
+  Muffle, Pluck, Bribe). Once played in a duel, won or lost, one is gone from the pouch. They
+  have a dashed outline, come as their own reward and shop shelf, and are cheaper than stones.
+  Encore, which handed back your last special stone, did not survive the change.
 - **Boss rules** come from an older iteration's sheet of special rules (Taktika, Náskok, Elko,
   Lep, Sloup, Špion, Reservé).
 
@@ -144,11 +146,11 @@ At heat 0 (six hearts), bots that play the map sensibly, pick their stones by st
 | 300 iterations, no blunders | about 34% |
 
 Heat 1–5 raises it after each win: deeper search, dearer shops, a heart fewer,
-bigger elite hands and boss tricks, no blunders.
+bigger elite hands, no blunders.
 
 ## Tests
 
-- `node tools/test-engine.mjs` — every stone, trick, condition and boss rule against its own
+- `node tools/test-engine.mjs` — every stone, condition and boss rule against its own
   text, plus a 20,000-game fuzz of
   invariants.
 - `node tools/runbot.mjs` — whole runs, including the save format's JSON round trip.

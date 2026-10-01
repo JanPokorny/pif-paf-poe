@@ -1,6 +1,6 @@
 // The enemy: Monte Carlo tree search over the engine's own action list, grown
 // out of old/ai.js. A turn is searched as separate plies (select, place,
-// effect, trick), so it picks a stone knowing what it will do with it.
+// effect), so it picks a stone knowing what it will do with it.
 //
 //   chooseAction(state, { iterations, rng, blunder })
 //
@@ -27,8 +27,8 @@ function peek(s, action) {
   return after;
 }
 
-// Rollout policy: take a line when one is there, avoid handing one over, and
-// keep a trick unless spending it wins on the spot. Both sides play it.
+// Rollout policy: take a line when one is there, avoid handing one over.
+// Both sides play it.
 export function policyAction(s, actions, rng) {
   if (s.phase === 'select') return pick(actions, rng);
   const me = s.player;
@@ -43,7 +43,6 @@ export function policyAction(s, actions, rng) {
     else if (!hasLine(after, other(me))) safe.push(a);
   }
   if (winning.length) return pick(winning, rng);
-  if (s.phase === 'trick') return actions[0];   // pass
   if (safe.length) return pick(safe, rng);
   return pick(actions, rng);
 }
@@ -99,7 +98,6 @@ export function chooseAction(state, opts = {}) {
       else if (!(after.over && after.winner !== me)) ok.push(a);
     }
     if (wins.length) return wins[0];
-    if (state.phase === 'trick') return actions[0];
     if (ok.length) return pick(ok, rng);
   }
 

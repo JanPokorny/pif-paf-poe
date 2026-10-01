@@ -4,10 +4,10 @@
 // The run is one JSON-serialisable object. Its random stream is part of it, so
 // a saved run resumes exactly.
 
-import { STONES, TRICKS, TRICK_TYPES, CONDS } from './engine.js';
+import { STONES, CONDS } from './engine.js';
 import {
   RELICS, RELIC_TYPES, BOSS_RELICS, ENEMIES, ACTS, EVENTS, enemiesOf, EASY_OPENERS,
-  STONE_PRICE, TRICK_PRICE, RELIC_PRICE, REWARD_STONES,
+  STONE_PRICE, ONCE_PRICE, RELIC_PRICE, REWARD_STONES, ONCE_STONES,
 } from './content.js';
 
 // ── Randomness that saves with the run ──────────────────────────────────────
@@ -39,11 +39,11 @@ export const HEAT = [
   { n: 1, text: 'Enemies think harder.' },
   { n: 2, text: 'Shops charge a quarter more.' },
   { n: 3, text: 'Start with 1 fewer heart.' },
-  { n: 4, text: 'Elites bring an extra stone, bosses an extra trick.' },
+  { n: 4, text: 'Elites bring an extra stone.' },
   { n: 5, text: 'Enemies never blunder.' },
 ];
 
-export const START = { pouch: [], tricks: ['overtake'], hearts: 6, gold: 30, slots: 2 };
+export const START = { pouch: [], hearts: 6, gold: 30, slots: 2 };
 export const MAX_SLOTS = 5;
 
 const stone = (run, type) => ({ type, uid: run.nextUid++ });
@@ -54,7 +54,7 @@ export function newRun({ seed = (Math.random() * 2 ** 31) | 0, heat = 0 } = {}) 
     v: 2, seed, rs: seed, heat,
     act: 1, atBoss: false, map: null,
     hearts, maxHearts: hearts,
-    gold: START.gold, pouch: [], tricks: [...START.tricks], relics: [],
+    gold: START.gold, pouch: [], relics: [],
     slots: START.slots,
     aids: { double: 0, breach: 0 },   // map aids won in duels
     lastHand: null, nextUid: 1,
@@ -69,11 +69,10 @@ export function newRun({ seed = (Math.random() * 2 ** 31) | 0, heat = 0 } = {}) 
 
 export const has = (run, relic) => run.relics.includes(relic);
 export const pouchCap = (run) => 6 + (has(run, 'satchel') ? 2 : 0);
-export const trickCap = (run) => 3 + (has(run, 'satchel') ? 1 : 0);
 // How many special stones you bring into a duel. Pebbles are always there.
 export const handSize = (run) => Math.min(MAX_SLOTS + 1, (run.slots ?? 2) + (has(run, 'deep-pockets') ? 1 : 0));
-export const trickUses = (run) => 1 + (has(run, 'gloves') ? 1 : 0);
 export const stoneName = (s) => STONES[s.type].name;
+export const isOnce = (s) => !!STONES[s.type]?.once;
 
 // ── Crafting ────────────────────────────────────────────────────────────────
 //
@@ -528,8 +527,7 @@ export function prepareDuel(run, enemyId, context = {}) {
   // Heat makes everyone think harder. Later acts' rank and file already think
   // hard by nature; they are eased a little, as an act is several pages of them.
   let heatIters = (tier === 'boss' ? 1 : [1, 0.8, 0.6][Math.max(0, run.act - 1)]) * (run.heat >= 1 ? 1.5 : 1);
-  const enemyTricks = [...(enemy.tricks ?? [])];
-  const usesO = 1;
+  for (const type of enemy.once ?? []) handO.push({ type });
   const modsO = { ...(enemy.mods ?? {}) };
   let conds = [], rules = [];
   if (tier === 'boss') {
@@ -538,7 +536,6 @@ export function prepareDuel(run, enemyId, context = {}) {
     const power = run.map?.power ?? 0;
     rules = [...(((context.bossWins ?? 0) > 0 || power >= 2) && enemy.rules2 || enemy.rules || [])];
     heatIters *= 1 + 0.25 * power;
-    if (run.heat >= 4) enemyTricks.push(randomTrick(run));
   } else {
     // A home rule, or sometimes one rolled for the day.
     const act = ACTS[run.act - 1];
@@ -550,13 +547,12 @@ export function prepareDuel(run, enemyId, context = {}) {
   let quirk = null;
   if (tier === 'elite' && run.act >= 2) {
     quirk = pick(run, Object.keys(QUIRKS));
-    if (quirk === 'tricky') enemyTricks.push(randomTrick(run));
+    if (quirk === 'tricky') handO.push(randomOnce(run));
     if (quirk === 'stocked') handO.push({ type: pick(run, enemy.pool) });
     if (quirk === 'keen') heatIters *= 1.5;
   }
   return {
     enemyId, tier, handO, first: 'O', quirk, conds, rules,
-    tricksO: enemyTricks, usesO,
     modsO,
     iters: Math.round(enemy.iters * heatIters), blunder: run.heat >= 5 ? 0 : enemy.blunder * 0.7,
     bossRound: context.bossRound ?? 0, bossWins: context.bossWins ?? 0,
@@ -565,7 +561,7 @@ export function prepareDuel(run, enemyId, context = {}) {
 }
 
 export const QUIRKS = {
-  tricky: { name: 'Tricky', text: 'It carries an extra trick.' },
+  tricky: { name: 'Tricky', text: 'It carries a one-shot stone.' },
   stocked: { name: 'Stocked', text: 'It brings an extra stone.' },
   keen: { name: 'Keen', text: 'It thinks harder.' },
 };
@@ -584,7 +580,6 @@ export function playerMods(run) {
 export function gameConfig(run, duel, uids) {
   return {
     handX: playerHand(run, uids), handO: duel.handO, first: 'O',
-    tricksX: [...run.tricks], tricksO: duel.tricksO, usesX: trickUses(run), usesO: duel.usesO,
     modsX: playerMods(run), modsO: duel.modsO, conds: duel.conds ?? [], rules: duel.rules ?? [],
   };
 }
@@ -624,7 +619,7 @@ export function enterNode(run, key) {
     case 'gift': {
       // A special stone, free: one of two.
       const stones = stoneChoices(run, 'normal', null, 2);
-      run.pending = { kind: 'reward', gift: true, gold: 0, stones, trick: null, relic: null, relicChoice: null, tier: 'gift', taken: {} };
+      run.pending = { kind: 'reward', gift: true, gold: 0, stones, once: null, relic: null, relicChoice: null, tier: 'gift', taken: {} };
       run.screen = 'reward';
       break;
     }
@@ -672,10 +667,10 @@ export function duelWon(run) {
   if (has(run, 'lucky-coin')) gold += 8;
   run.gold += gold;
   run.stats.gold += gold;
-  const reward = { kind: 'reward', gold, stones: [], trick: null, relic: null, relicChoice: null, tier: duel.tier, taken: {} };
+  const reward = { kind: 'reward', gold, stones: [], once: null, relic: null, relicChoice: null, tier: duel.tier, taken: {} };
   if (duel.event !== 'thief') reward.stones = stoneChoices(run, duel.tier);
-  const trickChance = duel.tier === 'normal' ? 0.3 : duel.tier === 'event' ? 0 : 0.7;
-  if (rand(run) < trickChance) reward.trick = randomTrick(run);
+  const onceChance = duel.tier === 'normal' ? 0.3 : duel.tier === 'event' ? 0 : 0.7;
+  if (rand(run) < onceChance) reward.once = randomOnce(run);
   // Instead of a stone, help on the map.
   if (duel.event !== 'thief' && duel.tier !== 'boss' && rand(run) < (duel.tier === 'normal' ? 0.4 : 1)) reward.aid = pick(run, AID_TYPES);
   const big = duel.tier === 'elite' || duel.tier === 'boss';
@@ -687,7 +682,7 @@ export function duelWon(run) {
     run.hearts = Math.min(run.maxHearts, run.hearts + 3);
   }
   if (big && has(run, 'herbs')) run.hearts = Math.min(run.maxHearts, run.hearts + 1);
-  if (big && has(run, 'bell') && !reward.trick) reward.trick = randomTrick(run);
+  if (big && has(run, 'bell') && !reward.once) reward.once = randomOnce(run);
   run.pending = reward;
   run.screen = 'reward';
   return reward;
@@ -769,12 +764,22 @@ export function stoneChoices(run, tier = 'normal', rarity = null, count = 3) {
   return out;
 }
 
-export function randomTrick(run, rarity = null) {
+export function randomOnce(run, rarity = null) {
   const r = rarity ?? weighted(run, { common: 60, uncommon: 28, rare: 12 });
-  // Something you do not already carry, if there is anything left.
-  const fresh = TRICK_TYPES.filter((t) => !run.tricks.includes(t));
-  const pool = fresh.filter((t) => TRICKS[t].rarity === r);
-  return pick(run, pool.length ? pool : fresh.length ? fresh : TRICK_TYPES);
+  const pool = ONCE_STONES.filter((t) => STONES[t].rarity === r);
+  return { type: pick(run, pool.length ? pool : ONCE_STONES) };
+}
+
+// After a duel: the one-shot stones you played are gone from the pouch.
+export function spendOnce(run, uids, spent) {
+  const left = [...spent];
+  for (const u of uids ?? []) {
+    const st = run.pouch.find((x) => x.uid === u);
+    const k = st ? left.indexOf(st.type) : -1;
+    if (k < 0) continue;
+    left.splice(k, 1);
+    run.pouch = run.pouch.filter((x) => x !== st);
+  }
 }
 
 export function randomRelic(run, rarity = null) {
@@ -805,7 +810,6 @@ export function gainStone(run, s) {
 
 export function gainAid(run, kind) { run.aids = run.aids ?? { double: 0, breach: 0 }; run.aids[kind] = (run.aids[kind] ?? 0) + 1; }
 export const pouchFull = (run) => run.pouch.length >= pouchCap(run);
-export const tricksFull = (run) => run.tricks.length >= trickCap(run);
 
 // ── Shop ────────────────────────────────────────────────────────────────────
 
@@ -821,10 +825,11 @@ export function makeShop(run) {
     for (let g = 0; g < 20; g++) { s = randomStone(run, r); if (!stones.some((o) => o.type === s.type)) break; }
     stones.push({ ...s, price: price(run, STONE_PRICE[r]), sold: false });
   }
-  const tricks = [];
+  const once = [];
   for (const r of ['common', 'common', 'uncommon', 'rare']) {
-    const t = randomTrick(run, r);
-    tricks.push({ trick: t, price: price(run, TRICK_PRICE[r]), sold: false });
+    let s;
+    for (let g = 0; g < 20; g++) { s = randomOnce(run, r); if (!once.some((o) => o.type === s.type)) break; }
+    once.push({ ...s, price: price(run, ONCE_PRICE[r]), sold: false });
   }
   const relics = [];
   for (let i = 0; i < 2; i++) {
@@ -832,7 +837,7 @@ export function makeShop(run) {
     if (id && !relics.some((x) => x.relic === id)) relics.push({ relic: id, price: price(run, RELIC_PRICE[RELICS[id].rarity]), sold: false });
   }
   return {
-    stones, tricks, relics,
+    stones, once, relics,
     healPrice: price(run, 30),
     slotPrice: price(run, 60 + 40 * (run.slots - START.slots)),
     healed: 0, slotted: false,

@@ -192,6 +192,8 @@ b { font-weight: 400; background: linear-gradient(transparent 55%, var(--hi) 55%
     linear-gradient(-45deg, transparent 45%, var(--ink) 45%, var(--ink) 53%, transparent 53%);
   filter: url(#pencil);
 }
+/* A one-shot stone: a dashed outline, as if cut out to be torn off. */
+.stone.once::before { border-style: dashed; }
 .stone.mini { --size: 30px; }
 .stone.mini::before { border-width: 2px; }
 .stone.mini .badge-plus { width: 16px; height: 16px; top: -7px; right: -7px; }
@@ -220,9 +222,6 @@ b { font-weight: 400; background: linear-gradient(transparent 55%, var(--hi) 55%
 .enemy-hand { min-height: 32px; }
 .enemy-hand .stone { cursor: pointer; }
 .enemy-hand .stone.lifted { transform: translateY(-6px) rotate(8deg) scale(1.15); }
-.enemy-tricks { display: flex; gap: 4px; margin-left: auto; }
-.mini-trick { width: 28px; height: 32px; padding: 4px; color: var(--red); display: inline-flex; background: var(--card); border: 1.5px solid var(--red); border-radius: 2px; transform: rotate(4deg); }
-.mini-trick .icon { width: 100%; height: 100%; filter: url(#ink); }
 .tier { display: inline-block; font-family: var(--hand); font-size: 0.9rem; padding: 0 8px; color: var(--ink); background: var(--hi); transform: rotate(-2deg); }
 .tier.elite { background: var(--pink); }
 .tier.boss { background: var(--sticky); outline: 1.5px solid var(--ink); }
@@ -306,15 +305,7 @@ b { font-weight: 400; background: linear-gradient(transparent 55%, var(--hi) 55%
 .hand-slot.placed, .hand-slot.placed.idle { opacity: 0.25; }
 .hand-slot.idle { opacity: 0.8; }
 .empty-hand { color: var(--faint); }
-.trick-row { display: flex; gap: 8px; align-items: center; justify-content: safe center; flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; padding: 4px 2px; }
-.trick-row::-webkit-scrollbar { display: none; }
-.trick-row .uses { font-size: 0.9rem; color: var(--pencil); flex: none; }
-.no-tricks { font-size: 0.9rem; color: var(--faint); }
 /* Tricks are little index cards. */
-.trick-btn { flex: none; display: inline-flex; align-items: center; gap: 5px; padding: 3px 9px; font-size: 1rem; background: var(--card); border: 1.5px solid #b9b19b; border-radius: 2px; color: var(--ink); box-shadow: 1px 2px 0 rgba(0,0,0,.08); }
-.trick-btn .trick-ico .icon { width: 18px; height: 18px; color: var(--blue); }
-.trick-btn.usable { background: var(--sky); border-color: var(--blue); animation: wiggle 1.6s ease-in-out infinite; }
-.trick-btn.aiming { background: #ffae5c; }
 @keyframes wiggle { 0%, 100% { transform: rotate(-1.5deg); } 50% { transform: rotate(1.5deg); } }
 .info-line { font-size: 1rem; color: var(--pencil); text-align: center; min-height: 2.5em; padding: 0 6px; line-height: 1.2; }
 .info-line b { color: var(--ink); }
@@ -384,7 +375,6 @@ b { font-weight: 400; background: linear-gradient(transparent 55%, var(--hi) 55%
 .quote { color: var(--pencil); font-size: 1.05rem; }
 .enemy-hand.show .stone { --size: 42px; }
 .slot-plain { background: none; border: 0; padding: 3px; }
-.enemy-tricks-pre { font-size: 1rem; color: var(--pencil); }
 .duel-facts { display: flex; flex-direction: column; gap: 6px; }
 .fact { display: flex; align-items: center; gap: 8px; text-align: left; padding: 7px 10px; font-size: 1.02rem; }
 .fact.warn { background: var(--hi); border-color: transparent; }
@@ -476,8 +466,6 @@ b { font-weight: 400; background: linear-gradient(transparent 55%, var(--hi) 55%
 .info-extra { color: var(--pencil); font-size: 1rem; }
 .menu { display: flex; flex-direction: column; gap: 10px; padding-left: 22px; }
 .pouch-view { display: flex; flex-direction: column; gap: 10px; padding-left: 22px; }
-.trick-list, .relic-list { display: flex; flex-direction: column; gap: 6px; }
-.trick-list .trick-btn { justify-content: flex-start; padding: 8px 10px; }
 .relic-row { display: flex; gap: 10px; align-items: center; text-align: left; padding: 6px 8px; font-size: 1rem; }
 .help { display: flex; flex-direction: column; gap: 12px; min-height: 50dvh; padding-left: 22px; }
 .help-page { flex: 1; font-size: 1.1rem; }
@@ -495,6 +483,7 @@ b { font-weight: 400; background: linear-gradient(transparent 55%, var(--hi) 55%
 .codex-list { display: flex; flex-direction: column; gap: 8px; }
 .codex-row { display: flex; gap: 12px; align-items: flex-start; padding: 10px; font-size: 1rem; line-height: 1.2; }
 .codex-row .stone { --size: 42px; }
+.relic-list { display: flex; flex-direction: column; gap: 6px; }
 .codex-row .trick-token { width: 40px; height: 46px; padding: 7px; }
 .hand.tiny { gap: 5px; margin: 4px 0; }
 .hand.tiny .stone { --size: 24px; }
@@ -516,7 +505,6 @@ b { font-weight: 400; background: linear-gradient(transparent 55%, var(--hi) 55%
   .portrait { width: 44px; height: 50px; font-size: 1.5rem; }
   .info-line { min-height: 2.3em; font-size: 0.95rem; }
 }
-.kit .mini-trick { color: var(--blue); border-color: var(--blue); }
 .map-grid.first .map-cell.reach::before { background: none; border: 2px dashed rgba(91, 90, 96, 0.45); animation: none; }
 .actions .btn.glyph-opt { flex: 0 0 auto; min-width: 50px; padding: 0.2em 0.6em; font-size: 1.5rem; }
 .actions { flex-wrap: nowrap; }
@@ -530,14 +518,9 @@ b { font-weight: 400; background: linear-gradient(transparent 55%, var(--hi) 55%
 .rot.turn .times { font-size: 0.8rem; line-height: 1; }
 .rot.turn span:first-child { width: 70%; height: 70%; }
 .rot.axis { font-size: 1.6rem; }
-.trick-row { flex-wrap: wrap; justify-content: center; overflow: visible; }
-.trick-row.spent .trick-btn { opacity: 0.45; }
 .btn.primary:disabled { background: #e8e2cf; color: var(--faint); box-shadow: none; }
 .pre-spacer { height: 70px; }
 .enemy-hand { flex-wrap: nowrap; }
-.trick-row { gap: 5px; }
-.trick-row .trick-btn { padding: 2px 6px; font-size: 0.92rem; gap: 3px; }
-.trick-row .uses { color: var(--blue); font-size: 1rem; }
 .map-cell .doodle.foe { display: flex; align-items: center; justify-content: center; font-size: 2.3rem; width: auto; height: auto; }
 .map-cell .doodle.foe .photo { filter: grayscale(1) contrast(1.2) sepia(0.3); line-height: 1; }
 .map-cell .elite-star { position: absolute; top: 6%; right: 8%; width: 24%; height: 24%; color: var(--red); pointer-events: none; }

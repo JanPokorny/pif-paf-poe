@@ -1,5 +1,5 @@
 // Unit tests for src/engine.js, checked against the player-facing text of every
-// stone, trick, condition and boss rule. Plain Node, no dependencies:
+// stone, condition and boss rule. Plain Node, no dependencies:
 //
 //   node tools/test-engine.mjs
 //
@@ -11,7 +11,7 @@
 import assert from 'node:assert/strict';
 import {
   createGame, applyAction, legalActions, cloneState, allowedSquares, isStuck,
-  hasLine, render, STONES, STONE_TYPES, BASE_STONES, TRICKS, TRICK_TYPES, CONDS, RULES, ELS,
+  hasLine, render, STONES, STONE_TYPES, BASE_STONES, ONCE_STONES, CONDS, RULES, ELS,
 } from '../src/engine.js';
 import { chooseAction } from '../src/ai.js';
 
@@ -74,7 +74,6 @@ function act(s, partial) {
   return a;
 }
 const eff = (s, partial = {}) => { assert.equal(s.phase, 'effect', `expected effect phase, got ${s.phase}`); return act(s, { type: 'effect', ...partial }); };
-const trick = (s, use, partial = {}) => { assert.equal(s.phase, 'trick', 'expected trick phase'); return act(s, { type: 'trick', use, ...partial }); };
 const effectOpts = (s) => (s.phase === 'effect' ? legalActions(s) : []);
 function turnPassedTo(s, p) {
   assert.equal(s.over, false, `game unexpectedly over (winner ${s.winner}, ${s.reason})\n${render(s)}`);
@@ -416,95 +415,82 @@ test('A Pebble sent back to hand is simply gone', () => {
   assert.equal(s.hands.O.length, 0);
 });
 
-// ── Tricks ──────────────────────────────────────────────────────────────────
+// ── One-shot stones ─────────────────────────────────────────────────────────
 
-group('tricks');
+group('one-shot stones');
 
-test('every trick has a name and text', () => { for (const t of TRICK_TYPES) assert.ok(TRICKS[t].name && TRICKS[t].text, t); });
-test('tricks come after the stone; pass ends the turn', () => {
-  const s = G({ tricksX: ['nudge'] });
-  play(s, 'pebble', 0);
-  assert.equal(s.phase, 'trick');
-  trick(s, 'pass');
-  turnPassedTo(s, 'O');
-  assert.deepEqual(s.tricks.X, ['nudge']);
+test('one-shot stones are marked once and counted as spent when played from your hand', () => {
+  assert.ok(ONCE_STONES.length >= 8);
+  for (const t of ONCE_STONES) assert.ok(STONES[t].once && STONES[t].text, t);
+  const s = G({ handX: ['nudge', 'nudge'] });
+  lay(s, { 8: 'O pebble' });
+  play(s, 'nudge', 0);
+  eff(s, { from: 8, to: 7 });
+  assert.deepEqual(s.spent.X, ['nudge']);
+  assert.equal(count(s, 'X', 'nudge'), 1);
 });
-test('one use a duel by default', () => {
-  const s = G({ tricksX: ['nudge', 'nudge'] });
-  play(s, 'pebble', 0);
-  trick(s, 'nudge', { from: 0, to: 1 });
-  play(s, 'pebble', 8);
-  play(s, 'pebble', 2);
-  turnPassedTo(s, 'O');
-});
-test('a trick that makes your line wins', () => {
-  const s = G({ tricksX: ['nudge'] });
+test('a one-shot stone that makes your line wins', () => {
+  const s = G({ handX: ['nudge'] });
   lay(s, { 0: 'X pebble', 1: 'X pebble', 5: 'X pebble' });
-  play(s, 'pebble', 8);
-  trick(s, 'nudge', { from: 5, to: 2 });
+  play(s, 'nudge', 8);
+  eff(s, { from: 5, to: 2 });
   assert.equal(s.winner, 'X');
 });
 test('Overtake sends the enemy\'s centre stone back', () => {
-  const s = G({ tricksX: ['overtake'] });
+  const s = G({ handX: ['overtake'] });
   lay(s, { 4: 'O shift' });
-  play(s, 'pebble', 0);
-  trick(s, 'overtake', { pos: 4 });
+  play(s, 'overtake', 0);
   assert.equal(s.board[4], null);
   assert.equal(count(s, 'O', 'shift'), 1);
 });
+test('Relocate moves one of your stones anywhere, itself too', () => {
+  const s = G({ handX: ['relocate'] });
+  lay(s, { 1: 'O pebble' });
+  play(s, 'relocate', 0);
+  eff(s, { from: 0, to: 8 });
+  assert.equal(s.board[8].type, 'relocate');
+});
 test('Mind Control names the enemy\'s next stone, a Pebble included', () => {
-  const s = G({ tricksX: ['mind-control'], handO: ['shift'] });
-  play(s, 'pebble', 0);
-  trick(s, 'mind-control', { stone: 'pebble' });
+  const s = G({ handX: ['mind-control'], handO: ['shift'] });
+  play(s, 'mind-control', 0);
+  eff(s, { stone: 'pebble' });
   assert.deepEqual(legalActions(s).map((a) => a.stone), ['pebble']);
 });
 test('Mind Control: the enemy AI plays the stone it was named', () => {
   for (const name of ['pebble', 'shift', 'rotate']) {
-    const s = G({ tricksX: ['mind-control'], handO: ['shift', 'rotate', 'magnet'] });
-    play(s, 'pebble', 0);
-    trick(s, 'mind-control', { stone: name });
+    const s = G({ handX: ['mind-control'], handO: ['shift', 'rotate', 'magnet'] });
+    play(s, 'mind-control', 0);
+    eff(s, { stone: name });
     assert.equal(s.player, 'O');
     assert.equal(chooseAction(s, { iters: 200, seed: 7 }).stone, name);
   }
 });
 test('Muffle: the enemy\'s next special stone does nothing', () => {
-  const s = G({ tricksX: ['muffle'] });
+  const s = G({ handX: ['muffle'] });
   lay(s, { 1: 'X pebble' });
-  play(s, 'pebble', 8);
-  trick(s, 'muffle');
+  play(s, 'muffle', 8);
   play(s, 'bumper', 4);
   expectAt(s, { 1: 101 });
   assert.ok(s.board[4].hushed);
 });
-test('Encore returns your last special stone to your hand', () => {
-  const s = G({ tricksX: ['reinforce'] });
-  play(s, 'mountain', 0);
-  trick(s, 'reinforce');
-  assert.equal(count(s, 'X', 'mountain'), 1);
-});
-test('Encore has nothing to return before a special stone is played', () => {
-  const s = G({ tricksX: ['reinforce'] });
-  play(s, 'pebble', 0);
-  turnPassedTo(s, 'O');
-});
 test('Pluck and Bribe', () => {
-  const s = G({ tricksX: ['pluck'] });
-  lay(s, { 4: 'O shift' });
-  play(s, 'pebble', 0);
-  trick(s, 'pluck', { pos: 4 });
+  const s = G({ handX: ['pluck'] });
+  lay(s, { 4: 'O shift', 2: 'O pebble' });
+  play(s, 'pluck', 0);
+  eff(s, { target: 4 });
   assert.equal(s.board[4], null);
-  const t = G({ tricksX: ['bribe'] });
-  lay(t, { 4: 'O pebble', 2: 'O pebble' });
-  play(t, 'pebble', 0);
-  assert.ok(!legalActions(t).some((a) => a.pos === 4));
-  trick(t, 'bribe', { pos: 2 });
+  const t = G({ handX: ['bribe'] });
+  lay(t, { 4: 'O pebble', 2: 'O pebble', 6: 'O pebble' });
+  play(t, 'bribe', 0);
+  assert.ok(!legalActions(t).some((a) => a.target === 4));
+  eff(t, { target: 2 });
   assert.equal(t.board[2].player, 'X');
 });
-test('Rehearse: a stone of yours does its thing again', () => {
-  const s = G({ tricksX: ['rehearse'] });
+test('Rehearse: another stone of yours does its thing again', () => {
+  const s = G({ handX: ['rehearse'] });
   lay(s, { 0: 'X shift', 1: 'O pebble' });
-  play(s, 'pebble', 8);
-  trick(s, 'rehearse', { pos: 0, dir: 'right', index: 0 });
+  play(s, 'rehearse', 8);
+  eff(s, { pos: 0, dir: 'right', index: 0 });
   expectAt(s, { 1: 100, 2: 101 });
 });
 
@@ -683,23 +669,23 @@ function sharedRefs(a, b, path = 's', out = [], skip = new Set(['mods', 'log', '
 const snap = (s) => JSON.stringify({ ...s, log: null });
 
 test('cloneState shares no mutable object with the original', () => {
-  const s = G({ tricksX: ['mind-control'], rules: ['column'] });
+  const s = G({ handX: ['mind-control'], handO: ['shift'], rules: ['column'] });
   lay(s, { 0: 'X pebble!', 1: 'O shift' });
-  play(s, 'bumper', 8);
-  trick(s, 'mind-control', { stone: 'pebble' });
+  play(s, 'mind-control', 8);
+  eff(s, { stone: 'pebble' });
   s.selected = { type: 'pebble' };
   s.dictate = { kind: 'column', value: 1 };
   const c = cloneState(s);
   assert.deepEqual(sharedRefs(c, s), []);
 });
 test('mutating a clone leaves the original alone', () => {
-  const s = G({ tricksX: ['mind-control'], handX: ['shift'] });
+  const s = G({ handX: ['shift', 'nudge'] });
   lay(s, { 0: 'X pebble!', 1: 'O shift' });
   play(s, 'pebble', 8);
   const before = snap(s);
   const c = cloneState(s);
   c.board[0].player = 'O'; c.board[0].stuck = false; c.board[1] = null;
-  c.hands.X.pop(); c.tricks.X.push('pluck'); c.uses.X = 9;
+  c.hands.X.pop(); c.spent.X.push('pluck');
   c.silenced.X = 3; c.placements.O = 7; c.echo.X = true; c.lastSpecial.O = 'rotate';
   applyAction(c, legalActions(c)[0]);
   assert.equal(snap(s), before);
@@ -718,7 +704,7 @@ function rng32(seed) {
   };
 }
 
-const PHASES = new Set(['select', 'place', 'effect', 'trick', 'dictate', 'over']);
+const PHASES = new Set(['select', 'place', 'effect', 'dictate', 'over']);
 const fuzzFails = new Map();
 let fuzzSteps = 0, maxLen = 0;
 const wins = { X: 0, O: 0 }, reasons = {};
@@ -746,12 +732,10 @@ const SPECIALS = STONE_TYPES.filter((t) => t !== 'pebble');
 const COND_KEYS = Object.keys(CONDS), RULE_KEYS = Object.keys(RULES);
 for (let g = 0; g < GAMES; g++) {
   const hand = () => Array.from({ length: (r() * 5) | 0 }, () => pick(SPECIALS));
-  const tricks = () => Array.from({ length: (r() * 4) | 0 }, () => pick(TRICK_TYPES));
   const mods = () => ({ echo: r() < 0.2, freeFirst: r() < 0.2 });
   const boss = r() < 0.4;
   const cfg = {
     handX: hand(), handO: boss ? [] : hand(), first: r() < 0.8 ? 'O' : 'X',
-    tricksX: tricks(), tricksO: tricks(), usesX: 1 + ((r() * 2) | 0), usesO: 1 + ((r() * 2) | 0),
     modsX: mods(), modsO: mods(),
     conds: !boss && r() < 0.5 ? [pick(COND_KEYS)] : [],
     rules: boss ? [...new Set([pick(RULE_KEYS), ...(r() < 0.4 ? [pick(RULE_KEYS)] : [])])] : [],
@@ -776,7 +760,7 @@ for (let g = 0; g < GAMES; g++) {
       }
       c.board.forEach((x) => { if (x) { x.player = 'X'; x.stuck = true; } });
       c.hands.X.push({ type: 'shift' }); c.hands.O.length = 0;
-      c.tricks.X.length = 0; c.silenced.O = 5;
+      c.spent.X.push('nudge'); c.silenced.O = 5;
       if (snap(s) !== before) fuzzFail('mutating a clone leaves the original alone', where());
     }
     const a = legal[(r() * legal.length) | 0];

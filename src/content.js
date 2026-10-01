@@ -1,7 +1,7 @@
 // Everything a run is made of that is not the duel itself: relics, enemies,
 // acts, events. Numbers here are the balance; tools/balance.mjs measures them.
 
-import { STONES, BASE_STONES, TRICKS, TRICK_TYPES } from './engine.js';
+import { STONES, BASE_STONES, ONCE_STONES } from './engine.js';
 import { t } from './i18n.js';
 
 // ── Relics ──────────────────────────────────────────────────────────────────
@@ -19,9 +19,7 @@ export const RELICS = {
   'deep-pockets': { name: 'Deep Pockets', emoji: '👖', rarity: 'rare',
     text: 'One more stone slot: bring one more special stone into every duel.' },
   satchel: { name: 'Satchel', emoji: '🎒', rarity: 'common',
-    text: 'Your pouch holds 2 more stones, and you can carry 1 more trick.' },
-  gloves: { name: 'Juggler\'s Gloves', emoji: '🧤', rarity: 'rare',
-    text: 'You may spend 2 tricks per duel instead of 1.' },
+    text: 'Your pouch holds 2 more stones.' },
   'lucky-coin': { name: 'Lucky Coin', emoji: '🪙', rarity: 'common',
     text: '+8 gold for every duel you win.' },
   herbs: { name: 'Herbal Pouch', emoji: '🌿', rarity: 'common',
@@ -31,7 +29,7 @@ export const RELICS = {
   clover: { name: 'Four-Leaf Clover', emoji: '🍀', rarity: 'uncommon',
     text: 'Stone rewards offer 4 choices instead of 3, and rares turn up more.' },
   bell: { name: 'Hand Bell', emoji: '🛎️', rarity: 'common',
-    text: 'Gain a random trick after every elite or boss you beat.' },
+    text: 'Find a one-shot stone after every elite or boss you beat.' },
   phoenix: { name: 'Phoenix Feather', emoji: '🪶', rarity: 'rare',
     text: 'Once, when you would run out of hearts, rise again with 3.' },
   rematch: { name: 'Rematch Token', emoji: '🎟️', rarity: 'uncommon',
@@ -41,17 +39,19 @@ export const RELICS = {
   'war-chest': { name: 'War Chest', emoji: '💰', rarity: 'rare',
     text: 'Gain 150 gold now.' },
 };
-export const BOSS_RELICS = ['deep-pockets', 'gloves', 'echo', 'phoenix', 'war-chest'];
+export const BOSS_RELICS = ['deep-pockets', 'echo', 'phoenix', 'war-chest'];
 export const RELIC_TYPES = Object.keys(RELICS);
 
-// ── Stone and trick economy ─────────────────────────────────────────────────
+// ── Stone economy ───────────────────────────────────────────────────────────
 
 export const STONE_PRICE = { common: 45, uncommon: 70, rare: 100 };
-export const TRICK_PRICE = { common: 45, uncommon: 65, rare: 95 };
+export const ONCE_PRICE = { common: 30, uncommon: 45, rare: 65 };
 export const RELIC_PRICE = { common: 110, uncommon: 140, rare: 170 };
 
-// Stones you can find: everything but the Pebble.
-export const REWARD_STONES = BASE_STONES;
+// Stones you can find as rewards: everything but the Pebble and the one-shot
+// stones, which come on their own.
+export const REWARD_STONES = BASE_STONES.filter((t) => !STONES[t].once);
+export { ONCE_STONES };
 
 // ── Enemies ─────────────────────────────────────────────────────────────────
 //
@@ -95,7 +95,7 @@ export const ENEMIES = {
     quote: 'Two for the price of one!' },
   stenchlord: { name: 'Lord of Stench', emoji: '🧅', act: 1, tier: 'elite',
     core: ['stinky', 'stinky', 'magnet'], pool: ['shift', 'rotate', 'mountain'], iters: 140, blunder: 0.18,
-    tricks: ['muffle'], quote: 'You will stand where I let you.' },
+    once: ['muffle'], quote: 'You will stand where I let you.' },
   // bosses
   oak: { name: 'The Old Oak', emoji: '🌳', act: 1, tier: 'boss',
     rules: ['clinch'], rules2: ['clinch', 'headstart'], iters: 300, blunder: 0.08,
@@ -129,10 +129,10 @@ export const ENEMIES = {
   // elites
   witch: { name: 'Hollow Witch', emoji: '🕷️', act: 2, tier: 'elite', cond: 'nocentre',
     core: ['magnet', 'stinky', 'swap'], pool: ['magnet', 'shift', 'rotate'], iters: 350, blunder: 0.08,
-    tricks: ['muffle'], quote: 'Nobody sits in the middle, dear.' },
+    once: ['muffle'], quote: 'Nobody sits in the middle, dear.' },
   golem: { name: 'Stone Golem', emoji: '🗿', act: 2, tier: 'elite',
     core: ['mountain', 'mountain', 'magnet'], pool: ['2048', 'shift', 'magnet'], iters: 350, blunder: 0.08,
-    tricks: ['nudge'], quote: 'I. DO. NOT. MOVE.' },
+    once: ['nudge'], quote: 'I. DO. NOT. MOVE.' },
   // bosses
   colossus: { name: 'Clockwork Colossus', emoji: '⚙️', act: 2, tier: 'boss',
     rules: ['column'], rules2: ['column'], iters: 200, blunder: 0.04,
@@ -166,7 +166,7 @@ export const ENEMIES = {
   // elites
   owl: { name: 'Grand Tactician', emoji: '🦉', act: 3, tier: 'elite',
     core: ['magnet', 'shift', 'swap'], pool: ['rotate', 'swap', 'beacon', 'firecracker'], iters: 300, blunder: 0.06,
-    tricks: ['mirror'], quote: 'I have seen this position before.' },
+    once: ['mirror'], quote: 'I have seen this position before.' },
   storm: { name: 'Storm Caller', emoji: '⛈️', act: 3, tier: 'elite',
     core: ['whirl', 'flip', 'magnet'], pool: ['2048', 'bumper', 'shift'], iters: 300, blunder: 0.06,
     quote: 'The wind takes everything.' },
@@ -235,8 +235,8 @@ export const EVENTS = [
     choices: [
       { label: 'Drink', detail: 'Heal 2 hearts.', act: (r) => { r.hearts = Math.min(r.maxHearts, r.hearts + 2); return t('Cool, clear water. You feel restored.'); } },
       { label: 'Fish for coins', detail: 'Gain 25–50 gold.', act: (r, api) => { const g = 25 + ((api.rng() * 26) | 0); r.gold += g; return t('You fish out {n} gold.', { n: g }); } },
-      { label: 'Toss a coin', detail: 'Pay 10 gold, gain a random trick.', can: (r, api) => r.gold >= 10 && api.trickRoom(),
-        act: (r, api) => { r.gold -= 10; return api.gainRandomTrick(); } },
+      { label: 'Toss a coin', detail: 'Pay 10 gold, gain a random one-shot stone.', can: (r, api) => r.gold >= 10 && api.pouchRoom(),
+        act: (r, api) => { r.gold -= 10; return api.gainRandomOnce(); } },
     ],
   },
   {
@@ -295,17 +295,17 @@ export const EVENTS = [
   },
   {
     id: 'trader', title: 'The Trick Trader', emoji: '🎩',
-    text: 'A magician fans out a deck of tricks. "Swap one, any one."',
+    text: 'A magician fans out a deck of one-shot stones. "Swap one, any one."',
     choices: [
-      { label: 'Trade a trick', detail: 'Swap a trick for a random rare one.', can: (r) => r.tricks.length > 0,
+      { label: 'Trade one', detail: 'Swap a one-shot stone for a random rare one.', can: (r) => r.pouch.some((x) => STONES[x.type].once),
         act: async (r, api) => {
-          const k = await api.pickTrick(t('Trade which trick?'));
-          if (k < 0) return t('He shrugs and shuffles the deck.');
-          r.tricks.splice(k, 1);
-          return api.gainRandomTrick('rare');
+          const k = await api.pickOnce(t('Trade which one?'));
+          if (!k) return t('He shrugs and shuffles the deck.');
+          r.pouch = r.pouch.filter((x) => x !== k);
+          return api.gainRandomOnce('rare');
         } },
-      { label: 'Buy a trick', detail: 'Pay 25 gold for a random trick.', can: (r, api) => r.gold >= 25 && api.trickRoom(),
-        act: (r, api) => { r.gold -= 25; return api.gainRandomTrick(); } },
+      { label: 'Buy one', detail: 'Pay 25 gold for a random one-shot stone.', can: (r, api) => r.gold >= 25 && api.pouchRoom(),
+        act: (r, api) => { r.gold -= 25; return api.gainRandomOnce(); } },
       { label: 'No thanks', act: () => t('He vanishes in a puff of smoke.') },
     ],
   },
@@ -315,8 +315,9 @@ export const EVENTS = [
     choices: [
       { label: 'Study', detail: 'Pay 30 gold, choose an uncommon stone.', can: (r, api) => r.gold >= 30 && api.pouchRoom(),
         act: (r, api) => api.chooseStone('uncommon', () => { r.gold -= 30; }) },
-      { label: 'Borrow a book', detail: 'Gain a random uncommon trick.', can: (r, api) => api.trickRoom(),
-        act: (r, api) => api.gainRandomTrick('uncommon') },
+      { label: 'Borrow a book', detail: 'Gain a random uncommon one-shot stone.', can: (r, api) => api.pouchRoom(),
+        act: (r, api) => api.gainRandomOnce('uncommon') },
+      { label: 'Leave', act: () => t('You put the books back.') },
     ],
   },
   {
@@ -340,10 +341,10 @@ export const EVENTS = [
     id: 'storyteller', title: 'The Storyteller', emoji: '🧓',
     text: 'An old camper tells of the summer the stones first learned to move.',
     choices: [
-      { label: 'Listen', detail: 'Heal 1 heart and gain a random trick.', act: (r, api) => {
+      { label: 'Listen', detail: 'Heal 1 heart and gain a random one-shot stone.', act: (r, api) => {
         const healed = r.hearts < r.maxHearts;
         r.hearts = Math.min(r.maxHearts, r.hearts + 1);
-        const extra = api.trickRoom() ? ` ${api.gainRandomTrick()}` : '';
+        const extra = api.pouchRoom() ? ` ${api.gainRandomOnce()}` : '';
         return `${healed ? t('You feel better.') : t('A fine story.')}${extra}`;
       } },
       { label: 'Tell your own', detail: 'Gain 20 gold for a good yarn.', act: (r) => { r.gold += 20; return t('They toss you 20 gold. Not bad!'); } },
@@ -362,4 +363,4 @@ ENEMIES.thief = { name: 'The Pickpocket', emoji: '🥷', act: 0, tier: 'event',
   core: ['firecracker', 'swap'], pool: ['shift', 'pebble', 'stinky'], iters: 150, blunder: 0.2,
   quote: 'Catch me if you can!' };
 
-export { STONES, TRICKS, TRICK_TYPES };
+export { STONES };
