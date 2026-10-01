@@ -50,7 +50,7 @@ duel, and a rule for who wins when someone runs out. The second version slows it
   Double Time is the hard one, and it wants a particular loadout. Bot duels, 20 each: Pebbles
   only or two Mountains win 0%, movers (Shift and Rotate, Rail/Pivot/Teleport, 2048/4096)
   20–40%, restrictions (Magnet and Stinky, and their evolved forms of the time)
-  95–100%. A boss's second life adds Reserved, and then restrictions alone drop to
+  95–100%. A boss's undead phase adds Reserved, and then restrictions alone drop to
   0–15%: it takes a restriction *and* a mover (Magnet and Shift: 95%).
   The sheet's Sloup had the boss choose the column you *must* play in; measured against the bot
   that won 96% for the boss, so here the boss closes a column instead. OOTB (playing outside
@@ -78,7 +78,7 @@ its own, with its boss.
 - **The door.** Your three in a row opens the boss's door (+10 gold for every square past that).
   The boss's three in a row adds one to its *power* (up to 2); so does a page filled with twelve
   marks before you open the door, and then the door opens anyway. Power is search depth, and at
-  full power the boss fights with its second-life rules from the start.
+  full power the boss fights with its moonrise rules from the start.
 - **Spent lines.** Every line of three is crossed through on the page, and its marks are spent:
   no later line may use them, so a fourth mark beside a line, or a fork sharing its square, makes
   nothing new. A mark that finishes two lines at once crosses through only one.
@@ -95,8 +95,9 @@ its own, with its boss.
   cleared again (random order). That leaves about 38% rock there, and keeps at least fifteen
   squares connected to the start. With it the line-building bot opens the door before the page
   fills 34% of the time, in about nine steps (62% and seven steps without).
-- **Bosses** bring no stones, only their rule (above), and have two lives; the second life adds
-  their harder rule. A boss won is a boss relic, three hearts and 60 gold. **Elites** are just
+- **Bosses** bring no stones, only their rule (above), and are beaten twice: once beaten, the moon
+  rises and the boss climbs back out of the earth as its undead self ("Undead Old Oak"), with its
+  harder rule. A boss won is a boss relic, three hearts and 60 gold. **Elites** are just
   stronger regular enemies: bigger hands, two hearts if lost, a red star in the corner.
 - **Map aids.** A duel won may offer, instead of a stone, a *Double Step* (the boss does not
   answer one step) or a *Pickaxe*. Elites always offer one.
@@ -136,7 +137,7 @@ needs the centre empty too.
 
 Enemies are the same Monte Carlo search as the camp game's AI (`src/ai.js`), dialled by
 iterations and a blunder rate. `node tools/balance.mjs` duels a bot with a typical pouch against
-every enemy (`--life 1` for a boss's second life); `node tools/runbot.mjs` plays
+every enemy (`--life 1` for a boss's undead phase); `node tools/runbot.mjs` plays
 whole runs headless; `node tools/stones.mjs` measures the stones.
 
 At heat 0 (six hearts), bots that play the map sensibly, pick their stones by strength and keep one that moves things win:

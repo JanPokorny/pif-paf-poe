@@ -413,6 +413,23 @@ function actIntro() {
     h('button.btn.primary.wide.big', { onclick: () => { run.screen = 'map'; route(); } }, t('Onward'))));
 }
 
+// A boss beaten once rises again by moonlight, undead, with its harder rules.
+const isUndead = (duel) => duel.tier === 'boss' && duel.bossWins > 0;
+const undeadName = (e) => e.undead ?? t('Undead {boss}', { boss: e.name.replace(/^The /, '') });
+// The moon comes up over the board, and the boss climbs out of the earth.
+function moonrise(boss, done) {
+  const veil = h('div.moonrise', {},
+    h('div.moon'),
+    h('div.moonrise-text', {}, h('div', {}, t('The moon rises…')),
+      h('div.moonrise-name', {}, t('{boss} climbs out of the earth.', { boss: undeadName(boss) }))));
+  document.body.append(veil);
+  musicEvent('stronger');
+  let gone = false;
+  const go = () => { if (gone) return; gone = true; veil.classList.add('out'); setTimeout(() => { veil.remove(); done(); }, 500); };
+  veil.addEventListener('click', go);
+  setTimeout(go, 3200);
+}
+
 // A stone's name with an (i): tapping the name reads the stone.
 function infoName(s, player) {
   return h('span.info-name-link', { onclick: (e) => { e.stopPropagation(); infoStone(s, player); } }, stoneName(s), h('span.i', {}, ' ⓘ'));
@@ -455,20 +472,19 @@ function preDuel() {
     ...(duel.conds ?? []).map((c) => h('div.fact.rule-fact', {}, ruleChip('cond', c), h('span', {}, CONDS[c].text))),
     duel.quirk ? h('div.fact.warn', {}, `${R.QUIRKS[duel.quirk].name}: ${R.QUIRKS[duel.quirk].text}`) : null,
     duel.tier === 'boss' && duel.bossWins === 0 && enemy.rules2 && enemy.rules2.join() !== duel.rules.join()
-      ? h('div.fact.dim', {}, t('Second life: {rules}', { rules: enemy.rules2.map((r) => RULES[r].name).join(', ') })) : null,
-    duel.tier === 'boss' ? h('div.fact.dim', {}, tp(R.BOSS_LIVES - duel.bossWins, '{n} life left', '{n} lives left')) : null,
+      ? h('div.fact.dim', {}, t('At moonrise: {rules}', { rules: enemy.rules2.map((r) => RULES[r].name).join(', ') })) : null,
   ].filter(Boolean);
   const canBack = duel.tier !== 'boss' && !duel.event;
   screen(topBar(),
     h('div.page', {},
       canBack ? h('button.btn.ghost.small.back-map', { onclick: () => { R.retreat(run); route(); } }, h('span', { html: icon('back') }), t('Back to the map')) : null,
-      h('div.enemy-card.' + duel.tier, {},
+      h('div.enemy-card.' + duel.tier + (isUndead(duel) ? '.undead' : ''), {},
         h('button.stake', { onclick: () => toast(t('Will cost you {n} ❤ on loss.', { n: R.heartsLost(duel) })), 'aria-label': t('Will cost you {n} ❤ on loss.', { n: R.heartsLost(duel) }) },
           h('span', { html: icon('sword') }), String(R.heartsLost(duel))),
         h('div.portrait.big', {}, h('div.photo', {}, enemy.emoji)),
         h('div', {},
           tierLabel ? h('div.tier.' + duel.tier, {}, tierLabel) : null,
-          h('div.enemy-name.big', {}, enemy.name),
+          h('div.enemy-name.big', {}, isUndead(duel) ? undeadName(enemy) : enemy.name),
           h('div.quote', {}, t('“{quote}”', { quote: enemy.quote })))),
       h('div.section-label', {}, t('Their stones')),
       h('div.stone-row', {}, [...new Set(duel.handO.map((s) => s.type))].map((type) => {
@@ -494,8 +510,8 @@ function preDuel() {
 
 function duelScreen() {
   const duel = run.pending.duel;
-  const lives = duel.tier === 'boss' ? R.BOSS_LIVES : 1;
-  const enemy = { ...ENEMIES[duel.enemyId], iters: duel.iters, blunder: duel.blunder, tier: duel.tier, lives, livesLeft: duel.tier === 'boss' ? lives - duel.bossWins : 1 };
+  const base = ENEMIES[duel.enemyId];
+  const enemy = { ...base, name: isUndead(duel) ? undeadName(base) : base.name, undead: isUndead(duel), iters: duel.iters, blunder: duel.blunder, tier: duel.tier };
   const holder = screen(h('div.duel-host'));
   const extra = h('div.duel-side', {},
     h('button.icon-btn.small', { onclick: showDuelMenu, 'aria-label': t('Menu') }, h('span', { html: icon('gear') })),
@@ -510,7 +526,7 @@ function duelScreen() {
       duelState = null;
       if (winner === 'X') {
         const res = R.duelWon(run);
-        if (res.kind === 'boss-continue') toast(t('One down. It rises again!'));
+        if (res.kind === 'boss-continue') { save(); moonrise(ENEMIES[duel.enemyId], route); return; }
         if (res.kind === 'reward' && duel.tier === 'boss') {
           meta.beaten = { ...(meta.beaten ?? {}), [duel.enemyId]: true };
           saveMeta();

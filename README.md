@@ -14,7 +14,7 @@ Each act is an endless notebook page of encounters. You start on one square and 
 squares next to your marks; every step is an X, and the act's boss answers with an O. Rocks dot
 the page in a pattern that makes three in a row hard to force. Your three in a row opens the
 boss's door; the boss's lines (or a full page) make it stronger. Bosses bring no stones, only a
-rule in their favour, and have two lives.
+rule in their favour; beaten once, they rise again undead by moonlight.
 
 It grew out of a physical summer-camp game; the original rules, simulations and print-and-play
 sheets live in [`old/`](old/).
