@@ -352,7 +352,7 @@ def('rehearse', {
 
 def('muffle', {
   name: 'Muffle', rarity: 'common', kind: 'once', once: true,
-  text: 'The enemy\'s next special stone does nothing. A Pebble does not use it up.',
+  text: 'The enemy\'s next stone does nothing.',
   options: (s, pos, cell) => (s.silenced[other(cell.player)] ? [] : [{}]),
   apply(s, pos, a, cell) { s.silenced[other(cell.player)] = 1; },
 });
@@ -717,7 +717,7 @@ function afterPlacement(s) {
   const c = s.board[pos];
   let dud = false;
   // Muffled, a stone does nothing at all for as long as it stands.
-  if (s.silenced[p] > 0 && c.type !== 'pebble') {
+  if (s.silenced[p] > 0) {
     s.silenced[p]--;
     dud = true;
     c.hushed = true;

@@ -206,8 +206,8 @@ export function mountDuel(root, opts) {
     for (const r of s.rules) items.push(ruleChip('rule', r));
     if (s.dictate?.kind === 'column') items.push(h('span.chip.bad', {}, t(['Left column closed', 'Middle column closed', 'Right column closed'][s.dictate.value])));
     if (s.dictate?.kind === 'spy') items.push(h('span.chip.bad', {}, t(`Moves go ${s.dictate.value}`)));
-    if (s.silenced.X) items.push(h('button.chip.bad', { onclick: () => toast(t('Your next special stone will do nothing. Pebbles do not use it up.')) }, t('Hushed: next special')));
-    if (s.silenced.O) items.push(h('button.chip.good', { onclick: () => toast(t('Their next special stone will do nothing.')) }, t('Enemy hushed: next special')));
+    if (s.silenced.X) items.push(h('button.chip.bad', { onclick: () => toast(t('Your next stone will do nothing.')) }, t('Hushed: next stone')));
+    if (s.silenced.O) items.push(h('button.chip.good', { onclick: () => toast(t('Their next stone will do nothing.')) }, t('Enemy hushed: next stone')));
     if (s.forced) items.push(h('span.chip.bad', {}, t(s.forced.player === 'X' ? 'You must play {stone}' : 'They must play {stone}', { stone: STONES[s.forced.stone].name })));
     chips.replaceChildren(...items);
   }

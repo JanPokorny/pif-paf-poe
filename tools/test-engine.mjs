@@ -474,7 +474,13 @@ test('Mind Control: the enemy AI plays the stone it was named', () => {
     assert.equal(chooseAction(s, { iters: 200, seed: 7 }).stone, name);
   }
 });
-test('Muffle: the enemy\'s next special stone does nothing', () => {
+test('Muffle: a Pebble uses it up too', () => {
+  const s = G({ handX: ['muffle'] });
+  play(s, 'muffle', 8);
+  play(s, 'pebble', 0);
+  assert.equal(s.silenced.O, 0);
+});
+test('Muffle: the enemy\'s next stone does nothing', () => {
   const s = G({ handX: ['muffle'] });
   lay(s, { 1: 'X pebble' });
   play(s, 'muffle', 8);
