@@ -13,7 +13,7 @@ favour.
 Each act is an endless notebook page of encounters. You start on one square and see only the
 squares next to your marks; every step is an X, and the act's boss answers with an O. Rocks dot
 the page in a pattern that makes three in a row hard to force. Your three in a row opens the
-boss's door; each line of the boss's costs you two hearts. Bosses bring no stones, only a
+boss's door; each line of the boss's costs you a heart. Bosses bring no stones, only a
 rule in their favour; beaten once, they rise again undead by moonlight.
 
 It grew out of a physical summer-camp game; the original rules, simulations and print-and-play

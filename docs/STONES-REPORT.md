@@ -527,13 +527,46 @@ What changed:
 The bot now leaves Magpie, Parrot and Mind Control at home against bosses,
 as a player would. Those stones are always dead against a boss.
 
-### Still open
+### Round two: the open issues
 
-- **"Beside" vs "around" wording**, and a highlight of the affected squares
-  while a stone is selected.
-- **Bumper, Rehearse, Mind Control, Lasso and Mountain are still near Pebble
-  strength.** They are commons now; an eight-way Bumper or a Bribe that also
-  reaches corners measured no better.
-- **Act 1's bosses are the most common run-enders for the bots.** Each is
-  about 50% in its undead phase, and an act-1 pouch is small.
-- **Boss lines on the map cost 2 hearts each.** That is unchanged.
+- **"Beside" and "around"**: beside is always the four squares that share a
+  side, around all eight.
+  - Card texts (EN and CS) and the Clinch rule follow this.
+  - Each stone carries its `reach`. The placement preview outlines those
+    squares, and the info card draws them.
+- **Weak stones reworked** (act-1 matrix, before → after):
+
+  | stone | change | before → after |
+  |---|---|---:|
+  | Bumper | a stone pushed off the edge is knocked off the board; now uncommon | 28% → 53% |
+  | Lasso | pulls *any* enemy stone onto an empty square beside it | 33% → 39% |
+  | Mountain | also goes anywhere, whatever the restrictions; Mirror and Relocate no longer move it | 36% → 37% (40% in the proposal run) |
+  | Mind Control | the stone named also does nothing | 31% → 37% |
+  | Rehearse | becomes a copy of your last special stone | 63% → 67% with a Shift beside it in the hand³ |
+
+  ³ Alone with Pebbles it has nothing to copy, so the matrix shows it at
+  Pebble level.
+
+  Tried and dropped: a Lasso that pulls only enemy stones, an eight-way
+  Bumper, and a Bribe that reaches corners. None measured better.
+- **Act-1 elites re-tuned** after the Lasso change: the Twins and the Lord of
+  Stench carry a Frog instead of a Lasso (both about 50%).
+- **Act-1 bosses' undead phases** now measure 55–57%.
+- **Boss lines cost 1 heart, not 2.**
+
+  | per line | bot wins (150 it., 192 runs) | runs ended by a boss line |
+  |---:|---:|---:|
+  | 2 hearts | 37% | 48 (25%) |
+  | 1 heart | 52% | 16 (8%) |
+  | 0 hearts | 61% | 0 |
+
+  The map still pushes back; it just no longer decides a quarter of the runs.
+- **Whole runs now** (heat 0, 192 runs each):
+
+  | player bot | runs won |
+  |---|---:|
+  | 80 iterations, 20% blunders | 30% |
+  | 150 iterations, 10% blunders | 54% |
+  | 300 iterations, no blunders | 69% |
+
+  Heat 1–5 raises it from there.

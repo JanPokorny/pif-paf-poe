@@ -133,7 +133,7 @@ export const LINE = 3;                     // marks in a row that count
 export const MAX_POWER = 2;
 // `sees`: the chance the boss blocks your two in a row; `lineDamage`: hearts
 // a line of the boss's Os costs you.
-export const MAPCFG = { sees: 0.75, lineDamage: 2 };
+export const MAPCFG = { sees: 0.75, lineDamage: 1 };
 // Rocks: a lattice -- (x + 3y) mod 7 in two neighbouring classes -- that cuts
 // every row, column and diagonal into runs between two and five squares long,
 // so an open two is rarely a double threat and a line has to be set up; plus a

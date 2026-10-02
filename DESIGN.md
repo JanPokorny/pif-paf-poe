@@ -76,7 +76,7 @@ its own, with its boss.
   square, which only the boss may take afterwards. You choose again at once — the boss answers
   only a real X.
 - **The door.** Your three in a row opens the boss's door (+10 gold for every square past that).
-  The boss's three in a row costs you two hearts. There is no page limit any more: the door opens
+  The boss's three in a row costs you a heart (two made it the last blow in a quarter of the bots' runs). There is no page limit any more: the door opens
   only to your line, and when nothing on view is free the boss moves again (into the fog beside
   the page if it must) until something is.
 - **Spent lines.** Every line of three is crossed through on the page, and its marks are spent:
@@ -114,7 +114,7 @@ its own, with its boss.
 - **Terrain by act.** The Meadow's obstacles are firs and its empty ground tiny shrubs; the
   Quarry's are boulders and gravel; the Summit's crags and tufts of grass in the snow.
 
-Balance was measured and retuned in `docs/STONES-REPORT.md`; the run bots (see Difficulty) win a fifth to a half of their runs.
+Balance was measured and retuned in `docs/STONES-REPORT.md`; the run bots (see Difficulty) win a third to two thirds of their runs at heat 0.
 
 ## The stones
 
@@ -126,37 +126,39 @@ the stronger and the more skill a stone wants, the rarer.
 
 | stone | rarity | act 1 | act 2 | act 3 |
 |---|---|---:|---:|---:|
-| Magpie | rare | 68% | 29% | 29% |
-| Pluck | rare, one-shot | 53% | 21% | 26% |
-| Rewind | uncommon, one-shot | 56% | 21% | 24% |
-| Firecracker | rare | 52% | 23% | 22% |
-| Beacon | rare | 61% | 15% | 18% |
-| Bribe | rare, one-shot | 67% | 9% | 10% |
-| Magnet | uncommon | 55% | 13% | 13% |
-| Relocate | uncommon, one-shot | 45% | 18% | 17% |
-| Stinky | common | 47% | 16% | 17% |
-| Nudge | common, one-shot | 46% | 17% | 16% |
-| Shift | common | 48% | 15% | 14% |
-| Swap | uncommon | 47% | 15% | 15% |
-| Turncoat | uncommon | 41% | 21% | 14% |
-| Twin | uncommon | 47% | 15% | 6% |
-| 2048 | uncommon | 43% | 14% | 10% |
+| Magpie | rare | 69% | 30% | 29% |
+| Bumper | uncommon | 53% | 16% | 25% |
+| Rewind | uncommon, one-shot | 49% | 21% | 24% |
+| Firecracker | rare | 48% | 22% | 22% |
+| Pluck | rare, one-shot | 46% | 20% | 25% |
+| Beacon | rare | 54% | 17% | 17% |
+| Bribe | rare, one-shot | 64% | 11% | 10% |
+| Relocate | uncommon, one-shot | 43% | 17% | 17% |
+| Turncoat | uncommon | 39% | 21% | 16% |
+| Stinky | common | 46% | 13% | 16% |
+| Nudge | common, one-shot | 41% | 16% | 16% |
+| Magnet | uncommon | 49% | 12% | 11% |
+| Swap | uncommon | 42% | 15% | 15% |
+| Shift | common | 44% | 14% | 14% |
 | Muffle | common, one-shot | 45% | 10% | 11% |
-| Rotate | common | 41% | 14% | 10% |
-| Frog | common | 37% | 11% | 15% |
-| Parrot | uncommon | 38% | 12% | 12% |
-| Flip | uncommon | 39% | 9% | 10% |
-| Whirl | uncommon | 37% | 9% | 10% |
-| Mirror | common, one-shot | 38% | 8% | 10% |
-| Mountain | common | 36% | 7% | 9% |
-| Lasso | common | 34% | 7% | 10% |
-| Pebble | starter | 29% | 6% | 10% |
-| Mind Control | common, one-shot | 31% | 8% | 6% |
-| Rehearse | common, one-shot | 28% | 7% | 8% |
-| Bumper | common | 28% | 6% | 8% |
+| 2048 | uncommon | 41% | 12% | 11% |
+| Lasso | common | 39% | 12% | 13% |
+| Rotate | common | 36% | 15% | 10% |
+| Frog | common | 35% | 11% | 15% |
+| Twin | uncommon | 39% | 15% | 7% |
+| Parrot | uncommon | 37% | 11% | 12% |
+| Mind Control | common, one-shot | 37% | 11% | 10% |
+| Mountain | common | 37% | 10% | 10% |
+| Flip | uncommon | 35% | 8% | 10% |
+| Whirl | uncommon | 33% | 9% | 10% |
+| Mirror | common, one-shot | 33% | 9% | 11% |
+| Rehearse | common, one-shot | 26% | 7% | 10% |
+| Pebble | starter | 23% | 7% | 10% |
 
 `docs/STONES-REPORT.md` has the rest: duds, choices, skill, pairs, boss builds, and what changed
-(Bribe takes only a Pebble beside it, Firecracker leaves a Pebble, Twin needs no empty centre,
+(Bribe takes only a Pebble beside it, Firecracker leaves a Pebble, Bumper knocks stones off the
+edge, Lasso fetches any enemy stone, Mountain ignores restrictions, Mind Control's stone does
+nothing, Rehearse copies your last special, Twin needs no empty centre,
 Lasso pulls all at once, Frog knocks the stone it leaps off the board, Muffle hushes the next
 *special* stone, and Overtake became Rewind).
 
@@ -175,9 +177,9 @@ At heat 0 (six hearts), bots that play the map sensibly, pick their stones by st
 
 | player bot | runs won |
 |---|---|
-| 80 iterations, 20% blunders | about 20% |
-| 150 iterations, 10% blunders | about 34% |
-| 300 iterations, no blunders | about 52% |
+| 80 iterations, 20% blunders | about 30% |
+| 150 iterations, 10% blunders | about 54% |
+| 300 iterations, no blunders | about 69% |
 
 Heat 1–5 raises it after each win: deeper search, dearer shops, a heart fewer,
 bigger elite hands, no blunders.

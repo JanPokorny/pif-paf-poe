@@ -92,10 +92,10 @@ export const ENEMIES = {
     quote: 'What goes up…' },
   // elites
   twins: { name: 'The Twins', emoji: '👯', act: 1, tier: 'elite',
-    core: ['twin', 'lasso'], pool: ['shift', 'magnet'], iters: 90, blunder: 0.28,
+    core: ['twin', 'frog'], pool: ['shift', 'magnet'], iters: 90, blunder: 0.28,
     quote: 'Two for the price of one!' },
   stenchlord: { name: 'Lord of Stench', emoji: '🧅', act: 1, tier: 'elite',
-    core: ['stinky', 'lasso', 'magnet'], pool: ['shift', 'rotate', 'mountain'], iters: 70, blunder: 0.32,
+    core: ['stinky', 'frog', 'magnet'], pool: ['shift', 'rotate', 'mountain'], iters: 70, blunder: 0.32,
     once: ['nudge'], quote: 'You will stand where I let you.' },
   // bosses
   oak: { name: 'The Old Oak', emoji: '🌳', act: 1, tier: 'boss',
