@@ -779,6 +779,16 @@ body:has(.duel) #toast.show { transform: translate(-50%, 0) rotate(-1deg); }
   50% { filter: drop-shadow(0 0 9px rgba(255, 180, 20, 0.95)); }
 }
 .door-hint.open { color: var(--ink); }
+/* The lair opening: a rumble, the mouth warming, then a burst of light. */
+.map-cell.lair.opening { --lair-in: #9a6a1c; z-index: 1; }
+.map-cell.lair.opening .doodle.lair { animation: lair-shake 0.12s linear infinite; }
+@keyframes lair-shake { 0% { translate: -1.5px 0; } 33% { translate: 1.5px -1px; } 66% { translate: -0.5px 1px; } 100% { translate: -1.5px 0; } }
+.map-cell.lair.burst .doodle.lair { animation: lair-pop 0.5s cubic-bezier(0.3, 1.8, 0.5, 1), lair-glow 1.6s ease-in-out 0.5s infinite; }
+@keyframes lair-pop { from { scale: 0.8; } to { scale: 1; } }
+.map-cell.lair.burst::after { content: ''; position: absolute; inset: 8%; border-radius: 50%; pointer-events: none;
+  background: radial-gradient(circle, rgba(255, 214, 90, 0.95) 0 30%, rgba(255, 196, 50, 0.5) 50%, rgba(255, 190, 40, 0) 70%);
+  animation: lair-burst 0.9s ease-out forwards; }
+@keyframes lair-burst { from { scale: 0.3; opacity: 1; } to { scale: 2.6; opacity: 0; } }
 /* The boss's door on the map: a line of hint. */
 .door-hint { display: flex; align-items: center; justify-content: center; gap: 6px; font-size: 0.95rem; color: var(--pencil); text-align: center; margin: 2px 0 4px; }
 .door-hint .icon { width: 18px; height: 18px; flex: none; }

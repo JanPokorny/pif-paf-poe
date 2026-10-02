@@ -299,6 +299,8 @@ function mapScreen() {
   const map = run.map;
   if (map.news === 'oline') flash = 'hurt';   // the hearts in the top bar take the hit
   R.placeLair(run, map);   // a page from before the lair
+  // Your line has just opened the lair: it opens on the page once the marks are drawn.
+  const opening = map.open && !map.doorHeard;
   const reach = new Set(R.reachable(run));
   const boss = ENEMIES[map.boss];
   // One ring of unexplored paper round what is on view: the page goes on.
@@ -322,7 +324,7 @@ function mapScreen() {
       if (!c) { grid.push(h('div.map-fog', { 'aria-hidden': 'true' }, '?')); continue; }
       const kind = c.kind;
       const can = kind === 'lair' ? map.open : reach.has(k);
-      const el = h(`button.map-cell.${kind}` + (can && kind !== 'lair' ? '.reach' : '') + (c.mark && kind !== 'lair' ? '.marked' : '') + (kind === 'lair' && map.open ? '.open' : '') + (!c.mark && !can && kind !== 'lair' && !R.inReach(map, k) ? '.far' : ''), {
+      const el = h(`button.map-cell.${kind}` + (can && kind !== 'lair' ? '.reach' : '') + (c.mark && kind !== 'lair' ? '.marked' : '') + (kind === 'lair' && map.open && !opening ? '.open' : '') + (!c.mark && !can && kind !== 'lair' && !R.inReach(map, k) ? '.far' : ''), {
         'aria-label': NODE_NAME[kind] ?? boss.name, dataset: { k },
         onclick: () => {
           if (kind === 'lair') {
@@ -373,7 +375,6 @@ function mapScreen() {
   map.lastO = null;
   map.freshS = null; map.revealX = null; map.revealO = null;
   if (map.news === 'oline') musicEvent('stronger');
-  else if (map.open && !map.doorHeard) musicEvent('door');
   if (map.open) map.doorHeard = true;
   // A line of the boss's Os costs you hearts: news of its own, once the O is drawn.
   if (map.news === 'oline') setTimeout(() => toast(t('{boss}: three in a row — −{n} ❤', { boss: boss.name, n: R.MAPCFG.lineDamage }), 'bad'), 2200);
@@ -383,10 +384,9 @@ function mapScreen() {
   map.news = null;
   if (bonus) setTimeout(() => toast(`+${bonus} 🪙`, 'good'), 50);
   // The boss's lair, on the page: a hint while it is shut, another once it glows.
-  const door = map.open
-    ? h('div.door-hint.open', {}, h('span', { html: icon('crown') }), t('The lair is open: tap it to face {boss}.', { boss: boss.name }))
-    : h('div.door-hint', {}, h('span', { html: icon('crown') }), t('Three Xs in a row open the boss\'s lair.'),
-)
+  const openHint = () => h('div.door-hint.open', {}, h('span', { html: icon('crown') }), t('The lair is open: tap it to face {boss}.', { boss: boss.name }));
+  const door = map.open && !opening ? openHint()
+    : h('div.door-hint', {}, h('span', { html: icon('crown') }), t('Three Xs in a row open the boss\'s lair.'));
   // Lines of pencil between the squares on view, each a little crooked.
   const W = cols * 100, H = rows * 100;
   let paths = '';
@@ -415,12 +415,28 @@ function mapScreen() {
       h('div.map-help', {}, !R.xCount(run) ? t('Pick any square next to an X or an O.') : ''),
       threats.size ? h('div.map-help.red', {}, t('Dashed circle: the boss wins a line there.')) : null));
   // Keep the newest marks in view, scrolling the sheet only, never the page.
+  const centre = (el) => ({ left: el.offsetLeft - scroller.clientWidth / 2 + el.offsetWidth / 2, top: el.offsetTop - scroller.clientHeight / 2 + el.offsetHeight / 2 });
   requestAnimationFrame(() => {
     const target = (freshX && scroller.querySelector(`[data-k="${freshX}"]`)) || scroller.querySelector('.map-cell.reach');
     if (!target) return;
-    scroller.scrollLeft = target.offsetLeft - scroller.clientWidth / 2 + target.offsetWidth / 2;
-    scroller.scrollTop = target.offsetTop - scroller.clientHeight / 2 + target.offsetHeight / 2;
+    const c = centre(target);
+    scroller.scrollLeft = c.left;
+    scroller.scrollTop = c.top;
   });
+  // The lair opens: the page glides over to it, it shakes, and it bursts into light.
+  if (opening) {
+    const lair = scroller.querySelector('.map-cell.lair');
+    const later = (ms, fn) => setTimeout(() => { if (lair?.isConnected) fn(); }, ms);
+    later(2300, () => scroller.scrollTo({ ...centre(lair), behavior: 'smooth' }));
+    later(2800, () => { lair.classList.add('opening'); sfx('thud'); });
+    later(3600, () => {
+      lair.classList.remove('opening');
+      lair.classList.add('open', 'burst');
+      musicEvent('door');
+      sfx('win');
+      document.querySelector('.door-hint')?.replaceWith(openHint());
+    });
+  }
 }
 
 function actIntro() {
