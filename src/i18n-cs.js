@@ -8,7 +8,6 @@
 
 export default {
   // ── Chrome, menus, title ──────────────────────────────────────────────────
-  'Act {n} · {name}': 'Dějství {n} · {name}',
   'Your pouch': 'Tvůj váček',
   'Menu': 'Menu',
   'Pouch · {n}': 'Váček · {n}',

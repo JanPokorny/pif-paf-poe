@@ -70,7 +70,8 @@ function topBar(menu = showMenu) {
     hearts,
     h('div.gold', {}, h('span', { html: icon('coin') }), run.gold),
     h('div.energy', { onclick: () => toast(t('Energy: what your stones may cost together in a duel.')) }, h('span', { html: icon('energy') }), R.energyOf(run)),
-    h('div.where', {}, t('Act {n} · {name}', { n: run.act, name: ACTS[run.act - 1].name.replace(/^The /, '') })),
+    // On a narrow screen only the act's number: the place name gives way.
+    h('div.where', {}, t('Act {n}', { n: run.act }), h('span.where-name', {}, ` · ${ACTS[run.act - 1].name.replace(/^The /, '')}`)),
     h('button.icon-btn', { onclick: showPouch, 'aria-label': t('Your pouch') }, h('span', { html: icon('hand') })),
     h('button.icon-btn', { onclick: menu, 'aria-label': t('Menu') }, h('span', { html: icon('gear') })));
 }
