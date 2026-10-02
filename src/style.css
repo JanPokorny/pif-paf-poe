@@ -696,7 +696,7 @@ body:has(.duel) #toast.show { transform: translate(-50%, 0) rotate(-1deg); }
 .map-news.good { color: var(--blue); }
 /* Too dear: what the purse cannot pay for yet. */
 .card.dear { opacity: 0.6; }
-.card.dear .price, .price.dear { color: var(--red); text-decoration: line-through; text-decoration-thickness: 2px; }
+.card.dear .price, .price.dear { color: var(--red); }
 .card.dear .price .icon, .price.dear .icon { color: var(--red); }
 .service:has(.price.dear) { opacity: 0.6; }
 

@@ -676,7 +676,8 @@ function treasureScreen() {
 
 // A shop service as a card like the wares.
 function serviceCard(ico, name, price, off, onclick) {
-  return h('button.card.service-card' + (off ? '.sold' : run.gold < price ? '.dear' : ''), { onclick, disabled: off || undefined },
+  // Out of reach of your purse shows, whether or not the service is on offer at all.
+  return h('button.card.service-card' + (off ? '.sold' : '') + (run.gold < price ? '.dear' : ''), { onclick, disabled: off || undefined },
     h('div.relic-token', { html: icon(ico) }), h('div.card-name', {}, name), h('div.price', {}, iconEl('coin'), price));
 }
 
