@@ -322,7 +322,7 @@ function mapScreen() {
       if (!c) { grid.push(h('div.map-fog', { 'aria-hidden': 'true' }, '?')); continue; }
       const kind = c.kind;
       const can = kind === 'lair' ? map.open : reach.has(k);
-      const el = h(`button.map-cell.${kind}` + (can && kind !== 'lair' ? '.reach' : '') + (c.mark && kind !== 'lair' ? '.marked' : '') + (kind === 'lair' && map.open ? '.open' : ''), {
+      const el = h(`button.map-cell.${kind}` + (can && kind !== 'lair' ? '.reach' : '') + (c.mark && kind !== 'lair' ? '.marked' : '') + (kind === 'lair' && map.open ? '.open' : '') + (!c.mark && !can && kind !== 'lair' && !R.inReach(map, k) ? '.far' : ''), {
         'aria-label': NODE_NAME[kind] ?? boss.name, dataset: { k },
         onclick: () => {
           if (kind === 'lair') {
@@ -338,7 +338,7 @@ function mapScreen() {
               : c.mark === 'X' ? t('You have been here.')
                 : c.mark === 'O' ? t('{boss} took this square.', { boss: boss.name })
                   : c.mark === 'S' ? t('Burned: only the boss may take it.')
-                    : t('Not next to a mark.');
+                    : t('Too far: step next to an X or an O first.');
             toast(why);
             return;
           }
@@ -412,7 +412,7 @@ function mapScreen() {
       door,
       scroller,
       h('div.map-news', {}, news),
-      h('div.map-help', {}, !R.xCount(run) ? t('Pick any free square.') : ''),
+      h('div.map-help', {}, !R.xCount(run) ? t('Pick any square next to an X or an O.') : ''),
       threats.size ? h('div.map-help.red', {}, t('Dashed circle: the boss wins a line there.')) : null));
   // Keep the newest marks in view, scrolling the sheet only, never the page.
   requestAnimationFrame(() => {

@@ -843,3 +843,7 @@ body:has(.duel) #toast.show { transform: translate(-50%, 0) rotate(-1deg); }
 /* Our own yes-or-no dialog. */
 .ask { display: flex; flex-direction: column; gap: 10px; }
 .ask-q { font-size: 1.1rem; text-align: center; margin: 4px 0 6px; }
+
+/* On view but out of reach: two squares from every mark. Seen, not yet to be taken. */
+.map-cell.far { cursor: default; }
+.map-cell.far > .doodle, .map-cell.far > .label, .map-cell.far > .elite-star { opacity: 0.4; filter: grayscale(0.6); }

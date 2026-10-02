@@ -411,10 +411,29 @@ function revealCell(run, x, y, first, broken = false) {
 }
 
 // Reveal the squares round (x, y); returns the ones that came into view.
+// A new mark brings the paper round it into view two squares deep: the inner
+// ring is in reach, the outer one only on view, so you see what lies beyond
+// the square you step on.
+export const SIGHT = 2;
 function reveal(run, x, y, first = false) {
   const out = [];
-  for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++) if ((dx || dy) && revealCell(run, x + dx, y + dy, first)) out.push(keyOf(x + dx, y + dy));
+  // Nearest first, so the inner ring is decided with the outer one still unknown.
+  for (let r = 1; r <= SIGHT; r++) {
+    for (let dy = -r; dy <= r; dy++) for (let dx = -r; dx <= r; dx++) {
+      if (Math.max(Math.abs(dx), Math.abs(dy)) === r && revealCell(run, x + dx, y + dy, first && r === 1)) out.push(keyOf(x + dx, y + dy));
+    }
+  }
   return out;
+}
+
+// In reach: next to an X or an O. Squares further out are on view, not to be taken yet.
+export function inReach(map, k) {
+  const [x, y] = coords(k);
+  for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++) {
+    const m = (dx || dy) && map.cells[keyOf(x + dx, y + dy)]?.mark;
+    if (m === 'X' || m === 'O') return true;
+  }
+  return false;
 }
 
 export const xCount = (run) => Object.values(run.map?.cells ?? {}).filter((c) => c.mark === 'X').length;
@@ -433,7 +452,7 @@ export function mapBounds(map) {
 export function bossThreats(map) {
   const out = [];
   for (const [k, c] of Object.entries(map.cells)) {
-    if (c.mark && c.mark !== 'S') continue;
+    if ((c.mark && c.mark !== 'S') || !inReach(map, k)) continue;
     const [x, y] = coords(k);
     if (reach(map, x, y, 'O') >= LINE - 1) out.push(k);
   }
@@ -441,10 +460,10 @@ export function bossThreats(map) {
 }
 
 export const lineReach = (map, k, mark = 'X') => reach(map, ...coords(k), mark);
-const openSquares = (map) => Object.entries(map.cells).filter(([, c]) => !c.mark).map(([k]) => k);
+const openSquares = (map) => Object.entries(map.cells).filter(([k, c]) => !c.mark && inReach(map, k)).map(([k]) => k);
 
-// Where you may go next: any open square on view, and the boss once its door
-// is open. When the page is full, only the boss.
+// Where you may go next: any open square in reach, and the boss once its lair
+// is open.
 export function reachable(run) {
   const out = openSquares(run.map);
   if (run.map.open) out.push('boss');
@@ -453,10 +472,11 @@ export function reachable(run) {
 
 // The boss's reply: finish a line if it can, block yours if it sees it coming,
 // otherwise build its own and spoil yours, with a little noise. It may take a
-// square you scorched.
-function bossMark(run) {
+// square you scorched. It keeps to the squares in reach, as you do, unless
+// `far`: then any free square on view.
+function bossMark(run, far = false) {
   const map = run.map;
-  const free = Object.entries(map.cells).filter(([, c]) => !c.mark || c.mark === 'S');
+  const free = Object.entries(map.cells).filter(([k, c]) => (!c.mark || c.mark === 'S') && (far || inReach(map, k)));
   if (!free.length) return null;
   const sees = rand(run) < MAPCFG.sees;
   const value = { treasure: 6, gift: 5, shop: 3, rest: 3, craft: 3, event: 2, elite: 1, fight: 1 };
@@ -481,7 +501,7 @@ function bossMark(run) {
 // unknown square right beside the revealed page, never a rock, the one
 // best for its lines.
 function bossTurn(run) {
-  const o = bossMark(run);
+  const o = bossMark(run) ?? bossMark(run, true);
   if (o) return o;
   const map = run.map;
   const fog = new Set();
@@ -503,7 +523,7 @@ function bossTurn(run) {
   return best;
 }
 
-// A line of the boss's Os hurts: two hearts.
+// A line of the boss's Os hurts.
 function bossLine(run) {
   run.map.oLines++;
   run.map.news = 'oline';

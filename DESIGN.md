@@ -75,6 +75,9 @@ its own, with its boss.
   boss's (O). Every square you step on is an X; a duel lost costs its hearts and scorches the
   square, which only the boss may take afterwards. You choose again at once — the boss answers
   only a real X.
+- **Sight.** A mark brings the paper round it into view two squares deep, but only the squares
+  next to an X or an O can be taken, by you or by the boss. The outer ring is on view, dimmed:
+  you see what lies past the square you step on before you commit a line to it.
 - **The lair.** The boss's lair takes the place of one of the obstacles next to its first mark: a
   wall like any other, until your three in a row opens it (+10 gold for every square past that).
   Open, it glows, and tapping it starts the boss duel.
