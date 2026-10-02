@@ -352,9 +352,11 @@ export function makeMap(run) {
   reveal(run, 0, 0, true);
   placeLair(run, map);
   // The very first page hides a gift: a special stone, free.
+  // On a square in reach from the very first step.
   if (run.act === 1) {
-    const ring = Object.entries(map.cells).filter(([, c]) => !c.mark && c.kind !== 'elite');
-    const [k] = pick(run, ring);
+    const free = ([k, c]) => !c.mark && c.kind !== 'elite';
+    const ring = Object.entries(map.cells).filter((e) => free(e) && inReach(map, e[0]));
+    const [k] = pick(run, ring.length ? ring : Object.entries(map.cells).filter(free));
     map.cells[k] = { kind: 'gift', mark: null };
   }
   return map;
