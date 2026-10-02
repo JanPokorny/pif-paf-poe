@@ -1,7 +1,7 @@
 // Plays whole runs headless with a simple bot, to catch flow bugs and to see
 // how far a player of a given strength gets.
 //
-//   node tools/runbot.mjs --runs 8 --piters 150 --pblunder 0.1 [--heat 0]
+//   node tools/runbot.mjs --runs 8 --piters 150 --pblunder 0.1 [--heat 0] [--linedmg 2]
 
 import { Worker, isMainThread, parentPort, workerData } from 'node:worker_threads';
 import { cpus } from 'node:os';
@@ -71,9 +71,15 @@ function playRun(spec) {
   const run = R.newRun({ seed: spec.seed, heat: spec.heat });
   const rng = makeRng(spec.seed);
   const log = [];
-  let guard = 0;
+  let guard = 0, lines = 0, lineDeath = false;
+  if (spec.linedmg != null) R.MAPCFG.lineDamage = spec.linedmg;
   while (!run.over && guard++ < 3000) {
-    switch (run.screen) {
+    const page = run.map, seen = page?.oLines ?? 0;
+    step(run.screen);
+    if (run.map === page && page && page.oLines > seen) { lines += page.oLines - seen; if (run.over) lineDeath = true; }
+  }
+  function step(screen) {
+    switch (screen) {
       case 'map': case 'actintro': {
         run.screen = 'map';
         let opts = R.reachable(run);
@@ -139,7 +145,7 @@ function playRun(spec) {
   if (!run.over) throw new Error('run did not end: ' + run.screen);
   // JSON round trip must survive (the save format).
   JSON.parse(JSON.stringify(run));
-  return { seed: spec.seed, victory: run.victory, act: run.act, row: run.map.visited, hearts: run.hearts, log: log.join(' '), relics: run.relics.join(','), pouch: run.pouch.map((s) => s.type).join(',') + ` slots ${run.slots}` };
+  return { seed: spec.seed, victory: run.victory, act: run.act, row: run.map.visited, hearts: run.hearts, lines, lineDeath, log: log.join(' '), relics: run.relics.join(','), pouch: run.pouch.map((s) => s.type).join(',') + ` slots ${run.slots}` };
 }
 
 if (!isMainThread) {
@@ -148,7 +154,7 @@ if (!isMainThread) {
   parentPort.postMessage(out);
 } else {
   const runs = +arg('runs', 8), piters = +arg('piters', 150), pblunder = +arg('pblunder', 0.1), heat = +arg('heat', 0);
-  const specs = Array.from({ length: runs }, (_, i) => ({ seed: +arg('seed', 100) + i, piters, pblunder, heat, stay: arg('stay', 8) }));
+  const specs = Array.from({ length: runs }, (_, i) => ({ seed: +arg('seed', 100) + i, piters, pblunder, heat, stay: arg('stay', 8), linedmg: arg('linedmg', null) == null ? null : +arg('linedmg') }));
   const W = Math.min(cpus().length, runs);
   const chunks = Array.from({ length: W }, () => []);
   specs.forEach((s, i) => chunks[i % W].push(s));
@@ -159,5 +165,5 @@ if (!isMainThread) {
     console.log(`seed ${r.seed}: ${r.victory ? 'VICTORY' : `died act ${r.act} after ${r.row} squares`}  | ${r.log}\n    relics ${r.relics}\n    pouch ${r.pouch}`);
   }
   const ok = res.filter((r) => !r.error);
-  console.log(`\n${ok.filter((r) => r.victory).length}/${ok.length} victories; mean act reached ${(ok.reduce((a, r) => a + r.act, 0) / ok.length).toFixed(2)}; ${((Date.now() - t0) / 1000).toFixed(0)}s`);
+  console.log(`\n${ok.filter((r) => r.victory).length}/${ok.length} victories; mean act reached ${(ok.reduce((a, r) => a + r.act, 0) / ok.length).toFixed(2)}; boss lines ${(ok.reduce((a, r) => a + r.lines, 0) / ok.length).toFixed(1)} a run, the last blow in ${ok.filter((r) => r.lineDeath).length}; ${((Date.now() - t0) / 1000).toFixed(0)}s`);
 }

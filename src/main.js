@@ -369,7 +369,7 @@ function mapScreen() {
   else if (map.open && !map.doorHeard) musicEvent('door');
   if (map.open) map.doorHeard = true;
   // A line of the boss's Os costs you hearts: news of its own, once the O is drawn.
-  if (map.news === 'oline') setTimeout(() => toast(t('{boss}: three in a row — −{n} ❤', { boss: boss.name, n: R.LINE_DAMAGE }), 'bad'), 2200);
+  if (map.news === 'oline') setTimeout(() => toast(t('{boss}: three in a row — −{n} ❤', { boss: boss.name, n: R.MAPCFG.lineDamage }), 'bad'), 2200);
   const news = lastO && map.cells[lastO] && map.cells[lastO].kind !== 'boss-mark' ? t('{boss} marks the {node} square.', { boss: boss.name, node: NODE_NAME[map.cells[lastO].kind].toLowerCase() }) : '';
   const bonus = map.bonus;
   map.bonus = 0;

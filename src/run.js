@@ -131,8 +131,9 @@ export const craftable = (run) => run.pouch.filter((s) => s.type !== 'pebble');
 export const BOSS_LIVES = 2;              // duels a boss must lose
 export const LINE = 3;                     // marks in a row that count
 export const MAX_POWER = 2;
-export const LINE_DAMAGE = 2;              // hearts a line of the boss's Os costs you
-export const MAPCFG = { sees: 0.75 };     // the chance the boss blocks your two in a row
+// `sees`: the chance the boss blocks your two in a row; `lineDamage`: hearts
+// a line of the boss's Os costs you.
+export const MAPCFG = { sees: 0.75, lineDamage: 2 };
 // Rocks: a lattice -- (x + 3y) mod 7 in two neighbouring classes -- that cuts
 // every row, column and diagonal into runs between two and five squares long,
 // so an open two is rarely a double threat and a line has to be set up; plus a
@@ -496,7 +497,7 @@ function bossTurn(run) {
 function bossLine(run) {
   run.map.oLines++;
   run.map.news = 'oline';
-  hurt(run, LINE_DAMAGE);
+  hurt(run, MAPCFG.lineDamage);
 }
 
 // Nowhere left for you to step: the boss moves instead, and its marks reveal
