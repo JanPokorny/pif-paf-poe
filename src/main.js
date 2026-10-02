@@ -608,7 +608,7 @@ function takeStone(s, done) { R.gainStone(run, s); sfx('coin'); done(true); }
 function pickFromPouch(prompt, cb, { filter = () => true, cancel = t('Cancel') } = {}) {
   const list = run.pouch.filter(filter);
   const body = h('div.pouch-view', {}, h('h2', {}, prompt),
-    list.length ? h('div.stone-grid', {}, list.map((s) => h('button.pouch-slot', { onclick: () => { close(); cb(s); } }, stoneEl(s, 'X'), h('span', {}, stoneName(s)))))
+    list.length ? h('div.stone-grid', {}, list.map((s) => h('button.pouch-slot', { onclick: () => { close(); cb(s); } }, stoneEl(s, 'X', { cost: true }), h('span', {}, stoneName(s)))))
       : h('p.dim', {}, t('Nothing to choose.')),
     h('button.btn.wide.ghost', { onclick: () => { close(); cb(null); } }, cancel));
   const close = modal(body, { dismissable: false, cls: 'tall' });
@@ -752,7 +752,7 @@ function craftFlow(done) {
           picked = picked.includes(x.uid) ? picked.filter((u) => u !== x.uid) : picked.length < 2 ? [...picked, x.uid] : [picked[1], x.uid];
           sfx('click'); drawPick();
         },
-      }, stoneEl(x, 'X'), infoName(x, 'X')))),
+      }, stoneEl(x, 'X', { cost: true }), infoName(x, 'X')))),
       h('p.dim', {}, b ? t('→ one {tier} stone', { tier: t(R.craftTier(a, b)) }) : t('Two stones → one better.')),
       h('button.btn.primary.wide', {
         disabled: !b || undefined,

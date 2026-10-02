@@ -119,6 +119,14 @@ test('a side with no stones left finds a Pebble on its turn', () => {
   play(s, 'pebble', 2);
   assert.equal(s.over, false);
 });
+test('Open Hands: an empty hand still finds a Pebble, and may borrow instead', () => {
+  const s = G({ handX: ['pebble'], pebblesX: [], handO: ['shift', 'pebble'], pebblesO: [], conds: ['shared'] });
+  play(s, 'pebble', 0);
+  play(s, 'pebble', 8);
+  assert.equal(s.player, 'X');
+  assert.deepEqual(s.hands.X.map((x) => x.type), ['pebble']);
+  assert.ok(legalActions(s).some((a) => a.stone === 'shift' && a.from === 'O'));
+});
 test('a special stone leaves the hand when placed', () => {
   const s = G({ handX: ['mountain', 'mountain'] });
   play(s, 'mountain', 0);

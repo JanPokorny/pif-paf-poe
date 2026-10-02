@@ -915,4 +915,4 @@ body:has(.duel) #toast.show { transform: translate(-50%, 0) rotate(-1deg); }
 .cards.pick-one .card.chosen { transform: translateY(-4px) rotate(-1deg) scale(1.04); box-shadow: 0 0 0 3px var(--blue), 2px 6px 10px rgba(0, 0, 0, 0.2); }
 .cards.pick-one .card.unchosen { opacity: 0.45; }
 
-@media (max-width: 379px) { .topbar .where-name { display: none; } }
+@media (max-width: 419px) { .topbar .where-name { display: none; } }

@@ -665,13 +665,10 @@ function passTurn(s) {
   settle(s);
 }
 
-// Stones run out, but nobody is ever stuck: a side with nothing left to place
-// finds a Pebble on its turn.
-export function canMove(s, p) {
-  return s.hands[p].length > 0 || (s.conds.includes('shared') && s.hands[other(p)].some((h) => h.type !== 'pebble'));
-}
+// Stones run out, but nobody is ever stuck: a side whose own hand is empty
+// finds a Pebble on its turn (under Open Hands it may still borrow instead).
 function settle(s) {
-  if (s.over || s.phase !== 'select' || canMove(s, s.player)) return;
+  if (s.over || s.phase !== 'select' || s.hands[s.player].length) return;
   s.hands[s.player].push({ type: 'pebble' });
   note(s, `found:${s.player}`);
 }
