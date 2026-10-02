@@ -641,21 +641,23 @@ function rewardScreen() {
   // its cards), tap one to choose it. Continue takes it all, once every
   // choice is made.
   rw.sel = rw.sel ?? {};
+  // (A save from before the form may have taken some of it already.)
+  const want = { once: rw.once && !rw.taken.once, boss: rw.relicChoice?.length && !rw.taken.boss, stone: rw.stones.length && !rw.taken.stone };
   const rows = [];
   if (rw.relic) rows.push(h('div.cards.one', {}, relicCard(rw.relic, { onclick: () => infoRelic(rw.relic) })));
-  if (rw.once) rows.push(h('div.cards.one', {}, stoneCard(rw.once, { onclick: () => infoStone(rw.once, 'X') })));
+  if (want.once) rows.push(h('div.cards.one', {}, stoneCard(rw.once, { onclick: () => infoStone(rw.once, 'X') })));
   const choose = (key, value) => () => { rw.sel[key] = value; sfx('click'); save(); rewardScreen(); };
-  if (rw.relicChoice?.length) rows.push(radioRow(rw.sel.boss, rw.relicChoice.map((id) => [id, relicCard(id, { onclick: choose('boss', id) })])));
-  if (rw.stones.length) rows.push(radioRow(rw.sel.stone, rw.stones.map((st, k) => [k, stoneCard(st, { onclick: choose('stone', k) })])));
+  if (want.boss) rows.push(radioRow(rw.sel.boss, rw.relicChoice.map((id) => [id, relicCard(id, { onclick: choose('boss', id) })])));
+  if (want.stone) rows.push(radioRow(rw.sel.stone, rw.stones.map((st, k) => [k, stoneCard(st, { onclick: choose('stone', k) })])));
   rows.forEach((r, k) => { if (k) parts.push(h('div.and-sep', {}, t('~ and ~'))); parts.push(r); });
   parts.push(pressHint());
-  const ready = (!rw.relicChoice?.length || rw.sel.boss !== undefined) && (!rw.stones.length || rw.sel.stone !== undefined);
+  const ready = (!want.boss || rw.sel.boss !== undefined) && (!want.stone || rw.sel.stone !== undefined);
   parts.push(h('div.sticky-bottom', {}, h('button.btn.wide.big.primary', {
     disabled: !ready || undefined,
     onclick: () => {
-      if (rw.once) R.gainStone(run, rw.once);
-      if (rw.relicChoice?.length) R.gainRelic(run, rw.sel.boss);
-      if (rw.stones.length) R.gainStone(run, rw.stones[rw.sel.stone]);
+      if (want.once) R.gainStone(run, rw.once);
+      if (want.boss) R.gainRelic(run, rw.sel.boss);
+      if (want.stone) R.gainStone(run, rw.stones[rw.sel.stone]);
       sfx('coin');
       R.leaveNode(run);
       route();
