@@ -726,8 +726,9 @@ export function enterNode(run, key) {
     case 'rest': run.pending = { kind: 'rest' }; run.screen = 'rest'; break;
     case 'craft': run.pending = { kind: 'craft' }; run.screen = 'craft'; break;
     case 'gift': {
-      // A special stone, free: one of two.
-      const stones = stoneChoices(run, 'normal', null, 2);
+      // A special stone, free: one of two, both of them stones the energy you
+      // have can bring along.
+      const stones = stoneChoices(run, 'normal', energyOf(run) >= 3 ? null : energyOf(run) >= 2 ? 'uncommon' : 'common', 2);
       run.pending = { kind: 'reward', gift: true, gold: 0, stones, once: null, relic: null, relicChoice: null, tier: 'gift', taken: {} };
       run.screen = 'reward';
       break;
