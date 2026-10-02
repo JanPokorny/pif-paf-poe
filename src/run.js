@@ -313,7 +313,15 @@ export function placeLair(run, map = run.map) {
 }
 
 // Step back out of a duel you have only looked at.
+// From the boss too: it waits in its lair as it was, risen already if you
+// beat it once.
 export function retreat(run) {
+  const duel = run.pending?.duel;
+  if (run.atBoss && duel) {
+    run.map.bossWins = duel.bossWins;
+    run.map.bossRound = duel.bossRound;
+    run.atBoss = false;
+  }
   run.map.at = null;
   run.pending = null;
   run.screen = 'map';
@@ -693,7 +701,7 @@ export function defaultHand(run) {
 export function enterNode(run, key) {
   if (key === 'boss') {
     run.atBoss = true;
-    run.pending = { kind: 'duel', duel: prepareDuel(run, run.map.boss, { bossRound: 0, bossWins: 0 }) };
+    run.pending = { kind: 'duel', duel: prepareDuel(run, run.map.boss, { bossRound: run.map.bossRound ?? 0, bossWins: run.map.bossWins ?? 0 }) };
     run.screen = 'predual';
     return;
   }

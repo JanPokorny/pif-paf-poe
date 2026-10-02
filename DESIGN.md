@@ -80,7 +80,8 @@ its own, with its boss.
   you see what lies past the square you step on before you commit a line to it.
 - **The lair.** The boss's lair takes the place of one of the obstacles next to its first mark: a
   wall like any other, until your three in a row opens it (+10 gold for every square past that).
-  Open, it glows, and tapping it starts the boss duel.
+  Open, it glows, and tapping it starts the boss duel. You may step back to the map from the
+  boss as from any duel; it waits in its lair as it was, risen already if you beat it once.
   The boss's three in a row costs you a heart (two made it the last blow in a quarter of the bots' runs). There is no page limit any more: the lair opens
   only to your line, and when nothing on view is free the boss moves again (into the fog beside
   the page if it must) until something is.

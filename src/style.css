@@ -774,6 +774,7 @@ body:has(.duel) #toast.show { transform: translate(-50%, 0) rotate(-1deg); }
 .map-cell.lair.open { --lair-in: #ffd451; z-index: 1; }
 .map-cell.lair.open .doodle.lair { animation: lair-glow 1.6s ease-in-out infinite; }
 .map-cell.lair.open .lair-boss { filter: none; opacity: 1; }
+.map-cell.lair.open.undead .lair-boss { filter: grayscale(1) contrast(1.3) brightness(0.9) sepia(0.6) hue-rotate(60deg); }
 @keyframes lair-glow {
   0%, 100% { filter: drop-shadow(0 0 2px rgba(255, 196, 40, 0.6)); }
   50% { filter: drop-shadow(0 0 9px rgba(255, 180, 20, 0.95)); }

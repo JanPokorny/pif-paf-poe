@@ -324,7 +324,7 @@ function mapScreen() {
       if (!c) { grid.push(h('div.map-fog', { 'aria-hidden': 'true' }, '?')); continue; }
       const kind = c.kind;
       const can = kind === 'lair' ? map.open : reach.has(k);
-      const el = h(`button.map-cell.${kind}` + (can && kind !== 'lair' ? '.reach' : '') + (c.mark && kind !== 'lair' ? '.marked' : '') + (kind === 'lair' && map.open && !opening ? '.open' : '') + (!c.mark && !can && kind !== 'lair' && !R.inReach(map, k) ? '.far' : ''), {
+      const el = h(`button.map-cell.${kind}` + (can && kind !== 'lair' ? '.reach' : '') + (c.mark && kind !== 'lair' ? '.marked' : '') + (kind === 'lair' && map.open && !opening ? '.open' : '') + (kind === 'lair' && (map.bossWins ?? 0) > 0 ? '.undead' : '') + (!c.mark && !can && kind !== 'lair' && !R.inReach(map, k) ? '.far' : ''), {
         'aria-label': NODE_NAME[kind] ?? boss.name, dataset: { k },
         onclick: () => {
           if (kind === 'lair') {
@@ -384,7 +384,8 @@ function mapScreen() {
   map.news = null;
   if (bonus) setTimeout(() => toast(`+${bonus} 🪙`, 'good'), 50);
   // The boss's lair, on the page: a hint while it is shut, another once it glows.
-  const openHint = () => h('div.door-hint.open', {}, h('span', { html: icon('crown') }), t('The lair is open: tap it to face {boss}.', { boss: boss.name }));
+  const risen = (map.bossWins ?? 0) > 0;
+  const openHint = () => h('div.door-hint.open', {}, h('span', { html: icon('crown') }), t('The lair is open: tap it to face {boss}.', { boss: risen ? undeadName(boss) : boss.name }));
   const door = map.open && !opening ? openHint()
     : h('div.door-hint', {}, h('span', { html: icon('crown') }), t('Three Xs in a row open the boss\'s lair.'));
   // Lines of pencil between the squares on view, each a little crooked.
@@ -509,7 +510,7 @@ function preDuel() {
     duel.tier === 'boss' && duel.bossWins === 0 && enemy.rules2 && enemy.rules2.join() !== duel.rules.join()
       ? h('div.fact.dim', {}, t('At moonrise: {rules}', { rules: enemy.rules2.map((r) => RULES[r].name).join(', ') })) : null,
   ].filter(Boolean);
-  const canBack = duel.tier !== 'boss' && !duel.event;
+  const canBack = !duel.event;
   screen(topBar(),
     h('div.page', {},
       canBack ? h('button.btn.ghost.small.back-map', { onclick: () => { R.retreat(run); route(); } }, h('span', { html: icon('back') }), t('Back to the map')) : null,
