@@ -909,6 +909,18 @@ export function gainRelic(run, id) {
 export function gainStone(run, s) {
   const st = stone(run, s.type);
   run.pouch.push(st);
+  // A new special stone goes into the hand you last took into a duel: into a
+  // free slot, or in place of a Pebble.
+  if (st.type !== 'pebble' && run.lastHand) {
+    const typeOf = (u) => run.pouch.find((x) => x.uid === u)?.type;
+    const hand = run.lastHand.filter((u) => typeOf(u));
+    if (hand.length < handSize(run)) hand.push(st.uid);
+    else {
+      const i = hand.findLastIndex((u) => typeOf(u) === 'pebble');
+      if (i >= 0) hand[i] = st.uid;
+    }
+    run.lastHand = hand;
+  }
   return st;
 }
 

@@ -692,6 +692,21 @@ test('a rule with nothing to choose leaves the boss\'s turn plain', () => {
   turnPassedTo(s, 'X');
 });
 
+// ── The run's hand ──────────────────────────────────────────────────────────
+
+group('run');
+const RUN = await import('../src/run.js');
+test('a special stone found joins the last hand: a free slot, else in place of a Pebble', () => {
+  const run = RUN.newRun({ seed: 1 });
+  const hand = () => RUN.defaultHand(run).map((u) => run.pouch.find((x) => x.uid === u).type).sort();
+  run.lastHand = RUN.defaultHand(run);   // a duel played with four Pebbles
+  RUN.gainStone(run, { type: 'shift' });
+  assert.deepEqual(hand(), ['pebble', 'pebble', 'pebble', 'shift']);
+  run.slots = (run.slots ?? 4) + 1;
+  RUN.gainStone(run, { type: 'magnet' });   // a fifth slot: the hand fills it, then a Pebble makes room
+  assert.deepEqual(hand(), ['magnet', 'pebble', 'pebble', 'pebble', 'shift']);
+});
+
 // ── cloneState ──────────────────────────────────────────────────────────────
 
 group('cloneState');
