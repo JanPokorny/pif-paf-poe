@@ -619,6 +619,8 @@ h1, h2, .turn-status, .btn.primary, .enemy-name, .card-name, .section-label { le
 .demo-board.anim .demo-cell { transition: background 0.25s; }
 .demo-stone { position: absolute; left: 0; top: 0; transition: translate 0.6s ease-in-out, opacity 0.35s, scale 0.3s cubic-bezier(0.3, 1.6, 0.5, 1); }
 .demo-stone.still { transition: none; }
+.demo-cell.area { background: rgba(255, 196, 64, 0.45); border-radius: 30%; }
+.demo-board.anim .demo-cell.placed { background: var(--hi); }
 .demo-cap { font-size: 0.9rem; color: var(--pencil); flex: 1; min-width: 120px; }
 .card-info { position: absolute; top: 4px; right: 8px; color: var(--blue); font-size: 1.2rem; padding: 4px; }
 .btn.continue { flex-direction: column; gap: 0; line-height: 1.1; } .continue-sub { font-family: var(--hand); font-size: 0.9rem; opacity: 0.75; }

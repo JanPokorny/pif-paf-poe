@@ -1,6 +1,6 @@
 // Small DOM helpers shared by every screen.
 
-import { STONES, CONDS, RULES, createGame, legalActions, applyAction, cloneState, allowedSquares, touching, adjacent } from '../engine.js';
+import { STONES, CONDS, RULES, BLOCKS, RING, createGame, legalActions, applyAction, cloneState, allowedSquares, touching, adjacent } from '../engine.js';
 import { RELICS } from '../content.js';
 import { icon, ICONS } from '../icons.js';
 import { t, lang, setLang, LANGS } from '../i18n.js';
@@ -156,6 +156,21 @@ function demoBoard(board, marks = {}) {
   }
   return g;
 }
+// The squares a stone works on, from where it lands: lit up before it acts,
+// with a word on what they are.
+function areaOf(st, pos, o) {
+  const ring = (near) => [...Array(9).keys()].filter((i) => near(pos, i));
+  if (st.reach === 'beside') return { cells: ring(adjacent), cap: t('Beside: the four squares that share a side.') };
+  if (st.reach === 'around') return { cells: ring(touching), cap: t('Around: all eight squares, corners too.') };
+  if (st.id === 'rotate' && o?.block) return { cells: BLOCKS[o.block], cap: t('One of the 2×2 blocks it is in.') };
+  if (st.id === 'shift' && o?.dir) {
+    const r = (pos / 3) | 0, c = pos % 3;
+    return { cells: o.dir === 'left' || o.dir === 'right' ? [r * 3, r * 3 + 1, r * 3 + 2] : [c, c + 3, c + 6], cap: t('Its row or its column.') };
+  }
+  if (st.id === 'whirl') return { cells: RING, cap: t('The eight outer squares.') };
+  return null;
+}
+
 function stoneDemo(s) {
   const st = STONES[s.type];
   const fresh = () => {
@@ -167,7 +182,10 @@ function stoneDemo(s) {
   };
   try {
     if (st.restrict) {
+      // Landed in the centre: the squares the enemy may and may not use.
       const g = fresh();
+      const before = cloneState(g).board;
+      before[4] = { player: 'X', type: s.type, id: g.nextId };
       applyAction(g, { type: 'select', stone: s.type });
       applyAction(g, { type: 'place', pos: 4 });
       if (g.phase === 'effect') applyAction(g, legalActions(g)[0]);
@@ -175,7 +193,7 @@ function stoneDemo(s) {
       const ok = new Set(allowedSquares(g));
       const marks = {};
       for (let i = 0; i < 9; i++) if (!g.board[i]) marks[i] = ok.has(i) ? 'ok' : 'no';
-      return h('div.demo', {}, demoBoard(g.board, marks), h('div.demo-cap', {}, t('Placed in the centre: the enemy may only use the marked squares.')));
+      return h('div.demo', {}, animatedDemo(before, g.board, 4, { marks }), h('div.demo-cap', {}, t('Placed in the centre: the enemy may only use the marked squares.')));
     }
     if (!st.apply) return null;
     // The placement and choice that change the board the most.
@@ -195,29 +213,20 @@ function stoneDemo(s) {
         const same = (a, b) => (!a && !b) || (a && b && a.player === b.player && a.type === b.type);
         const moved = after.board.reduce((n, c, i) => n + (same(c, before[i]) ? 0 : 1), 0)
           + (after.hands.X.length !== g.hands.X.length || after.hands.O.length !== g.hands.O.length ? 2 : 0);
-        if (!best || moved > best.moved) best = { moved, before, after: after.board, pos };
+        if (!best || moved > best.moved) best = { moved, before, after: after.board, pos, o };
       }
     }
     if (!best || !best.moved) return null;
-    return h('div.demo', {}, animatedDemo(best.before, best.after, best.pos));
+    const area = areaOf(st, best.pos, best.o);
+    return h('div.demo', {}, animatedDemo(best.before, best.after, best.pos, { area: area?.cells }), area ? h('div.demo-cap', {}, area.cap) : null);
   } catch { return null; }
-}
-
-// What "beside" and "around" mean, drawn: the four squares sharing a side, or all eight.
-function reachDemo(st) {
-  if (!st.reach || st.restrict) return null;   // a restriction's own demo shows it already
-  const near = st.reach === 'around' ? touching : adjacent;
-  const marks = {};
-  for (let i = 0; i < 9; i++) marks[i] = i === 4 ? 'placed' : near(4, i) ? 'ok' : '';
-  return h('div.demo.reach-demo', {}, demoBoard({ 4: { player: 'X', type: st.id } }, marks),
-    h('div.demo-cap', {}, st.reach === 'around' ? t('Around: all eight squares, corners too.') : t('Beside: the four squares that share a side.')));
 }
 
 // The example played out on one small board, over and over: the stone lands,
 // then every stone slides to where it ends up; what leaves fades, what is new
 // appears, what changes side or kind turns.
 const DEMO_CELL = 36, DEMO_STONE = 30;
-function animatedDemo(before, after, pos) {
+function animatedDemo(before, after, pos, { area = null, marks = null } = {}) {
   const board = demoBoard([], {});
   board.classList.add('anim');
   const spot = (i) => `${(i % 3) * DEMO_CELL + (DEMO_CELL - DEMO_STONE) / 2}px ${((i / 3) | 0) * DEMO_CELL + (DEMO_CELL - DEMO_STONE) / 2}px`;
@@ -233,7 +242,7 @@ function animatedDemo(before, after, pos) {
   }));
   const cellAt = (i) => board.children[i];
   const reset = () => {
-    cellAt(pos).classList.remove('placed');
+    for (let i = 0; i < 9; i++) cellAt(i).classList.remove('placed', 'area', 'ok', 'no');
     for (const [id, el] of els) {
       el.classList.add('still');
       const i = where(before, id);
@@ -252,7 +261,9 @@ function animatedDemo(before, after, pos) {
     const el = els.get(placedId);
     el.style.opacity = 1; el.style.scale = 1;
   };
+  const light = () => { for (const i of area ?? []) cellAt(i).classList.add('area'); };
   const play = () => {
+    for (const [i, m] of Object.entries(marks ?? {})) cellAt(+i).classList.add(m);
     for (const [id, el] of els) {
       const i = where(after, id);
       if (i < 0) { el.style.opacity = 0; el.style.scale = 0.4; continue; }
@@ -262,14 +273,16 @@ function animatedDemo(before, after, pos) {
       el.style.opacity = 1; el.style.scale = 1;
     }
   };
-  // One loop: still, land, act, hold. It stops once the card is closed.
+  // One loop: still, land, light up what it works on, act, hold. It stops
+  // once the card is closed.
   const loop = () => {
     if (!board.isConnected && board.dataset.started) return;
     board.dataset.started = '1';
     reset();
     setTimeout(land, 500);
-    setTimeout(play, 1300);
-    setTimeout(loop, 3800);
+    if (area) setTimeout(light, 1000);
+    setTimeout(play, area ? 1900 : 1300);
+    setTimeout(loop, area ? 4600 : 3800);
   };
   loop();
   return board;
@@ -282,7 +295,6 @@ export function infoStone(s, player = 'X', extra = '') {
       h('div.info-name', {}, stoneName(s)),
       h('div.info-rarity.' + st.rarity, {}, st.once ? `${t('one-shot')} · ${t(st.rarity)}` : t(st.rarity)))),
     h('p', {}, stoneText(s)),
-    reachDemo(st),
     stoneDemo(s),
     st.once ? h('p.info-plus', {}, t('One use: once played, it is gone from your pouch.')) : null,
     extra ? h('p.info-extra', {}, extra) : null,
