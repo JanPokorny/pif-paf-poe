@@ -1,0 +1,3151 @@
+{
+ "exp": "pairs",
+ "games": 120,
+ "secs": 231.575,
+ "by": {
+  "magnet+magnet": {
+   "n": 120,
+   "won": 1,
+   "full": 1,
+   "turns": 640,
+   "track": {
+    "magnet": {
+     "placed": 139,
+     "dud": 0,
+     "bite": 190,
+     "restrictTurns": 282,
+     "choices": 0,
+     "hushed": 0,
+     "hushedPebble": 0
+    }
+   }
+  },
+  "magnet+stinky": {
+   "n": 120,
+   "won": 2,
+   "full": 2,
+   "turns": 698,
+   "track": {
+    "stinky": {
+     "placed": 95,
+     "dud": 0,
+     "bite": 197,
+     "restrictTurns": 230,
+     "choices": 0,
+     "hushed": 0,
+     "hushedPebble": 0
+    },
+    "magnet": {
+     "placed": 103,
+     "dud": 0,
+     "bite": 190,
+     "restrictTurns": 229,
+     "choices": 0,
+     "hushed": 0,
+     "hushedPebble": 0
+    }
+   }
+  },
+  "magnet+beacon": {
+   "n": 120,
+   "won": 1,
+   "full": 1,
+   "turns": 678,
+   "track": {
+    "magnet": {
+     "placed": 102,
+     "dud": 0,
+     "bite": 178,
+     "restrictTurns": 225,
+     "choices": 0,
+     "hushed": 0,
+     "hushedPebble": 0
+    },
+    "beacon": {
+     "placed": 107,
+     "dud": 0,
+     "bite": 175,
+     "restrictTurns": 234,
+     "choices": 214,
+     "hushed": 0,
+     "hushedPebble": 0
+    }
+   }
+  },
+  "magnet+shift": {
+   "n": 120,
+   "won": 8,
+   "full": 0,
+   "turns": 688,
+   "track": {
+    "magnet": {
+     "placed": 95,
+     "dud": 0,
+     "bite": 164,
+     "restrictTurns": 226,
+     "choices": 0,
+     "hushed": 0,
+     "hushedPebble": 0
+    },
+    "shift": {
+     "placed": 95,
+     "dud": 15,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 380,
+     "hushed": 0,
+     "hushedPebble": 0
+    }
+   }
+  },
+  "magnet+swap": {
+   "n": 120,
+   "won": 8,
+   "full": 1,
+   "turns": 633,
+   "track": {
+    "magnet": {
+     "placed": 89,
+     "dud": 0,
+     "bite": 164,
+     "restrictTurns": 217,
+     "choices": 0,
+     "hushed": 0,
+     "hushedPebble": 0
+    },
+    "swap": {
+     "placed": 78,
+     "dud": 3,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 149,
+     "hushed": 0,
+     "hushedPebble": 0
+    }
+   }
+  },
+  "magnet+twin": {
+   "n": 120,
+   "won": 1,
+   "full": 0,
+   "turns": 659,
+   "track": {
+    "magnet": {
+     "placed": 97,
+     "dud": 0,
+     "bite": 151,
+     "restrictTurns": 235,
+     "choices": 0,
+     "hushed": 0,
+     "hushedPebble": 0
+    },
+    "twin": {
+     "placed": 101,
+     "dud": 90,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 0,
+     "hushed": 0,
+     "hushedPebble": 0
+    }
+   }
+  },
+  "magnet+turncoat": {
+   "n": 120,
+   "won": 21,
+   "full": 14,
+   "turns": 735,
+   "track": {
+    "turncoat": {
+     "placed": 95,
+     "dud": 15,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 14,
+     "hushed": 0,
+     "hushedPebble": 0
+    },
+    "magnet": {
+     "placed": 101,
+     "dud": 0,
+     "bite": 232,
+     "restrictTurns": 341,
+     "choices": 0,
+     "hushed": 0,
+     "hushedPebble": 0
+    }
+   }
+  },
+  "magnet+magpie": {
+   "n": 120,
+   "won": 36,
+   "full": 8,
+   "turns": 652,
+   "track": {
+    "magnet": {
+     "placed": 86,
+     "dud": 0,
+     "bite": 142,
+     "restrictTurns": 172,
+     "choices": 0,
+     "hushed": 0,
+     "hushedPebble": 0
+    },
+    "magpie": {
+     "placed": 92,
+     "dud": 1,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 172,
+     "hushed": 0,
+     "hushedPebble": 0
+    },
+    "rotate": {
+     "placed": 11,
+     "dud": 0,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 10,
+     "hushed": 0,
+     "hushedPebble": 0
+    },
+    "shift": {
+     "placed": 22,
+     "dud": 0,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 88,
+     "hushed": 0,
+     "hushedPebble": 0
+    }
+   }
+  },
+  "magnet+2048": {
+   "n": 120,
+   "won": 14,
+   "full": 7,
+   "turns": 677,
+   "track": {
+    "2048": {
+     "placed": 98,
+     "dud": 19,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 392,
+     "hushed": 0,
+     "hushedPebble": 0
+    },
+    "magnet": {
+     "placed": 96,
+     "dud": 0,
+     "bite": 135,
+     "restrictTurns": 227,
+     "choices": 0,
+     "hushed": 0,
+     "hushedPebble": 0
+    }
+   }
+  },
+  "magnet+flip": {
+   "n": 120,
+   "won": 18,
+   "full": 1,
+   "turns": 611,
+   "track": {
+    "magnet": {
+     "placed": 103,
+     "dud": 0,
+     "bite": 174,
+     "restrictTurns": 231,
+     "choices": 0,
+     "hushed": 0,
+     "hushedPebble": 0
+    },
+    "flip": {
+     "placed": 72,
+     "dud": 10,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 288,
+     "hushed": 0,
+     "hushedPebble": 0
+    }
+   }
+  },
+  "magnet+rotate": {
+   "n": 120,
+   "won": 6,
+   "full": 2,
+   "turns": 680,
+   "track": {
+    "magnet": {
+     "placed": 102,
+     "dud": 0,
+     "bite": 174,
+     "restrictTurns": 254,
+     "choices": 0,
+     "hushed": 0,
+     "hushedPebble": 0
+    },
+    "rotate": {
+     "placed": 88,
+     "dud": 13,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 130,
+     "hushed": 0,
+     "hushedPebble": 0
+    }
+   }
+  },
+  "magnet+mountain": {
+   "n": 120,
+   "won": 2,
+   "full": 1,
+   "turns": 655,
+   "track": {
+    "magnet": {
+     "placed": 105,
+     "dud": 0,
+     "bite": 168,
+     "restrictTurns": 252,
+     "choices": 0,
+     "hushed": 0,
+     "hushedPebble": 0
+    },
+    "mountain": {
+     "placed": 76,
+     "dud": 0,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 0,
+     "hushed": 0,
+     "hushedPebble": 0
+    }
+   }
+  },
+  "magnet+bribe": {
+   "n": 120,
+   "won": 112,
+   "full": 14,
+   "turns": 524,
+   "track": {
+    "magnet": {
+     "placed": 118,
+     "dud": 0,
+     "bite": 157,
+     "restrictTurns": 199,
+     "choices": 0,
+     "hushed": 0,
+     "hushedPebble": 0
+    },
+    "bribe": {
+     "placed": 120,
+     "dud": 3,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 6,
+     "hushed": 0,
+     "hushedPebble": 0
+    }
+   }
+  },
+  "magnet+pluck": {
+   "n": 120,
+   "won": 5,
+   "full": 0,
+   "turns": 931,
+   "track": {
+    "magnet": {
+     "placed": 101,
+     "dud": 0,
+     "bite": 154,
+     "restrictTurns": 237,
+     "choices": 0,
+     "hushed": 0,
+     "hushedPebble": 0
+    },
+    "pluck": {
+     "placed": 120,
+     "dud": 0,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 35,
+     "hushed": 0,
+     "hushedPebble": 0
+    }
+   }
+  },
+  "stinky+stinky": {
+   "n": 120,
+   "won": 1,
+   "full": 0,
+   "turns": 591,
+   "track": {
+    "stinky": {
+     "placed": 135,
+     "dud": 0,
+     "bite": 222,
+     "restrictTurns": 272,
+     "choices": 0,
+     "hushed": 0,
+     "hushedPebble": 0
+    }
+   }
+  },
+  "stinky+beacon": {
+   "n": 120,
+   "won": 2,
+   "full": 0,
+   "turns": 710,
+   "track": {
+    "stinky": {
+     "placed": 89,
+     "dud": 0,
+     "bite": 171,
+     "restrictTurns": 210,
+     "choices": 0,
+     "hushed": 0,
+     "hushedPebble": 0
+    },
+    "beacon": {
+     "placed": 96,
+     "dud": 0,
+     "bite": 153,
+     "restrictTurns": 219,
+     "choices": 192,
+     "hushed": 0,
+     "hushedPebble": 0
+    }
+   }
+  },
+  "stinky+shift": {
+   "n": 120,
+   "won": 10,
+   "full": 4,
+   "turns": 622,
+   "track": {
+    "stinky": {
+     "placed": 98,
+     "dud": 0,
+     "bite": 196,
+     "restrictTurns": 218,
+     "choices": 0,
+     "hushed": 0,
+     "hushedPebble": 0
+    },
+    "shift": {
+     "placed": 86,
+     "dud": 13,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 344,
+     "hushed": 0,
+     "hushedPebble": 0
+    }
+   }
+  },
+  "stinky+swap": {
+   "n": 120,
+   "won": 14,
+   "full": 5,
+   "turns": 631,
+   "track": {
+    "swap": {
+     "placed": 81,
+     "dud": 4,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 133,
+     "hushed": 0,
+     "hushedPebble": 0
+    },
+    "stinky": {
+     "placed": 86,
+     "dud": 0,
+     "bite": 161,
+     "restrictTurns": 189,
+     "choices": 0,
+     "hushed": 0,
+     "hushedPebble": 0
+    }
+   }
+  },
+  "stinky+twin": {
+   "n": 120,
+   "won": 0,
+   "full": 0,
+   "turns": 552,
+   "track": {
+    "stinky": {
+     "placed": 106,
+     "dud": 0,
+     "bite": 211,
+     "restrictTurns": 225,
+     "choices": 0,
+     "hushed": 0,
+     "hushedPebble": 0
+    },
+    "twin": {
+     "placed": 86,
+     "dud": 77,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 0,
+     "hushed": 0,
+     "hushedPebble": 0
+    }
+   }
+  },
+  "stinky+turncoat": {
+   "n": 120,
+   "won": 28,
+   "full": 6,
+   "turns": 692,
+   "track": {
+    "stinky": {
+     "placed": 101,
+     "dud": 0,
+     "bite": 207,
+     "restrictTurns": 243,
+     "choices": 0,
+     "hushed": 0,
+     "hushedPebble": 0
+    },
+    "turncoat": {
+     "placed": 100,
+     "dud": 15,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 46,
+     "hushed": 0,
+     "hushedPebble": 0
+    },
+    "magnet": {
+     "placed": 0,
+     "dud": 0,
+     "bite": 42,
+     "restrictTurns": 61,
+     "choices": 0,
+     "hushed": 0,
+     "hushedPebble": 0
+    }
+   }
+  },
+  "stinky+magpie": {
+   "n": 120,
+   "won": 36,
+   "full": 3,
+   "turns": 628,
+   "track": {
+    "stinky": {
+     "placed": 99,
+     "dud": 0,
+     "bite": 206,
+     "restrictTurns": 211,
+     "choices": 0,
+     "hushed": 0,
+     "hushedPebble": 0
+    },
+    "magpie": {
+     "placed": 101,
+     "dud": 1,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 121,
+     "hushed": 0,
+     "hushedPebble": 0
+    },
+    "shift": {
+     "placed": 9,
+     "dud": 1,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 36,
+     "hushed": 0,
+     "hushedPebble": 0
+    },
+    "rotate": {
+     "placed": 15,
+     "dud": 0,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 22,
+     "hushed": 0,
+     "hushedPebble": 0
+    },
+    "magnet": {
+     "placed": 16,
+     "dud": 0,
+     "bite": 10,
+     "restrictTurns": 10,
+     "choices": 0,
+     "hushed": 0,
+     "hushedPebble": 0
+    }
+   }
+  },
+  "stinky+2048": {
+   "n": 120,
+   "won": 8,
+   "full": 5,
+   "turns": 663,
+   "track": {
+    "2048": {
+     "placed": 82,
+     "dud": 10,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 328,
+     "hushed": 0,
+     "hushedPebble": 0
+    },
+    "stinky": {
+     "placed": 89,
+     "dud": 0,
+     "bite": 166,
+     "restrictTurns": 207,
+     "choices": 0,
+     "hushed": 0,
+     "hushedPebble": 0
+    }
+   }
+  },
+  "stinky+flip": {
+   "n": 120,
+   "won": 12,
+   "full": 2,
+   "turns": 608,
+   "track": {
+    "flip": {
+     "placed": 74,
+     "dud": 7,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 296,
+     "hushed": 0,
+     "hushedPebble": 0
+    },
+    "stinky": {
+     "placed": 106,
+     "dud": 0,
+     "bite": 230,
+     "restrictTurns": 243,
+     "choices": 0,
+     "hushed": 0,
+     "hushedPebble": 0
+    }
+   }
+  },
+  "stinky+rotate": {
+   "n": 120,
+   "won": 8,
+   "full": 3,
+   "turns": 649,
+   "track": {
+    "rotate": {
+     "placed": 87,
+     "dud": 12,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 150,
+     "hushed": 0,
+     "hushedPebble": 0
+    },
+    "stinky": {
+     "placed": 88,
+     "dud": 0,
+     "bite": 162,
+     "restrictTurns": 204,
+     "choices": 0,
+     "hushed": 0,
+     "hushedPebble": 0
+    }
+   }
+  },
+  "stinky+mountain": {
+   "n": 120,
+   "won": 0,
+   "full": 0,
+   "turns": 568,
+   "track": {
+    "mountain": {
+     "placed": 55,
+     "dud": 0,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 0,
+     "hushed": 0,
+     "hushedPebble": 0
+    },
+    "stinky": {
+     "placed": 98,
+     "dud": 0,
+     "bite": 198,
+     "restrictTurns": 213,
+     "choices": 0,
+     "hushed": 0,
+     "hushedPebble": 0
+    }
+   }
+  },
+  "stinky+bribe": {
+   "n": 120,
+   "won": 100,
+   "full": 11,
+   "turns": 687,
+   "track": {
+    "stinky": {
+     "placed": 120,
+     "dud": 0,
+     "bite": 273,
+     "restrictTurns": 295,
+     "choices": 0,
+     "hushed": 0,
+     "hushedPebble": 0
+    },
+    "bribe": {
+     "placed": 118,
+     "dud": 1,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 58,
+     "hushed": 0,
+     "hushedPebble": 0
+    },
+    "magnet": {
+     "placed": 0,
+     "dud": 0,
+     "bite": 7,
+     "restrictTurns": 8,
+     "choices": 0,
+     "hushed": 0,
+     "hushedPebble": 0
+    }
+   }
+  },
+  "stinky+pluck": {
+   "n": 120,
+   "won": 2,
+   "full": 0,
+   "turns": 860,
+   "track": {
+    "pluck": {
+     "placed": 119,
+     "dud": 0,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 27,
+     "hushed": 0,
+     "hushedPebble": 0
+    },
+    "stinky": {
+     "placed": 87,
+     "dud": 0,
+     "bite": 161,
+     "restrictTurns": 211,
+     "choices": 0,
+     "hushed": 0,
+     "hushedPebble": 0
+    }
+   }
+  },
+  "beacon+beacon": {
+   "n": 120,
+   "won": 25,
+   "full": 23,
+   "turns": 784,
+   "track": {
+    "beacon": {
+     "placed": 208,
+     "dud": 0,
+     "bite": 309,
+     "restrictTurns": 530,
+     "choices": 416,
+     "hushed": 0,
+     "hushedPebble": 0
+    }
+   }
+  },
+  "beacon+shift": {
+   "n": 120,
+   "won": 14,
+   "full": 4,
+   "turns": 698,
+   "track": {
+    "shift": {
+     "placed": 70,
+     "dud": 19,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 280,
+     "hushed": 0,
+     "hushedPebble": 0
+    },
+    "beacon": {
+     "placed": 106,
+     "dud": 0,
+     "bite": 131,
+     "restrictTurns": 274,
+     "choices": 212,
+     "hushed": 0,
+     "hushedPebble": 0
+    }
+   }
+  },
+  "beacon+swap": {
+   "n": 120,
+   "won": 11,
+   "full": 4,
+   "turns": 693,
+   "track": {
+    "swap": {
+     "placed": 91,
+     "dud": 2,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 168,
+     "hushed": 0,
+     "hushedPebble": 0
+    },
+    "beacon": {
+     "placed": 98,
+     "dud": 0,
+     "bite": 124,
+     "restrictTurns": 239,
+     "choices": 196,
+     "hushed": 0,
+     "hushedPebble": 0
+    }
+   }
+  },
+  "beacon+twin": {
+   "n": 120,
+   "won": 1,
+   "full": 0,
+   "turns": 631,
+   "track": {
+    "beacon": {
+     "placed": 94,
+     "dud": 0,
+     "bite": 101,
+     "restrictTurns": 215,
+     "choices": 188,
+     "hushed": 0,
+     "hushedPebble": 0
+    },
+    "twin": {
+     "placed": 98,
+     "dud": 84,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 0,
+     "hushed": 0,
+     "hushedPebble": 0
+    }
+   }
+  },
+  "beacon+turncoat": {
+   "n": 120,
+   "won": 24,
+   "full": 8,
+   "turns": 696,
+   "track": {
+    "beacon": {
+     "placed": 109,
+     "dud": 0,
+     "bite": 159,
+     "restrictTurns": 261,
+     "choices": 218,
+     "hushed": 0,
+     "hushedPebble": 0
+    },
+    "turncoat": {
+     "placed": 94,
+     "dud": 22,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 30,
+     "hushed": 0,
+     "hushedPebble": 0
+    },
+    "magnet": {
+     "placed": 0,
+     "dud": 0,
+     "bite": 19,
+     "restrictTurns": 45,
+     "choices": 0,
+     "hushed": 0,
+     "hushedPebble": 0
+    }
+   }
+  },
+  "beacon+magpie": {
+   "n": 120,
+   "won": 81,
+   "full": 25,
+   "turns": 861,
+   "track": {
+    "magpie": {
+     "placed": 111,
+     "dud": 0,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 155,
+     "hushed": 0,
+     "hushedPebble": 0
+    },
+    "beacon": {
+     "placed": 116,
+     "dud": 0,
+     "bite": 161,
+     "restrictTurns": 260,
+     "choices": 232,
+     "hushed": 0,
+     "hushedPebble": 0
+    },
+    "shift": {
+     "placed": 44,
+     "dud": 6,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 176,
+     "hushed": 0,
+     "hushedPebble": 0
+    },
+    "rotate": {
+     "placed": 17,
+     "dud": 0,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 18,
+     "hushed": 0,
+     "hushedPebble": 0
+    },
+    "magnet": {
+     "placed": 17,
+     "dud": 0,
+     "bite": 14,
+     "restrictTurns": 23,
+     "choices": 0,
+     "hushed": 0,
+     "hushedPebble": 0
+    }
+   }
+  },
+  "beacon+2048": {
+   "n": 120,
+   "won": 14,
+   "full": 9,
+   "turns": 699,
+   "track": {
+    "2048": {
+     "placed": 86,
+     "dud": 16,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 344,
+     "hushed": 0,
+     "hushedPebble": 0
+    },
+    "beacon": {
+     "placed": 101,
+     "dud": 0,
+     "bite": 140,
+     "restrictTurns": 247,
+     "choices": 202,
+     "hushed": 0,
+     "hushedPebble": 0
+    }
+   }
+  },
+  "beacon+flip": {
+   "n": 120,
+   "won": 7,
+   "full": 4,
+   "turns": 652,
+   "track": {
+    "beacon": {
+     "placed": 100,
+     "dud": 0,
+     "bite": 138,
+     "restrictTurns": 237,
+     "choices": 200,
+     "hushed": 0,
+     "hushedPebble": 0
+    },
+    "flip": {
+     "placed": 57,
+     "dud": 6,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 228,
+     "hushed": 0,
+     "hushedPebble": 0
+    }
+   }
+  },
+  "beacon+rotate": {
+   "n": 120,
+   "won": 13,
+   "full": 3,
+   "turns": 708,
+   "track": {
+    "beacon": {
+     "placed": 109,
+     "dud": 0,
+     "bite": 148,
+     "restrictTurns": 285,
+     "choices": 218,
+     "hushed": 0,
+     "hushedPebble": 0
+    },
+    "rotate": {
+     "placed": 97,
+     "dud": 17,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 210,
+     "hushed": 0,
+     "hushedPebble": 0
+    }
+   }
+  },
+  "beacon+mountain": {
+   "n": 120,
+   "won": 5,
+   "full": 1,
+   "turns": 678,
+   "track": {
+    "mountain": {
+     "placed": 92,
+     "dud": 0,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 0,
+     "hushed": 0,
+     "hushedPebble": 0
+    },
+    "beacon": {
+     "placed": 90,
+     "dud": 0,
+     "bite": 120,
+     "restrictTurns": 222,
+     "choices": 180,
+     "hushed": 0,
+     "hushedPebble": 0
+    }
+   }
+  },
+  "beacon+bribe": {
+   "n": 120,
+   "won": 105,
+   "full": 10,
+   "turns": 635,
+   "track": {
+    "beacon": {
+     "placed": 117,
+     "dud": 0,
+     "bite": 224,
+     "restrictTurns": 254,
+     "choices": 234,
+     "hushed": 0,
+     "hushedPebble": 0
+    },
+    "bribe": {
+     "placed": 116,
+     "dud": 2,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 164,
+     "hushed": 0,
+     "hushedPebble": 0
+    },
+    "magnet": {
+     "placed": 0,
+     "dud": 0,
+     "bite": 7,
+     "restrictTurns": 12,
+     "choices": 0,
+     "hushed": 0,
+     "hushedPebble": 0
+    }
+   }
+  },
+  "beacon+pluck": {
+   "n": 120,
+   "won": 3,
+   "full": 1,
+   "turns": 927,
+   "track": {
+    "beacon": {
+     "placed": 111,
+     "dud": 0,
+     "bite": 132,
+     "restrictTurns": 269,
+     "choices": 222,
+     "hushed": 0,
+     "hushedPebble": 0
+    },
+    "pluck": {
+     "placed": 119,
+     "dud": 0,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 22,
+     "hushed": 0,
+     "hushedPebble": 0
+    }
+   }
+  },
+  "shift+shift": {
+   "n": 120,
+   "won": 23,
+   "full": 6,
+   "turns": 643,
+   "track": {
+    "shift": {
+     "placed": 167,
+     "dud": 22,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 668,
+     "hushed": 0,
+     "hushedPebble": 0
+    }
+   }
+  },
+  "shift+swap": {
+   "n": 120,
+   "won": 18,
+   "full": 6,
+   "turns": 589,
+   "track": {
+    "shift": {
+     "placed": 68,
+     "dud": 16,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 272,
+     "hushed": 0,
+     "hushedPebble": 0
+    },
+    "swap": {
+     "placed": 88,
+     "dud": 5,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 128,
+     "hushed": 0,
+     "hushedPebble": 0
+    }
+   }
+  },
+  "shift+twin": {
+   "n": 120,
+   "won": 5,
+   "full": 0,
+   "turns": 573,
+   "track": {
+    "twin": {
+     "placed": 83,
+     "dud": 68,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 0,
+     "hushed": 0,
+     "hushedPebble": 0
+    },
+    "shift": {
+     "placed": 94,
+     "dud": 11,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 376,
+     "hushed": 0,
+     "hushedPebble": 0
+    }
+   }
+  },
+  "shift+turncoat": {
+   "n": 120,
+   "won": 40,
+   "full": 16,
+   "turns": 685,
+   "track": {
+    "turncoat": {
+     "placed": 94,
+     "dud": 9,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 38,
+     "hushed": 0,
+     "hushedPebble": 0
+    },
+    "shift": {
+     "placed": 94,
+     "dud": 27,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 376,
+     "hushed": 0,
+     "hushedPebble": 0
+    },
+    "magnet": {
+     "placed": 0,
+     "dud": 0,
+     "bite": 9,
+     "restrictTurns": 17,
+     "choices": 0,
+     "hushed": 0,
+     "hushedPebble": 0
+    }
+   }
+  },
+  "shift+magpie": {
+   "n": 120,
+   "won": 43,
+   "full": 12,
+   "turns": 639,
+   "track": {
+    "shift": {
+     "placed": 99,
+     "dud": 11,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 396,
+     "hushed": 0,
+     "hushedPebble": 0
+    },
+    "magpie": {
+     "placed": 101,
+     "dud": 3,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 145,
+     "hushed": 0,
+     "hushedPebble": 0
+    },
+    "magnet": {
+     "placed": 22,
+     "dud": 0,
+     "bite": 23,
+     "restrictTurns": 25,
+     "choices": 0,
+     "hushed": 0,
+     "hushedPebble": 0
+    },
+    "rotate": {
+     "placed": 12,
+     "dud": 0,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 18,
+     "hushed": 0,
+     "hushedPebble": 0
+    }
+   }
+  },
+  "shift+2048": {
+   "n": 120,
+   "won": 19,
+   "full": 11,
+   "turns": 640,
+   "track": {
+    "2048": {
+     "placed": 85,
+     "dud": 12,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 340,
+     "hushed": 0,
+     "hushedPebble": 0
+    },
+    "shift": {
+     "placed": 82,
+     "dud": 16,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 328,
+     "hushed": 0,
+     "hushedPebble": 0
+    }
+   }
+  },
+  "shift+flip": {
+   "n": 120,
+   "won": 6,
+   "full": 1,
+   "turns": 579,
+   "track": {
+    "shift": {
+     "placed": 97,
+     "dud": 13,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 388,
+     "hushed": 0,
+     "hushedPebble": 0
+    },
+    "flip": {
+     "placed": 52,
+     "dud": 10,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 208,
+     "hushed": 0,
+     "hushedPebble": 0
+    }
+   }
+  },
+  "shift+rotate": {
+   "n": 120,
+   "won": 20,
+   "full": 7,
+   "turns": 617,
+   "track": {
+    "shift": {
+     "placed": 76,
+     "dud": 14,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 304,
+     "hushed": 0,
+     "hushedPebble": 0
+    },
+    "rotate": {
+     "placed": 85,
+     "dud": 33,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 148,
+     "hushed": 0,
+     "hushedPebble": 0
+    }
+   }
+  },
+  "shift+mountain": {
+   "n": 120,
+   "won": 7,
+   "full": 5,
+   "turns": 646,
+   "track": {
+    "shift": {
+     "placed": 101,
+     "dud": 13,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 404,
+     "hushed": 0,
+     "hushedPebble": 0
+    },
+    "mountain": {
+     "placed": 71,
+     "dud": 0,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 0,
+     "hushed": 0,
+     "hushedPebble": 0
+    }
+   }
+  },
+  "shift+bribe": {
+   "n": 120,
+   "won": 48,
+   "full": 22,
+   "turns": 790,
+   "track": {
+    "shift": {
+     "placed": 119,
+     "dud": 32,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 476,
+     "hushed": 0,
+     "hushedPebble": 0
+    },
+    "bribe": {
+     "placed": 112,
+     "dud": 1,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 56,
+     "hushed": 0,
+     "hushedPebble": 0
+    },
+    "magnet": {
+     "placed": 0,
+     "dud": 0,
+     "bite": 1,
+     "restrictTurns": 17,
+     "choices": 0,
+     "hushed": 0,
+     "hushedPebble": 0
+    }
+   }
+  },
+  "shift+pluck": {
+   "n": 120,
+   "won": 10,
+   "full": 1,
+   "turns": 853,
+   "track": {
+    "pluck": {
+     "placed": 119,
+     "dud": 0,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 6,
+     "hushed": 0,
+     "hushedPebble": 0
+    },
+    "shift": {
+     "placed": 98,
+     "dud": 19,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 392,
+     "hushed": 0,
+     "hushedPebble": 0
+    }
+   }
+  },
+  "swap+swap": {
+   "n": 120,
+   "won": 27,
+   "full": 14,
+   "turns": 657,
+   "track": {
+    "swap": {
+     "placed": 156,
+     "dud": 6,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 351,
+     "hushed": 0,
+     "hushedPebble": 0
+    }
+   }
+  },
+  "swap+twin": {
+   "n": 120,
+   "won": 5,
+   "full": 0,
+   "turns": 585,
+   "track": {
+    "twin": {
+     "placed": 89,
+     "dud": 77,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 0,
+     "hushed": 0,
+     "hushedPebble": 0
+    },
+    "swap": {
+     "placed": 93,
+     "dud": 0,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 47,
+     "hushed": 0,
+     "hushedPebble": 0
+    }
+   }
+  },
+  "swap+turncoat": {
+   "n": 120,
+   "won": 35,
+   "full": 10,
+   "turns": 644,
+   "track": {
+    "turncoat": {
+     "placed": 93,
+     "dud": 22,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 32,
+     "hushed": 0,
+     "hushedPebble": 0
+    },
+    "swap": {
+     "placed": 74,
+     "dud": 11,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 137,
+     "hushed": 0,
+     "hushedPebble": 0
+    },
+    "magnet": {
+     "placed": 0,
+     "dud": 0,
+     "bite": 14,
+     "restrictTurns": 25,
+     "choices": 0,
+     "hushed": 0,
+     "hushedPebble": 0
+    }
+   }
+  },
+  "swap+magpie": {
+   "n": 120,
+   "won": 54,
+   "full": 10,
+   "turns": 699,
+   "track": {
+    "swap": {
+     "placed": 103,
+     "dud": 7,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 129,
+     "hushed": 0,
+     "hushedPebble": 0
+    },
+    "magpie": {
+     "placed": 105,
+     "dud": 2,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 145,
+     "hushed": 0,
+     "hushedPebble": 0
+    },
+    "rotate": {
+     "placed": 6,
+     "dud": 0,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 12,
+     "hushed": 0,
+     "hushedPebble": 0
+    },
+    "magnet": {
+     "placed": 35,
+     "dud": 0,
+     "bite": 32,
+     "restrictTurns": 39,
+     "choices": 0,
+     "hushed": 0,
+     "hushedPebble": 0
+    },
+    "shift": {
+     "placed": 9,
+     "dud": 1,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 36,
+     "hushed": 0,
+     "hushedPebble": 0
+    }
+   }
+  },
+  "swap+2048": {
+   "n": 120,
+   "won": 15,
+   "full": 4,
+   "turns": 605,
+   "track": {
+    "2048": {
+     "placed": 79,
+     "dud": 17,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 316,
+     "hushed": 0,
+     "hushedPebble": 0
+    },
+    "swap": {
+     "placed": 81,
+     "dud": 7,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 129,
+     "hushed": 0,
+     "hushedPebble": 0
+    }
+   }
+  },
+  "swap+flip": {
+   "n": 120,
+   "won": 12,
+   "full": 4,
+   "turns": 599,
+   "track": {
+    "swap": {
+     "placed": 83,
+     "dud": 6,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 126,
+     "hushed": 0,
+     "hushedPebble": 0
+    },
+    "flip": {
+     "placed": 71,
+     "dud": 13,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 284,
+     "hushed": 0,
+     "hushedPebble": 0
+    }
+   }
+  },
+  "swap+rotate": {
+   "n": 120,
+   "won": 13,
+   "full": 5,
+   "turns": 604,
+   "track": {
+    "swap": {
+     "placed": 77,
+     "dud": 6,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 119,
+     "hushed": 0,
+     "hushedPebble": 0
+    },
+    "rotate": {
+     "placed": 78,
+     "dud": 31,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 122,
+     "hushed": 0,
+     "hushedPebble": 0
+    }
+   }
+  },
+  "swap+mountain": {
+   "n": 120,
+   "won": 8,
+   "full": 3,
+   "turns": 655,
+   "track": {
+    "swap": {
+     "placed": 94,
+     "dud": 5,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 67,
+     "hushed": 0,
+     "hushedPebble": 0
+    },
+    "mountain": {
+     "placed": 87,
+     "dud": 0,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 0,
+     "hushed": 0,
+     "hushedPebble": 0
+    }
+   }
+  },
+  "swap+bribe": {
+   "n": 120,
+   "won": 52,
+   "full": 15,
+   "turns": 734,
+   "track": {
+    "swap": {
+     "placed": 116,
+     "dud": 0,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 62,
+     "hushed": 0,
+     "hushedPebble": 0
+    },
+    "bribe": {
+     "placed": 117,
+     "dud": 3,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 50,
+     "hushed": 0,
+     "hushedPebble": 0
+    },
+    "magnet": {
+     "placed": 0,
+     "dud": 0,
+     "bite": 2,
+     "restrictTurns": 17,
+     "choices": 0,
+     "hushed": 0,
+     "hushedPebble": 0
+    }
+   }
+  },
+  "swap+pluck": {
+   "n": 120,
+   "won": 19,
+   "full": 6,
+   "turns": 873,
+   "track": {
+    "pluck": {
+     "placed": 119,
+     "dud": 0,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 16,
+     "hushed": 0,
+     "hushedPebble": 0
+    },
+    "swap": {
+     "placed": 102,
+     "dud": 2,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 248,
+     "hushed": 0,
+     "hushedPebble": 0
+    }
+   }
+  },
+  "twin+twin": {
+   "n": 120,
+   "won": 0,
+   "full": 0,
+   "turns": 600,
+   "track": {
+    "twin": {
+     "placed": 143,
+     "dud": 141,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 0,
+     "hushed": 0,
+     "hushedPebble": 0
+    }
+   }
+  },
+  "twin+turncoat": {
+   "n": 120,
+   "won": 10,
+   "full": 2,
+   "turns": 607,
+   "track": {
+    "twin": {
+     "placed": 92,
+     "dud": 76,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 0,
+     "hushed": 0,
+     "hushedPebble": 0
+    },
+    "turncoat": {
+     "placed": 106,
+     "dud": 1,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 14,
+     "hushed": 0,
+     "hushedPebble": 0
+    },
+    "magnet": {
+     "placed": 0,
+     "dud": 0,
+     "bite": 19,
+     "restrictTurns": 33,
+     "choices": 0,
+     "hushed": 0,
+     "hushedPebble": 0
+    }
+   }
+  },
+  "twin+magpie": {
+   "n": 120,
+   "won": 17,
+   "full": 12,
+   "turns": 565,
+   "track": {
+    "twin": {
+     "placed": 81,
+     "dud": 71,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 0,
+     "hushed": 0,
+     "hushedPebble": 0
+    },
+    "magpie": {
+     "placed": 114,
+     "dud": 1,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 186,
+     "hushed": 0,
+     "hushedPebble": 0
+    },
+    "magnet": {
+     "placed": 19,
+     "dud": 0,
+     "bite": 25,
+     "restrictTurns": 29,
+     "choices": 0,
+     "hushed": 0,
+     "hushedPebble": 0
+    },
+    "shift": {
+     "placed": 5,
+     "dud": 0,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 20,
+     "hushed": 0,
+     "hushedPebble": 0
+    }
+   }
+  },
+  "twin+2048": {
+   "n": 120,
+   "won": 8,
+   "full": 1,
+   "turns": 582,
+   "track": {
+    "2048": {
+     "placed": 102,
+     "dud": 3,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 408,
+     "hushed": 0,
+     "hushedPebble": 0
+    },
+    "twin": {
+     "placed": 83,
+     "dud": 68,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 0,
+     "hushed": 0,
+     "hushedPebble": 0
+    }
+   }
+  },
+  "twin+flip": {
+   "n": 120,
+   "won": 0,
+   "full": 0,
+   "turns": 570,
+   "track": {
+    "flip": {
+     "placed": 74,
+     "dud": 40,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 296,
+     "hushed": 0,
+     "hushedPebble": 0
+    },
+    "twin": {
+     "placed": 94,
+     "dud": 85,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 0,
+     "hushed": 0,
+     "hushedPebble": 0
+    }
+   }
+  },
+  "twin+rotate": {
+   "n": 120,
+   "won": 11,
+   "full": 1,
+   "turns": 592,
+   "track": {
+    "rotate": {
+     "placed": 105,
+     "dud": 0,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 196,
+     "hushed": 0,
+     "hushedPebble": 0
+    },
+    "twin": {
+     "placed": 89,
+     "dud": 67,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 0,
+     "hushed": 0,
+     "hushedPebble": 0
+    }
+   }
+  },
+  "twin+mountain": {
+   "n": 120,
+   "won": 0,
+   "full": 0,
+   "turns": 554,
+   "track": {
+    "mountain": {
+     "placed": 71,
+     "dud": 0,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 0,
+     "hushed": 0,
+     "hushedPebble": 0
+    },
+    "twin": {
+     "placed": 81,
+     "dud": 77,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 0,
+     "hushed": 0,
+     "hushedPebble": 0
+    }
+   }
+  },
+  "twin+bribe": {
+   "n": 120,
+   "won": 63,
+   "full": 11,
+   "turns": 756,
+   "track": {
+    "twin": {
+     "placed": 117,
+     "dud": 117,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 0,
+     "hushed": 0,
+     "hushedPebble": 0
+    },
+    "bribe": {
+     "placed": 119,
+     "dud": 2,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 54,
+     "hushed": 0,
+     "hushedPebble": 0
+    },
+    "magnet": {
+     "placed": 0,
+     "dud": 0,
+     "bite": 0,
+     "restrictTurns": 9,
+     "choices": 0,
+     "hushed": 0,
+     "hushedPebble": 0
+    }
+   }
+  },
+  "twin+pluck": {
+   "n": 120,
+   "won": 7,
+   "full": 0,
+   "turns": 815,
+   "track": {
+    "pluck": {
+     "placed": 119,
+     "dud": 0,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 58,
+     "hushed": 0,
+     "hushedPebble": 0
+    },
+    "twin": {
+     "placed": 105,
+     "dud": 77,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 0,
+     "hushed": 0,
+     "hushedPebble": 0
+    }
+   }
+  },
+  "turncoat+turncoat": {
+   "n": 120,
+   "won": 45,
+   "full": 7,
+   "turns": 638,
+   "track": {
+    "turncoat": {
+     "placed": 165,
+     "dud": 45,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 62,
+     "hushed": 0,
+     "hushedPebble": 0
+    },
+    "magnet": {
+     "placed": 0,
+     "dud": 0,
+     "bite": 8,
+     "restrictTurns": 23,
+     "choices": 0,
+     "hushed": 0,
+     "hushedPebble": 0
+    }
+   }
+  },
+  "turncoat+magpie": {
+   "n": 120,
+   "won": 71,
+   "full": 12,
+   "turns": 711,
+   "track": {
+    "turncoat": {
+     "placed": 100,
+     "dud": 16,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 24,
+     "hushed": 0,
+     "hushedPebble": 0
+    },
+    "magpie": {
+     "placed": 109,
+     "dud": 1,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 195,
+     "hushed": 0,
+     "hushedPebble": 0
+    },
+    "magnet": {
+     "placed": 46,
+     "dud": 0,
+     "bite": 60,
+     "restrictTurns": 70,
+     "choices": 0,
+     "hushed": 0,
+     "hushedPebble": 0
+    },
+    "shift": {
+     "placed": 10,
+     "dud": 0,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 40,
+     "hushed": 0,
+     "hushedPebble": 0
+    },
+    "rotate": {
+     "placed": 8,
+     "dud": 0,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 14,
+     "hushed": 0,
+     "hushedPebble": 0
+    }
+   }
+  },
+  "turncoat+2048": {
+   "n": 120,
+   "won": 27,
+   "full": 15,
+   "turns": 680,
+   "track": {
+    "2048": {
+     "placed": 86,
+     "dud": 31,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 344,
+     "hushed": 0,
+     "hushedPebble": 0
+    },
+    "turncoat": {
+     "placed": 88,
+     "dud": 16,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 48,
+     "hushed": 0,
+     "hushedPebble": 0
+    },
+    "magnet": {
+     "placed": 0,
+     "dud": 0,
+     "bite": 12,
+     "restrictTurns": 32,
+     "choices": 0,
+     "hushed": 0,
+     "hushedPebble": 0
+    }
+   }
+  },
+  "turncoat+flip": {
+   "n": 120,
+   "won": 23,
+   "full": 4,
+   "turns": 628,
+   "track": {
+    "flip": {
+     "placed": 77,
+     "dud": 21,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 308,
+     "hushed": 0,
+     "hushedPebble": 0
+    },
+    "turncoat": {
+     "placed": 95,
+     "dud": 16,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 31,
+     "hushed": 0,
+     "hushedPebble": 0
+    },
+    "magnet": {
+     "placed": 0,
+     "dud": 0,
+     "bite": 13,
+     "restrictTurns": 22,
+     "choices": 0,
+     "hushed": 0,
+     "hushedPebble": 0
+    }
+   }
+  },
+  "turncoat+rotate": {
+   "n": 120,
+   "won": 37,
+   "full": 7,
+   "turns": 675,
+   "track": {
+    "rotate": {
+     "placed": 104,
+     "dud": 39,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 194,
+     "hushed": 0,
+     "hushedPebble": 0
+    },
+    "turncoat": {
+     "placed": 92,
+     "dud": 14,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 54,
+     "hushed": 0,
+     "hushedPebble": 0
+    },
+    "magnet": {
+     "placed": 0,
+     "dud": 0,
+     "bite": 6,
+     "restrictTurns": 12,
+     "choices": 0,
+     "hushed": 0,
+     "hushedPebble": 0
+    }
+   }
+  },
+  "turncoat+mountain": {
+   "n": 120,
+   "won": 15,
+   "full": 9,
+   "turns": 702,
+   "track": {
+    "mountain": {
+     "placed": 94,
+     "dud": 0,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 0,
+     "hushed": 0,
+     "hushedPebble": 0
+    },
+    "turncoat": {
+     "placed": 103,
+     "dud": 14,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 22,
+     "hushed": 0,
+     "hushedPebble": 0
+    },
+    "magnet": {
+     "placed": 0,
+     "dud": 0,
+     "bite": 7,
+     "restrictTurns": 14,
+     "choices": 0,
+     "hushed": 0,
+     "hushedPebble": 0
+    }
+   }
+  },
+  "turncoat+bribe": {
+   "n": 120,
+   "won": 49,
+   "full": 27,
+   "turns": 810,
+   "track": {
+    "turncoat": {
+     "placed": 118,
+     "dud": 19,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 2,
+     "hushed": 0,
+     "hushedPebble": 0
+    },
+    "bribe": {
+     "placed": 119,
+     "dud": 1,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 77,
+     "hushed": 0,
+     "hushedPebble": 0
+    },
+    "magnet": {
+     "placed": 0,
+     "dud": 0,
+     "bite": 4,
+     "restrictTurns": 41,
+     "choices": 0,
+     "hushed": 0,
+     "hushedPebble": 0
+    }
+   }
+  },
+  "turncoat+pluck": {
+   "n": 120,
+   "won": 24,
+   "full": 1,
+   "turns": 803,
+   "track": {
+    "pluck": {
+     "placed": 118,
+     "dud": 0,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 25,
+     "hushed": 0,
+     "hushedPebble": 0
+    },
+    "turncoat": {
+     "placed": 98,
+     "dud": 26,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 40,
+     "hushed": 0,
+     "hushedPebble": 0
+    },
+    "magnet": {
+     "placed": 0,
+     "dud": 0,
+     "bite": 31,
+     "restrictTurns": 50,
+     "choices": 0,
+     "hushed": 0,
+     "hushedPebble": 0
+    }
+   }
+  },
+  "magpie+magpie": {
+   "n": 120,
+   "won": 80,
+   "full": 37,
+   "turns": 866,
+   "track": {
+    "magpie": {
+     "placed": 211,
+     "dud": 77,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 225,
+     "hushed": 0,
+     "hushedPebble": 0
+    },
+    "rotate": {
+     "placed": 19,
+     "dud": 1,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 36,
+     "hushed": 0,
+     "hushedPebble": 0
+    },
+    "magnet": {
+     "placed": 72,
+     "dud": 0,
+     "bite": 112,
+     "restrictTurns": 114,
+     "choices": 0,
+     "hushed": 0,
+     "hushedPebble": 0
+    },
+    "shift": {
+     "placed": 6,
+     "dud": 1,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 24,
+     "hushed": 0,
+     "hushedPebble": 0
+    }
+   }
+  },
+  "magpie+2048": {
+   "n": 120,
+   "won": 30,
+   "full": 9,
+   "turns": 633,
+   "track": {
+    "2048": {
+     "placed": 85,
+     "dud": 13,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 340,
+     "hushed": 0,
+     "hushedPebble": 0
+    },
+    "magpie": {
+     "placed": 107,
+     "dud": 6,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 165,
+     "hushed": 0,
+     "hushedPebble": 0
+    },
+    "magnet": {
+     "placed": 18,
+     "dud": 0,
+     "bite": 19,
+     "restrictTurns": 19,
+     "choices": 0,
+     "hushed": 0,
+     "hushedPebble": 0
+    },
+    "shift": {
+     "placed": 9,
+     "dud": 0,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 36,
+     "hushed": 0,
+     "hushedPebble": 0
+    },
+    "rotate": {
+     "placed": 5,
+     "dud": 0,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 8,
+     "hushed": 0,
+     "hushedPebble": 0
+    }
+   }
+  },
+  "magpie+flip": {
+   "n": 120,
+   "won": 32,
+   "full": 11,
+   "turns": 602,
+   "track": {
+    "magpie": {
+     "placed": 111,
+     "dud": 0,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 189,
+     "hushed": 0,
+     "hushedPebble": 0
+    },
+    "magnet": {
+     "placed": 28,
+     "dud": 0,
+     "bite": 36,
+     "restrictTurns": 41,
+     "choices": 0,
+     "hushed": 0,
+     "hushedPebble": 0
+    },
+    "flip": {
+     "placed": 60,
+     "dud": 9,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 240,
+     "hushed": 0,
+     "hushedPebble": 0
+    },
+    "rotate": {
+     "placed": 7,
+     "dud": 0,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 10,
+     "hushed": 0,
+     "hushedPebble": 0
+    },
+    "shift": {
+     "placed": 7,
+     "dud": 3,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 28,
+     "hushed": 0,
+     "hushedPebble": 0
+    }
+   }
+  },
+  "magpie+rotate": {
+   "n": 120,
+   "won": 39,
+   "full": 5,
+   "turns": 613,
+   "track": {
+    "rotate": {
+     "placed": 83,
+     "dud": 15,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 160,
+     "hushed": 0,
+     "hushedPebble": 0
+    },
+    "magpie": {
+     "placed": 103,
+     "dud": 0,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 153,
+     "hushed": 0,
+     "hushedPebble": 0
+    },
+    "shift": {
+     "placed": 11,
+     "dud": 1,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 44,
+     "hushed": 0,
+     "hushedPebble": 0
+    },
+    "magnet": {
+     "placed": 26,
+     "dud": 0,
+     "bite": 23,
+     "restrictTurns": 24,
+     "choices": 0,
+     "hushed": 0,
+     "hushedPebble": 0
+    }
+   }
+  },
+  "magpie+mountain": {
+   "n": 120,
+   "won": 24,
+   "full": 9,
+   "turns": 594,
+   "track": {
+    "mountain": {
+     "placed": 73,
+     "dud": 0,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 0,
+     "hushed": 0,
+     "hushedPebble": 0
+    },
+    "magpie": {
+     "placed": 109,
+     "dud": 1,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 178,
+     "hushed": 0,
+     "hushedPebble": 0
+    },
+    "magnet": {
+     "placed": 17,
+     "dud": 0,
+     "bite": 28,
+     "restrictTurns": 29,
+     "choices": 0,
+     "hushed": 0,
+     "hushedPebble": 0
+    },
+    "shift": {
+     "placed": 5,
+     "dud": 0,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 20,
+     "hushed": 0,
+     "hushedPebble": 0
+    },
+    "rotate": {
+     "placed": 13,
+     "dud": 0,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 24,
+     "hushed": 0,
+     "hushedPebble": 0
+    }
+   }
+  },
+  "magpie+bribe": {
+   "n": 120,
+   "won": 109,
+   "full": 2,
+   "turns": 764,
+   "track": {
+    "magpie": {
+     "placed": 108,
+     "dud": 9,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 196,
+     "hushed": 0,
+     "hushedPebble": 0
+    },
+    "magnet": {
+     "placed": 59,
+     "dud": 0,
+     "bite": 68,
+     "restrictTurns": 72,
+     "choices": 0,
+     "hushed": 0,
+     "hushedPebble": 0
+    },
+    "bribe": {
+     "placed": 117,
+     "dud": 3,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 50,
+     "hushed": 0,
+     "hushedPebble": 0
+    },
+    "shift": {
+     "placed": 19,
+     "dud": 2,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 76,
+     "hushed": 0,
+     "hushedPebble": 0
+    }
+   }
+  },
+  "magpie+pluck": {
+   "n": 120,
+   "won": 57,
+   "full": 17,
+   "turns": 803,
+   "track": {
+    "pluck": {
+     "placed": 120,
+     "dud": 0,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 10,
+     "hushed": 0,
+     "hushedPebble": 0
+    },
+    "magpie": {
+     "placed": 117,
+     "dud": 1,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 213,
+     "hushed": 0,
+     "hushedPebble": 0
+    },
+    "shift": {
+     "placed": 40,
+     "dud": 4,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 160,
+     "hushed": 0,
+     "hushedPebble": 0
+    },
+    "magnet": {
+     "placed": 20,
+     "dud": 0,
+     "bite": 33,
+     "restrictTurns": 37,
+     "choices": 0,
+     "hushed": 0,
+     "hushedPebble": 0
+    },
+    "rotate": {
+     "placed": 17,
+     "dud": 0,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 32,
+     "hushed": 0,
+     "hushedPebble": 0
+    }
+   }
+  },
+  "2048+2048": {
+   "n": 120,
+   "won": 13,
+   "full": 5,
+   "turns": 594,
+   "track": {
+    "2048": {
+     "placed": 116,
+     "dud": 21,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 464,
+     "hushed": 0,
+     "hushedPebble": 0
+    }
+   }
+  },
+  "2048+flip": {
+   "n": 120,
+   "won": 6,
+   "full": 3,
+   "turns": 609,
+   "track": {
+    "2048": {
+     "placed": 84,
+     "dud": 12,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 336,
+     "hushed": 0,
+     "hushedPebble": 0
+    },
+    "flip": {
+     "placed": 59,
+     "dud": 11,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 236,
+     "hushed": 0,
+     "hushedPebble": 0
+    }
+   }
+  },
+  "2048+rotate": {
+   "n": 120,
+   "won": 10,
+   "full": 4,
+   "turns": 624,
+   "track": {
+    "2048": {
+     "placed": 78,
+     "dud": 13,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 312,
+     "hushed": 0,
+     "hushedPebble": 0
+    },
+    "rotate": {
+     "placed": 84,
+     "dud": 23,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 144,
+     "hushed": 0,
+     "hushedPebble": 0
+    }
+   }
+  },
+  "2048+mountain": {
+   "n": 120,
+   "won": 13,
+   "full": 8,
+   "turns": 661,
+   "track": {
+    "2048": {
+     "placed": 101,
+     "dud": 17,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 404,
+     "hushed": 0,
+     "hushedPebble": 0
+    },
+    "mountain": {
+     "placed": 81,
+     "dud": 0,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 0,
+     "hushed": 0,
+     "hushedPebble": 0
+    }
+   }
+  },
+  "2048+bribe": {
+   "n": 120,
+   "won": 39,
+   "full": 4,
+   "turns": 695,
+   "track": {
+    "2048": {
+     "placed": 118,
+     "dud": 6,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 472,
+     "hushed": 0,
+     "hushedPebble": 0
+    },
+    "bribe": {
+     "placed": 116,
+     "dud": 2,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 10,
+     "hushed": 0,
+     "hushedPebble": 0
+    },
+    "magnet": {
+     "placed": 0,
+     "dud": 0,
+     "bite": 1,
+     "restrictTurns": 3,
+     "choices": 0,
+     "hushed": 0,
+     "hushedPebble": 0
+    }
+   }
+  },
+  "2048+pluck": {
+   "n": 120,
+   "won": 16,
+   "full": 0,
+   "turns": 848,
+   "track": {
+    "2048": {
+     "placed": 83,
+     "dud": 9,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 332,
+     "hushed": 0,
+     "hushedPebble": 0
+    },
+    "pluck": {
+     "placed": 120,
+     "dud": 0,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 13,
+     "hushed": 0,
+     "hushedPebble": 0
+    }
+   }
+  },
+  "flip+flip": {
+   "n": 120,
+   "won": 0,
+   "full": 0,
+   "turns": 570,
+   "track": {
+    "flip": {
+     "placed": 104,
+     "dud": 31,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 416,
+     "hushed": 0,
+     "hushedPebble": 0
+    }
+   }
+  },
+  "flip+rotate": {
+   "n": 120,
+   "won": 10,
+   "full": 4,
+   "turns": 564,
+   "track": {
+    "flip": {
+     "placed": 56,
+     "dud": 13,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 224,
+     "hushed": 0,
+     "hushedPebble": 0
+    },
+    "rotate": {
+     "placed": 75,
+     "dud": 24,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 140,
+     "hushed": 0,
+     "hushedPebble": 0
+    }
+   }
+  },
+  "flip+mountain": {
+   "n": 120,
+   "won": 2,
+   "full": 1,
+   "turns": 547,
+   "track": {
+    "mountain": {
+     "placed": 70,
+     "dud": 0,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 0,
+     "hushed": 0,
+     "hushedPebble": 0
+    },
+    "flip": {
+     "placed": 48,
+     "dud": 18,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 192,
+     "hushed": 0,
+     "hushedPebble": 0
+    }
+   }
+  },
+  "flip+bribe": {
+   "n": 120,
+   "won": 68,
+   "full": 6,
+   "turns": 742,
+   "track": {
+    "flip": {
+     "placed": 116,
+     "dud": 110,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 464,
+     "hushed": 0,
+     "hushedPebble": 0
+    },
+    "bribe": {
+     "placed": 117,
+     "dud": 2,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 52,
+     "hushed": 0,
+     "hushedPebble": 0
+    },
+    "magnet": {
+     "placed": 0,
+     "dud": 0,
+     "bite": 1,
+     "restrictTurns": 13,
+     "choices": 0,
+     "hushed": 0,
+     "hushedPebble": 0
+    }
+   }
+  },
+  "flip+pluck": {
+   "n": 120,
+   "won": 0,
+   "full": 0,
+   "turns": 830,
+   "track": {
+    "pluck": {
+     "placed": 120,
+     "dud": 0,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 6,
+     "hushed": 0,
+     "hushedPebble": 0
+    },
+    "flip": {
+     "placed": 93,
+     "dud": 13,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 372,
+     "hushed": 0,
+     "hushedPebble": 0
+    }
+   }
+  },
+  "rotate+rotate": {
+   "n": 120,
+   "won": 8,
+   "full": 3,
+   "turns": 596,
+   "track": {
+    "rotate": {
+     "placed": 144,
+     "dud": 32,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 236,
+     "hushed": 0,
+     "hushedPebble": 0
+    }
+   }
+  },
+  "rotate+mountain": {
+   "n": 120,
+   "won": 7,
+   "full": 3,
+   "turns": 642,
+   "track": {
+    "mountain": {
+     "placed": 83,
+     "dud": 0,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 0,
+     "hushed": 0,
+     "hushedPebble": 0
+    },
+    "rotate": {
+     "placed": 90,
+     "dud": 18,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 164,
+     "hushed": 0,
+     "hushedPebble": 0
+    }
+   }
+  },
+  "rotate+bribe": {
+   "n": 120,
+   "won": 45,
+   "full": 15,
+   "turns": 772,
+   "track": {
+    "bribe": {
+     "placed": 116,
+     "dud": 0,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 46,
+     "hushed": 0,
+     "hushedPebble": 0
+    },
+    "rotate": {
+     "placed": 118,
+     "dud": 0,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 206,
+     "hushed": 0,
+     "hushedPebble": 0
+    },
+    "magnet": {
+     "placed": 0,
+     "dud": 0,
+     "bite": 0,
+     "restrictTurns": 19,
+     "choices": 0,
+     "hushed": 0,
+     "hushedPebble": 0
+    }
+   }
+  },
+  "rotate+pluck": {
+   "n": 120,
+   "won": 2,
+   "full": 0,
+   "turns": 864,
+   "track": {
+    "pluck": {
+     "placed": 120,
+     "dud": 0,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 16,
+     "hushed": 0,
+     "hushedPebble": 0
+    },
+    "rotate": {
+     "placed": 95,
+     "dud": 7,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 174,
+     "hushed": 0,
+     "hushedPebble": 0
+    }
+   }
+  },
+  "mountain+mountain": {
+   "n": 120,
+   "won": 1,
+   "full": 1,
+   "turns": 602,
+   "track": {
+    "mountain": {
+     "placed": 125,
+     "dud": 0,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 0,
+     "hushed": 0,
+     "hushedPebble": 0
+    }
+   }
+  },
+  "mountain+bribe": {
+   "n": 120,
+   "won": 87,
+   "full": 19,
+   "turns": 728,
+   "track": {
+    "mountain": {
+     "placed": 118,
+     "dud": 0,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 0,
+     "hushed": 0,
+     "hushedPebble": 0
+    },
+    "bribe": {
+     "placed": 118,
+     "dud": 2,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 62,
+     "hushed": 0,
+     "hushedPebble": 0
+    },
+    "magnet": {
+     "placed": 0,
+     "dud": 0,
+     "bite": 0,
+     "restrictTurns": 17,
+     "choices": 0,
+     "hushed": 0,
+     "hushedPebble": 0
+    }
+   }
+  },
+  "mountain+pluck": {
+   "n": 120,
+   "won": 0,
+   "full": 0,
+   "turns": 860,
+   "track": {
+    "pluck": {
+     "placed": 120,
+     "dud": 0,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 28,
+     "hushed": 0,
+     "hushedPebble": 0
+    },
+    "mountain": {
+     "placed": 81,
+     "dud": 0,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 0,
+     "hushed": 0,
+     "hushedPebble": 0
+    }
+   }
+  },
+  "bribe+bribe": {
+   "n": 120,
+   "won": 113,
+   "full": 0,
+   "turns": 627,
+   "track": {
+    "bribe": {
+     "placed": 225,
+     "dud": 9,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 24,
+     "hushed": 0,
+     "hushedPebble": 0
+    },
+    "magnet": {
+     "placed": 0,
+     "dud": 0,
+     "bite": 2,
+     "restrictTurns": 3,
+     "choices": 0,
+     "hushed": 0,
+     "hushedPebble": 0
+    }
+   }
+  },
+  "bribe+pluck": {
+   "n": 120,
+   "won": 90,
+   "full": 6,
+   "turns": 746,
+   "track": {
+    "pluck": {
+     "placed": 118,
+     "dud": 0,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 19,
+     "hushed": 0,
+     "hushedPebble": 0
+    },
+    "bribe": {
+     "placed": 74,
+     "dud": 6,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 6,
+     "hushed": 0,
+     "hushedPebble": 0
+    },
+    "magnet": {
+     "placed": 0,
+     "dud": 0,
+     "bite": 16,
+     "restrictTurns": 18,
+     "choices": 0,
+     "hushed": 0,
+     "hushedPebble": 0
+    }
+   }
+  },
+  "pluck+pluck": {
+   "n": 120,
+   "won": 1,
+   "full": 1,
+   "turns": 1078,
+   "track": {
+    "pluck": {
+     "placed": 240,
+     "dud": 0,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 42,
+     "hushed": 0,
+     "hushedPebble": 0
+    }
+   }
+  }
+ }
+}
