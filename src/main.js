@@ -286,7 +286,7 @@ function route() {
 // ── Map ─────────────────────────────────────────────────────────────────────
 
 const NODE_ICON = { fight: 'sword', elite: 'skull', rock: 'mountain', shop: 'shop', rest: 'fire', event: 'question', treasure: 'chest', boss: 'crown', gift: 'star', craft: 'relic-anvil' };
-const NODE_NAME = { 'boss-mark': t('Boss'), fight: t('Duel'), elite: t('Elite'), shop: t('Shop'), rest: t('Campfire'), event: t('Unknown'), treasure: t('Treasure'), boss: t('Boss'), rock: t('Rock'), gift: t('Gift'), craft: t('Workshop'), empty: t('Empty') };
+const NODE_NAME = { 'boss-mark': t('Boss'), fight: t('Duel'), elite: t('Elite'), shop: t('Shop'), rest: t('Campfire'), event: t('Unknown'), treasure: t('Treasure'), boss: t('Boss'), rock: t('Rock'), gift: t('Gift'), craft: t('Workshop'), empty: t('Empty'), lair: t('Lair') };
 
 // Each act's ground: what blocks the way (trees, boulders, crags), and empty ground.
 const terrain = () => Math.min(3, Math.max(1, run?.act ?? 1));
@@ -298,6 +298,7 @@ function mapScreen() {
   if (run.map?.v !== 7) R.makeMap(run);   // a save from an older map: a fresh one
   const map = run.map;
   if (map.news === 'oline') flash = 'hurt';   // the hearts in the top bar take the hit
+  R.placeLair(run, map);   // a page from before the lair
   const reach = new Set(R.reachable(run));
   const boss = ENEMIES[map.boss];
   // One ring of unexplored paper round what is on view: the page goes on.
@@ -320,12 +321,20 @@ function mapScreen() {
       const k = R.keyOf(x, y);
       const c = map.cells[k];
       if (!c) { grid.push(h('div.map-fog', { 'aria-hidden': 'true' }, '?')); continue; }
-      const can = reach.has(k);
       const kind = c.kind;
-      const el = h(`button.map-cell.${kind}` + (can ? '.reach' : '') + (c.mark ? '.marked' : '') + (breaching && kind === 'rock' ? '.breachable' : ''), {
+      const can = kind === 'lair' ? map.open : reach.has(k);
+      const el = h(`button.map-cell.${kind}` + (can && kind !== 'lair' ? '.reach' : '') + (c.mark && kind !== 'lair' ? '.marked' : '') + (kind === 'lair' && map.open ? '.open' : '') + (breaching && kind === 'rock' ? '.breachable' : ''), {
         'aria-label': NODE_NAME[kind] ?? boss.name, dataset: { k },
         onclick: () => {
           if (breaching && kind === 'rock') { R.breach(run, k); sfx('thud'); save(); mapScreen(); return; }
+          if (kind === 'lair') {
+            if (!can) { toast(t('{boss}\'s lair. Three Xs in a row open it.', { boss: boss.name })); return; }
+            sfx('click');
+            R.enterNode(run, 'boss');
+            duelState = null;
+            route();
+            return;
+          }
           if (!can) {
             const why = kind === 'rock' ? t('{what}: no step, no line through it.', { what: blockName() })
               : c.mark === 'X' ? t('You have been here.')
@@ -340,11 +349,11 @@ function mapScreen() {
           duelState = null;
           route();
         },
-      }, kind === 'boss-mark' ? null : kind === 'rock' ? h('span.doodle.rock', { html: icon(`block-${terrain()}`) })
+      }, kind === 'boss-mark' ? null : kind === 'lair' ? h('span.doodle.lair', { html: icon(`lair-${terrain()}`) }, h('span.lair-boss', {}, boss.emoji)) : kind === 'rock' ? h('span.doodle.rock', { html: icon(`block-${terrain()}`) })
         : kind === 'empty' ? h('span.doodle.empty', { html: icon(`empty-${terrain()}`) }) : c.duel
         ? h('span.doodle.foe', {}, h('span.photo', {}, ENEMIES[c.duel.enemyId].emoji))
         : h('span.doodle', { html: icon(NODE_ICON[kind]) }),
-      kind === 'boss-mark' || kind === 'rock' || kind === 'empty' ? null : h('span.label', {}, c.duel ? shortName(ENEMIES[c.duel.enemyId]) : NODE_NAME[kind]));
+      kind === 'boss-mark' || kind === 'rock' || kind === 'empty' || kind === 'lair' ? null : h('span.label', {}, c.duel ? shortName(ENEMIES[c.duel.enemyId]) : NODE_NAME[kind]));
       if ((!c.mark || c.mark === 'S') && threats.has(k)) el.classList.add('boss-threat');
       if (c.mark === 'X') el.insertAdjacentHTML('beforeend', scribbleX(freshX === k));
       if (c.mark === 'O') el.insertAdjacentHTML('beforeend', scribbleO(lastO === k).replace('<svg ', `<svg style="--o-at: ${oAt}s" `));
@@ -375,11 +384,10 @@ function mapScreen() {
   map.bonus = 0;
   map.news = null;
   if (bonus) setTimeout(() => toast(`+${bonus} 🪙`, 'good'), 50);
-  // The boss's door: a hint while it is shut, a button once it is open.
+  // The boss's lair, on the page: a hint while it is shut, another once it glows.
   const door = map.open
-    ? h('button.btn.primary.wide.boss-go', { onclick: () => { R.enterNode(run, 'boss'); duelState = null; route(); } },
-      h('span', { html: icon('crown') }), t('Face the boss'))
-    : h('div.door-hint', {}, h('span', { html: icon('crown') }), t('Three Xs in a row open the boss\'s door.'),
+    ? h('div.door-hint.open', {}, h('span', { html: icon('crown') }), t('The lair is open: tap it to face {boss}.', { boss: boss.name }))
+    : h('div.door-hint', {}, h('span', { html: icon('crown') }), t('Three Xs in a row open the boss\'s lair.'),
 )
   // Map aids won in duels: arm one for the next step.
   const aids = R.AID_TYPES.filter((a) => run.aids?.[a]).length ? h('div.aids', {}, R.AID_TYPES.filter((a) => run.aids?.[a]).map((a) => h('button.aid' + (map.armed === a ? '.armed' : ''), {

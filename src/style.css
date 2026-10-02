@@ -767,12 +767,23 @@ body:has(.duel) #toast.show { transform: translate(-50%, 0) rotate(-1deg); }
 .enemy-hand { justify-content: center; gap: 2px; min-height: 60px; flex-wrap: nowrap; margin: 2px 0 4px; }
 .enemy-hand .hand-slot .stone { --size: min(54px, calc((100vw - 64px) / 7.3)); }
 
-/* The boss's door on the map: a line of hint, then a button. */
+/* The boss's lair on the map: a wall with a dark mouth, glowing once open. */
+.map-cell.lair { cursor: pointer; color: #8d887f; --rock-fill: #dedbd5; }
+.map-cell .doodle.lair { width: 74%; height: 74%; }
+.map-cell .lair-boss { position: absolute; left: 50%; top: 70%; transform: translate(-50%, -50%); font-size: 1.05rem; line-height: 1;
+  filter: grayscale(1) brightness(0.55); opacity: 0.75; }
+.map-cell.lair.open { --lair-in: #ffd451; z-index: 1; }
+.map-cell.lair.open .doodle.lair { animation: lair-glow 1.6s ease-in-out infinite; }
+.map-cell.lair.open .lair-boss { filter: none; opacity: 1; }
+@keyframes lair-glow {
+  0%, 100% { filter: drop-shadow(0 0 2px rgba(255, 196, 40, 0.6)); }
+  50% { filter: drop-shadow(0 0 9px rgba(255, 180, 20, 0.95)); }
+}
+.door-hint.open { color: var(--ink); }
+/* The boss's door on the map: a line of hint. */
 .door-hint { display: flex; align-items: center; justify-content: center; gap: 6px; font-size: 0.95rem; color: var(--pencil); text-align: center; margin: 2px 0 4px; }
-.door-hint .icon, .boss-go .icon { width: 18px; height: 18px; flex: none; }
+.door-hint .icon { width: 18px; height: 18px; flex: none; }
 .door-hint .power-note { color: var(--red); }
-.boss-go { display: flex; align-items: center; justify-content: center; gap: 8px; flex-wrap: wrap; animation: wiggle 1.4s ease-in-out infinite; }
-.boss-go .power-note { width: 100%; font-size: 0.85rem; color: var(--red); font-family: var(--hand); }
 
 /* Pages fill the screen; a bottom button sits at the bottom, no spacer. */
 .screen > .page { flex: 1; }

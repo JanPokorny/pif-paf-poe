@@ -648,6 +648,11 @@ RAW['kit-mason'] = RAW.mountain;
 
 const G = '<g fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">';
 
+// The boss's lair, in the act's terrain: a dark mouth in it, which glows once open.
+for (const n of [1, 2, 3]) {
+  RAW[`lair-${n}`] = RAW[`block-${n}`]
+    + P('M -4.4 7.4 V 2 C -4.4 -1.4 -2.4 -3 0 -3 C 2.4 -3 4.4 -1.4 4.4 2 V 7.4 Z', ' fill="var(--lair-in, #3b352e)"' + SW(1.3));
+}
 export const ICONS = Object.fromEntries(Object.entries(RAW).map(([k, v]) => [k, `${G}${v}</g>`]));
 
 export function icon(name, cls = '') {

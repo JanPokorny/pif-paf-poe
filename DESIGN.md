@@ -75,8 +75,10 @@ its own, with its boss.
   boss's (O). Every square you step on is an X; a duel lost costs its hearts and scorches the
   square, which only the boss may take afterwards. You choose again at once — the boss answers
   only a real X.
-- **The door.** Your three in a row opens the boss's door (+10 gold for every square past that).
-  The boss's three in a row costs you a heart (two made it the last blow in a quarter of the bots' runs). There is no page limit any more: the door opens
+- **The lair.** The boss's lair takes the place of one of the obstacles next to its first mark: a
+  wall like any other, until your three in a row opens it (+10 gold for every square past that).
+  Open, it glows, and tapping it starts the boss duel.
+  The boss's three in a row costs you a heart (two made it the last blow in a quarter of the bots' runs). There is no page limit any more: the lair opens
   only to your line, and when nothing on view is free the boss moves again (into the fog beside
   the page if it must) until something is.
 - **Spent lines.** Every line of three is crossed through on the page, and its marks are spent:

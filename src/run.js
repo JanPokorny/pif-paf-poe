@@ -302,6 +302,17 @@ function claimLine(map, k) {
   return null;
 }
 
+// The boss's lair takes the place of one of the obstacles next to its first
+// mark: a wall like any other, until your line opens it.
+export function placeLair(run, map = run.map) {
+  if (map.lair) return;
+  const near = Object.keys(map.cells).filter((k) => map.cells[k].kind === 'rock' && ringOf(...coords(k)) === 1);
+  const pool = near.length ? near : Object.keys(map.cells).filter((k) => map.cells[k].kind === 'rock');
+  if (!pool.length) return;
+  map.lair = pick(run, pool.sort());
+  map.cells[map.lair] = { kind: 'lair', mark: '#' };
+}
+
 // Step back out of a duel you have only looked at.
 export function retreat(run) {
   run.map.at = null;
@@ -334,6 +345,7 @@ export function makeMap(run) {
     if (!map.start) map.rockShift = shifts.length ? pick(run, shifts) : 0;
   }
   reveal(run, 0, 0, true);
+  placeLair(run, map);
   // The very first page hides a gift: a special stone, free.
   if (run.act === 1) {
     const ring = Object.entries(map.cells).filter(([, c]) => !c.mark && c.kind !== 'elite');
