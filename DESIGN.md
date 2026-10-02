@@ -28,11 +28,14 @@ duel, and a rule for who wins when someone runs out. The second version slows it
   cost no more than you have. A run starts with 1. Beating an elite gives 1, an act's boss 2;
   every shop sells 1 (once a visit), the Meditating Monk trades one for a max heart or 40 gold,
   and Second Wind (a boss relic) adds 1. Picking stones before a duel fills a bar of dots.
+- **Rewards are a form.** Each row of a reward is yours ("~ and ~" between rows); a row that
+  offers a choice ("or" between its cards) works like radio buttons, and Continue stays grey
+  until every choice is made, then takes it all. Nothing can be skipped.
 - **No Pebbles in the pouch.** Pebbles are free and never owned: they fill your hand up to four
   stones at the start of a duel, and the enemy's up to five (it opens, so a full board takes five
   of its stones). A side whose hand is empty on its turn finds a Pebble ("You found a pebble!"),
   so nobody ever passes. A stone sent back off the board goes back into its owner's hand. A full
-  board (or forty turns) goes to whoever moved second. The pouch holds eight special stones.
+  board (or forty turns) goes to whoever moved second. The pouch holds any number of stones.
 - **Enemies grow as you do:** one special stone in act 1, two in act 2, three in act 3; an elite
   brings one more. Measured at the energy a player has by then (1, 4, 8: `node tools/lab.mjs
   enemies --energy 1,4,8`).

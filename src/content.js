@@ -19,7 +19,7 @@ export const RELICS = {
   'deep-pockets': { name: 'Second Wind', emoji: '🌬️', rarity: 'rare',
     text: '+1 energy: bring stones worth one more into every duel.' },
   satchel: { name: 'Satchel', emoji: '🎒', rarity: 'common',
-    text: 'Your pouch holds 2 more stones.' },
+    text: 'Shops sell one more stone.' },
   'lucky-coin': { name: 'Lucky Coin', emoji: '🪙', rarity: 'common',
     text: '+8 gold for every duel you win.' },
   herbs: { name: 'Herbal Pouch', emoji: '🌿', rarity: 'common',
@@ -236,7 +236,7 @@ export const EVENTS = [
     choices: [
       { label: 'Drink', detail: 'Heal 2 hearts.', act: (r) => { r.hearts = Math.min(r.maxHearts, r.hearts + 2); return t('Cool, clear water. You feel restored.'); } },
       { label: 'Fish for coins', detail: 'Gain 25–50 gold.', act: (r, api) => { const g = 25 + ((api.rng() * 26) | 0); r.gold += g; return t('You fish out {n} gold.', { n: g }); } },
-      { label: 'Toss a coin', detail: 'Pay 10 gold, gain a random one-shot stone.', can: (r, api) => r.gold >= 10 && api.pouchRoom(),
+      { label: 'Toss a coin', detail: 'Pay 10 gold, gain a random one-shot stone.', can: (r) => r.gold >= 10,
         act: (r, api) => { r.gold -= 10; return api.gainRandomOnce(); } },
     ],
   },
@@ -270,7 +270,7 @@ export const EVENTS = [
     id: 'mirror', title: 'The Duplicating Pond', emoji: '🪞',
     text: 'The pond reflects your pouch. The reflection looks… real.',
     choices: [
-      { label: 'Reach in', detail: 'Duplicate a stone.', can: (r, api) => api.pouchRoom() && r.pouch.length > 0,
+      { label: 'Reach in', detail: 'Duplicate a stone.', can: (r) => r.pouch.length > 0,
         act: (r, api) => api.duplicate() },
       { label: 'Wash your face', detail: 'Heal 1 heart.', act: (r) => { r.hearts = Math.min(r.maxHearts, r.hearts + 1); return t('Refreshing.'); } },
     ],
@@ -287,7 +287,7 @@ export const EVENTS = [
     id: 'fountain', title: 'The Wishing Fountain', emoji: '⛲',
     text: 'Coins glint under the water. A sign reads: "One wish per traveller."',
     choices: [
-      { label: 'Wish for strength', detail: 'Choose a stone. Lose 1 heart.', can: (r, api) => r.hearts > 1 && api.pouchRoom(),
+      { label: 'Wish for strength', detail: 'Choose a stone. Lose 1 heart.', can: (r) => r.hearts > 1,
         act: (r, api) => api.chooseStone(null, () => { r.hearts--; }) },
       { label: 'Wish for health', detail: 'Pay 20 gold, heal 2 hearts.', can: (r) => r.gold >= 20,
         act: (r) => { r.gold -= 20; r.hearts = Math.min(r.maxHearts, r.hearts + 2); return t('You feel much better.'); } },
@@ -305,7 +305,7 @@ export const EVENTS = [
           r.pouch = r.pouch.filter((x) => x !== k);
           return api.gainRandomOnce('rare');
         } },
-      { label: 'Buy one', detail: 'Pay 25 gold for a random one-shot stone.', can: (r, api) => r.gold >= 25 && api.pouchRoom(),
+      { label: 'Buy one', detail: 'Pay 25 gold for a random one-shot stone.', can: (r) => r.gold >= 25,
         act: (r, api) => { r.gold -= 25; return api.gainRandomOnce(); } },
       { label: 'No thanks', act: () => t('He vanishes in a puff of smoke.') },
     ],
@@ -314,9 +314,9 @@ export const EVENTS = [
     id: 'library', title: 'The Rulebook Library', emoji: '📚',
     text: 'Shelves of dog-eared rulebooks. Someone has scribbled strategies in every margin.',
     choices: [
-      { label: 'Study', detail: 'Pay 30 gold, choose an uncommon stone.', can: (r, api) => r.gold >= 30 && api.pouchRoom(),
+      { label: 'Study', detail: 'Pay 30 gold, choose an uncommon stone.', can: (r) => r.gold >= 30,
         act: (r, api) => api.chooseStone('uncommon', () => { r.gold -= 30; }) },
-      { label: 'Borrow a book', detail: 'Gain a random uncommon one-shot stone.', can: (r, api) => api.pouchRoom(),
+      { label: 'Borrow a book', detail: 'Gain a random uncommon one-shot stone.',
         act: (r, api) => api.gainRandomOnce('uncommon') },
       { label: 'Leave', act: () => t('You put the books back.') },
     ],
@@ -356,7 +356,7 @@ export const EVENTS = [
       { label: 'Listen', detail: 'Heal 1 heart and gain a random one-shot stone.', act: (r, api) => {
         const healed = r.hearts < r.maxHearts;
         r.hearts = Math.min(r.maxHearts, r.hearts + 1);
-        const extra = api.pouchRoom() ? ` ${api.gainRandomOnce()}` : '';
+        const extra = ` ${api.gainRandomOnce()}`;
         return `${healed ? t('You feel better.') : t('A fine story.')}${extra}`;
       } },
       { label: 'Tell your own', detail: 'Gain 20 gold for a good yarn.', act: (r) => { r.gold += 20; return t('They toss you 20 gold. Not bad!'); } },

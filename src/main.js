@@ -4,7 +4,7 @@
 import { STONES, CONDS, RULES, createGame } from './engine.js';
 import { RELICS, ENEMIES, ACTS, EVENTS } from './content.js';
 import * as R from './run.js';
-import { h, hideToast, tapeUp, art, relicArt, scribbleX, scribbleO, stoneEl, iconEl, toast, modal, ask, pressable, infoStone, infoRelic, ruleChip, infoRule, stoneCard, relicCard, stoneName, langToggle, energyBar } from './ui/common.js';
+import { h, hideToast, tapeUp, art, relicArt, scribbleX, scribbleO, stoneEl, iconEl, toast, modal, ask, pressable, infoStone, infoRelic, infoRule, stoneCard, relicCard, stoneName, langToggle, energyBar } from './ui/common.js';
 import { icon } from './icons.js';
 import { mountDuel } from './ui/duel.js';
 import { sfx, soundOn, setSound } from './sound.js';
@@ -103,7 +103,7 @@ function relicStrip() {
 
 function showPouch() {
   const body = h('div.pouch-view', {},
-    h('h2', {}, t('Pouch · {n}/{cap}', { n: run.pouch.length, cap: R.pouchCap(run) })),
+    h('h2', {}, t('Pouch · {n}', { n: run.pouch.length })),
     run.pouch.length ? h('div.stone-grid', {}, run.pouch.map((s) => h('button.pouch-slot', { onclick: () => infoStone(s, 'X') }, stoneEl(s, 'X', { cost: true }), h('span', {}, stoneName(s)))))
       : h('p.dim', {}, t('No special stones yet. Pebbles you always have.')),
     h('h2', {}, t('Relics')),
@@ -601,16 +601,8 @@ function showDuelMenu() {
 
 // ── Rewards ─────────────────────────────────────────────────────────────────
 
-// Take a stone into the pouch, asking what to drop if it is full.
-function takeStone(s, done) {
-  if (!R.pouchFull(run)) { R.gainStone(run, s); sfx('coin'); done(true); return; }
-  pickFromPouch(t('Your pouch is full. Drop a stone to take the {stone}?', { stone: stoneName(s) }), (victim) => {
-    if (!victim) { done(false); return; }
-    run.pouch = run.pouch.filter((p) => p.uid !== victim.uid);
-    R.gainStone(run, s);
-    done(true);
-  }, { cancel: t('Keep my pouch') });
-}
+// Take a stone into the pouch: it holds any number.
+function takeStone(s, done) { R.gainStone(run, s); sfx('coin'); done(true); }
 
 function pickFromPouch(prompt, cb, { filter = () => true, cancel = t('Cancel') } = {}) {
   const list = run.pouch.filter(filter);
@@ -621,30 +613,20 @@ function pickFromPouch(prompt, cb, { filter = () => true, cancel = t('Cancel') }
   const close = modal(body, { dismissable: false, cls: 'tall' });
 }
 
-// The card you pick glides to the middle of its row; the others fly off.
-function pickCard(card, after) {
-  const row = card.parentElement;
-  const rr = row.getBoundingClientRect(), cr = card.getBoundingClientRect();
-  card.style.setProperty('--dx', `${rr.left + rr.width / 2 - (cr.left + cr.width / 2)}px`);
-  card.classList.add('picked');
-  [...row.children].forEach((c, k) => {
-    if (c === card) return;
-    const side = c.getBoundingClientRect().left < cr.left ? -1 : 1;
-    c.style.setProperty('--fx', `${side * (40 + 10 * k)}vw`);
-    c.style.setProperty('--fr', `${side * (14 + 6 * k)}deg`);
-    c.classList.add('unpicked');
-  });
-  row.style.pointerEvents = 'none';
-  setTimeout(after, 480);
-}
-
 const pressHint = () => h('div.press-hint', {}, t('Long press for info.'));
 // A row of cards to choose one from, "or" between them.
 const orRow = (cards) => h('div.cards.pick-one', {}, cards.flatMap((c, k) => (k ? [h('span.or', {}, t('or')), c] : [c])));
+// The same as radio buttons: [value, card] pairs, the chosen one marked, the others faded.
+function radioRow(chosen, items) {
+  return orRow(items.map(([value, card]) => {
+    if (chosen === value) card.classList.add('chosen');
+    else if (chosen !== undefined) card.classList.add('unchosen');
+    return card;
+  }));
+}
 
 function rewardScreen() {
   const rw = run.pending;
-  const done = () => { R.leaveNode(run); route(); };
   const parts = [h('h1.reward-title', {}, rw.gift ? t('A gift!') : rw.tier === 'boss' ? t('Boss defeated!') : t('Victory!'))];
   if (rw.gold) parts.push(h('div.reward-gold', {}, h('span', { html: icon('coin') }), t('+{n} gold', { n: rw.gold })));
   if (rw.energy) parts.push(h('div.reward-gold.reward-energy', {}, h('span', { html: icon('energy') }), t('+{n} energy', { n: rw.energy })));
@@ -653,55 +635,47 @@ function rewardScreen() {
     rw.taken.relic = true;
     save();
   }
-  // What it left behind, as rows of cards: everything in its own row is yours
-  // ("~ and ~" between rows); where a row offers a choice, "or" sits between.
+  // What it left behind, as rows of cards: everything in a row of its own is
+  // yours ("~ and ~" between rows); where a row offers a choice ("or" between
+  // its cards), tap one to choose it. Continue takes it all, once every
+  // choice is made.
+  rw.sel = rw.sel ?? {};
   const rows = [];
   if (rw.relic) rows.push(h('div.cards.one', {}, relicCard(rw.relic, { onclick: () => infoRelic(rw.relic) })));
-  if (rw.once && !rw.taken.once) {
-    rows.push(h('div.cards.one', {}, stoneCard(rw.once, {
-      onclick: () => takeStone(rw.once, (ok) => { if (ok) { rw.taken.once = true; save(); rewardScreen(); } }),
-    })));
-  }
-  if (rw.relicChoice?.length && !rw.taken.boss) {
-    rows.push(orRow(rw.relicChoice.map((id) => relicCard(id, {
-      onclick: (e) => { R.gainRelic(run, id); rw.taken.boss = id; sfx('coin'); save(); pickCard(e.currentTarget, rewardScreen); },
-    }))));
-  } else if (rw.taken.boss) rows.push(h('div.cards.one', {}, relicCard(rw.taken.boss, { onclick: () => infoRelic(rw.taken.boss) })));
-  if (rw.taken.stone && rw.taken.stone !== true) rows.push(h('div.cards.one', {}, stoneCard({ type: rw.taken.stone }, { onclick: () => infoStone({ type: rw.taken.stone }, 'X') })));
-  if (rw.stones.length && !rw.taken.stone) {
-    rows.push(orRow(rw.stones.map((st) => stoneCard(st, {
-      onclick: (e) => {
-        const card = e.currentTarget;
-        takeStone(st, (ok) => {
-          if (!ok) return;
-          rw.taken.stone = st.type;
-          save();
-          pickCard(card, () => { if (run?.pending === rw) rewardScreen(); });
-        });
-      },
-    }))));
-  }
+  if (rw.once) rows.push(h('div.cards.one', {}, stoneCard(rw.once, { onclick: () => infoStone(rw.once, 'X') })));
+  const choose = (key, value) => () => { rw.sel[key] = value; sfx('click'); save(); rewardScreen(); };
+  if (rw.relicChoice?.length) rows.push(radioRow(rw.sel.boss, rw.relicChoice.map((id) => [id, relicCard(id, { onclick: choose('boss', id) })])));
+  if (rw.stones.length) rows.push(radioRow(rw.sel.stone, rw.stones.map((st, k) => [k, stoneCard(st, { onclick: choose('stone', k) })])));
   rows.forEach((r, k) => { if (k) parts.push(h('div.and-sep', {}, t('~ and ~'))); parts.push(r); });
   parts.push(pressHint());
-  const pendingBoss = rw.relicChoice?.length && !rw.taken.boss;
-  parts.push(h('div.sticky-bottom', {}, h('button.btn.wide.big' + (pendingBoss ? '' : '.primary'), {
-    onclick: async () => { if (pendingBoss && !(await ask(t('Leave without a boss relic?'), t('Continue')))) return; done(); },
-  }, (rw.stones.length && !rw.taken.stone) || (rw.once && !rw.taken.once) ? t('Skip') : t('Continue'))));
-  screen(topBar(), h('div.page.reward', {}, parts));
+  const ready = (!rw.relicChoice?.length || rw.sel.boss !== undefined) && (!rw.stones.length || rw.sel.stone !== undefined);
+  parts.push(h('div.sticky-bottom', {}, h('button.btn.wide.big.primary', {
+    disabled: !ready || undefined,
+    onclick: () => {
+      if (rw.once) R.gainStone(run, rw.once);
+      if (rw.relicChoice?.length) R.gainRelic(run, rw.sel.boss);
+      if (rw.stones.length) R.gainStone(run, rw.stones[rw.sel.stone]);
+      sfx('coin');
+      R.leaveNode(run);
+      route();
+    },
+  }, ready ? t('Continue') : t('Choose first'))));
+  screen(...(Object.keys(rw.sel).length ? [KEEP_SCROLL] : []), topBar(), h('div.page.reward', {}, parts));
 }
 
 function treasureScreen() {
   const tr = run.pending;
-  screen(topBar(), h('div.page.reward', {},
+  screen(...(tr.sel !== undefined ? [KEEP_SCROLL] : []), topBar(), h('div.page.reward', {},
     h('h1.reward-title', {}, t('Treasure!')),
     h('div.reward-gold', {}, h('span', { html: icon('coin') }), t('+{n} gold', { n: tr.gold })),
     tr.relic ? h('div.cards.one', {}, relicCard(tr.relic, { onclick: () => infoRelic(tr.relic) }))
-      : tr.choices?.length ? orRow(tr.choices.map((id) => relicCard(id, {
-        onclick: (e) => { R.gainRelic(run, id); tr.relic = id; sfx('coin'); save(); pickCard(e.currentTarget, treasureScreen); },
-      })))
+      : tr.choices?.length ? radioRow(tr.sel, tr.choices.map((id) => [id, relicCard(id, { onclick: () => { tr.sel = id; sfx('click'); save(); treasureScreen(); } })]))
         : null,
     pressHint(),
-    h('div.sticky-bottom', {}, h('button.btn.wide.big' + (tr.relic || !tr.choices?.length ? '.primary' : ''), { onclick: () => { R.leaveNode(run); route(); } }, tr.relic || !tr.choices?.length ? t('Continue') : t('Skip')))));
+    h('div.sticky-bottom', {}, h('button.btn.wide.big.primary', {
+      disabled: (!tr.relic && tr.choices?.length && tr.sel === undefined) || undefined,
+      onclick: () => { if (!tr.relic && tr.sel !== undefined) { R.gainRelic(run, tr.sel); sfx('coin'); } R.leaveNode(run); route(); },
+    }, !tr.relic && tr.choices?.length && tr.sel === undefined ? t('Choose first') : t('Continue')))));
 }
 
 // ── Shop ────────────────────────────────────────────────────────────────────
@@ -815,7 +789,6 @@ function eventScreen() {
   const result = run.pending.result;
   const api = {
     rng: () => R.rand(run),
-    pouchRoom: () => !R.pouchFull(run),
     // `pay` is charged on the first pick, so backing out costs nothing.
     craft: () => new Promise((resolve) => craftFlow((text) => resolve(text ?? t('You change your mind.')))),
     pickOnce: (text) => new Promise((resolve) => pickFromPouch(text, resolve, { filter: (x) => STONES[x.type].once, cancel: t('Never mind') })),
@@ -828,7 +801,6 @@ function eventScreen() {
     }),
     gainRandomOnce: (rarity) => {
       const s = R.randomOnce(run, rarity);
-      if (R.pouchFull(run)) return t('You find a {stone}, but your pouch is full.', { stone: stoneName(s) });
       R.gainStone(run, s);
       return t('You gain a {stone}.', { stone: stoneName(s) });
     },

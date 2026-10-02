@@ -44,18 +44,10 @@ function playDuel(run, cfg, piters, pblunder, rng) {
   return s.winner === 'X';
 }
 
-function takeStone(run, st) {
-  if (R.pouchFull(run)) {
-    const worst = run.pouch.slice().sort((a, b) => value(a) - value(b))[0];
-    if (value(worst) >= value(st)) return;
-    run.pouch = run.pouch.filter((p) => p !== worst);
-  }
-  R.gainStone(run, st);
-}
+const takeStone = (run, st) => R.gainStone(run, st);
 
 const api = (run) => ({
   rng: () => R.rand(run),
-  pouchRoom: () => !R.pouchFull(run),
   // Trade the two weakest stones, if that yields something better than both.
   craft: () => {
     const [a, b] = R.craftable(run).sort((x, y) => value(x) - value(y));
@@ -66,7 +58,7 @@ const api = (run) => ({
   },
   pickOnce: () => run.pouch.find((x) => R.isOnce(x)) ?? null,
   chooseStone: (r, pay) => { pay?.(); const c = R.stoneChoices(run, 'elite', r); takeStone(run, c[0]); return 'ok'; },
-  gainRandomOnce: (r) => { if (!R.pouchFull(run)) R.gainStone(run, R.randomOnce(run, r)); return 'ok'; },
+  gainRandomOnce: (r) => { R.gainStone(run, R.randomOnce(run, r)); return 'ok'; },
   gainRandomRelic: (t) => { R.gainRelic(run, R.randomRelic(run)); return t; },
   transmute: () => { const p = run.pouch[0]; const n = R.randomStone(run, 'uncommon'); p.type = n.type; return 'ok'; },
   duplicate: () => { const b = run.pouch.slice().sort((a, b) => value(b) - value(a))[0]; R.gainStone(run, { type: b.type }); return 'ok'; },
@@ -113,7 +105,7 @@ function playRun(spec) {
         const rw = run.pending;
         if (rw.relic) R.gainRelic(run, rw.relic);
         if (rw.relicChoice?.length) R.gainRelic(run, rw.relicChoice[0]);
-        if (rw.once && !R.pouchFull(run)) R.gainStone(run, rw.once);
+        if (rw.once) R.gainStone(run, rw.once);
         if (rw.stones.length) takeStone(run, rw.stones.slice().sort((a, b) => value(b) - value(a))[0]);
         R.leaveNode(run);
         break;

@@ -907,3 +907,8 @@ body:has(.duel) #toast.show { transform: translate(-50%, 0) rotate(-1deg); }
 .cards.pick-one { align-items: center; }
 .cards .or { flex: none; align-self: center; font-family: var(--hand); font-size: 0.95rem; color: var(--pencil); padding: 0 1px; display: inline-block; transition: opacity 0.3s; }
 .cards .or.unpicked { opacity: 0; }
+
+/* A choice of cards works as radio buttons: the chosen one lifts, the rest fade. */
+.cards.pick-one .card { transition: transform 0.2s, opacity 0.2s, box-shadow 0.2s; }
+.cards.pick-one .card.chosen { transform: translateY(-4px) rotate(-1deg) scale(1.04); box-shadow: 0 0 0 3px var(--blue), 2px 6px 10px rgba(0, 0, 0, 0.2); }
+.cards.pick-one .card.unchosen { opacity: 0.45; }

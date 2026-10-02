@@ -77,7 +77,6 @@ export function newRun({ seed = (Math.random() * 2 ** 31) | 0, heat = 0 } = {}) 
 }
 
 export const has = (run, relic) => run.relics.includes(relic);
-export const pouchCap = (run) => 8 + (has(run, 'satchel') ? 2 : 0);
 export const stoneName = (s) => STONES[s.type].name;
 export const isOnce = (s) => !!STONES[s.type]?.once;
 
@@ -925,7 +924,6 @@ export function gainStone(run, s) {
   return st;
 }
 
-export const pouchFull = (run) => run.pouch.length >= pouchCap(run);
 
 // ── Shop ────────────────────────────────────────────────────────────────────
 
@@ -935,7 +933,7 @@ export function price(run, base) {
 
 export function makeShop(run) {
   const stones = [];
-  const rarities = ['common', 'common', 'uncommon', 'uncommon', 'rare'];
+  const rarities = ['common', 'common', 'uncommon', 'uncommon', 'rare', ...(has(run, 'satchel') ? ['uncommon'] : [])];
   for (const r of rarities) {
     let s;
     for (let g = 0; g < 20; g++) { s = randomStone(run, r); if (!stones.some((o) => o.type === s.type)) break; }
