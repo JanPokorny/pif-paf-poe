@@ -4,7 +4,7 @@
 import { STONES, CONDS, RULES, createGame } from './engine.js';
 import { RELICS, ENEMIES, ACTS, EVENTS } from './content.js';
 import * as R from './run.js';
-import { h, hideToast, tapeUp, art, relicArt, scribbleX, scribbleO, stoneEl, iconEl, toast, modal, ask, pressable, infoStone, infoRelic, ruleChip, stoneCard, relicCard, stoneName, langToggle, energyBar } from './ui/common.js';
+import { h, hideToast, tapeUp, art, relicArt, scribbleX, scribbleO, stoneEl, iconEl, toast, modal, ask, pressable, infoStone, infoRelic, ruleChip, infoRule, stoneCard, relicCard, stoneName, langToggle, energyBar } from './ui/common.js';
 import { icon } from './icons.js';
 import { mountDuel } from './ui/duel.js';
 import { sfx, soundOn, setSound } from './sound.js';
@@ -508,13 +508,17 @@ function preDuel() {
   draw();
 
   const tierLabel = { normal: '', elite: t('Elite'), boss: t('Boss'), event: t('Challenge') }[duel.tier];
+  // What makes this duel different, each on its own slip of paper: the icon,
+  // then its name and what it does. A boss's rules favour it; conditions hold for both.
+  const note = (kind, ico, name, text, onclick) => h(`button.mod-note.${kind}`, { onclick },
+    h('span.mod-ico', { html: ico }), h('span.mod-body', {}, h('span.mod-title', {}, name), h('span.mod-text', {}, text)));
   const facts = [
-    ...(duel.rules ?? []).map((r) => h('div.fact.warn.rule-fact', {}, ruleChip('rule', r), h('span', {}, RULES[r].text))),
-    ...(duel.conds ?? []).map((c) => h('div.fact.rule-fact', {}, ruleChip('cond', c), h('span', {}, CONDS[c].text))),
-    duel.quirk ? h('div.fact.warn', {}, `${R.QUIRKS[duel.quirk].name}: ${R.QUIRKS[duel.quirk].text}`) : null,
-    duel.tier === 'boss' && duel.bossWins === 0 && enemy.rules2 && enemy.rules2.join() !== duel.rules.join()
-      ? h('div.fact.dim', {}, t('At moonrise: {rules}', { rules: enemy.rules2.map((r) => RULES[r].name).join(', ') })) : null,
+    ...(duel.rules ?? []).map((r) => note('rule', icon(`rule-${r}`), RULES[r].name, RULES[r].text, () => infoRule('rule', r))),
+    ...(duel.conds ?? []).map((c) => note('cond', icon(`cond-${c}`), CONDS[c].name, CONDS[c].text, () => infoRule('cond', c))),
+    duel.quirk ? note('quirk', icon('star'), R.QUIRKS[duel.quirk].name, R.QUIRKS[duel.quirk].text) : null,
   ].filter(Boolean);
+  const moonrise = duel.tier === 'boss' && duel.bossWins === 0 && enemy.rules2 && enemy.rules2.join() !== duel.rules.join()
+    ? h('div.press-hint.moon-note', {}, t('At moonrise: {rules}', { rules: enemy.rules2.map((r) => RULES[r].name).join(', ') })) : null;
   const canBack = !duel.event;
   screen(topBar(),
     h('div.page', {},
@@ -527,13 +531,14 @@ function preDuel() {
           tierLabel ? h('div.tier.' + duel.tier, {}, tierLabel) : null,
           h('div.enemy-name.big', {}, isUndead(duel) ? undeadName(enemy) : enemy.name),
           h('div.quote', {}, t('“{quote}”', { quote: enemy.quote })))),
+      facts.length ? h('div.mod-notes', {}, facts) : null,
+      moonrise,
       h('div.section-label', {}, t('Their stones')),
       duel.handO.some((s) => s.type !== 'pebble') ? h('div.stone-row', {}, [...new Set(duel.handO.filter((s) => s.type !== 'pebble').map((s) => s.type))].map((type) => {
         const n = duel.handO.filter((s) => s.type === type).length;
         return h('button.stone-pick', { onclick: () => infoStone({ type }, 'O'), 'aria-label': stoneName({ type }) },
           stoneEl({ type }, 'O'), n > 1 ? h('span.hand-count', {}, `×${n}`) : null);
       })) : h('div.press-hint', {}, t('Only Pebbles.')),
-      facts.length ? h('div.duel-facts.facts-card', {}, facts) : null,
       h('div.section-label', {}, t('Your stones')),
       bar,
       run.pouch.length ? grid : h('div.press-hint', {}, t('No special stones yet: Pebbles only.')),
@@ -646,36 +651,37 @@ function rewardScreen() {
     rw.taken.relic = true;
     save();
   }
-  // What it left behind, in one row: a relic (already yours) and a one-shot stone to take.
-  const found = [];
-  if (rw.relic) found.push(relicCard(rw.relic, { onclick: () => infoRelic(rw.relic) }));
+  // What it left behind, as rows of cards: everything in its own row is yours
+  // ("~ and ~" between rows); where a row offers a choice, "or" sits between.
+  const or = () => h('span.or', {}, t('or'));
+  const choice = (cards) => h('div.cards.pick-one', {}, cards.flatMap((c, k) => (k ? [or(), c] : [c])));
+  const rows = [];
+  if (rw.relic) rows.push(h('div.cards.one', {}, relicCard(rw.relic, { onclick: () => infoRelic(rw.relic) })));
   if (rw.once && !rw.taken.once) {
-    found.push(stoneCard(rw.once, {
+    rows.push(h('div.cards.one', {}, stoneCard(rw.once, {
       onclick: () => takeStone(rw.once, (ok) => { if (ok) { rw.taken.once = true; save(); rewardScreen(); } }),
-    }));
+    })));
   }
-  if (found.length) parts.push(h('div.section-label', {}, rw.relic ? t('Found') : t('A one-shot stone')), h('div.cards', {}, found));
   if (rw.relicChoice?.length && !rw.taken.boss) {
-    parts.push(h('div.section-label', {}, t('Choose a boss relic')),
-      h('div.cards', {}, rw.relicChoice.map((id) => relicCard(id, {
-        onclick: (e) => { R.gainRelic(run, id); rw.taken.boss = id; sfx('coin'); save(); pickCard(e.currentTarget, rewardScreen); },
-      }))));
-  } else if (rw.taken.boss) parts.push(h('div.section-label', {}, t('Boss relic')), relicCard(rw.taken.boss, { onclick: () => infoRelic(rw.taken.boss) }));
-  if (rw.taken.stone && rw.taken.stone !== true) parts.push(h('div.section-label', {}, t('You took the {stone}.', { stone: STONES[rw.taken.stone].name })), h('div.cards.one', {}, stoneCard({ type: rw.taken.stone }, {})));
+    rows.push(choice(rw.relicChoice.map((id) => relicCard(id, {
+      onclick: (e) => { R.gainRelic(run, id); rw.taken.boss = id; sfx('coin'); save(); pickCard(e.currentTarget, rewardScreen); },
+    }))));
+  } else if (rw.taken.boss) rows.push(h('div.cards.one', {}, relicCard(rw.taken.boss, { onclick: () => infoRelic(rw.taken.boss) })));
+  if (rw.taken.stone && rw.taken.stone !== true) rows.push(h('div.cards.one', {}, stoneCard({ type: rw.taken.stone }, { onclick: () => infoStone({ type: rw.taken.stone }, 'X') })));
   if (rw.stones.length && !rw.taken.stone) {
-    parts.push(h('div.section-label', {}, t('Take one')),
-      h('div.cards', {}, rw.stones.map((s) => stoneCard(s, {
-        onclick: (e) => {
-          const card = e.currentTarget;
-          takeStone(s, (ok) => {
-            if (!ok) return;
-            rw.taken.stone = s.type;
-            save();
-            pickCard(card, () => { if (run?.pending === rw) rewardScreen(); });
-          });
-        },
-      }))));
+    rows.push(choice(rw.stones.map((st) => stoneCard(st, {
+      onclick: (e) => {
+        const card = e.currentTarget;
+        takeStone(st, (ok) => {
+          if (!ok) return;
+          rw.taken.stone = st.type;
+          save();
+          pickCard(card, () => { if (run?.pending === rw) rewardScreen(); });
+        });
+      },
+    }))));
   }
+  rows.forEach((r, k) => { if (k) parts.push(h('div.and-sep', {}, t('~ and ~'))); parts.push(r); });
   parts.push(pressHint());
   const pendingBoss = rw.relicChoice?.length && !rw.taken.boss;
   parts.push(h('div.sticky-bottom', {}, h('button.btn.wide.big' + (pendingBoss ? '' : '.primary'), {

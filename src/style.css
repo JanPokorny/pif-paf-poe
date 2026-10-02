@@ -261,13 +261,19 @@ b { font-weight: 400; background: linear-gradient(transparent 55%, var(--hi) 55%
 }
 .stone.on-board::before { border-width: 3px; }
 .stone.on-board .badge-plus { width: 28px; height: 28px; top: -11px; right: -11px; }
-.stone.on-board.pop { animation: pop 0.3s ease-out; }
-.stone.on-board.gone { opacity: 0; scale: 0.5; transition: opacity 0.25s, scale 0.25s; }
+.stone.on-board.pop { animation: fade-in 0.3s ease-out; }
+/* A board stone sits where its transform puts it, so anything that grows or
+   shrinks it works on its drawing (the paper and the glyph), about its own centre. */
+.stone.on-board.pop::before, .stone.on-board.pop .glyph { animation: pop 0.3s ease-out; }
+.stone.on-board.gone { opacity: 0; transition: opacity 0.25s; }
+.stone.on-board.gone::before, .stone.on-board.gone .glyph { scale: 0.5; transition: scale 0.25s; }
 .stone.on-board.flash::before { box-shadow: 0 0 0 6px var(--hi); }
 .stone.on-board.last::after { content: ''; position: absolute; inset: -7px; border: 2px dashed var(--red); border-radius: 50%; opacity: 0.6; pointer-events: none; }
 .stone.on-board.dead.last::after { border: 0; }
-.stone.on-board.in-line { animation: bounce 0.6s ease-in-out infinite alternate; z-index: 3; }
-@keyframes pop { from { scale: 0.4; opacity: 0; } to { scale: 1; opacity: 1; } }
+.stone.on-board.in-line { z-index: 3; }
+.stone.on-board.in-line::before, .stone.on-board.in-line .glyph { animation: bounce 0.6s ease-in-out infinite alternate; }
+@keyframes pop { from { scale: 0.4; } to { scale: 1; } }
+@keyframes fade-in { from { opacity: 0; } }
 @keyframes bounce { from { scale: 1; } to { scale: 1.08; } }
 .winline { position: absolute; inset: 0; pointer-events: none; z-index: 5; }
 .winline svg { width: 100%; height: 100%; overflow: visible; }
@@ -600,8 +606,10 @@ b { font-weight: 400; background: linear-gradient(transparent 55%, var(--hi) 55%
 @keyframes healpop { 40% { transform: scale(1.25); color: var(--good); } }
 .card.picked { position: relative; z-index: 2; transition: transform 0.45s cubic-bezier(.3,.7,.3,1); transform: translateX(var(--dx, 0)) !important; }
 .card.unpicked { transition: transform 0.45s ease-in, opacity 0.45s ease-in; transform: translate(var(--fx, 40vw), 30vh) rotate(var(--fr, 20deg)) !important; opacity: 0; }
-.stone.on-board.hop { animation: hop 0.42s ease-in-out; z-index: 4; }
-@keyframes hop { 50% { scale: 1.3; filter: drop-shadow(0 8px 6px rgba(0,0,0,0.25)); } }
+.stone.on-board.hop { animation: hop-shadow 0.42s ease-in-out; z-index: 4; }
+.stone.on-board.hop::before, .stone.on-board.hop .glyph { animation: hop 0.42s ease-in-out; }
+@keyframes hop { 50% { scale: 1.3; } }
+@keyframes hop-shadow { 50% { filter: drop-shadow(0 8px 6px rgba(0,0,0,0.25)); } }
 .share { white-space: pre-wrap; font-family: var(--hand); background: var(--card); padding: 8px; user-select: all; }
 /* Czech needs háčky and čárky: a marker face that has them, a size up. */
 h1, h2, .turn-status, .btn.primary, .enemy-name, .card-name, .section-label { letter-spacing: 0.01em; font-size-adjust: 0.52; }
@@ -876,3 +884,26 @@ body:has(.duel) #toast.show { transform: translate(-50%, 0) rotate(-1deg); }
 .energy-bar i.on { background: var(--blue-wash); opacity: 1; transform: scale(1.08); }
 .energy-bar i.over { border-color: var(--red); background: var(--red); }
 .pebble-fill { min-height: 1.2em; }
+
+/* A duel's rules and conditions: each a slip of paper, its icon on the left. */
+.mod-notes { display: flex; flex-direction: column; gap: 8px; margin: 4px 0 10px; }
+.mod-note { display: flex; align-items: center; gap: 12px; width: 100%; text-align: left; font: inherit; color: var(--ink); border: 0; cursor: pointer;
+  padding: 8px 12px; background: var(--card); border-radius: 2px; box-shadow: 1px 3px 6px rgba(0, 0, 0, 0.14);
+  background-image: repeating-linear-gradient(transparent 0 23px, var(--grid) 23px 24px); }
+.mod-note:nth-child(odd) { transform: rotate(-0.6deg); } .mod-note:nth-child(even) { transform: rotate(0.5deg); }
+.mod-note.rule { box-shadow: inset 4px 0 0 var(--red), 1px 3px 6px rgba(0, 0, 0, 0.14); }
+.mod-note.cond { box-shadow: inset 4px 0 0 var(--pencil), 1px 3px 6px rgba(0, 0, 0, 0.14); }
+.mod-note.quirk { box-shadow: inset 4px 0 0 var(--rare), 1px 3px 6px rgba(0, 0, 0, 0.14); }
+.mod-ico { flex: none; width: 34px; height: 34px; display: flex; align-items: center; justify-content: center; }
+.mod-ico .icon { width: 30px; height: 30px; filter: url(#ink); }
+.mod-note.rule .mod-ico { color: var(--red); }
+.mod-body { display: flex; flex-direction: column; gap: 1px; min-width: 0; }
+.mod-title { font-family: var(--marker); font-size: 1.1rem; line-height: 1.15; }
+.mod-text { font-size: 0.98rem; line-height: 1.25; color: var(--ink); }
+.moon-note { margin: -4px 0 8px; }
+
+/* Rewards: "~ and ~" between rows you get all of, "or" between the cards of a choice. */
+.and-sep { text-align: center; font-family: var(--hand); font-size: 1.05rem; color: var(--pencil); margin: 6px 0 2px; letter-spacing: 0.04em; }
+.cards.pick-one { align-items: center; }
+.cards .or { flex: none; align-self: center; font-family: var(--hand); font-size: 0.95rem; color: var(--pencil); padding: 0 1px; display: inline-block; transition: opacity 0.3s; }
+.cards .or.unpicked { opacity: 0; }
