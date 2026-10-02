@@ -1,7 +1,7 @@
 {
  "exp": "bosses",
  "games": 100,
- "secs": 190.429,
+ "secs": 226.512,
  "by": {
   "oak|pebbles only": {
    "n": 100,
@@ -185,25 +185,25 @@
   },
   "oak|one-shots (Pluck, Bribe)": {
    "n": 100,
-   "won": 98,
-   "full": 18,
-   "turns": 616,
+   "won": 100,
+   "full": 8,
+   "turns": 560,
    "track": {
     "pluck": {
-     "placed": 97,
+     "placed": 95,
      "dud": 0,
      "bite": 0,
      "restrictTurns": 0,
-     "choices": 8,
+     "choices": 21,
      "hushed": 0,
      "hushedPebble": 0
     },
     "bribe": {
-     "placed": 97,
-     "dud": 6,
+     "placed": 93,
+     "dud": 1,
      "bite": 0,
      "restrictTurns": 0,
-     "choices": 7,
+     "choices": 12,
      "hushed": 0,
      "hushedPebble": 0
     }
@@ -255,32 +255,32 @@
   },
   "oak+undead|pebbles only": {
    "n": 100,
-   "won": 1,
-   "full": 1,
-   "turns": 475,
+   "won": 7,
+   "full": 7,
+   "turns": 654,
    "track": {}
   },
   "oak+undead|movers (Shift, Rotate)": {
    "n": 100,
-   "won": 45,
+   "won": 90,
    "full": 28,
-   "turns": 610,
+   "turns": 675,
    "track": {
     "shift": {
-     "placed": 77,
-     "dud": 10,
+     "placed": 91,
+     "dud": 14,
      "bite": 0,
      "restrictTurns": 0,
-     "choices": 308,
+     "choices": 364,
      "hushed": 0,
      "hushedPebble": 0
     },
     "rotate": {
-     "placed": 77,
-     "dud": 9,
+     "placed": 96,
+     "dud": 26,
      "bite": 0,
      "restrictTurns": 0,
-     "choices": 158,
+     "choices": 180,
      "hushed": 0,
      "hushedPebble": 0
     }
@@ -288,24 +288,24 @@
   },
   "oak+undead|restrictions (Magnet, Stinky)": {
    "n": 100,
-   "won": 84,
-   "full": 49,
-   "turns": 676,
+   "won": 4,
+   "full": 2,
+   "turns": 650,
    "track": {
-    "stinky": {
-     "placed": 96,
+    "magnet": {
+     "placed": 91,
      "dud": 0,
-     "bite": 187,
-     "restrictTurns": 190,
+     "bite": 190,
+     "restrictTurns": 230,
      "choices": 0,
      "hushed": 0,
      "hushedPebble": 0
     },
-    "magnet": {
-     "placed": 84,
+    "stinky": {
+     "placed": 86,
      "dud": 0,
-     "bite": 164,
-     "restrictTurns": 167,
+     "bite": 145,
+     "restrictTurns": 183,
      "choices": 0,
      "hushed": 0,
      "hushedPebble": 0
@@ -314,25 +314,25 @@
   },
   "oak+undead|Magnet + Shift": {
    "n": 100,
-   "won": 74,
-   "full": 30,
-   "turns": 648,
+   "won": 98,
+   "full": 38,
+   "turns": 656,
    "track": {
-    "magnet": {
-     "placed": 80,
-     "dud": 0,
-     "bite": 135,
-     "restrictTurns": 169,
-     "choices": 0,
+    "shift": {
+     "placed": 100,
+     "dud": 62,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 400,
      "hushed": 0,
      "hushedPebble": 0
     },
-    "shift": {
-     "placed": 88,
-     "dud": 3,
-     "bite": 0,
-     "restrictTurns": 0,
-     "choices": 352,
+    "magnet": {
+     "placed": 99,
+     "dud": 0,
+     "bite": 117,
+     "restrictTurns": 198,
+     "choices": 0,
      "hushed": 0,
      "hushedPebble": 0
     }
@@ -340,24 +340,24 @@
   },
   "oak+undead|Beacon + Stinky": {
    "n": 100,
-   "won": 96,
-   "full": 2,
-   "turns": 598,
+   "won": 94,
+   "full": 13,
+   "turns": 709,
    "track": {
     "beacon": {
-     "placed": 97,
+     "placed": 100,
      "dud": 0,
-     "bite": 189,
-     "restrictTurns": 190,
-     "choices": 194,
+     "bite": 290,
+     "restrictTurns": 309,
+     "choices": 200,
      "hushed": 0,
      "hushedPebble": 0
     },
     "stinky": {
-     "placed": 97,
+     "placed": 99,
      "dud": 0,
-     "bite": 101,
-     "restrictTurns": 101,
+     "bite": 126,
+     "restrictTurns": 143,
      "choices": 0,
      "hushed": 0,
      "hushedPebble": 0
@@ -366,12 +366,12 @@
   },
   "oak+undead|two Mountains": {
    "n": 100,
-   "won": 2,
-   "full": 2,
-   "turns": 454,
+   "won": 5,
+   "full": 5,
+   "turns": 642,
    "track": {
     "mountain": {
-     "placed": 90,
+     "placed": 165,
      "dud": 0,
      "bite": 0,
      "restrictTurns": 0,
@@ -383,25 +383,25 @@
   },
   "oak+undead|Swap + Turncoat": {
    "n": 100,
-   "won": 70,
-   "full": 35,
-   "turns": 658,
+   "won": 45,
+   "full": 22,
+   "turns": 716,
    "track": {
     "turncoat": {
-     "placed": 67,
-     "dud": 1,
+     "placed": 89,
+     "dud": 17,
      "bite": 0,
      "restrictTurns": 0,
-     "choices": 49,
+     "choices": 6,
      "hushed": 0,
      "hushedPebble": 0
     },
     "swap": {
-     "placed": 85,
+     "placed": 97,
      "dud": 0,
      "bite": 0,
      "restrictTurns": 0,
-     "choices": 210,
+     "choices": 205,
      "hushed": 0,
      "hushedPebble": 0
     }
@@ -409,25 +409,25 @@
   },
   "oak+undead|2048 + Whirl": {
    "n": 100,
-   "won": 10,
-   "full": 6,
-   "turns": 478,
+   "won": 51,
+   "full": 31,
+   "turns": 666,
    "track": {
     "2048": {
-     "placed": 69,
-     "dud": 6,
+     "placed": 95,
+     "dud": 5,
      "bite": 0,
      "restrictTurns": 0,
-     "choices": 276,
+     "choices": 380,
      "hushed": 0,
      "hushedPebble": 0
     },
     "whirl": {
-     "placed": 44,
-     "dud": 0,
+     "placed": 90,
+     "dud": 7,
      "bite": 0,
      "restrictTurns": 0,
-     "choices": 88,
+     "choices": 180,
      "hushed": 0,
      "hushedPebble": 0
     }
@@ -435,25 +435,25 @@
   },
   "oak+undead|one-shots (Pluck, Bribe)": {
    "n": 100,
-   "won": 100,
-   "full": 15,
-   "turns": 645,
+   "won": 49,
+   "full": 8,
+   "turns": 739,
    "track": {
     "bribe": {
      "placed": 100,
      "dud": 0,
      "bite": 0,
      "restrictTurns": 0,
-     "choices": 80,
+     "choices": 0,
      "hushed": 0,
      "hushedPebble": 0
     },
     "pluck": {
-     "placed": 97,
+     "placed": 98,
      "dud": 0,
      "bite": 0,
      "restrictTurns": 0,
-     "choices": 196,
+     "choices": 91,
      "hushed": 0,
      "hushedPebble": 0
     }
@@ -461,43 +461,43 @@
   },
   "oak+undead|Magnet, Stinky, Shift, Rotate": {
    "n": 100,
-   "won": 97,
-   "full": 15,
-   "turns": 649,
+   "won": 98,
+   "full": 16,
+   "turns": 598,
    "track": {
-    "magnet": {
-     "placed": 94,
+    "shift": {
+     "placed": 49,
+     "dud": 3,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 196,
+     "hushed": 0,
+     "hushedPebble": 0
+    },
+    "stinky": {
+     "placed": 92,
      "dud": 0,
-     "bite": 158,
-     "restrictTurns": 172,
+     "bite": 65,
+     "restrictTurns": 82,
+     "choices": 0,
+     "hushed": 0,
+     "hushedPebble": 0
+    },
+    "magnet": {
+     "placed": 100,
+     "dud": 0,
+     "bite": 169,
+     "restrictTurns": 208,
      "choices": 0,
      "hushed": 0,
      "hushedPebble": 0
     },
     "rotate": {
-     "placed": 97,
-     "dud": 2,
+     "placed": 99,
+     "dud": 24,
      "bite": 0,
      "restrictTurns": 0,
-     "choices": 130,
-     "hushed": 0,
-     "hushedPebble": 0
-    },
-    "shift": {
-     "placed": 41,
-     "dud": 4,
-     "bite": 0,
-     "restrictTurns": 0,
-     "choices": 164,
-     "hushed": 0,
-     "hushedPebble": 0
-    },
-    "stinky": {
-     "placed": 91,
-     "dud": 0,
-     "bite": 66,
-     "restrictTurns": 74,
-     "choices": 0,
+     "choices": 136,
      "hushed": 0,
      "hushedPebble": 0
     }
@@ -505,32 +505,32 @@
   },
   "scarecrow|pebbles only": {
    "n": 100,
-   "won": 18,
-   "full": 16,
-   "turns": 642,
+   "won": 23,
+   "full": 22,
+   "turns": 651,
    "track": {}
   },
   "scarecrow|movers (Shift, Rotate)": {
    "n": 100,
-   "won": 92,
-   "full": 57,
-   "turns": 715,
+   "won": 97,
+   "full": 51,
+   "turns": 704,
    "track": {
-    "rotate": {
-     "placed": 99,
-     "dud": 31,
+    "shift": {
+     "placed": 83,
+     "dud": 16,
      "bite": 0,
      "restrictTurns": 0,
-     "choices": 188,
+     "choices": 332,
      "hushed": 0,
      "hushedPebble": 0
     },
-    "shift": {
-     "placed": 90,
-     "dud": 10,
+    "rotate": {
+     "placed": 99,
+     "dud": 28,
      "bite": 0,
      "restrictTurns": 0,
-     "choices": 360,
+     "choices": 190,
      "hushed": 0,
      "hushedPebble": 0
     }
@@ -538,15 +538,15 @@
   },
   "scarecrow|restrictions (Magnet, Stinky)": {
    "n": 100,
-   "won": 100,
+   "won": 97,
    "full": 8,
-   "turns": 622,
+   "turns": 639,
    "track": {
     "magnet": {
-     "placed": 100,
+     "placed": 98,
      "dud": 0,
-     "bite": 202,
-     "restrictTurns": 220,
+     "bite": 216,
+     "restrictTurns": 233,
      "choices": 0,
      "hushed": 0,
      "hushedPebble": 0
@@ -554,8 +554,8 @@
     "stinky": {
      "placed": 100,
      "dud": 0,
-     "bite": 180,
-     "restrictTurns": 198,
+     "bite": 177,
+     "restrictTurns": 194,
      "choices": 0,
      "hushed": 0,
      "hushedPebble": 0
@@ -565,23 +565,23 @@
   "scarecrow|Magnet + Shift": {
    "n": 100,
    "won": 100,
-   "full": 25,
-   "turns": 627,
+   "full": 35,
+   "turns": 669,
    "track": {
     "shift": {
-     "placed": 100,
-     "dud": 18,
+     "placed": 99,
+     "dud": 22,
      "bite": 0,
      "restrictTurns": 0,
-     "choices": 400,
+     "choices": 396,
      "hushed": 0,
      "hushedPebble": 0
     },
     "magnet": {
-     "placed": 99,
+     "placed": 100,
      "dud": 0,
-     "bite": 123,
-     "restrictTurns": 191,
+     "bite": 152,
+     "restrictTurns": 238,
      "choices": 0,
      "hushed": 0,
      "hushedPebble": 0
@@ -590,24 +590,24 @@
   },
   "scarecrow|Beacon + Stinky": {
    "n": 100,
-   "won": 94,
-   "full": 16,
-   "turns": 618,
+   "won": 97,
+   "full": 13,
+   "turns": 628,
    "track": {
     "beacon": {
-     "placed": 100,
+     "placed": 99,
      "dud": 0,
-     "bite": 242,
-     "restrictTurns": 264,
-     "choices": 200,
+     "bite": 251,
+     "restrictTurns": 267,
+     "choices": 198,
      "hushed": 0,
      "hushedPebble": 0
     },
     "stinky": {
-     "placed": 94,
+     "placed": 100,
      "dud": 0,
-     "bite": 132,
-     "restrictTurns": 150,
+     "bite": 148,
+     "restrictTurns": 163,
      "choices": 0,
      "hushed": 0,
      "hushedPebble": 0
@@ -616,12 +616,12 @@
   },
   "scarecrow|two Mountains": {
    "n": 100,
-   "won": 21,
+   "won": 25,
    "full": 21,
-   "turns": 616,
+   "turns": 628,
    "track": {
     "mountain": {
-     "placed": 160,
+     "placed": 158,
      "dud": 0,
      "bite": 0,
      "restrictTurns": 0,
@@ -633,25 +633,25 @@
   },
   "scarecrow|Swap + Turncoat": {
    "n": 100,
-   "won": 50,
+   "won": 51,
    "full": 15,
-   "turns": 685,
+   "turns": 668,
    "track": {
     "turncoat": {
-     "placed": 82,
-     "dud": 27,
+     "placed": 84,
+     "dud": 21,
      "bite": 0,
      "restrictTurns": 0,
-     "choices": 8,
+     "choices": 12,
      "hushed": 0,
      "hushedPebble": 0
     },
     "swap": {
-     "placed": 95,
+     "placed": 93,
      "dud": 13,
      "bite": 0,
      "restrictTurns": 0,
-     "choices": 180,
+     "choices": 182,
      "hushed": 0,
      "hushedPebble": 0
     }
@@ -659,25 +659,25 @@
   },
   "scarecrow|2048 + Whirl": {
    "n": 100,
-   "won": 58,
-   "full": 38,
-   "turns": 704,
+   "won": 57,
+   "full": 32,
+   "turns": 687,
    "track": {
     "2048": {
-     "placed": 97,
-     "dud": 6,
+     "placed": 95,
+     "dud": 10,
      "bite": 0,
      "restrictTurns": 0,
-     "choices": 388,
+     "choices": 380,
      "hushed": 0,
      "hushedPebble": 0
     },
     "whirl": {
-     "placed": 95,
+     "placed": 97,
      "dud": 9,
      "bite": 0,
      "restrictTurns": 0,
-     "choices": 190,
+     "choices": 194,
      "hushed": 0,
      "hushedPebble": 0
     }
@@ -685,25 +685,25 @@
   },
   "scarecrow|one-shots (Pluck, Bribe)": {
    "n": 100,
-   "won": 100,
-   "full": 14,
-   "turns": 612,
+   "won": 98,
+   "full": 13,
+   "turns": 569,
    "track": {
     "pluck": {
-     "placed": 99,
+     "placed": 100,
      "dud": 0,
      "bite": 0,
      "restrictTurns": 0,
-     "choices": 16,
+     "choices": 14,
      "hushed": 0,
      "hushedPebble": 0
     },
     "bribe": {
      "placed": 100,
-     "dud": 4,
+     "dud": 10,
      "bite": 0,
      "restrictTurns": 0,
-     "choices": 10,
+     "choices": 0,
      "hushed": 0,
      "hushedPebble": 0
     }
@@ -711,43 +711,43 @@
   },
   "scarecrow|Magnet, Stinky, Shift, Rotate": {
    "n": 100,
-   "won": 100,
+   "won": 99,
    "full": 6,
-   "turns": 534,
+   "turns": 539,
    "track": {
     "magnet": {
-     "placed": 100,
+     "placed": 99,
      "dud": 0,
-     "bite": 169,
-     "restrictTurns": 190,
+     "bite": 173,
+     "restrictTurns": 188,
      "choices": 0,
      "hushed": 0,
      "hushedPebble": 0
     },
     "rotate": {
-     "placed": 99,
-     "dud": 24,
+     "placed": 96,
+     "dud": 14,
      "bite": 0,
      "restrictTurns": 0,
-     "choices": 146,
+     "choices": 132,
      "hushed": 0,
      "hushedPebble": 0
     },
     "stinky": {
-     "placed": 96,
+     "placed": 95,
      "dud": 0,
-     "bite": 48,
-     "restrictTurns": 54,
+     "bite": 58,
+     "restrictTurns": 66,
      "choices": 0,
      "hushed": 0,
      "hushedPebble": 0
     },
     "shift": {
-     "placed": 19,
-     "dud": 2,
+     "placed": 26,
+     "dud": 6,
      "bite": 0,
      "restrictTurns": 0,
-     "choices": 76,
+     "choices": 104,
      "hushed": 0,
      "hushedPebble": 0
     }
@@ -755,32 +755,32 @@
   },
   "scarecrow+undead|pebbles only": {
    "n": 100,
-   "won": 1,
-   "full": 1,
-   "turns": 471,
+   "won": 18,
+   "full": 16,
+   "turns": 588,
    "track": {}
   },
   "scarecrow+undead|movers (Shift, Rotate)": {
    "n": 100,
-   "won": 36,
-   "full": 21,
-   "turns": 624,
+   "won": 85,
+   "full": 30,
+   "turns": 638,
    "track": {
-    "shift": {
-     "placed": 81,
-     "dud": 11,
+    "rotate": {
+     "placed": 99,
+     "dud": 34,
      "bite": 0,
      "restrictTurns": 0,
-     "choices": 324,
+     "choices": 182,
      "hushed": 0,
      "hushedPebble": 0
     },
-    "rotate": {
-     "placed": 80,
-     "dud": 5,
+    "shift": {
+     "placed": 62,
+     "dud": 14,
      "bite": 0,
      "restrictTurns": 0,
-     "choices": 156,
+     "choices": 0,
      "hushed": 0,
      "hushedPebble": 0
     }
@@ -788,24 +788,24 @@
   },
   "scarecrow+undead|restrictions (Magnet, Stinky)": {
    "n": 100,
-   "won": 88,
-   "full": 32,
-   "turns": 680,
+   "won": 98,
+   "full": 19,
+   "turns": 641,
    "track": {
-    "stinky": {
-     "placed": 97,
+    "magnet": {
+     "placed": 99,
      "dud": 0,
-     "bite": 186,
-     "restrictTurns": 192,
+     "bite": 193,
+     "restrictTurns": 238,
      "choices": 0,
      "hushed": 0,
      "hushedPebble": 0
     },
-    "magnet": {
-     "placed": 87,
+    "stinky": {
+     "placed": 100,
      "dud": 0,
-     "bite": 162,
-     "restrictTurns": 168,
+     "bite": 153,
+     "restrictTurns": 194,
      "choices": 0,
      "hushed": 0,
      "hushedPebble": 0
@@ -815,23 +815,23 @@
   "scarecrow+undead|Magnet + Shift": {
    "n": 100,
    "won": 82,
-   "full": 36,
-   "turns": 674,
+   "full": 27,
+   "turns": 625,
    "track": {
-    "shift": {
-     "placed": 91,
-     "dud": 17,
-     "bite": 0,
-     "restrictTurns": 0,
-     "choices": 364,
+    "magnet": {
+     "placed": 94,
+     "dud": 0,
+     "bite": 131,
+     "restrictTurns": 205,
+     "choices": 0,
      "hushed": 0,
      "hushedPebble": 0
     },
-    "magnet": {
-     "placed": 87,
-     "dud": 0,
-     "bite": 145,
-     "restrictTurns": 189,
+    "shift": {
+     "placed": 93,
+     "dud": 42,
+     "bite": 0,
+     "restrictTurns": 0,
      "choices": 0,
      "hushed": 0,
      "hushedPebble": 0
@@ -840,24 +840,24 @@
   },
   "scarecrow+undead|Beacon + Stinky": {
    "n": 100,
-   "won": 88,
-   "full": 21,
-   "turns": 646,
+   "won": 97,
+   "full": 19,
+   "turns": 618,
    "track": {
     "beacon": {
-     "placed": 93,
+     "placed": 99,
      "dud": 0,
-     "bite": 199,
-     "restrictTurns": 201,
-     "choices": 186,
+     "bite": 242,
+     "restrictTurns": 263,
+     "choices": 198,
      "hushed": 0,
      "hushedPebble": 0
     },
     "stinky": {
-     "placed": 95,
+     "placed": 92,
      "dud": 0,
-     "bite": 125,
-     "restrictTurns": 128,
+     "bite": 114,
+     "restrictTurns": 134,
      "choices": 0,
      "hushed": 0,
      "hushedPebble": 0
@@ -866,12 +866,12 @@
   },
   "scarecrow+undead|two Mountains": {
    "n": 100,
-   "won": 0,
-   "full": 0,
-   "turns": 476,
+   "won": 22,
+   "full": 18,
+   "turns": 570,
    "track": {
     "mountain": {
-     "placed": 110,
+     "placed": 136,
      "dud": 0,
      "bite": 0,
      "restrictTurns": 0,
@@ -883,25 +883,25 @@
   },
   "scarecrow+undead|Swap + Turncoat": {
    "n": 100,
-   "won": 24,
-   "full": 18,
-   "turns": 641,
+   "won": 50,
+   "full": 6,
+   "turns": 626,
    "track": {
-    "swap": {
-     "placed": 73,
-     "dud": 3,
+    "turncoat": {
+     "placed": 70,
+     "dud": 18,
      "bite": 0,
      "restrictTurns": 0,
-     "choices": 91,
+     "choices": 6,
      "hushed": 0,
      "hushedPebble": 0
     },
-    "turncoat": {
-     "placed": 86,
-     "dud": 4,
+    "swap": {
+     "placed": 88,
+     "dud": 8,
      "bite": 0,
      "restrictTurns": 0,
-     "choices": 22,
+     "choices": 152,
      "hushed": 0,
      "hushedPebble": 0
     }
@@ -909,25 +909,25 @@
   },
   "scarecrow+undead|2048 + Whirl": {
    "n": 100,
-   "won": 9,
-   "full": 6,
-   "turns": 455,
+   "won": 22,
+   "full": 9,
+   "turns": 607,
    "track": {
     "2048": {
-     "placed": 59,
-     "dud": 10,
+     "placed": 50,
+     "dud": 17,
      "bite": 0,
      "restrictTurns": 0,
-     "choices": 236,
+     "choices": 0,
      "hushed": 0,
      "hushedPebble": 0
     },
     "whirl": {
-     "placed": 51,
-     "dud": 0,
+     "placed": 94,
+     "dud": 11,
      "bite": 0,
      "restrictTurns": 0,
-     "choices": 102,
+     "choices": 188,
      "hushed": 0,
      "hushedPebble": 0
     }
@@ -935,25 +935,25 @@
   },
   "scarecrow+undead|one-shots (Pluck, Bribe)": {
    "n": 100,
-   "won": 97,
-   "full": 9,
-   "turns": 568,
+   "won": 100,
+   "full": 12,
+   "turns": 574,
    "track": {
-    "bribe": {
-     "placed": 98,
+    "pluck": {
+     "placed": 99,
      "dud": 0,
      "bite": 0,
      "restrictTurns": 0,
-     "choices": 136,
+     "choices": 12,
      "hushed": 0,
      "hushedPebble": 0
     },
-    "pluck": {
-     "placed": 97,
-     "dud": 0,
+    "bribe": {
+     "placed": 100,
+     "dud": 9,
      "bite": 0,
      "restrictTurns": 0,
-     "choices": 197,
+     "choices": 0,
      "hushed": 0,
      "hushedPebble": 0
     }
@@ -961,43 +961,43 @@
   },
   "scarecrow+undead|Magnet, Stinky, Shift, Rotate": {
    "n": 100,
-   "won": 94,
-   "full": 10,
-   "turns": 640,
+   "won": 95,
+   "full": 6,
+   "turns": 550,
    "track": {
     "magnet": {
      "placed": 98,
      "dud": 0,
-     "bite": 188,
-     "restrictTurns": 199,
-     "choices": 0,
-     "hushed": 0,
-     "hushedPebble": 0
-    },
-    "stinky": {
-     "placed": 92,
-     "dud": 0,
-     "bite": 71,
-     "restrictTurns": 77,
+     "bite": 150,
+     "restrictTurns": 179,
      "choices": 0,
      "hushed": 0,
      "hushedPebble": 0
     },
     "rotate": {
-     "placed": 94,
-     "dud": 3,
+     "placed": 98,
+     "dud": 44,
      "bite": 0,
      "restrictTurns": 0,
-     "choices": 96,
+     "choices": 158,
      "hushed": 0,
      "hushedPebble": 0
     },
     "shift": {
-     "placed": 33,
-     "dud": 1,
+     "placed": 35,
+     "dud": 10,
      "bite": 0,
      "restrictTurns": 0,
-     "choices": 132,
+     "choices": 0,
+     "hushed": 0,
+     "hushedPebble": 0
+    },
+    "stinky": {
+     "placed": 89,
+     "dud": 0,
+     "bite": 37,
+     "restrictTurns": 46,
+     "choices": 0,
      "hushed": 0,
      "hushedPebble": 0
     }
@@ -1185,25 +1185,25 @@
   },
   "colossus|one-shots (Pluck, Bribe)": {
    "n": 100,
-   "won": 94,
-   "full": 0,
-   "turns": 610,
+   "won": 99,
+   "full": 1,
+   "turns": 586,
    "track": {
     "pluck": {
-     "placed": 100,
+     "placed": 97,
      "dud": 0,
      "bite": 0,
      "restrictTurns": 0,
-     "choices": 4,
+     "choices": 2,
      "hushed": 0,
      "hushedPebble": 0
     },
     "bribe": {
-     "placed": 94,
-     "dud": 4,
+     "placed": 100,
+     "dud": 3,
      "bite": 0,
      "restrictTurns": 0,
-     "choices": 14,
+     "choices": 0,
      "hushed": 0,
      "hushedPebble": 0
     }
@@ -1255,32 +1255,32 @@
   },
   "colossus+undead|pebbles only": {
    "n": 100,
-   "won": 1,
+   "won": 0,
    "full": 0,
-   "turns": 443,
+   "turns": 460,
    "track": {}
   },
   "colossus+undead|movers (Shift, Rotate)": {
    "n": 100,
-   "won": 38,
-   "full": 11,
-   "turns": 647,
+   "won": 9,
+   "full": 3,
+   "turns": 581,
    "track": {
     "rotate": {
-     "placed": 93,
-     "dud": 23,
+     "placed": 65,
+     "dud": 8,
      "bite": 0,
      "restrictTurns": 0,
-     "choices": 180,
+     "choices": 120,
      "hushed": 0,
      "hushedPebble": 0
     },
     "shift": {
-     "placed": 97,
-     "dud": 29,
+     "placed": 80,
+     "dud": 8,
      "bite": 0,
      "restrictTurns": 0,
-     "choices": 388,
+     "choices": 320,
      "hushed": 0,
      "hushedPebble": 0
     }
@@ -1288,24 +1288,24 @@
   },
   "colossus+undead|restrictions (Magnet, Stinky)": {
    "n": 100,
-   "won": 18,
-   "full": 1,
-   "turns": 621,
+   "won": 10,
+   "full": 5,
+   "turns": 542,
    "track": {
-    "stinky": {
-     "placed": 99,
+    "magnet": {
+     "placed": 48,
      "dud": 0,
-     "bite": 247,
-     "restrictTurns": 275,
+     "bite": 98,
+     "restrictTurns": 125,
      "choices": 0,
      "hushed": 0,
      "hushedPebble": 0
     },
-    "magnet": {
-     "placed": 80,
+    "stinky": {
+     "placed": 76,
      "dud": 0,
-     "bite": 157,
-     "restrictTurns": 185,
+     "bite": 115,
+     "restrictTurns": 134,
      "choices": 0,
      "hushed": 0,
      "hushedPebble": 0
@@ -1314,24 +1314,24 @@
   },
   "colossus+undead|Magnet + Shift": {
    "n": 100,
-   "won": 63,
-   "full": 36,
-   "turns": 701,
+   "won": 51,
+   "full": 12,
+   "turns": 629,
    "track": {
     "shift": {
-     "placed": 92,
+     "placed": 93,
      "dud": 6,
      "bite": 0,
      "restrictTurns": 0,
-     "choices": 368,
+     "choices": 372,
      "hushed": 0,
      "hushedPebble": 0
     },
     "magnet": {
-     "placed": 94,
+     "placed": 79,
      "dud": 0,
-     "bite": 134,
-     "restrictTurns": 244,
+     "bite": 126,
+     "restrictTurns": 164,
      "choices": 0,
      "hushed": 0,
      "hushedPebble": 0
@@ -1340,24 +1340,24 @@
   },
   "colossus+undead|Beacon + Stinky": {
    "n": 100,
-   "won": 44,
-   "full": 7,
-   "turns": 717,
+   "won": 9,
+   "full": 3,
+   "turns": 579,
    "track": {
     "beacon": {
-     "placed": 92,
+     "placed": 72,
      "dud": 0,
-     "bite": 221,
-     "restrictTurns": 282,
-     "choices": 184,
+     "bite": 136,
+     "restrictTurns": 176,
+     "choices": 144,
      "hushed": 0,
      "hushedPebble": 0
     },
     "stinky": {
-     "placed": 100,
+     "placed": 74,
      "dud": 0,
-     "bite": 202,
-     "restrictTurns": 260,
+     "bite": 104,
+     "restrictTurns": 127,
      "choices": 0,
      "hushed": 0,
      "hushedPebble": 0
@@ -1368,10 +1368,10 @@
    "n": 100,
    "won": 0,
    "full": 0,
-   "turns": 456,
+   "turns": 482,
    "track": {
     "mountain": {
-     "placed": 115,
+     "placed": 122,
      "dud": 0,
      "bite": 0,
      "restrictTurns": 0,
@@ -1383,25 +1383,25 @@
   },
   "colossus+undead|Swap + Turncoat": {
    "n": 100,
-   "won": 22,
-   "full": 7,
-   "turns": 619,
+   "won": 7,
+   "full": 2,
+   "turns": 561,
    "track": {
-    "swap": {
-     "placed": 86,
-     "dud": 6,
+    "turncoat": {
+     "placed": 62,
+     "dud": 3,
      "bite": 0,
      "restrictTurns": 0,
-     "choices": 137,
+     "choices": 22,
      "hushed": 0,
      "hushedPebble": 0
     },
-    "turncoat": {
-     "placed": 72,
-     "dud": 11,
+    "swap": {
+     "placed": 62,
+     "dud": 2,
      "bite": 0,
      "restrictTurns": 0,
-     "choices": 0,
+     "choices": 90,
      "hushed": 0,
      "hushedPebble": 0
     }
@@ -1409,25 +1409,25 @@
   },
   "colossus+undead|2048 + Whirl": {
    "n": 100,
-   "won": 11,
-   "full": 3,
-   "turns": 565,
+   "won": 0,
+   "full": 0,
+   "turns": 479,
    "track": {
     "2048": {
-     "placed": 89,
-     "dud": 18,
+     "placed": 64,
+     "dud": 17,
      "bite": 0,
      "restrictTurns": 0,
-     "choices": 356,
+     "choices": 256,
      "hushed": 0,
      "hushedPebble": 0
     },
     "whirl": {
-     "placed": 65,
-     "dud": 11,
+     "placed": 60,
+     "dud": 0,
      "bite": 0,
      "restrictTurns": 0,
-     "choices": 130,
+     "choices": 120,
      "hushed": 0,
      "hushedPebble": 0
     }
@@ -1435,25 +1435,25 @@
   },
   "colossus+undead|one-shots (Pluck, Bribe)": {
    "n": 100,
-   "won": 94,
-   "full": 0,
-   "turns": 610,
+   "won": 50,
+   "full": 8,
+   "turns": 668,
    "track": {
     "pluck": {
-     "placed": 100,
+     "placed": 96,
      "dud": 0,
      "bite": 0,
      "restrictTurns": 0,
-     "choices": 4,
+     "choices": 196,
      "hushed": 0,
      "hushedPebble": 0
     },
     "bribe": {
-     "placed": 94,
-     "dud": 4,
+     "placed": 99,
+     "dud": 3,
      "bite": 0,
      "restrictTurns": 0,
-     "choices": 14,
+     "choices": 26,
      "hushed": 0,
      "hushedPebble": 0
     }
@@ -1461,43 +1461,43 @@
   },
   "colossus+undead|Magnet, Stinky, Shift, Rotate": {
    "n": 100,
-   "won": 99,
-   "full": 15,
-   "turns": 628,
+   "won": 92,
+   "full": 26,
+   "turns": 708,
    "track": {
-    "stinky": {
-     "placed": 67,
+    "magnet": {
+     "placed": 96,
      "dud": 0,
-     "bite": 75,
-     "restrictTurns": 90,
+     "bite": 196,
+     "restrictTurns": 222,
      "choices": 0,
      "hushed": 0,
      "hushedPebble": 0
     },
     "rotate": {
-     "placed": 80,
-     "dud": 16,
+     "placed": 85,
+     "dud": 7,
      "bite": 0,
      "restrictTurns": 0,
-     "choices": 132,
+     "choices": 154,
      "hushed": 0,
      "hushedPebble": 0
     },
-    "magnet": {
-     "placed": 95,
+    "stinky": {
+     "placed": 64,
      "dud": 0,
-     "bite": 199,
-     "restrictTurns": 229,
+     "bite": 48,
+     "restrictTurns": 50,
      "choices": 0,
      "hushed": 0,
      "hushedPebble": 0
     },
     "shift": {
-     "placed": 43,
-     "dud": 7,
+     "placed": 34,
+     "dud": 2,
      "bite": 0,
      "restrictTurns": 0,
-     "choices": 172,
+     "choices": 136,
      "hushed": 0,
      "hushedPebble": 0
     }
@@ -1505,262 +1505,12 @@
   },
   "mirrorknight|pebbles only": {
    "n": 100,
-   "won": 71,
-   "full": 69,
-   "turns": 718,
-   "track": {}
-  },
-  "mirrorknight|movers (Shift, Rotate)": {
-   "n": 100,
-   "won": 89,
-   "full": 27,
-   "turns": 610,
-   "track": {
-    "shift": {
-     "placed": 54,
-     "dud": 10,
-     "bite": 0,
-     "restrictTurns": 0,
-     "choices": 0,
-     "hushed": 0,
-     "hushedPebble": 0
-    },
-    "rotate": {
-     "placed": 93,
-     "dud": 23,
-     "bite": 0,
-     "restrictTurns": 0,
-     "choices": 178,
-     "hushed": 0,
-     "hushedPebble": 0
-    }
-   }
-  },
-  "mirrorknight|restrictions (Magnet, Stinky)": {
-   "n": 100,
-   "won": 98,
-   "full": 1,
-   "turns": 543,
-   "track": {
-    "stinky": {
-     "placed": 96,
-     "dud": 0,
-     "bite": 201,
-     "restrictTurns": 203,
-     "choices": 0,
-     "hushed": 0,
-     "hushedPebble": 0
-    },
-    "magnet": {
-     "placed": 95,
-     "dud": 0,
-     "bite": 102,
-     "restrictTurns": 105,
-     "choices": 0,
-     "hushed": 0,
-     "hushedPebble": 0
-    }
-   }
-  },
-  "mirrorknight|Magnet + Shift": {
-   "n": 100,
-   "won": 100,
-   "full": 33,
-   "turns": 643,
-   "track": {
-    "shift": {
-     "placed": 99,
-     "dud": 2,
-     "bite": 0,
-     "restrictTurns": 0,
-     "choices": 0,
-     "hushed": 0,
-     "hushedPebble": 0
-    },
-    "magnet": {
-     "placed": 100,
-     "dud": 0,
-     "bite": 109,
-     "restrictTurns": 192,
-     "choices": 0,
-     "hushed": 0,
-     "hushedPebble": 0
-    }
-   }
-  },
-  "mirrorknight|Beacon + Stinky": {
-   "n": 100,
-   "won": 97,
-   "full": 10,
-   "turns": 661,
-   "track": {
-    "beacon": {
-     "placed": 98,
-     "dud": 0,
-     "bite": 256,
-     "restrictTurns": 273,
-     "choices": 196,
-     "hushed": 0,
-     "hushedPebble": 0
-    },
-    "stinky": {
-     "placed": 99,
-     "dud": 0,
-     "bite": 174,
-     "restrictTurns": 186,
-     "choices": 0,
-     "hushed": 0,
-     "hushedPebble": 0
-    }
-   }
-  },
-  "mirrorknight|two Mountains": {
-   "n": 100,
-   "won": 65,
-   "full": 64,
-   "turns": 701,
-   "track": {
-    "mountain": {
-     "placed": 150,
-     "dud": 0,
-     "bite": 0,
-     "restrictTurns": 0,
-     "choices": 0,
-     "hushed": 0,
-     "hushedPebble": 0
-    }
-   }
-  },
-  "mirrorknight|Swap + Turncoat": {
-   "n": 100,
-   "won": 78,
-   "full": 9,
-   "turns": 623,
-   "track": {
-    "turncoat": {
-     "placed": 85,
-     "dud": 16,
-     "bite": 0,
-     "restrictTurns": 0,
-     "choices": 7,
-     "hushed": 0,
-     "hushedPebble": 0
-    },
-    "swap": {
-     "placed": 49,
-     "dud": 3,
-     "bite": 0,
-     "restrictTurns": 0,
-     "choices": 105,
-     "hushed": 0,
-     "hushedPebble": 0
-    }
-   }
-  },
-  "mirrorknight|2048 + Whirl": {
-   "n": 100,
-   "won": 66,
-   "full": 47,
-   "turns": 695,
-   "track": {
-    "2048": {
-     "placed": 72,
-     "dud": 20,
-     "bite": 0,
-     "restrictTurns": 0,
-     "choices": 0,
-     "hushed": 0,
-     "hushedPebble": 0
-    },
-    "whirl": {
-     "placed": 90,
-     "dud": 17,
-     "bite": 0,
-     "restrictTurns": 0,
-     "choices": 180,
-     "hushed": 0,
-     "hushedPebble": 0
-    }
-   }
-  },
-  "mirrorknight|one-shots (Pluck, Bribe)": {
-   "n": 100,
-   "won": 100,
-   "full": 2,
-   "turns": 572,
-   "track": {
-    "pluck": {
-     "placed": 100,
-     "dud": 0,
-     "bite": 0,
-     "restrictTurns": 0,
-     "choices": 6,
-     "hushed": 0,
-     "hushedPebble": 0
-    },
-    "bribe": {
-     "placed": 100,
-     "dud": 4,
-     "bite": 0,
-     "restrictTurns": 0,
-     "choices": 0,
-     "hushed": 0,
-     "hushedPebble": 0
-    }
-   }
-  },
-  "mirrorknight|Magnet, Stinky, Shift, Rotate": {
-   "n": 100,
-   "won": 100,
-   "full": 11,
-   "turns": 553,
-   "track": {
-    "magnet": {
-     "placed": 95,
-     "dud": 0,
-     "bite": 159,
-     "restrictTurns": 183,
-     "choices": 0,
-     "hushed": 0,
-     "hushedPebble": 0
-    },
-    "rotate": {
-     "placed": 80,
-     "dud": 9,
-     "bite": 0,
-     "restrictTurns": 0,
-     "choices": 140,
-     "hushed": 0,
-     "hushedPebble": 0
-    },
-    "shift": {
-     "placed": 31,
-     "dud": 9,
-     "bite": 0,
-     "restrictTurns": 0,
-     "choices": 0,
-     "hushed": 0,
-     "hushedPebble": 0
-    },
-    "stinky": {
-     "placed": 57,
-     "dud": 0,
-     "bite": 43,
-     "restrictTurns": 51,
-     "choices": 0,
-     "hushed": 0,
-     "hushedPebble": 0
-    }
-   }
-  },
-  "mirrorknight+undead|pebbles only": {
-   "n": 100,
    "won": 0,
    "full": 0,
    "turns": 468,
    "track": {}
   },
-  "mirrorknight+undead|movers (Shift, Rotate)": {
+  "mirrorknight|movers (Shift, Rotate)": {
    "n": 100,
    "won": 23,
    "full": 9,
@@ -1786,7 +1536,7 @@
     }
    }
   },
-  "mirrorknight+undead|restrictions (Magnet, Stinky)": {
+  "mirrorknight|restrictions (Magnet, Stinky)": {
    "n": 100,
    "won": 78,
    "full": 42,
@@ -1812,7 +1562,7 @@
     }
    }
   },
-  "mirrorknight+undead|Magnet + Shift": {
+  "mirrorknight|Magnet + Shift": {
    "n": 100,
    "won": 38,
    "full": 31,
@@ -1838,7 +1588,7 @@
     }
    }
   },
-  "mirrorknight+undead|Beacon + Stinky": {
+  "mirrorknight|Beacon + Stinky": {
    "n": 100,
    "won": 92,
    "full": 3,
@@ -1864,7 +1614,7 @@
     }
    }
   },
-  "mirrorknight+undead|two Mountains": {
+  "mirrorknight|two Mountains": {
    "n": 100,
    "won": 0,
    "full": 0,
@@ -1881,7 +1631,7 @@
     }
    }
   },
-  "mirrorknight+undead|Swap + Turncoat": {
+  "mirrorknight|Swap + Turncoat": {
    "n": 100,
    "won": 67,
    "full": 38,
@@ -1907,7 +1657,7 @@
     }
    }
   },
-  "mirrorknight+undead|2048 + Whirl": {
+  "mirrorknight|2048 + Whirl": {
    "n": 100,
    "won": 9,
    "full": 3,
@@ -1933,33 +1683,33 @@
     }
    }
   },
-  "mirrorknight+undead|one-shots (Pluck, Bribe)": {
+  "mirrorknight|one-shots (Pluck, Bribe)": {
    "n": 100,
-   "won": 100,
-   "full": 13,
-   "turns": 647,
+   "won": 96,
+   "full": 4,
+   "turns": 584,
    "track": {
     "bribe": {
      "placed": 100,
-     "dud": 0,
+     "dud": 3,
      "bite": 0,
      "restrictTurns": 0,
-     "choices": 32,
+     "choices": 28,
      "hushed": 0,
      "hushedPebble": 0
     },
     "pluck": {
-     "placed": 100,
+     "placed": 95,
      "dud": 0,
      "bite": 0,
      "restrictTurns": 0,
-     "choices": 202,
+     "choices": 192,
      "hushed": 0,
      "hushedPebble": 0
     }
    }
   },
-  "mirrorknight+undead|Magnet, Stinky, Shift, Rotate": {
+  "mirrorknight|Magnet, Stinky, Shift, Rotate": {
    "n": 100,
    "won": 89,
    "full": 15,
@@ -2003,22 +1753,22 @@
     }
    }
   },
-  "carpenter|pebbles only": {
+  "mirrorknight+undead|pebbles only": {
    "n": 100,
-   "won": 1,
+   "won": 0,
    "full": 0,
-   "turns": 487,
+   "turns": 460,
    "track": {}
   },
-  "carpenter|movers (Shift, Rotate)": {
+  "mirrorknight+undead|movers (Shift, Rotate)": {
    "n": 100,
-   "won": 90,
+   "won": 8,
    "full": 3,
-   "turns": 555,
+   "turns": 542,
    "track": {
     "rotate": {
-     "placed": 96,
-     "dud": 2,
+     "placed": 81,
+     "dud": 8,
      "bite": 0,
      "restrictTurns": 0,
      "choices": 154,
@@ -2026,11 +1776,261 @@
      "hushedPebble": 0
     },
     "shift": {
-     "placed": 73,
+     "placed": 41,
+     "dud": 7,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 0,
+     "hushed": 0,
+     "hushedPebble": 0
+    }
+   }
+  },
+  "mirrorknight+undead|restrictions (Magnet, Stinky)": {
+   "n": 100,
+   "won": 78,
+   "full": 25,
+   "turns": 652,
+   "track": {
+    "stinky": {
+     "placed": 88,
+     "dud": 0,
+     "bite": 166,
+     "restrictTurns": 170,
+     "choices": 0,
+     "hushed": 0,
+     "hushedPebble": 0
+    },
+    "magnet": {
+     "placed": 85,
+     "dud": 0,
+     "bite": 152,
+     "restrictTurns": 159,
+     "choices": 0,
+     "hushed": 0,
+     "hushedPebble": 0
+    }
+   }
+  },
+  "mirrorknight+undead|Magnet + Shift": {
+   "n": 100,
+   "won": 37,
+   "full": 27,
+   "turns": 633,
+   "track": {
+    "magnet": {
+     "placed": 79,
+     "dud": 0,
+     "bite": 127,
+     "restrictTurns": 203,
+     "choices": 0,
+     "hushed": 0,
+     "hushedPebble": 0
+    },
+    "shift": {
+     "placed": 51,
+     "dud": 10,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 0,
+     "hushed": 0,
+     "hushedPebble": 0
+    }
+   }
+  },
+  "mirrorknight+undead|Beacon + Stinky": {
+   "n": 100,
+   "won": 82,
+   "full": 22,
+   "turns": 632,
+   "track": {
+    "beacon": {
+     "placed": 92,
+     "dud": 0,
+     "bite": 193,
+     "restrictTurns": 199,
+     "choices": 184,
+     "hushed": 0,
+     "hushedPebble": 0
+    },
+    "stinky": {
+     "placed": 94,
+     "dud": 0,
+     "bite": 116,
+     "restrictTurns": 120,
+     "choices": 0,
+     "hushed": 0,
+     "hushedPebble": 0
+    }
+   }
+  },
+  "mirrorknight+undead|two Mountains": {
+   "n": 100,
+   "won": 0,
+   "full": 0,
+   "turns": 482,
+   "track": {
+    "mountain": {
+     "placed": 86,
+     "dud": 0,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 0,
+     "hushed": 0,
+     "hushedPebble": 0
+    }
+   }
+  },
+  "mirrorknight+undead|Swap + Turncoat": {
+   "n": 100,
+   "won": 23,
+   "full": 20,
+   "turns": 613,
+   "track": {
+    "turncoat": {
+     "placed": 76,
+     "dud": 6,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 30,
+     "hushed": 0,
+     "hushedPebble": 0
+    },
+    "swap": {
+     "placed": 67,
+     "dud": 4,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 76,
+     "hushed": 0,
+     "hushedPebble": 0
+    }
+   }
+  },
+  "mirrorknight+undead|2048 + Whirl": {
+   "n": 100,
+   "won": 0,
+   "full": 0,
+   "turns": 416,
+   "track": {
+    "2048": {
+     "placed": 40,
+     "dud": 9,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 0,
+     "hushed": 0,
+     "hushedPebble": 0
+    },
+    "whirl": {
+     "placed": 47,
+     "dud": 0,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 94,
+     "hushed": 0,
+     "hushedPebble": 0
+    }
+   }
+  },
+  "mirrorknight+undead|one-shots (Pluck, Bribe)": {
+   "n": 100,
+   "won": 64,
+   "full": 4,
+   "turns": 690,
+   "track": {
+    "bribe": {
+     "placed": 99,
+     "dud": 1,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 15,
+     "hushed": 0,
+     "hushedPebble": 0
+    },
+    "pluck": {
+     "placed": 99,
+     "dud": 0,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 200,
+     "hushed": 0,
+     "hushedPebble": 0
+    }
+   }
+  },
+  "mirrorknight+undead|Magnet, Stinky, Shift, Rotate": {
+   "n": 100,
+   "won": 91,
+   "full": 15,
+   "turns": 641,
+   "track": {
+    "magnet": {
+     "placed": 96,
+     "dud": 0,
+     "bite": 165,
+     "restrictTurns": 187,
+     "choices": 0,
+     "hushed": 0,
+     "hushedPebble": 0
+    },
+    "rotate": {
+     "placed": 85,
+     "dud": 7,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 148,
+     "hushed": 0,
+     "hushedPebble": 0
+    },
+    "stinky": {
+     "placed": 51,
+     "dud": 0,
+     "bite": 21,
+     "restrictTurns": 22,
+     "choices": 0,
+     "hushed": 0,
+     "hushedPebble": 0
+    },
+    "shift": {
+     "placed": 34,
      "dud": 5,
      "bite": 0,
      "restrictTurns": 0,
-     "choices": 292,
+     "choices": 0,
+     "hushed": 0,
+     "hushedPebble": 0
+    }
+   }
+  },
+  "carpenter|pebbles only": {
+   "n": 100,
+   "won": 0,
+   "full": 0,
+   "turns": 476,
+   "track": {}
+  },
+  "carpenter|movers (Shift, Rotate)": {
+   "n": 100,
+   "won": 85,
+   "full": 2,
+   "turns": 547,
+   "track": {
+    "rotate": {
+     "placed": 99,
+     "dud": 15,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 190,
+     "hushed": 0,
+     "hushedPebble": 0
+    },
+    "shift": {
+     "placed": 63,
+     "dud": 3,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 252,
      "hushed": 0,
      "hushedPebble": 0
     }
@@ -2038,24 +2038,24 @@
   },
   "carpenter|restrictions (Magnet, Stinky)": {
    "n": 100,
-   "won": 72,
+   "won": 75,
    "full": 0,
-   "turns": 498,
+   "turns": 519,
    "track": {
     "stinky": {
-     "placed": 93,
+     "placed": 95,
      "dud": 0,
-     "bite": 175,
-     "restrictTurns": 181,
+     "bite": 148,
+     "restrictTurns": 152,
      "choices": 0,
      "hushed": 0,
      "hushedPebble": 0
     },
     "magnet": {
-     "placed": 89,
+     "placed": 95,
      "dud": 0,
-     "bite": 95,
-     "restrictTurns": 102,
+     "bite": 146,
+     "restrictTurns": 154,
      "choices": 0,
      "hushed": 0,
      "hushedPebble": 0
@@ -2064,25 +2064,25 @@
   },
   "carpenter|Magnet + Shift": {
    "n": 100,
-   "won": 94,
-   "full": 22,
-   "turns": 612,
+   "won": 90,
+   "full": 17,
+   "turns": 607,
    "track": {
-    "shift": {
+    "magnet": {
      "placed": 98,
-     "dud": 3,
-     "bite": 0,
-     "restrictTurns": 0,
-     "choices": 392,
+     "dud": 0,
+     "bite": 196,
+     "restrictTurns": 238,
+     "choices": 0,
      "hushed": 0,
      "hushedPebble": 0
     },
-    "magnet": {
-     "placed": 96,
-     "dud": 0,
-     "bite": 157,
-     "restrictTurns": 185,
-     "choices": 0,
+    "shift": {
+     "placed": 87,
+     "dud": 43,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 348,
      "hushed": 0,
      "hushedPebble": 0
     }
@@ -2090,25 +2090,25 @@
   },
   "carpenter|Beacon + Stinky": {
    "n": 100,
-   "won": 44,
-   "full": 1,
-   "turns": 509,
+   "won": 59,
+   "full": 0,
+   "turns": 519,
    "track": {
     "stinky": {
-     "placed": 91,
+     "placed": 83,
      "dud": 0,
-     "bite": 133,
-     "restrictTurns": 169,
+     "bite": 131,
+     "restrictTurns": 153,
      "choices": 0,
      "hushed": 0,
      "hushedPebble": 0
     },
     "beacon": {
-     "placed": 95,
+     "placed": 96,
      "dud": 0,
-     "bite": 87,
-     "restrictTurns": 130,
-     "choices": 190,
+     "bite": 96,
+     "restrictTurns": 128,
+     "choices": 192,
      "hushed": 0,
      "hushedPebble": 0
     }
@@ -2116,12 +2116,12 @@
   },
   "carpenter|two Mountains": {
    "n": 100,
-   "won": 1,
+   "won": 0,
    "full": 0,
-   "turns": 479,
+   "turns": 488,
    "track": {
     "mountain": {
-     "placed": 112,
+     "placed": 113,
      "dud": 0,
      "bite": 0,
      "restrictTurns": 0,
@@ -2133,25 +2133,25 @@
   },
   "carpenter|Swap + Turncoat": {
    "n": 100,
-   "won": 94,
-   "full": 3,
-   "turns": 561,
+   "won": 4,
+   "full": 2,
+   "turns": 484,
    "track": {
     "turncoat": {
-     "placed": 86,
+     "placed": 69,
      "dud": 10,
      "bite": 0,
      "restrictTurns": 0,
-     "choices": 0,
+     "choices": 2,
      "hushed": 0,
      "hushedPebble": 0
     },
     "swap": {
-     "placed": 76,
-     "dud": 1,
+     "placed": 47,
+     "dud": 0,
      "bite": 0,
      "restrictTurns": 0,
-     "choices": 144,
+     "choices": 38,
      "hushed": 0,
      "hushedPebble": 0
     }
@@ -2159,25 +2159,25 @@
   },
   "carpenter|2048 + Whirl": {
    "n": 100,
-   "won": 62,
+   "won": 74,
    "full": 1,
-   "turns": 513,
+   "turns": 531,
    "track": {
     "2048": {
-     "placed": 71,
-     "dud": 7,
+     "placed": 87,
+     "dud": 5,
      "bite": 0,
      "restrictTurns": 0,
-     "choices": 284,
+     "choices": 348,
      "hushed": 0,
      "hushedPebble": 0
     },
     "whirl": {
-     "placed": 93,
-     "dud": 1,
+     "placed": 58,
+     "dud": 0,
      "bite": 0,
      "restrictTurns": 0,
-     "choices": 186,
+     "choices": 116,
      "hushed": 0,
      "hushedPebble": 0
     }
@@ -2185,13 +2185,13 @@
   },
   "carpenter|one-shots (Pluck, Bribe)": {
    "n": 100,
-   "won": 100,
+   "won": 99,
    "full": 0,
-   "turns": 576,
+   "turns": 477,
    "track": {
     "bribe": {
-     "placed": 97,
-     "dud": 6,
+     "placed": 100,
+     "dud": 3,
      "bite": 0,
      "restrictTurns": 0,
      "choices": 0,
@@ -2199,7 +2199,7 @@
      "hushedPebble": 0
     },
     "pluck": {
-     "placed": 100,
+     "placed": 99,
      "dud": 0,
      "bite": 0,
      "restrictTurns": 0,
@@ -2211,43 +2211,43 @@
   },
   "carpenter|Magnet, Stinky, Shift, Rotate": {
    "n": 100,
-   "won": 99,
+   "won": 97,
    "full": 3,
-   "turns": 534,
+   "turns": 530,
    "track": {
-    "magnet": {
-     "placed": 95,
-     "dud": 0,
-     "bite": 104,
-     "restrictTurns": 112,
-     "choices": 0,
-     "hushed": 0,
-     "hushedPebble": 0
-    },
-    "shift": {
-     "placed": 20,
-     "dud": 0,
-     "bite": 0,
-     "restrictTurns": 0,
-     "choices": 80,
-     "hushed": 0,
-     "hushedPebble": 0
-    },
-    "stinky": {
-     "placed": 46,
-     "dud": 0,
-     "bite": 24,
-     "restrictTurns": 29,
-     "choices": 0,
-     "hushed": 0,
-     "hushedPebble": 0
-    },
     "rotate": {
      "placed": 88,
      "dud": 0,
      "bite": 0,
      "restrictTurns": 0,
-     "choices": 168,
+     "choices": 144,
+     "hushed": 0,
+     "hushedPebble": 0
+    },
+    "magnet": {
+     "placed": 95,
+     "dud": 0,
+     "bite": 125,
+     "restrictTurns": 141,
+     "choices": 0,
+     "hushed": 0,
+     "hushedPebble": 0
+    },
+    "shift": {
+     "placed": 21,
+     "dud": 4,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 84,
+     "hushed": 0,
+     "hushedPebble": 0
+    },
+    "stinky": {
+     "placed": 41,
+     "dud": 0,
+     "bite": 11,
+     "restrictTurns": 16,
+     "choices": 0,
      "hushed": 0,
      "hushedPebble": 0
     }
@@ -2255,32 +2255,32 @@
   },
   "carpenter+undead|pebbles only": {
    "n": 100,
-   "won": 1,
+   "won": 0,
    "full": 0,
-   "turns": 505,
+   "turns": 466,
    "track": {}
   },
   "carpenter+undead|movers (Shift, Rotate)": {
    "n": 100,
-   "won": 90,
-   "full": 0,
-   "turns": 490,
+   "won": 43,
+   "full": 1,
+   "turns": 485,
    "track": {
     "rotate": {
-     "placed": 95,
-     "dud": 2,
+     "placed": 68,
+     "dud": 10,
      "bite": 0,
      "restrictTurns": 0,
-     "choices": 138,
+     "choices": 114,
      "hushed": 0,
      "hushedPebble": 0
     },
     "shift": {
-     "placed": 73,
+     "placed": 60,
      "dud": 2,
      "bite": 0,
      "restrictTurns": 0,
-     "choices": 292,
+     "choices": 240,
      "hushed": 0,
      "hushedPebble": 0
     }
@@ -2288,24 +2288,24 @@
   },
   "carpenter+undead|restrictions (Magnet, Stinky)": {
    "n": 100,
-   "won": 77,
+   "won": 5,
    "full": 0,
-   "turns": 499,
+   "turns": 463,
    "track": {
-    "magnet": {
-     "placed": 92,
+    "stinky": {
+     "placed": 63,
      "dud": 0,
-     "bite": 97,
+     "bite": 82,
      "restrictTurns": 101,
      "choices": 0,
      "hushed": 0,
      "hushedPebble": 0
     },
-    "stinky": {
-     "placed": 93,
+    "magnet": {
+     "placed": 42,
      "dud": 0,
-     "bite": 184,
-     "restrictTurns": 186,
+     "bite": 52,
+     "restrictTurns": 69,
      "choices": 0,
      "hushed": 0,
      "hushedPebble": 0
@@ -2314,25 +2314,25 @@
   },
   "carpenter+undead|Magnet + Shift": {
    "n": 100,
-   "won": 95,
-   "full": 0,
-   "turns": 519,
+   "won": 36,
+   "full": 10,
+   "turns": 464,
    "track": {
-    "shift": {
-     "placed": 97,
-     "dud": 1,
-     "bite": 0,
-     "restrictTurns": 0,
-     "choices": 388,
+    "magnet": {
+     "placed": 63,
+     "dud": 0,
+     "bite": 90,
+     "restrictTurns": 105,
+     "choices": 0,
      "hushed": 0,
      "hushedPebble": 0
     },
-    "magnet": {
-     "placed": 97,
-     "dud": 0,
-     "bite": 129,
-     "restrictTurns": 132,
-     "choices": 0,
+    "shift": {
+     "placed": 65,
+     "dud": 11,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 260,
      "hushed": 0,
      "hushedPebble": 0
     }
@@ -2340,25 +2340,25 @@
   },
   "carpenter+undead|Beacon + Stinky": {
    "n": 100,
-   "won": 41,
+   "won": 0,
    "full": 0,
-   "turns": 489,
+   "turns": 382,
    "track": {
-    "stinky": {
-     "placed": 88,
+    "beacon": {
+     "placed": 32,
      "dud": 0,
-     "bite": 135,
-     "restrictTurns": 170,
-     "choices": 0,
+     "bite": 36,
+     "restrictTurns": 44,
+     "choices": 64,
      "hushed": 0,
      "hushedPebble": 0
     },
-    "beacon": {
-     "placed": 96,
+    "stinky": {
+     "placed": 48,
      "dud": 0,
-     "bite": 76,
-     "restrictTurns": 117,
-     "choices": 192,
+     "bite": 55,
+     "restrictTurns": 67,
+     "choices": 0,
      "hushed": 0,
      "hushedPebble": 0
     }
@@ -2366,12 +2366,12 @@
   },
   "carpenter+undead|two Mountains": {
    "n": 100,
-   "won": 1,
+   "won": 0,
    "full": 0,
-   "turns": 477,
+   "turns": 446,
    "track": {
     "mountain": {
-     "placed": 114,
+     "placed": 93,
      "dud": 0,
      "bite": 0,
      "restrictTurns": 0,
@@ -2383,25 +2383,25 @@
   },
   "carpenter+undead|Swap + Turncoat": {
    "n": 100,
-   "won": 96,
+   "won": 3,
    "full": 0,
-   "turns": 546,
+   "turns": 609,
    "track": {
     "turncoat": {
-     "placed": 84,
-     "dud": 5,
+     "placed": 90,
+     "dud": 2,
      "bite": 0,
      "restrictTurns": 0,
-     "choices": 0,
+     "choices": 12,
      "hushed": 0,
      "hushedPebble": 0
     },
     "swap": {
-     "placed": 69,
-     "dud": 0,
+     "placed": 95,
+     "dud": 3,
      "bite": 0,
      "restrictTurns": 0,
-     "choices": 128,
+     "choices": 48,
      "hushed": 0,
      "hushedPebble": 0
     }
@@ -2409,25 +2409,25 @@
   },
   "carpenter+undead|2048 + Whirl": {
    "n": 100,
-   "won": 62,
+   "won": 5,
    "full": 0,
-   "turns": 468,
+   "turns": 363,
    "track": {
     "2048": {
-     "placed": 76,
-     "dud": 3,
+     "placed": 50,
+     "dud": 4,
      "bite": 0,
      "restrictTurns": 0,
-     "choices": 304,
+     "choices": 200,
      "hushed": 0,
      "hushedPebble": 0
     },
     "whirl": {
-     "placed": 95,
+     "placed": 39,
      "dud": 0,
      "bite": 0,
      "restrictTurns": 0,
-     "choices": 190,
+     "choices": 78,
      "hushed": 0,
      "hushedPebble": 0
     }
@@ -2435,25 +2435,25 @@
   },
   "carpenter+undead|one-shots (Pluck, Bribe)": {
    "n": 100,
-   "won": 99,
-   "full": 0,
-   "turns": 619,
+   "won": 72,
+   "full": 21,
+   "turns": 759,
    "track": {
-    "pluck": {
-     "placed": 100,
-     "dud": 0,
+    "bribe": {
+     "placed": 98,
+     "dud": 1,
      "bite": 0,
      "restrictTurns": 0,
-     "choices": 6,
+     "choices": 4,
      "hushed": 0,
      "hushedPebble": 0
     },
-    "bribe": {
-     "placed": 99,
-     "dud": 6,
+    "pluck": {
+     "placed": 98,
+     "dud": 0,
      "bite": 0,
      "restrictTurns": 0,
-     "choices": 0,
+     "choices": 200,
      "hushed": 0,
      "hushedPebble": 0
     }
@@ -2461,42 +2461,42 @@
   },
   "carpenter+undead|Magnet, Stinky, Shift, Rotate": {
    "n": 100,
-   "won": 100,
-   "full": 0,
-   "turns": 518,
+   "won": 73,
+   "full": 5,
+   "turns": 561,
    "track": {
-    "magnet": {
-     "placed": 95,
-     "dud": 0,
-     "bite": 112,
-     "restrictTurns": 116,
-     "choices": 0,
-     "hushed": 0,
-     "hushedPebble": 0
-    },
     "shift": {
-     "placed": 36,
-     "dud": 4,
+     "placed": 23,
+     "dud": 0,
      "bite": 0,
      "restrictTurns": 0,
-     "choices": 144,
+     "choices": 92,
      "hushed": 0,
      "hushedPebble": 0
     },
     "rotate": {
-     "placed": 89,
-     "dud": 1,
+     "placed": 78,
+     "dud": 3,
      "bite": 0,
      "restrictTurns": 0,
-     "choices": 172,
+     "choices": 154,
+     "hushed": 0,
+     "hushedPebble": 0
+    },
+    "magnet": {
+     "placed": 80,
+     "dud": 0,
+     "bite": 123,
+     "restrictTurns": 134,
+     "choices": 0,
      "hushed": 0,
      "hushedPebble": 0
     },
     "stinky": {
-     "placed": 42,
+     "placed": 45,
      "dud": 0,
-     "bite": 14,
-     "restrictTurns": 14,
+     "bite": 22,
+     "restrictTurns": 22,
      "choices": 0,
      "hushed": 0,
      "hushedPebble": 0
@@ -2506,31 +2506,31 @@
   "grandmaster|pebbles only": {
    "n": 100,
    "won": 72,
-   "full": 68,
-   "turns": 742,
+   "full": 67,
+   "turns": 723,
    "track": {}
   },
   "grandmaster|movers (Shift, Rotate)": {
    "n": 100,
-   "won": 15,
+   "won": 30,
    "full": 12,
-   "turns": 559,
+   "turns": 573,
    "track": {
-    "shift": {
-     "placed": 41,
+    "rotate": {
+     "placed": 75,
      "dud": 0,
      "bite": 0,
      "restrictTurns": 0,
-     "choices": 164,
+     "choices": 130,
      "hushed": 0,
      "hushedPebble": 0
     },
-    "rotate": {
-     "placed": 59,
+    "shift": {
+     "placed": 58,
      "dud": 0,
      "bite": 0,
      "restrictTurns": 0,
-     "choices": 104,
+     "choices": 232,
      "hushed": 0,
      "hushedPebble": 0
     }
@@ -2538,24 +2538,24 @@
   },
   "grandmaster|restrictions (Magnet, Stinky)": {
    "n": 100,
-   "won": 85,
-   "full": 70,
-   "turns": 747,
+   "won": 86,
+   "full": 73,
+   "turns": 753,
    "track": {
     "magnet": {
      "placed": 84,
      "dud": 0,
-     "bite": 160,
-     "restrictTurns": 294,
+     "bite": 148,
+     "restrictTurns": 277,
      "choices": 0,
      "hushed": 0,
      "hushedPebble": 0
     },
     "stinky": {
-     "placed": 49,
+     "placed": 60,
      "dud": 0,
-     "bite": 15,
-     "restrictTurns": 52,
+     "bite": 21,
+     "restrictTurns": 74,
      "choices": 0,
      "hushed": 0,
      "hushedPebble": 0
@@ -2565,14 +2565,264 @@
   "grandmaster|Magnet + Shift": {
    "n": 100,
    "won": 48,
-   "full": 43,
-   "turns": 719,
+   "full": 38,
+   "turns": 683,
    "track": {
     "magnet": {
-     "placed": 94,
+     "placed": 74,
      "dud": 0,
-     "bite": 161,
-     "restrictTurns": 295,
+     "bite": 126,
+     "restrictTurns": 228,
+     "choices": 0,
+     "hushed": 0,
+     "hushedPebble": 0
+    },
+    "shift": {
+     "placed": 68,
+     "dud": 0,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 272,
+     "hushed": 0,
+     "hushedPebble": 0
+    }
+   }
+  },
+  "grandmaster|Beacon + Stinky": {
+   "n": 100,
+   "won": 84,
+   "full": 73,
+   "turns": 743,
+   "track": {
+    "stinky": {
+     "placed": 50,
+     "dud": 0,
+     "bite": 38,
+     "restrictTurns": 88,
+     "choices": 0,
+     "hushed": 0,
+     "hushedPebble": 0
+    },
+    "beacon": {
+     "placed": 42,
+     "dud": 0,
+     "bite": 17,
+     "restrictTurns": 57,
+     "choices": 84,
+     "hushed": 0,
+     "hushedPebble": 0
+    }
+   }
+  },
+  "grandmaster|two Mountains": {
+   "n": 100,
+   "won": 70,
+   "full": 68,
+   "turns": 728,
+   "track": {
+    "mountain": {
+     "placed": 130,
+     "dud": 0,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 0,
+     "hushed": 0,
+     "hushedPebble": 0
+    }
+   }
+  },
+  "grandmaster|Swap + Turncoat": {
+   "n": 100,
+   "won": 24,
+   "full": 11,
+   "turns": 626,
+   "track": {
+    "swap": {
+     "placed": 96,
+     "dud": 0,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 77,
+     "hushed": 0,
+     "hushedPebble": 0
+    },
+    "turncoat": {
+     "placed": 69,
+     "dud": 0,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 19,
+     "hushed": 0,
+     "hushedPebble": 0
+    }
+   }
+  },
+  "grandmaster|2048 + Whirl": {
+   "n": 100,
+   "won": 24,
+   "full": 12,
+   "turns": 602,
+   "track": {
+    "2048": {
+     "placed": 50,
+     "dud": 0,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 200,
+     "hushed": 0,
+     "hushedPebble": 0
+    },
+    "whirl": {
+     "placed": 65,
+     "dud": 0,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 130,
+     "hushed": 0,
+     "hushedPebble": 0
+    }
+   }
+  },
+  "grandmaster|one-shots (Pluck, Bribe)": {
+   "n": 100,
+   "won": 36,
+   "full": 20,
+   "turns": 627,
+   "track": {
+    "bribe": {
+     "placed": 19,
+     "dud": 0,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 4,
+     "hushed": 0,
+     "hushedPebble": 0
+    },
+    "pluck": {
+     "placed": 7,
+     "dud": 0,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 22,
+     "hushed": 0,
+     "hushedPebble": 0
+    }
+   }
+  },
+  "grandmaster|Magnet, Stinky, Shift, Rotate": {
+   "n": 100,
+   "won": 35,
+   "full": 11,
+   "turns": 616,
+   "track": {
+    "stinky": {
+     "placed": 40,
+     "dud": 0,
+     "bite": 63,
+     "restrictTurns": 83,
+     "choices": 0,
+     "hushed": 0,
+     "hushedPebble": 0
+    },
+    "shift": {
+     "placed": 71,
+     "dud": 0,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 284,
+     "hushed": 0,
+     "hushedPebble": 0
+    },
+    "rotate": {
+     "placed": 69,
+     "dud": 0,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 114,
+     "hushed": 0,
+     "hushedPebble": 0
+    },
+    "magnet": {
+     "placed": 46,
+     "dud": 0,
+     "bite": 32,
+     "restrictTurns": 57,
+     "choices": 0,
+     "hushed": 0,
+     "hushedPebble": 0
+    }
+   }
+  },
+  "grandmaster+undead|pebbles only": {
+   "n": 100,
+   "won": 87,
+   "full": 85,
+   "turns": 774,
+   "track": {}
+  },
+  "grandmaster+undead|movers (Shift, Rotate)": {
+   "n": 100,
+   "won": 22,
+   "full": 12,
+   "turns": 581,
+   "track": {
+    "shift": {
+     "placed": 46,
+     "dud": 0,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 184,
+     "hushed": 0,
+     "hushedPebble": 0
+    },
+    "rotate": {
+     "placed": 67,
+     "dud": 0,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 98,
+     "hushed": 0,
+     "hushedPebble": 0
+    }
+   }
+  },
+  "grandmaster+undead|restrictions (Magnet, Stinky)": {
+   "n": 100,
+   "won": 90,
+   "full": 74,
+   "turns": 758,
+   "track": {
+    "magnet": {
+     "placed": 80,
+     "dud": 0,
+     "bite": 143,
+     "restrictTurns": 276,
+     "choices": 0,
+     "hushed": 0,
+     "hushedPebble": 0
+    },
+    "stinky": {
+     "placed": 56,
+     "dud": 0,
+     "bite": 7,
+     "restrictTurns": 50,
+     "choices": 0,
+     "hushed": 0,
+     "hushedPebble": 0
+    }
+   }
+  },
+  "grandmaster+undead|Magnet + Shift": {
+   "n": 100,
+   "won": 54,
+   "full": 47,
+   "turns": 714,
+   "track": {
+    "magnet": {
+     "placed": 80,
+     "dud": 0,
+     "bite": 143,
+     "restrictTurns": 267,
      "choices": 0,
      "hushed": 0,
      "hushedPebble": 0
@@ -2588,277 +2838,27 @@
     }
    }
   },
-  "grandmaster|Beacon + Stinky": {
-   "n": 100,
-   "won": 73,
-   "full": 69,
-   "turns": 728,
-   "track": {
-    "stinky": {
-     "placed": 40,
-     "dud": 0,
-     "bite": 14,
-     "restrictTurns": 51,
-     "choices": 0,
-     "hushed": 0,
-     "hushedPebble": 0
-    },
-    "beacon": {
-     "placed": 40,
-     "dud": 0,
-     "bite": 18,
-     "restrictTurns": 56,
-     "choices": 80,
-     "hushed": 0,
-     "hushedPebble": 0
-    }
-   }
-  },
-  "grandmaster|two Mountains": {
-   "n": 100,
-   "won": 78,
-   "full": 74,
-   "turns": 742,
-   "track": {
-    "mountain": {
-     "placed": 135,
-     "dud": 0,
-     "bite": 0,
-     "restrictTurns": 0,
-     "choices": 0,
-     "hushed": 0,
-     "hushedPebble": 0
-    }
-   }
-  },
-  "grandmaster|Swap + Turncoat": {
-   "n": 100,
-   "won": 16,
-   "full": 6,
-   "turns": 613,
-   "track": {
-    "swap": {
-     "placed": 92,
-     "dud": 0,
-     "bite": 0,
-     "restrictTurns": 0,
-     "choices": 61,
-     "hushed": 0,
-     "hushedPebble": 0
-    },
-    "turncoat": {
-     "placed": 65,
-     "dud": 0,
-     "bite": 0,
-     "restrictTurns": 0,
-     "choices": 26,
-     "hushed": 0,
-     "hushedPebble": 0
-    }
-   }
-  },
-  "grandmaster|2048 + Whirl": {
-   "n": 100,
-   "won": 24,
-   "full": 17,
-   "turns": 612,
-   "track": {
-    "2048": {
-     "placed": 54,
-     "dud": 0,
-     "bite": 0,
-     "restrictTurns": 0,
-     "choices": 216,
-     "hushed": 0,
-     "hushedPebble": 0
-    },
-    "whirl": {
-     "placed": 43,
-     "dud": 0,
-     "bite": 0,
-     "restrictTurns": 0,
-     "choices": 86,
-     "hushed": 0,
-     "hushedPebble": 0
-    }
-   }
-  },
-  "grandmaster|one-shots (Pluck, Bribe)": {
-   "n": 100,
-   "won": 77,
-   "full": 47,
-   "turns": 772,
-   "track": {
-    "bribe": {
-     "placed": 99,
-     "dud": 0,
-     "bite": 0,
-     "restrictTurns": 0,
-     "choices": 0,
-     "hushed": 0,
-     "hushedPebble": 0
-    },
-    "pluck": {
-     "placed": 47,
-     "dud": 0,
-     "bite": 0,
-     "restrictTurns": 0,
-     "choices": 174,
-     "hushed": 0,
-     "hushedPebble": 0
-    }
-   }
-  },
-  "grandmaster|Magnet, Stinky, Shift, Rotate": {
-   "n": 100,
-   "won": 16,
-   "full": 9,
-   "turns": 590,
-   "track": {
-    "magnet": {
-     "placed": 51,
-     "dud": 0,
-     "bite": 33,
-     "restrictTurns": 63,
-     "choices": 0,
-     "hushed": 0,
-     "hushedPebble": 0
-    },
-    "shift": {
-     "placed": 43,
-     "dud": 0,
-     "bite": 0,
-     "restrictTurns": 0,
-     "choices": 172,
-     "hushed": 0,
-     "hushedPebble": 0
-    },
-    "rotate": {
-     "placed": 68,
-     "dud": 0,
-     "bite": 0,
-     "restrictTurns": 0,
-     "choices": 100,
-     "hushed": 0,
-     "hushedPebble": 0
-    },
-    "stinky": {
-     "placed": 29,
-     "dud": 0,
-     "bite": 37,
-     "restrictTurns": 57,
-     "choices": 0,
-     "hushed": 0,
-     "hushedPebble": 0
-    }
-   }
-  },
-  "grandmaster+undead|pebbles only": {
-   "n": 100,
-   "won": 30,
-   "full": 28,
-   "turns": 696,
-   "track": {}
-  },
-  "grandmaster+undead|movers (Shift, Rotate)": {
-   "n": 100,
-   "won": 9,
-   "full": 3,
-   "turns": 506,
-   "track": {
-    "rotate": {
-     "placed": 35,
-     "dud": 0,
-     "bite": 0,
-     "restrictTurns": 0,
-     "choices": 60,
-     "hushed": 0,
-     "hushedPebble": 0
-    },
-    "shift": {
-     "placed": 45,
-     "dud": 0,
-     "bite": 0,
-     "restrictTurns": 0,
-     "choices": 180,
-     "hushed": 0,
-     "hushedPebble": 0
-    }
-   }
-  },
-  "grandmaster+undead|restrictions (Magnet, Stinky)": {
-   "n": 100,
-   "won": 42,
-   "full": 35,
-   "turns": 707,
-   "track": {
-    "magnet": {
-     "placed": 75,
-     "dud": 0,
-     "bite": 74,
-     "restrictTurns": 178,
-     "choices": 0,
-     "hushed": 0,
-     "hushedPebble": 0
-    },
-    "stinky": {
-     "placed": 79,
-     "dud": 0,
-     "bite": 83,
-     "restrictTurns": 148,
-     "choices": 0,
-     "hushed": 0,
-     "hushedPebble": 0
-    }
-   }
-  },
-  "grandmaster+undead|Magnet + Shift": {
-   "n": 100,
-   "won": 32,
-   "full": 24,
-   "turns": 639,
-   "track": {
-    "magnet": {
-     "placed": 71,
-     "dud": 0,
-     "bite": 113,
-     "restrictTurns": 186,
-     "choices": 0,
-     "hushed": 0,
-     "hushedPebble": 0
-    },
-    "shift": {
-     "placed": 46,
-     "dud": 0,
-     "bite": 0,
-     "restrictTurns": 0,
-     "choices": 184,
-     "hushed": 0,
-     "hushedPebble": 0
-    }
-   }
-  },
   "grandmaster+undead|Beacon + Stinky": {
    "n": 100,
-   "won": 37,
-   "full": 1,
-   "turns": 692,
+   "won": 78,
+   "full": 69,
+   "turns": 721,
    "track": {
     "stinky": {
-     "placed": 99,
+     "placed": 34,
      "dud": 0,
-     "bite": 220,
-     "restrictTurns": 259,
+     "bite": 18,
+     "restrictTurns": 45,
      "choices": 0,
      "hushed": 0,
      "hushedPebble": 0
     },
     "beacon": {
-     "placed": 80,
+     "placed": 45,
      "dud": 0,
-     "bite": 72,
-     "restrictTurns": 106,
-     "choices": 160,
+     "bite": 12,
+     "restrictTurns": 53,
+     "choices": 90,
      "hushed": 0,
      "hushedPebble": 0
     }
@@ -2866,12 +2866,12 @@
   },
   "grandmaster+undead|two Mountains": {
    "n": 100,
-   "won": 20,
-   "full": 20,
-   "turns": 624,
+   "won": 73,
+   "full": 69,
+   "turns": 734,
    "track": {
     "mountain": {
-     "placed": 112,
+     "placed": 134,
      "dud": 0,
      "bite": 0,
      "restrictTurns": 0,
@@ -2883,25 +2883,25 @@
   },
   "grandmaster+undead|Swap + Turncoat": {
    "n": 100,
-   "won": 1,
-   "full": 0,
-   "turns": 513,
+   "won": 21,
+   "full": 15,
+   "turns": 624,
    "track": {
-    "swap": {
-     "placed": 53,
+    "turncoat": {
+     "placed": 67,
      "dud": 0,
      "bite": 0,
      "restrictTurns": 0,
-     "choices": 15,
+     "choices": 18,
      "hushed": 0,
      "hushedPebble": 0
     },
-    "turncoat": {
-     "placed": 51,
+    "swap": {
+     "placed": 93,
      "dud": 0,
      "bite": 0,
      "restrictTurns": 0,
-     "choices": 0,
+     "choices": 75,
      "hushed": 0,
      "hushedPebble": 0
     }
@@ -2910,24 +2910,24 @@
   "grandmaster+undead|2048 + Whirl": {
    "n": 100,
    "won": 19,
-   "full": 15,
-   "turns": 594,
+   "full": 11,
+   "turns": 603,
    "track": {
     "2048": {
-     "placed": 64,
+     "placed": 36,
      "dud": 0,
      "bite": 0,
      "restrictTurns": 0,
-     "choices": 256,
+     "choices": 144,
      "hushed": 0,
      "hushedPebble": 0
     },
     "whirl": {
-     "placed": 55,
+     "placed": 51,
      "dud": 0,
      "bite": 0,
      "restrictTurns": 0,
-     "choices": 110,
+     "choices": 102,
      "hushed": 0,
      "hushedPebble": 0
     }
@@ -2935,25 +2935,25 @@
   },
   "grandmaster+undead|one-shots (Pluck, Bribe)": {
    "n": 100,
-   "won": 85,
-   "full": 53,
-   "turns": 812,
+   "won": 39,
+   "full": 8,
+   "turns": 639,
    "track": {
-    "bribe": {
-     "placed": 98,
+    "pluck": {
+     "placed": 22,
      "dud": 0,
      "bite": 0,
      "restrictTurns": 0,
-     "choices": 0,
+     "choices": 77,
      "hushed": 0,
      "hushedPebble": 0
     },
-    "pluck": {
-     "placed": 62,
+    "bribe": {
+     "placed": 23,
      "dud": 0,
      "bite": 0,
      "restrictTurns": 0,
-     "choices": 233,
+     "choices": 2,
      "hushed": 0,
      "hushedPebble": 0
     }
@@ -2961,42 +2961,42 @@
   },
   "grandmaster+undead|Magnet, Stinky, Shift, Rotate": {
    "n": 100,
-   "won": 19,
-   "full": 2,
-   "turns": 556,
+   "won": 24,
+   "full": 10,
+   "turns": 579,
    "track": {
     "rotate": {
-     "placed": 47,
+     "placed": 72,
      "dud": 0,
      "bite": 0,
      "restrictTurns": 0,
-     "choices": 74,
-     "hushed": 0,
-     "hushedPebble": 0
-    },
-    "shift": {
-     "placed": 46,
-     "dud": 0,
-     "bite": 0,
-     "restrictTurns": 0,
-     "choices": 184,
-     "hushed": 0,
-     "hushedPebble": 0
-    },
-    "magnet": {
-     "placed": 47,
-     "dud": 0,
-     "bite": 27,
-     "restrictTurns": 66,
-     "choices": 0,
+     "choices": 118,
      "hushed": 0,
      "hushedPebble": 0
     },
     "stinky": {
-     "placed": 48,
+     "placed": 35,
      "dud": 0,
-     "bite": 73,
-     "restrictTurns": 100,
+     "bite": 52,
+     "restrictTurns": 68,
+     "choices": 0,
+     "hushed": 0,
+     "hushedPebble": 0
+    },
+    "shift": {
+     "placed": 49,
+     "dud": 0,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 196,
+     "hushed": 0,
+     "hushedPebble": 0
+    },
+    "magnet": {
+     "placed": 41,
+     "dud": 0,
+     "bite": 28,
+     "restrictTurns": 52,
      "choices": 0,
      "hushed": 0,
      "hushedPebble": 0
@@ -3007,260 +3007,10 @@
    "n": 100,
    "won": 0,
    "full": 0,
-   "turns": 496,
-   "track": {}
-  },
-  "twinkings|movers (Shift, Rotate)": {
-   "n": 100,
-   "won": 41,
-   "full": 34,
-   "turns": 614,
-   "track": {
-    "shift": {
-     "placed": 65,
-     "dud": 7,
-     "bite": 0,
-     "restrictTurns": 0,
-     "choices": 260,
-     "hushed": 0,
-     "hushedPebble": 0
-    },
-    "rotate": {
-     "placed": 69,
-     "dud": 15,
-     "bite": 0,
-     "restrictTurns": 0,
-     "choices": 134,
-     "hushed": 0,
-     "hushedPebble": 0
-    }
-   }
-  },
-  "twinkings|restrictions (Magnet, Stinky)": {
-   "n": 100,
-   "won": 97,
-   "full": 41,
-   "turns": 730,
-   "track": {
-    "stinky": {
-     "placed": 100,
-     "dud": 0,
-     "bite": 163,
-     "restrictTurns": 205,
-     "choices": 0,
-     "hushed": 0,
-     "hushedPebble": 0
-    },
-    "magnet": {
-     "placed": 100,
-     "dud": 0,
-     "bite": 185,
-     "restrictTurns": 227,
-     "choices": 0,
-     "hushed": 0,
-     "hushedPebble": 0
-    }
-   }
-  },
-  "twinkings|Magnet + Shift": {
-   "n": 100,
-   "won": 99,
-   "full": 34,
-   "turns": 718,
-   "track": {
-    "magnet": {
-     "placed": 99,
-     "dud": 0,
-     "bite": 198,
-     "restrictTurns": 232,
-     "choices": 0,
-     "hushed": 0,
-     "hushedPebble": 0
-    },
-    "shift": {
-     "placed": 48,
-     "dud": 4,
-     "bite": 0,
-     "restrictTurns": 0,
-     "choices": 192,
-     "hushed": 0,
-     "hushedPebble": 0
-    }
-   }
-  },
-  "twinkings|Beacon + Stinky": {
-   "n": 100,
-   "won": 98,
-   "full": 23,
-   "turns": 675,
-   "track": {
-    "beacon": {
-     "placed": 100,
-     "dud": 0,
-     "bite": 194,
-     "restrictTurns": 219,
-     "choices": 200,
-     "hushed": 0,
-     "hushedPebble": 0
-    },
-    "stinky": {
-     "placed": 70,
-     "dud": 0,
-     "bite": 28,
-     "restrictTurns": 47,
-     "choices": 0,
-     "hushed": 0,
-     "hushedPebble": 0
-    }
-   }
-  },
-  "twinkings|two Mountains": {
-   "n": 100,
-   "won": 0,
-   "full": 0,
-   "turns": 502,
-   "track": {
-    "mountain": {
-     "placed": 103,
-     "dud": 0,
-     "bite": 0,
-     "restrictTurns": 0,
-     "choices": 0,
-     "hushed": 0,
-     "hushedPebble": 0
-    }
-   }
-  },
-  "twinkings|Swap + Turncoat": {
-   "n": 100,
-   "won": 43,
-   "full": 16,
-   "turns": 590,
-   "track": {
-    "turncoat": {
-     "placed": 78,
-     "dud": 4,
-     "bite": 0,
-     "restrictTurns": 0,
-     "choices": 8,
-     "hushed": 0,
-     "hushedPebble": 0
-    },
-    "swap": {
-     "placed": 35,
-     "dud": 1,
-     "bite": 0,
-     "restrictTurns": 0,
-     "choices": 59,
-     "hushed": 0,
-     "hushedPebble": 0
-    }
-   }
-  },
-  "twinkings|2048 + Whirl": {
-   "n": 100,
-   "won": 67,
-   "full": 59,
-   "turns": 691,
-   "track": {
-    "2048": {
-     "placed": 90,
-     "dud": 6,
-     "bite": 0,
-     "restrictTurns": 0,
-     "choices": 360,
-     "hushed": 0,
-     "hushedPebble": 0
-    },
-    "whirl": {
-     "placed": 72,
-     "dud": 0,
-     "bite": 0,
-     "restrictTurns": 0,
-     "choices": 144,
-     "hushed": 0,
-     "hushedPebble": 0
-    }
-   }
-  },
-  "twinkings|one-shots (Pluck, Bribe)": {
-   "n": 100,
-   "won": 100,
-   "full": 7,
-   "turns": 610,
-   "track": {
-    "bribe": {
-     "placed": 100,
-     "dud": 0,
-     "bite": 0,
-     "restrictTurns": 0,
-     "choices": 4,
-     "hushed": 0,
-     "hushedPebble": 0
-    },
-    "pluck": {
-     "placed": 97,
-     "dud": 0,
-     "bite": 0,
-     "restrictTurns": 0,
-     "choices": 6,
-     "hushed": 0,
-     "hushedPebble": 0
-    }
-   }
-  },
-  "twinkings|Magnet, Stinky, Shift, Rotate": {
-   "n": 100,
-   "won": 97,
-   "full": 22,
-   "turns": 658,
-   "track": {
-    "magnet": {
-     "placed": 94,
-     "dud": 0,
-     "bite": 171,
-     "restrictTurns": 210,
-     "choices": 0,
-     "hushed": 0,
-     "hushedPebble": 0
-    },
-    "rotate": {
-     "placed": 62,
-     "dud": 0,
-     "bite": 0,
-     "restrictTurns": 0,
-     "choices": 100,
-     "hushed": 0,
-     "hushedPebble": 0
-    },
-    "stinky": {
-     "placed": 60,
-     "dud": 0,
-     "bite": 70,
-     "restrictTurns": 85,
-     "choices": 0,
-     "hushed": 0,
-     "hushedPebble": 0
-    },
-    "shift": {
-     "placed": 11,
-     "dud": 1,
-     "bite": 0,
-     "restrictTurns": 0,
-     "choices": 44,
-     "hushed": 0,
-     "hushedPebble": 0
-    }
-   }
-  },
-  "twinkings+undead|pebbles only": {
-   "n": 100,
-   "won": 0,
-   "full": 0,
    "turns": 536,
    "track": {}
   },
-  "twinkings+undead|movers (Shift, Rotate)": {
+  "twinkings|movers (Shift, Rotate)": {
    "n": 100,
    "won": 44,
    "full": 35,
@@ -3286,7 +3036,7 @@
     }
    }
   },
-  "twinkings+undead|restrictions (Magnet, Stinky)": {
+  "twinkings|restrictions (Magnet, Stinky)": {
    "n": 100,
    "won": 21,
    "full": 9,
@@ -3312,7 +3062,7 @@
     }
    }
   },
-  "twinkings+undead|Magnet + Shift": {
+  "twinkings|Magnet + Shift": {
    "n": 100,
    "won": 96,
    "full": 58,
@@ -3338,7 +3088,7 @@
     }
    }
   },
-  "twinkings+undead|Beacon + Stinky": {
+  "twinkings|Beacon + Stinky": {
    "n": 100,
    "won": 6,
    "full": 2,
@@ -3364,7 +3114,7 @@
     }
    }
   },
-  "twinkings+undead|two Mountains": {
+  "twinkings|two Mountains": {
    "n": 100,
    "won": 0,
    "full": 0,
@@ -3381,7 +3131,7 @@
     }
    }
   },
-  "twinkings+undead|Swap + Turncoat": {
+  "twinkings|Swap + Turncoat": {
    "n": 100,
    "won": 2,
    "full": 2,
@@ -3407,7 +3157,7 @@
     }
    }
   },
-  "twinkings+undead|2048 + Whirl": {
+  "twinkings|2048 + Whirl": {
    "n": 100,
    "won": 25,
    "full": 24,
@@ -3433,33 +3183,33 @@
     }
    }
   },
-  "twinkings+undead|one-shots (Pluck, Bribe)": {
+  "twinkings|one-shots (Pluck, Bribe)": {
    "n": 100,
-   "won": 96,
-   "full": 19,
-   "turns": 568,
+   "won": 98,
+   "full": 10,
+   "turns": 452,
    "track": {
     "bribe": {
      "placed": 100,
-     "dud": 0,
+     "dud": 2,
      "bite": 0,
      "restrictTurns": 0,
-     "choices": 46,
+     "choices": 4,
      "hushed": 0,
      "hushedPebble": 0
     },
     "pluck": {
-     "placed": 95,
+     "placed": 89,
      "dud": 0,
      "bite": 0,
      "restrictTurns": 0,
-     "choices": 21,
+     "choices": 10,
      "hushed": 0,
      "hushedPebble": 0
     }
    }
   },
-  "twinkings+undead|Magnet, Stinky, Shift, Rotate": {
+  "twinkings|Magnet, Stinky, Shift, Rotate": {
    "n": 100,
    "won": 99,
    "full": 19,
@@ -3497,6 +3247,256 @@
      "dud": 0,
      "bite": 36,
      "restrictTurns": 45,
+     "choices": 0,
+     "hushed": 0,
+     "hushedPebble": 0
+    }
+   }
+  },
+  "twinkings+undead|pebbles only": {
+   "n": 100,
+   "won": 0,
+   "full": 0,
+   "turns": 536,
+   "track": {}
+  },
+  "twinkings+undead|movers (Shift, Rotate)": {
+   "n": 100,
+   "won": 45,
+   "full": 39,
+   "turns": 627,
+   "track": {
+    "shift": {
+     "placed": 64,
+     "dud": 1,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 256,
+     "hushed": 0,
+     "hushedPebble": 0
+    },
+    "rotate": {
+     "placed": 87,
+     "dud": 23,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 168,
+     "hushed": 0,
+     "hushedPebble": 0
+    }
+   }
+  },
+  "twinkings+undead|restrictions (Magnet, Stinky)": {
+   "n": 100,
+   "won": 20,
+   "full": 6,
+   "turns": 630,
+   "track": {
+    "magnet": {
+     "placed": 80,
+     "dud": 0,
+     "bite": 108,
+     "restrictTurns": 160,
+     "choices": 0,
+     "hushed": 0,
+     "hushedPebble": 0
+    },
+    "stinky": {
+     "placed": 70,
+     "dud": 0,
+     "bite": 93,
+     "restrictTurns": 139,
+     "choices": 0,
+     "hushed": 0,
+     "hushedPebble": 0
+    }
+   }
+  },
+  "twinkings+undead|Magnet + Shift": {
+   "n": 100,
+   "won": 63,
+   "full": 17,
+   "turns": 633,
+   "track": {
+    "shift": {
+     "placed": 82,
+     "dud": 24,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 328,
+     "hushed": 0,
+     "hushedPebble": 0
+    },
+    "magnet": {
+     "placed": 70,
+     "dud": 0,
+     "bite": 129,
+     "restrictTurns": 155,
+     "choices": 0,
+     "hushed": 0,
+     "hushedPebble": 0
+    }
+   }
+  },
+  "twinkings+undead|Beacon + Stinky": {
+   "n": 100,
+   "won": 5,
+   "full": 3,
+   "turns": 628,
+   "track": {
+    "beacon": {
+     "placed": 80,
+     "dud": 0,
+     "bite": 101,
+     "restrictTurns": 162,
+     "choices": 160,
+     "hushed": 0,
+     "hushedPebble": 0
+    },
+    "stinky": {
+     "placed": 70,
+     "dud": 0,
+     "bite": 112,
+     "restrictTurns": 151,
+     "choices": 0,
+     "hushed": 0,
+     "hushedPebble": 0
+    }
+   }
+  },
+  "twinkings+undead|two Mountains": {
+   "n": 100,
+   "won": 0,
+   "full": 0,
+   "turns": 514,
+   "track": {
+    "mountain": {
+     "placed": 105,
+     "dud": 0,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 0,
+     "hushed": 0,
+     "hushedPebble": 0
+    }
+   }
+  },
+  "twinkings+undead|Swap + Turncoat": {
+   "n": 100,
+   "won": 1,
+   "full": 0,
+   "turns": 564,
+   "track": {
+    "swap": {
+     "placed": 58,
+     "dud": 2,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 16,
+     "hushed": 0,
+     "hushedPebble": 0
+    },
+    "turncoat": {
+     "placed": 57,
+     "dud": 5,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 6,
+     "hushed": 0,
+     "hushedPebble": 0
+    }
+   }
+  },
+  "twinkings+undead|2048 + Whirl": {
+   "n": 100,
+   "won": 14,
+   "full": 13,
+   "turns": 598,
+   "track": {
+    "2048": {
+     "placed": 61,
+     "dud": 1,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 244,
+     "hushed": 0,
+     "hushedPebble": 0
+    },
+    "whirl": {
+     "placed": 58,
+     "dud": 0,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 116,
+     "hushed": 0,
+     "hushedPebble": 0
+    }
+   }
+  },
+  "twinkings+undead|one-shots (Pluck, Bribe)": {
+   "n": 100,
+   "won": 97,
+   "full": 6,
+   "turns": 403,
+   "track": {
+    "bribe": {
+     "placed": 95,
+     "dud": 2,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 10,
+     "hushed": 0,
+     "hushedPebble": 0
+    },
+    "pluck": {
+     "placed": 41,
+     "dud": 0,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 83,
+     "hushed": 0,
+     "hushedPebble": 0
+    }
+   }
+  },
+  "twinkings+undead|Magnet, Stinky, Shift, Rotate": {
+   "n": 100,
+   "won": 93,
+   "full": 23,
+   "turns": 699,
+   "track": {
+    "stinky": {
+     "placed": 61,
+     "dud": 0,
+     "bite": 90,
+     "restrictTurns": 103,
+     "choices": 0,
+     "hushed": 0,
+     "hushedPebble": 0
+    },
+    "shift": {
+     "placed": 81,
+     "dud": 0,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 324,
+     "hushed": 0,
+     "hushedPebble": 0
+    },
+    "rotate": {
+     "placed": 47,
+     "dud": 0,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 46,
+     "hushed": 0,
+     "hushedPebble": 0
+    },
+    "magnet": {
+     "placed": 69,
+     "dud": 0,
+     "bite": 98,
+     "restrictTurns": 122,
      "choices": 0,
      "hushed": 0,
      "hushedPebble": 0
