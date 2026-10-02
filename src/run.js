@@ -638,10 +638,12 @@ export function prepareDuel(run, enemyId, context = {}) {
     if (quirk === 'stocked') handO.unshift({ type: pick(run, enemy.pool) });
     if (quirk === 'keen') heatIters *= 1.5;
   }
+  // A boss's undead phase may think harder than its first.
+  const baseIters = tier === 'boss' && (context.bossWins ?? 0) > 0 && enemy.iters2 ? enemy.iters2 : enemy.iters;
   return {
     enemyId, tier, handO, first: 'O', quirk, conds, rules,
     modsO,
-    iters: Math.round(enemy.iters * heatIters), blunder: run.heat >= 5 ? 0 : enemy.blunder * 0.7,
+    iters: Math.round(baseIters * heatIters), blunder: run.heat >= 5 ? 0 : enemy.blunder * 0.7,
     bossRound: context.bossRound ?? 0, bossWins: context.bossWins ?? 0,
     event: context.event ?? null,
   };

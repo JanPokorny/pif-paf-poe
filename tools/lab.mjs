@@ -12,6 +12,7 @@
 //   pairs     the strongest stones two by two (+ 2 Pebbles)
 //   conds     each condition, typical pouch against a typical enemy
 //   proposals the changes the stone report suggests, measured against the stones as they are
+//   tune      enemy variants given as --spec JSON, against the act's typical pouch
 //   slots     each stone in a hand of four and of five: what the fifth slot changes
 //   effects   how often each stone does nothing, and how many choices it asks for
 //
@@ -81,7 +82,20 @@ function duel(t) {
 const ORIGINAL = Object.fromEntries(Object.entries(STONES).map(([k, v]) => [k, { ...v }]));
 const newest = (s, p) => { let best = -1; for (let i = 0; i < 9; i++) if (s.board[i]?.player === p && (best < 0 || s.board[i].id > s.board[best].id)) best = i; return best; };
 const ORTHO4 = (i) => [i - 3, i + 3, i % 3 ? i - 1 : -1, i % 3 < 2 ? i + 1 : -1].filter((j) => j >= 0 && j < 9);
+const AROUND = (i) => [...Array(9).keys()].filter((j) => j !== i && Math.abs(((j / 3) | 0) - ((i / 3) | 0)) <= 1 && Math.abs((j % 3) - (i % 3)) <= 1);
 const PATCHES = {
+  // Bribe: an enemy Pebble around it, corners included.
+  'bribe:around': { options: (s, pos, cell) => AROUND(pos).filter((j) => s.board[j] && s.board[j].player !== cell.player && s.board[j].type === 'pebble').map((target) => ({ target })) },
+  // Bumper: pushes in all eight directions.
+  'bumper:eight': { apply(s, pos, a, cell) {
+    const moves = [];
+    for (const j of AROUND(pos)) {
+      const dr = ((j / 3) | 0) - ((pos / 3) | 0), dc = (j % 3) - (pos % 3), r = ((j / 3) | 0) + dr, c = (j % 3) + dc;
+      if (!s.board[j] || s.board[j].player === cell.player || STONES[s.board[j].type].immovable || r < 0 || r > 2 || c < 0 || c > 2) continue;
+      if (!s.board[r * 3 + c]) moves.push([j, r * 3 + c]);
+    }
+    for (const [f, t] of moves) { s.board[t] = s.board[f]; s.board[f] = null; }
+  } },
   // Bribe: only an enemy Pebble beside it.
   bribe: { options: (s, pos, cell) => ORTHO4(pos).filter((j) => s.board[j] && s.board[j].player !== cell.player && s.board[j].type === 'pebble').map((target) => ({ target })) },
   // Firecracker: leaves a scorched Pebble behind instead of burning away.
@@ -188,6 +202,23 @@ const EXPERIMENTS = {
         const d = enemyDuel(1, id, i * 31 + 7, { tier: ENEMIES[id].tier });
         out.push({ key: `${version === 'now' ? type + ' now' : version}|act 1`, patch: p, handX: [type, ...P(3)], handO: d.handO.map((x) => x.type), conds: d.conds, rules: d.rules, modsO: d.modsO, itersO: d.iters, blunderO: d.blunder, seed: i + 1 });
       }
+    }
+    return out;
+  },
+  tune(g) {
+    // Try enemy variants without touching content.js: --spec '[{"id":"oak","undead":1,"set":{"rules2":["clinch","reserved"]}}, ...]'
+    const out = [];
+    for (const v of JSON.parse(arg('spec', '[]'))) {
+      const e = ENEMIES[v.id], saved = { ...e };
+      Object.assign(e, v.set ?? {});
+      const ctx = e.tier === 'boss' ? { bossWins: v.undead ? 1 : 0 } : { tier: e.tier };
+      const label = v.label ?? `${v.id}${v.undead ? '+undead' : ''} ${JSON.stringify(v.set ?? {})}`;
+      for (let i = 0; i < g; i++) {
+        const d = enemyDuel(e.act, v.id, i * 17 + 3, ctx);
+        out.push({ key: label, handX: typicalHand(e.act, i), handO: d.handO.map((x) => x.type), conds: d.conds, rules: d.rules, modsO: d.modsO, itersO: d.iters, blunderO: d.blunder, seed: i + 1 });
+      }
+      for (const k of Object.keys(e)) if (!(k in saved)) delete e[k];
+      Object.assign(e, saved);
     }
     return out;
   },

@@ -88,7 +88,7 @@ def('rotate', {
 });
 
 def('magnet', {
-  name: 'Magnet', rarity: 'common', kind: 'restrict',
+  name: 'Magnet', rarity: 'uncommon', kind: 'restrict',
   text: 'The enemy must place next to it.',
   restrict: (sq, m) => adjacent(sq, m),
 });
@@ -112,7 +112,7 @@ def('2048', {
 });
 
 def('bumper', {
-  name: 'Bumper', rarity: 'uncommon', kind: 'move',
+  name: 'Bumper', rarity: 'common', kind: 'move',
   text: 'Pushes each enemy stone beside it one step away, onto an empty square.',
   options: () => [{}],
   apply(s, pos, a, cell) {
@@ -191,7 +191,7 @@ def('frog', {
 });
 
 def('beacon', {
-  name: 'Beacon', rarity: 'uncommon', kind: 'restrict',
+  name: 'Beacon', rarity: 'rare', kind: 'restrict',
   text: 'Pick its row or its column: the enemy must place there.',
   options: () => [{ line: 'row' }, { line: 'col' }],
   apply(s, pos, a) { s.board[pos].line = a.line; },
@@ -233,7 +233,7 @@ def('firecracker', {
 });
 
 def('turncoat', {
-  name: 'Turncoat', rarity: 'rare', kind: 'move',
+  name: 'Turncoat', rarity: 'uncommon', kind: 'move',
   text: 'Trades sides with an enemy stone beside it: that one becomes yours, this one theirs.',
   options(s, pos, cell) {
     return neighbours(pos, false).filter((j) => s.board[j] && s.board[j].player !== cell.player).map((target) => ({ target }));
@@ -245,12 +245,12 @@ def('turncoat', {
 });
 
 def('parrot', {
-  name: 'Parrot', rarity: 'rare', kind: 'copy',
+  name: 'Parrot', rarity: 'uncommon', kind: 'copy',
   text: 'Becomes a copy of the last special stone the enemy placed, and does what it does.',
 });
 
 def('twin', {
-  name: 'Twin', rarity: 'rare', kind: 'move',
+  name: 'Twin', rarity: 'uncommon', kind: 'move',
   text: 'A Pebble lands on the square opposite it across the board, if that is empty.',
   options(s, pos) {
     const j = 8 - pos;
@@ -296,7 +296,7 @@ def('overtake', {
 });
 
 def('relocate', {
-  name: 'Relocate', rarity: 'common', kind: 'once', once: true,
+  name: 'Relocate', rarity: 'uncommon', kind: 'once', once: true,
   text: 'Move one of your stones, this one too, to any empty square.',
   options: (s, pos, cell) => mine(s, cell.player).flatMap((from) => empties(s).map((to) => ({ from, to }))),
   apply(s, pos, a) { move(s, a.from, a.to); },
@@ -328,14 +328,14 @@ def('nudge', {
 });
 
 def('mind-control', {
-  name: 'Mind Control', rarity: 'uncommon', kind: 'once', once: true,
+  name: 'Mind Control', rarity: 'common', kind: 'once', once: true,
   text: 'Name a stone for the enemy — one of theirs, or a Pebble. That is what they must play next.',
   options: (s, pos, cell) => [...new Set(s.hands[other(cell.player)].map((h) => h.type))].map((stone) => ({ stone })),
   apply(s, pos, a, cell) { s.forced = { player: other(cell.player), stone: a.stone }; },
 });
 
 def('rehearse', {
-  name: 'Rehearse', rarity: 'uncommon', kind: 'once', once: true,
+  name: 'Rehearse', rarity: 'common', kind: 'once', once: true,
   text: 'Another of your stones on the board does its thing again, from where it stands.',
   options(s, pos, cell) {
     const out = [];

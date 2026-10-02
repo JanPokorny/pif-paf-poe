@@ -55,13 +55,14 @@ export { ONCE_STONES };
 
 // ── Enemies ─────────────────────────────────────────────────────────────────
 //
-// Everyone plays Pebbles as they like. An enemy's special stones are its
-// `core` plus draws from its `pool` up to its act's hand size. `iters` and
-// `blunder` are its brain. A `cond` is its
-// home rule, for both sides; others may roll one.
+// An enemy's special stones are its `core` plus draws from its `pool` up to
+// its act's hand size, and Pebbles make up the rest. `iters` and `blunder` are
+// its brain. A `cond` is its home rule, for both sides; others may roll one.
+// Tuned with `node tools/lab.mjs enemies` (see docs/STONES-REPORT.md).
 //
 // A boss brings no special stones at all: it has `rules` that favour it, and
-// once beaten (or grown stronger on the map) it rises with `rules2`.
+// once beaten (or grown stronger on the map) it rises with `rules2`, thinking
+// with `iters2` if it has one.
 
 export const ENEMIES = {
   // Act 1 — the Meadow
@@ -69,50 +70,50 @@ export const ENEMIES = {
     core: ['shift'], pool: ['shift', 'rotate'], size: 1, iters: 40, blunder: 0.45,
     quote: 'I just learned the rules!' },
   otter: { name: 'Slidey Otter', emoji: '🦦', act: 1, tier: 'normal',
-    core: ['shift', 'shift'], pool: ['shift', 'rotate'], iters: 60, blunder: 0.35,
+    core: ['shift', 'shift'], pool: ['shift', 'rotate'], iters: 60, blunder: 0.45,
     quote: 'Wheee! Everything slides!' },
   clinger: { name: 'Clingy Crab', emoji: '🦀', act: 1, tier: 'normal',
-    core: ['magnet', 'magnet'], pool: ['shift', 'magnet', 'mountain'], iters: 60, blunder: 0.35,
+    core: ['magnet'], pool: ['shift', 'mountain'], iters: 60, blunder: 0.42,
     quote: 'Come closer. Closer!' },
   rock: { name: 'Grumbling Rock', emoji: '🪨', act: 1, tier: 'normal',
     core: ['mountain'], pool: ['mountain', 'rotate', 'shift'], iters: 60, blunder: 0.3,
     quote: 'Hrmph. Not moving.' },
   top: { name: 'Spinning Top', emoji: '🌀', act: 1, tier: 'normal',
-    core: ['rotate', 'rotate'], pool: ['rotate', 'stinky'], iters: 70, blunder: 0.3,
+    core: ['rotate', 'rotate'], pool: ['rotate', 'lasso'], iters: 70, blunder: 0.38,
     quote: 'Round and round and round.' },
   skunk: { name: 'Stinky Skunk', emoji: '🦨', act: 1, tier: 'normal',
-    core: ['stinky', 'stinky'], pool: ['stinky', 'shift', 'lasso'], iters: 70, blunder: 0.3,
+    core: ['stinky', 'lasso'], pool: ['stinky', 'shift', 'lasso'], iters: 70, blunder: 0.38,
     quote: 'Keep your distance.' },
   mole: { name: 'Bumbling Hamster', emoji: '🐹', act: 1, tier: 'normal',
     core: ['bumper', 'lasso'], pool: ['bumper', 'lasso'], iters: 70, blunder: 0.3,
     quote: 'Push, pull, push, pull!' },
   apple: { name: 'Falling Apple', emoji: '🍎', act: 1, tier: 'normal', cond: 'gravity',
-    core: ['shift'], pool: ['shift', 'rotate', 'mountain'], iters: 70, blunder: 0.3,
+    core: ['shift'], pool: ['shift', 'rotate', 'mountain'], iters: 50, blunder: 0.4,
     quote: 'What goes up…' },
   // elites
   twins: { name: 'The Twins', emoji: '👯', act: 1, tier: 'elite',
-    core: ['twin', 'twin'], pool: ['shift', 'magnet'], iters: 110, blunder: 0.22,
+    core: ['twin', 'lasso'], pool: ['shift', 'magnet'], iters: 90, blunder: 0.28,
     quote: 'Two for the price of one!' },
   stenchlord: { name: 'Lord of Stench', emoji: '🧅', act: 1, tier: 'elite',
-    core: ['stinky', 'stinky', 'magnet'], pool: ['shift', 'rotate', 'mountain'], iters: 140, blunder: 0.18,
-    once: ['muffle'], quote: 'You will stand where I let you.' },
+    core: ['stinky', 'lasso', 'magnet'], pool: ['shift', 'rotate', 'mountain'], iters: 70, blunder: 0.32,
+    once: ['nudge'], quote: 'You will stand where I let you.' },
   // bosses
   oak: { name: 'The Old Oak', emoji: '🌳', act: 1, tier: 'boss',
-    rules: ['clinch'], rules2: ['clinch', 'headstart'], iters: 300, blunder: 0.08,
+    rules: ['clinch'], rules2: ['clinch', 'reserved'], iters: 300, blunder: 0.08,
     quote: 'Stay close to me, little one.' },
   scarecrow: { name: 'The Scarecrow', emoji: '🌾', act: 1, tier: 'boss',
-    rules: ['reserved'], rules2: ['reserved', 'headstart'], iters: 300, blunder: 0.08,
+    rules: ['reserved'], rules2: ['reserved', 'spy'], iters: 220, blunder: 0.12,
     quote: 'The middle of the field is mine.' },
 
   // Act 2 — the Quarry
   bee: { name: 'Bumper Bee', emoji: '🐝', act: 2, tier: 'normal',
-    core: ['bumper', 'bumper'], pool: ['bumper', 'magnet', 'shift', 'rotate'], iters: 130, blunder: 0.2,
+    core: ['bumper', 'magnet'], pool: ['bumper', 'magnet', 'shift', 'rotate'], iters: 130, blunder: 0.2,
     quote: 'Bzz! Out of my way!' },
   cowboy: { name: 'Lasso Lou', emoji: '🤠', act: 2, tier: 'normal',
-    core: ['lasso', 'lasso'], pool: ['shift', 'mountain', 'magnet'], iters: 130, blunder: 0.2,
+    core: ['lasso', 'magnet'], pool: ['shift', 'mountain', 'magnet'], iters: 130, blunder: 0.05,
     quote: 'Yeehaw, git over here.' },
   frog: { name: 'Leapin\' Frog', emoji: '🐸', act: 2, tier: 'normal',
-    core: ['frog', 'frog'], pool: ['frog', 'stinky', 'rotate'], iters: 130, blunder: 0.2,
+    core: ['frog', 'stinky'], pool: ['frog', 'stinky', 'rotate'], iters: 130, blunder: 0.05,
     quote: 'Ribbit. Hop. Ribbit.' },
   keeper: { name: 'Lighthouse Keeper', emoji: '🗼', act: 2, tier: 'normal',
     core: ['beacon', 'beacon'], pool: ['beacon', 'shift', 'mountain', 'bumper'], iters: 130, blunder: 0.15,
@@ -120,11 +121,11 @@ export const ENEMIES = {
   dolphin: { name: 'Flip Flop', emoji: '🐬', act: 2, tier: 'normal',
     core: ['flip', 'flip'], pool: ['flip', 'swap', 'magnet'], iters: 130, blunder: 0.15,
     quote: 'Everything is backwards!' },
-  miner: { name: 'Quarry Miner', emoji: '⛏️', act: 2, tier: 'normal', cond: 'gravity',
-    core: ['2048', 'mountain'], pool: ['2048', 'mountain', 'shift', 'stinky'], iters: 130, blunder: 0.15,
+  miner: { name: 'Quarry Miner', emoji: '⛏️', act: 2, tier: 'normal',
+    core: ['2048', 'mountain', 'magnet'], pool: ['2048', 'mountain', 'shift', 'stinky'], iters: 130, blunder: 0.05,
     quote: 'Dig, slide, dig.' },
   magpie: { name: 'Magpie Meg', emoji: '🐦', act: 2, tier: 'normal',
-    core: ['magpie', 'magpie'], pool: ['shift', 'rotate', 'magnet'], iters: 130, blunder: 0.15,
+    core: ['magpie', 'shift'], pool: ['shift', 'rotate', 'magnet'], iters: 90, blunder: 0.28,
     quote: 'Ooh, shiny. That one\'s mine now.' },
   // elites
   witch: { name: 'Hollow Witch', emoji: '🕷️', act: 2, tier: 'elite', cond: 'nocentre',
@@ -135,13 +136,13 @@ export const ENEMIES = {
     once: ['nudge'], quote: 'I. DO. NOT. MOVE.' },
   // bosses
   colossus: { name: 'Clockwork Colossus', emoji: '⚙️', act: 2, tier: 'boss',
-    rules: ['column'], rules2: ['column'], iters: 200, blunder: 0.04,
+    rules: ['column'], rules2: ['column', 'headstart'], iters: 200, blunder: 0.04,
     quote: 'TICK. TOCK. THAT COLUMN, PLEASE.' },
   mirrorknight: { name: 'The Mirror Knight', emoji: '🛡️', act: 2, tier: 'boss',
-    rules: ['spy'], rules2: ['spy', 'headstart'], iters: 500, blunder: 0.04,
+    rules: ['spy', 'headstart'], rules2: ['spy', 'headstart', 'reserved'], iters: 500, blunder: 0.04,
     quote: 'Your left is my right.' },
   carpenter: { name: 'The Carpenter', emoji: '🪚', act: 2, tier: 'boss',
-    rules: ['elko'], rules2: ['elko', 'patient'], iters: 500, blunder: 0.04,
+    rules: ['elko', 'reserved'], rules2: ['elko', 'reserved', 'headstart'], iters: 500, blunder: 0.04,
     quote: 'Straight lines are for amateurs.' },
 
   // Act 3 — the Summit
@@ -152,7 +153,7 @@ export const ENEMIES = {
     core: ['turncoat', 'turncoat'], pool: ['magnet', 'stinky', 'shift', 'mountain'], iters: 400, blunder: 0.08,
     quote: 'Loyalty is for pebbles.' },
   parrot: { name: 'Captain Polly', emoji: '🦜', act: 3, tier: 'normal', cond: 'shared',
-    core: ['parrot', 'parrot'], pool: ['magnet', 'shift', '2048', 'swap'], iters: 400, blunder: 0.08,
+    core: ['parrot', 'parrot'], pool: ['magnet', 'shift', '2048', 'swap'], iters: 400, blunder: 0.18,
     quote: 'Squawk! What\'s yours is mine!' },
   jester: { name: 'The Jester', emoji: '🃏', act: 3, tier: 'normal',
     core: ['swap', 'flip'], pool: ['shift', 'swap', 'magnet', 'whirl'], iters: 220, blunder: 0.14,
@@ -161,23 +162,23 @@ export const ENEMIES = {
     core: ['2048', '2048'], pool: ['mountain', 'magnet', 'stinky'], iters: 450, blunder: 0.05,
     quote: 'CALCULATING OPTIMAL SLIDE.' },
   yeti: { name: 'Summit Yeti', emoji: '🦍', act: 3, tier: 'normal', cond: 'gravity',
-    core: ['mountain', 'bumper'], pool: ['lasso', 'frog', 'whirl', 'mountain'], iters: 450, blunder: 0.05,
-    quote: 'ROAR. Everything falls down mountain.' },
+    core: ['mountain', 'magnet', 'stinky'], pool: ['lasso', 'frog', 'whirl', 'mountain'], iters: 450, blunder: 0.02,
+    once: ['muffle'], quote: 'ROAR. Everything falls down mountain.' },
   // elites
   owl: { name: 'Grand Tactician', emoji: '🦉', act: 3, tier: 'elite',
     core: ['magnet', 'shift', 'swap'], pool: ['rotate', 'swap', 'beacon', 'firecracker'], iters: 300, blunder: 0.06,
     once: ['mirror'], quote: 'I have seen this position before.' },
   storm: { name: 'Storm Caller', emoji: '⛈️', act: 3, tier: 'elite',
-    core: ['whirl', 'flip', 'magnet'], pool: ['2048', 'bumper', 'shift'], iters: 300, blunder: 0.06,
+    core: ['whirl', 'flip', 'magnet'], pool: ['2048', 'bumper', 'shift'], iters: 450, blunder: 0.03,
     quote: 'The wind takes everything.' },
   // bosses
   grandmaster: { name: 'The Grandmaster', emoji: '👑', act: 3, tier: 'boss',
-    rules: ['tactics'], rules2: ['tactics', 'reserved'], iters: 400, blunder: 0.03,
+    rules: ['tactics'], rules2: ['tactics', 'spy'], iters: 300, iters2: 450, blunder: 0.05,
     quote: 'You will play what I tell you to play.' },
-  // Double Time: plain stones cannot hold out. It wants restrictions — and
-  // once it holds the centre too, restrictions and something that moves.
+  // Double Time: plain stones cannot hold out. It wants restrictions and
+  // something that moves; risen, it also names the stone you play.
   twinkings: { name: 'The Twin Kings', emoji: '🎭', act: 3, tier: 'boss',
-    rules: ['double'], rules2: ['double', 'reserved'], iters: 600, blunder: 0.03,
+    rules: ['double', 'reserved'], rules2: ['double', 'tactics', 'reserved'], iters: 600, blunder: 0.03,
     quote: 'Two crowns, two moves.' },
 };
 
