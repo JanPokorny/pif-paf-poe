@@ -277,18 +277,17 @@ test('2048 slides everything one way as far as it goes, stepping over Mountains'
   eff(t, { dir: 'left' });
   expectAt(t, { 0: 100, 1: 102 });
 });
-test('Bumper pushes each enemy stone beside it one step away, into an empty square', () => {
+test('Bumper pushes each enemy stone beside it one step away, or off the edge', () => {
   const s = G();
   lay(s, { 4: 'O shift', 0: 'O pebble', 2: 'X pebble' });
   play(s, 'bumper', 1);
-  expectAt(s, { 7: 104, 4: 0, 0: 100, 2: 102 });
+  expectAt(s, { 7: 104, 4: 0, 0: 0, 2: 102 });   // 0 goes off the edge; your own 2 stays
 });
-test('Bumper never pushes a stone off the board', () => {
+test('Bumper: a stone with an occupied square behind it stays', () => {
   const s = G();
-  lay(s, { 1: 'O shift', 3: 'O pebble' });
-  play(s, 'bumper', 4);
-  expectAt(s, { 1: 101, 3: 103 });
-  assert.equal(count(s, 'O', 'shift'), 0);
+  lay(s, { 4: 'O shift', 7: 'O pebble' });
+  play(s, 'bumper', 1);
+  expectAt(s, { 4: 104, 7: 107 });
 });
 test('Bumper does not push a Mountain', () => {
   const s = G();
@@ -296,12 +295,11 @@ test('Bumper does not push a Mountain', () => {
   play(s, 'bumper', 4);
   expectAt(s, { 1: 101 });
 });
-test('Lasso pulls every stone two squares away one step closer', () => {
+test('Lasso pulls any enemy stone onto an empty square beside it', () => {
   const s = G();
-  lay(s, { 0: 'O pebble', 6: 'O pebble' });
-  play(s, 'lasso', 2);   // 0 is two away along the row; 6 along the diagonal
-  expectAt(s, { 1: 100, 4: 106 });
-  turnPassedTo(s, 'O');
+  lay(s, { 6: 'O pebble', 5: 'O pebble', 0: 'X pebble' });
+  play(s, 'lasso', 2);   // beside 2: 1 (empty) and 5 (already beside, stays); one choice, made on its own
+  expectAt(s, { 1: 106, 5: 105, 0: 100 });
 });
 test('Swap trades with a stone around it, corners included — not further', () => {
   const s = G();
@@ -501,12 +499,38 @@ test('Pluck and Bribe', () => {
   assert.equal(t.board[4].player, 'X');
   assert.equal(t.board[2].player, 'O');
 });
-test('Rehearse: another stone of yours does its thing again', () => {
-  const s = G({ handX: ['rehearse'] });
-  lay(s, { 0: 'X shift', 1: 'O pebble' });
-  play(s, 'rehearse', 8);
-  eff(s, { pos: 0, dir: 'right', index: 0 });
-  expectAt(s, { 1: 100, 2: 101 });
+test('Rehearse becomes a copy of your last special stone', () => {
+  const s = G({ handX: ['rehearse', 'firecracker'] });
+  lay(s, { 0: 'O pebble', 8: 'O shift' });
+  play(s, 'firecracker', 1);   // one target: 0 goes back
+  play(s, 'pebble', 3);   // the enemy's turn
+  play(s, 'rehearse', 7);   // a Firecracker again
+  eff(s, { target: 8 });
+  assert.equal(s.board[8], null);
+  assert.equal(s.board[7].type, 'pebble');
+  const t = G({ handX: ['rehearse'] });
+  play(t, 'rehearse', 4);   // nothing placed yet: it stays itself
+  assert.equal(t.board[4].type, 'rehearse');
+});
+test('Mind Control: the stone named does nothing', () => {
+  const s = G({ handX: ['mind-control'], handO: ['bumper'] });
+  lay(s, { 1: 'X pebble' });
+  play(s, 'mind-control', 8);
+  eff(s, { stone: 'bumper' });
+  play(s, 'bumper', 4);
+  expectAt(s, { 1: 101 });
+  assert.ok(s.board[4].hushed);
+});
+test('Mountain goes anywhere, whatever the restrictions; Mirror and Relocate cannot move it', () => {
+  const s = G({ handX: ['mountain'] });
+  lay(s, { 0: 'O magnet' });
+  applyAction(s, { type: 'select', stone: 'mountain' });
+  assert.equal(allowedSquares(s).length, 8);
+  applyAction(s, { type: 'place', pos: 8 });
+  const t = G({ handX: ['mirror'] });
+  lay(t, { 0: 'X mountain', 1: 'O pebble' });
+  play(t, 'mirror', 4);
+  assert.ok(!legalActions(t).some((a) => a.a === 0 || a.b === 0));
 });
 
 // ── Conditions ──────────────────────────────────────────────────────────────

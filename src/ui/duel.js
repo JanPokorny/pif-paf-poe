@@ -7,7 +7,7 @@
 
 import {
   STONES, CONDS, RULES, legalActions, applyAction, cloneState, allowedSquares,
-  winningLine, active, row, col, LINES, ELS,
+  winningLine, active, row, col, LINES, ELS, touching, adjacent,
 } from '../engine.js';
 import { h, stoneEl, updateStone, toast, pressable, infoStone, ruleChip, stoneName, stoneText, sleep } from './common.js';
 import { icon } from '../icons.js';
@@ -239,7 +239,7 @@ export function mountDuel(root, opts) {
 
   function clearOverlay() {
     overlay.replaceChildren();
-    cells.forEach((c) => c.classList.remove('allowed', 'target', 'chosen', 'from'));
+    cells.forEach((c) => c.classList.remove('allowed', 'target', 'chosen', 'from', 'reach'));
   }
 
   // Squares, arrows and buttons for the choice at hand.
@@ -408,6 +408,9 @@ export function mountDuel(root, opts) {
       setStatus(dud ? t('{why} — it will do nothing. Confirm?', { why: t('Hushed') }) : t('This is what happens. Confirm?'), dud ? 'lose-note' : 'you');
       cells[preview.action.pos].classList.add('chosen');
       for (const i of allowedSquares(state)) cells[i].classList.add('allowed');
+      // The squares it acts on from there: beside it (four) or around it (eight).
+      const reach = STONES[state.selected?.type]?.reach, at = preview.action.pos;
+      if (reach) for (let i = 0; i < 9; i++) if ((reach === 'around' ? touching : adjacent)(at, i)) cells[i].classList.add('reach');
       renderActions([undo, h('button.btn.primary', { onclick: confirm }, h('span', { html: icon('check') }), t('Confirm'))]);
       verdict();
     } else if (state.phase === 'effect') {
@@ -552,7 +555,7 @@ export function mountDuel(root, opts) {
     if (i === 4 && state.rules.includes('reserved')) return t('{rule}: the centre is the boss\'s.', { rule: RULES.reserved.name });
     if (state.dictate?.kind === 'column' && col(i) === state.dictate.value) return t('{rule}: that column is closed this turn.', { rule: RULES.column.name });
     if (state.rules.includes('clinch') && !state.board.some((c, j) => c?.player === 'O' && j !== i && Math.abs(row(i) - row(j)) <= 1 && Math.abs(col(i) - col(j)) <= 1)) {
-      return t('{rule}: you must place next to one of its stones.', { rule: RULES.clinch.name });
+      return t('{rule}: you must place around one of its stones.', { rule: RULES.clinch.name });
     }
     return t('Not there — the enemy\'s restrictions point elsewhere.');
   }
@@ -613,7 +616,7 @@ export function mountDuel(root, opts) {
     for (const l of logs) {
       if (l === 'silenced') toast(t(me ? 'Hushed! Your stone does nothing.' : 'Hushed! {enemy}\'s stone does nothing.', v), me ? 'bad' : 'good');
       else if (l === 'echo') toast(t('Echo! It goes again.'), 'good');
-      else if (l.startsWith('parrot:')) toast(t('The {parrot} copies {stone}!', { parrot: STONES.parrot.name, stone: STONES[l.slice(7)].name }));
+      else if (l.startsWith('copy:')) { const [, by, what] = l.split(':'); toast(t('The {parrot} copies {stone}!', { parrot: STONES[by].name, stone: STONES[what].name })); }
       else if (l === 'pass:X') toast(t('No stones left: you pass.'), 'bad');
       else if (l === 'pass:O') toast(t('{enemy} has no stones left and passes.', v), 'good');
       else if (l === 'cond:gravity') { /* shown as a step of its own */ }

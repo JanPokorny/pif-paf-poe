@@ -1,6 +1,6 @@
 // Small DOM helpers shared by every screen.
 
-import { STONES, CONDS, RULES, createGame, legalActions, applyAction, cloneState, allowedSquares } from '../engine.js';
+import { STONES, CONDS, RULES, createGame, legalActions, applyAction, cloneState, allowedSquares, touching, adjacent } from '../engine.js';
 import { RELICS } from '../content.js';
 import { icon, ICONS } from '../icons.js';
 import { t, lang, setLang, LANGS } from '../i18n.js';
@@ -191,6 +191,16 @@ function stoneDemo(s) {
   } catch { return null; }
 }
 
+// What "beside" and "around" mean, drawn: the four squares sharing a side, or all eight.
+function reachDemo(st) {
+  if (!st.reach || st.restrict) return null;   // a restriction's own demo shows it already
+  const near = st.reach === 'around' ? touching : adjacent;
+  const marks = {};
+  for (let i = 0; i < 9; i++) marks[i] = i === 4 ? 'placed' : near(4, i) ? 'ok' : '';
+  return h('div.demo.reach-demo', {}, demoBoard({ 4: { player: 'X', type: st.id } }, marks),
+    h('div.demo-cap', {}, st.reach === 'around' ? t('Around: all eight squares, corners too.') : t('Beside: the four squares that share a side.')));
+}
+
 export function infoStone(s, player = 'X', extra = '') {
   const st = STONES[s.type];
   const body = h('div.info-stone', {},
@@ -198,6 +208,7 @@ export function infoStone(s, player = 'X', extra = '') {
       h('div.info-name', {}, stoneName(s)),
       h('div.info-rarity.' + st.rarity, {}, st.once ? `${t('one-shot')} · ${t(st.rarity)}` : t(st.rarity)))),
     h('p', {}, stoneText(s)),
+    reachDemo(st),
     stoneDemo(s),
     st.once ? h('p.info-plus', {}, t('One use: once played, it is gone from your pouch.')) : null,
     extra ? h('p.info-extra', {}, extra) : null,

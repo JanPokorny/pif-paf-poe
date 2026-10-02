@@ -81,9 +81,45 @@ function duel(t) {
 
 const ORIGINAL = Object.fromEntries(Object.entries(STONES).map(([k, v]) => [k, { ...v }]));
 const newest = (s, p) => { let best = -1; for (let i = 0; i < 9; i++) if (s.board[i]?.player === p && (best < 0 || s.board[i].id > s.board[best].id)) best = i; return best; };
+const enemyPulls = (s, pos, cell) => {
+  const out = [];
+  for (const [dr, dc] of [[-1, -1], [-1, 0], [-1, 1], [0, -1], [0, 1], [1, -1], [1, 0], [1, 1]]) {
+    const r = ((pos / 3) | 0), c = pos % 3, mr = r + dr, mc = c + dc, fr = r + 2 * dr, fc = c + 2 * dc;
+    if (fr < 0 || fr > 2 || fc < 0 || fc > 2) continue;
+    const far = fr * 3 + fc, mid = mr * 3 + mc;
+    if (s.board[far] && !s.board[mid] && s.board[far].player !== cell.player && !STONES[s.board[far].type].immovable) out.push([far, mid]);
+  }
+  return out;
+};
 const ORTHO4 = (i) => [i - 3, i + 3, i % 3 ? i - 1 : -1, i % 3 < 2 ? i + 1 : -1].filter((j) => j >= 0 && j < 9);
 const AROUND = (i) => [...Array(9).keys()].filter((j) => j !== i && Math.abs(((j / 3) | 0) - ((i / 3) | 0)) <= 1 && Math.abs((j % 3) - (i % 3)) <= 1);
 const PATCHES = {
+  // Bumper: an enemy stone it cannot push away is knocked off the board.
+  'bumper:knock': { apply(s, pos, a, cell) {
+    const r = (pos / 3) | 0, c = pos % 3;
+    for (const [dr, dc] of [[-1, 0], [1, 0], [0, -1], [0, 1]]) {
+      const nr = r + dr, nc = c + dc, tr = r + 2 * dr, tc = c + 2 * dc;
+      if (nr < 0 || nr > 2 || nc < 0 || nc > 2) continue;
+      const n = nr * 3 + nc, cl = s.board[n];
+      if (!cl || cl.player === cell.player || STONES[cl.type].immovable) continue;
+      if (tr < 0 || tr > 2 || tc < 0 || tc > 2) s.board[n] = null;
+      else if (!s.board[tr * 3 + tc]) { s.board[tr * 3 + tc] = cl; s.board[n] = null; }
+    }
+  } },
+  // Rehearse: a copy of the last special stone you placed.
+  'rehearse:copy': { copies: 'self', options: undefined, apply: undefined },
+  // Lasso: fetches any enemy stone to an empty square beside it.
+  'lasso:fetch': {
+    options: (s, pos, cell) => { const out = []; for (let i = 0; i < 9; i++) { const c = s.board[i]; if (!c || c.player === cell.player || STONES[c.type].immovable || ORTHO4(pos).includes(i)) continue; for (const to of ORTHO4(pos)) if (!s.board[to]) out.push({ from: i, to }); } return out; },
+    apply(s, pos, a) { s.board[a.to] = s.board[a.from]; s.board[a.from] = null; },
+  },
+  // Lasso: pulls only enemy stones.
+  'lasso:enemy': { options: (s, pos, cell) => (ORIGINAL.lasso.options(s, pos).length && enemyPulls(s, pos, cell).length ? [{}] : []), apply(s, pos, a, cell) { for (const [f, t] of enemyPulls(s, pos, cell)) { s.board[t] = s.board[f]; s.board[f] = null; } } },
+  // Mountain: it may go anywhere, whatever the enemy's restrictions.
+  'mountain:free': { free: true },
+  // Mind Control: the stone named does nothing, too.
+  'mind-control:hush': { apply(s, pos, a, cell) { s.forced = { player: other(cell.player), stone: a.stone }; if (a.stone !== 'pebble') s.silenced[other(cell.player)] = 1; } },
+
   // Bribe: an enemy Pebble around it, corners included.
   'bribe:around': { options: (s, pos, cell) => AROUND(pos).filter((j) => s.board[j] && s.board[j].player !== cell.player && s.board[j].type === 'pebble').map((target) => ({ target })) },
   // Bumper: pushes in all eight directions.
@@ -118,7 +154,7 @@ const PATCHES = {
 let patched = null;
 function patch(id) {
   if (patched === (id ?? null)) return;
-  for (const k of Object.keys(ORIGINAL)) Object.assign(STONES[k], ORIGINAL[k]);
+  for (const k of Object.keys(ORIGINAL)) { for (const f of Object.keys(STONES[k])) if (!(f in ORIGINAL[k])) delete STONES[k][f]; Object.assign(STONES[k], ORIGINAL[k]); }
   if (id) Object.assign(STONES[id.split(':')[0]], PATCHES[id]);
   patched = id ?? null;
 }
@@ -195,12 +231,13 @@ const EXPERIMENTS = {
     const only = arg('only', null)?.split(',');
     const keys = Object.keys(PATCHES).filter((k) => !only || only.includes(k));
     const versions = [...new Set(keys.map((k) => k.split(':')[0]))].map((k) => [k, null]).concat(keys.map((k) => [k.split(':')[0], k]));
+    const withX = arg('with', null) ? [arg('with')] : [];
     for (const [type, p] of versions) {
       const version = p ?? 'now';
-      for (const [fk, handO] of Object.entries(foes)) for (let i = 0; i < g; i++) out.push({ key: `${version === 'now' ? type + ' now' : version}|${fk}`, patch: p, handX: [type, ...P(3)], handO, seed: i + 1 });
+      for (const [fk, handO] of Object.entries(foes)) for (let i = 0; i < g; i++) out.push({ key: `${version === 'now' ? type + ' now' : version}|${fk}`, patch: p, handX: [type, ...withX, ...P(3 - withX.length)], handO, seed: i + 1 });
       for (const id of cast) for (let i = 0; i < g / 4; i++) {
         const d = enemyDuel(1, id, i * 31 + 7, { tier: ENEMIES[id].tier });
-        out.push({ key: `${version === 'now' ? type + ' now' : version}|act 1`, patch: p, handX: [type, ...P(3)], handO: d.handO.map((x) => x.type), conds: d.conds, rules: d.rules, modsO: d.modsO, itersO: d.iters, blunderO: d.blunder, seed: i + 1 });
+        out.push({ key: `${version === 'now' ? type + ' now' : version}|act 1`, patch: p, handX: [type, ...withX, ...P(3 - withX.length)], handO: d.handO.map((x) => x.type), conds: d.conds, rules: d.rules, modsO: d.modsO, itersO: d.iters, blunderO: d.blunder, seed: i + 1 });
       }
     }
     return out;

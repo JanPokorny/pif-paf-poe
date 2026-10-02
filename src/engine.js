@@ -29,7 +29,6 @@ const DELTA = {
   upleft: [-1, -1], upright: [-1, 1], downleft: [1, -1], downright: [1, 1],
 };
 const ORTHO = ['up', 'down', 'left', 'right'];
-const ALL8 = Object.keys(DELTA);
 
 export const other = (p) => (p === 'X' ? 'O' : 'X');
 export const row = (i) => (i / 3) | 0;
@@ -88,20 +87,20 @@ def('rotate', {
 });
 
 def('magnet', {
-  name: 'Magnet', rarity: 'uncommon', kind: 'restrict',
-  text: 'The enemy must place next to it.',
+  name: 'Magnet', rarity: 'uncommon', kind: 'restrict', reach: 'beside',
+  text: 'The enemy must place beside it.',
   restrict: (sq, m) => adjacent(sq, m),
 });
 
 def('stinky', {
-  name: 'Stinky', rarity: 'common', kind: 'restrict',
-  text: 'The enemy must not place next to it.',
+  name: 'Stinky', rarity: 'common', kind: 'restrict', reach: 'beside',
+  text: 'The enemy must not place beside it.',
   restrict: (sq, m) => !adjacent(sq, m),
 });
 
 def('mountain', {
-  name: 'Mountain', rarity: 'common', kind: 'static', immovable: true,
-  text: 'No stone ever moves it: moving stones step over it. One-shot stones still can.',
+  name: 'Mountain', rarity: 'common', kind: 'static', immovable: true, free: true,
+  text: 'Goes anywhere, whatever the enemy\'s restrictions, and nothing ever moves it.',
 });
 
 def('2048', {
@@ -112,43 +111,41 @@ def('2048', {
 });
 
 def('bumper', {
-  name: 'Bumper', rarity: 'common', kind: 'move',
-  text: 'Pushes each enemy stone beside it one step away, onto an empty square.',
+  name: 'Bumper', rarity: 'uncommon', kind: 'move', reach: 'beside',
+  text: 'Pushes each enemy stone beside it one step away. One pushed off the edge is knocked off the board.',
   options: () => [{}],
   apply(s, pos, a, cell) {
-    const moves = [];
+    const moves = [], off = [];
     for (const dir of ORTHO) {
       const n = step(pos, dir), beyond = step(pos, dir, 2);
       if (n < 0 || !s.board[n] || s.board[n].player === cell.player || isStuck(s, n)) continue;
-      // Only onto the board: a stone at the edge stays put.
-      if (beyond >= 0 && !s.board[beyond]) moves.push([n, beyond]);
+      if (beyond < 0) off.push(n);
+      else if (!s.board[beyond]) moves.push([n, beyond]);
     }
+    for (const n of off) s.board[n] = null;
     for (const [from, to] of moves) move(s, from, to);
   },
 });
 
 def('lasso', {
-  name: 'Lasso', rarity: 'common', kind: 'move',
-  text: 'Pulls every stone two squares away (diagonals too) one step closer.',
-  options: (s, pos) => (lassoPulls(s, pos).length ? [{}] : []),
-  apply(s, pos) {
-    for (const [from, to] of lassoPulls(s, pos)) move(s, from, to);
+  name: 'Lasso', rarity: 'common', kind: 'move', reach: 'beside',
+  text: 'Pulls any enemy stone onto an empty square beside it.',
+  options(s, pos, cell) {
+    const out = [];
+    const beside = neighbours(pos, false);
+    for (let i = 0; i < 9; i++) {
+      const c = s.board[i];
+      if (!c || c.player === cell.player || isStuck(s, i) || beside.includes(i)) continue;
+      for (const to of beside) if (!s.board[to]) out.push({ from: i, to });
+    }
+    return out;
   },
+  apply(s, pos, a) { move(s, a.from, a.to); },
 });
 
-function lassoPulls(s, pos) {
-  const moves = [];
-  for (const dir of ALL8) {
-    const mid = step(pos, dir), far = step(pos, dir, 2);
-    if (far < 0 || !s.board[far] || s.board[mid] || isStuck(s, far)) continue;
-    moves.push([far, mid]);
-  }
-  return moves;
-}
-
 def('swap', {
-  name: 'Swap', rarity: 'uncommon', kind: 'move',
-  text: 'Trade places with a stone around it, corners included.',
+  name: 'Swap', rarity: 'uncommon', kind: 'move', reach: 'around',
+  text: 'Trade places with a stone around it.',
   options(s, pos) {
     if (isStuck(s, pos)) return [];
     return neighbours(pos, true).filter((j) => s.board[j] && !isStuck(s, j)).sort((x, y) => x - y).map((target) => ({ target }));
@@ -171,7 +168,7 @@ def('whirl', {
 });
 
 def('frog', {
-  name: 'Frog', rarity: 'common', kind: 'move',
+  name: 'Frog', rarity: 'common', kind: 'move', reach: 'beside',
   text: 'Leaps over a stone beside it. An enemy stone leapt over is knocked off the board.',
   options(s, pos) {
     const out = [];
@@ -223,7 +220,7 @@ function mirror(s, axis, holds) {
 }
 
 def('firecracker', {
-  name: 'Firecracker', rarity: 'rare', kind: 'move',
+  name: 'Firecracker', rarity: 'rare', kind: 'move', reach: 'around',
   text: 'Blows a stone around it back to its owner\'s hand. A burnt Pebble stays where it stood.',
   options: (s, pos) => neighbours(pos, true).filter((j) => s.board[j]).map((target) => ({ target })),
   apply(s, pos, a) {
@@ -233,7 +230,7 @@ def('firecracker', {
 });
 
 def('turncoat', {
-  name: 'Turncoat', rarity: 'uncommon', kind: 'move',
+  name: 'Turncoat', rarity: 'uncommon', kind: 'move', reach: 'beside',
   text: 'Trades sides with an enemy stone beside it: that one becomes yours, this one theirs.',
   options(s, pos, cell) {
     return neighbours(pos, false).filter((j) => s.board[j] && s.board[j].player !== cell.player).map((target) => ({ target }));
@@ -245,7 +242,7 @@ def('turncoat', {
 });
 
 def('parrot', {
-  name: 'Parrot', rarity: 'uncommon', kind: 'copy',
+  name: 'Parrot', rarity: 'uncommon', kind: 'copy', copies: 'enemy',
   text: 'Becomes a copy of the last special stone the enemy placed, and does what it does.',
 });
 
@@ -298,14 +295,14 @@ def('overtake', {
 def('relocate', {
   name: 'Relocate', rarity: 'uncommon', kind: 'once', once: true,
   text: 'Move one of your stones, this one too, to any empty square.',
-  options: (s, pos, cell) => mine(s, cell.player).flatMap((from) => empties(s).map((to) => ({ from, to }))),
+  options: (s, pos, cell) => mine(s, cell.player).filter((from) => !isStuck(s, from)).flatMap((from) => empties(s).map((to) => ({ from, to }))),
   apply(s, pos, a) { move(s, a.from, a.to); },
 });
 
 def('mirror', {
   name: 'Mirror', rarity: 'common', kind: 'once', once: true,
   text: 'Swap what stands on two squares facing each other through the centre.',
-  options: (s) => SYMMETRIC.filter(([a, b]) => s.board[a] || s.board[b]).map(([a, b]) => ({ a, b })),
+  options: (s) => SYMMETRIC.filter(([a, b]) => (s.board[a] || s.board[b]) && !isStuck(s, a) && !isStuck(s, b)).map(([a, b]) => ({ a, b })),
   apply(s, pos, t) {
     const held = s.board[t.a];
     s.board[t.a] = s.board[t.b];
@@ -329,28 +326,17 @@ def('nudge', {
 
 def('mind-control', {
   name: 'Mind Control', rarity: 'common', kind: 'once', once: true,
-  text: 'Name a stone for the enemy — one of theirs, or a Pebble. That is what they must play next.',
+  text: 'Name a stone for the enemy — one of theirs, or a Pebble. They must play it next, and it does nothing.',
   options: (s, pos, cell) => [...new Set(s.hands[other(cell.player)].map((h) => h.type))].map((stone) => ({ stone })),
-  apply(s, pos, a, cell) { s.forced = { player: other(cell.player), stone: a.stone }; },
+  apply(s, pos, a, cell) {
+    s.forced = { player: other(cell.player), stone: a.stone };
+    if (a.stone !== 'pebble') s.silenced[other(cell.player)] = 1;
+  },
 });
 
 def('rehearse', {
-  name: 'Rehearse', rarity: 'common', kind: 'once', once: true,
-  text: 'Another of your stones on the board does its thing again, from where it stands.',
-  options(s, pos, cell) {
-    const out = [];
-    for (const i of mine(s, cell.player)) {
-      const c = s.board[i];
-      const st = STONES[c.type];
-      if (i === pos || !active(s, c) || !st.apply || st.once || st.id === 'twin') continue;
-      for (const o of st.options(s, i, c)) out.push({ pos: i, ...o });
-    }
-    return out;
-  },
-  apply(s, pos, a) {
-    const c = s.board[a.pos];
-    STONES[c.type].apply(s, a.pos, a, c);
-  },
+  name: 'Rehearse', rarity: 'common', kind: 'once', once: true, copies: 'self',
+  text: 'Becomes a copy of the last special stone you placed, and does what it does.',
 });
 
 def('muffle', {
@@ -368,7 +354,7 @@ def('pluck', {
 });
 
 def('bribe', {
-  name: 'Bribe', rarity: 'rare', kind: 'once', once: true,
+  name: 'Bribe', rarity: 'rare', kind: 'once', once: true, reach: 'beside',
   text: 'An enemy Pebble beside it becomes yours.',
   options: (s, pos, cell) => neighbours(pos, false).filter((j) => s.board[j] && s.board[j].player !== cell.player && s.board[j].type === 'pebble').map((target) => ({ target })),
   apply(s, pos, a, cell) { s.board[a.target].player = cell.player; },
@@ -395,7 +381,7 @@ export const RULES = {
   headstart: { name: 'Head Start', text: 'The boss plays twice on its first turn.' },
   double: { name: 'Double Time', text: 'Every turn is two stones in a row, for both sides. The boss starts.' },
   elko: { name: 'Elbow', text: 'Rows do not count: an L of three wins.' },
-  clinch: { name: 'Clinch', text: 'You must place next to one of the boss\'s stones, corners included, if you can.' },
+  clinch: { name: 'Clinch', text: 'You must place around one of the boss\'s stones, if you can.' },
   column: { name: 'Column', text: 'Each turn the boss closes a column to you.', dictate: true },
   spy: { name: 'Spy', text: 'Each turn the boss picks which way your stones move.', dictate: true },
   patient: { name: 'Patience', text: 'A full board goes to the boss.' },
@@ -454,6 +440,7 @@ export function allowedSquares(s) {
     if (s.dictate?.kind === 'column') narrow((i) => col(i) !== s.dictate.value);
   }
   if (s.mods[p].freeFirst && s.placements[p] === 0) return pool;
+  if (s.selected && STONES[s.selected.type].free) return pool;
   const rs = restrictionsOn(s, p);
   if (!rs.length) return pool;
   const scores = pool.map((i) => rs.reduce((n, r) => n + (r.st.restrict(i, r.pos, r.line) ? 1 : 0), 0));
@@ -753,12 +740,14 @@ export function applyAction(s, a) {
     case 'place': {
       let stone = s.selected;
       if (STONES[stone.type].once && !s.from) s.spent[p].push(stone.type);
-      // A Parrot turns into what the enemy last placed, before it does anything.
-      if (stone.type === 'parrot') {
-        const last = s.lastSpecial[other(p)];
-        if (last && last !== 'parrot') {
+      // A copying stone turns into the last special stone placed -- the enemy's
+      // for a Parrot -- before it does anything.
+      const copies = STONES[stone.type].copies;
+      if (copies) {
+        const last = s.lastSpecial[copies === 'self' ? p : other(p)];
+        if (last && !STONES[last].copies) {
+          note(s, `copy:${stone.type}:${last}`);
           stone = { type: last };
-          note(s, `parrot:${stone.type}`);
         }
       }
       s.placedId = s.nextId++;
