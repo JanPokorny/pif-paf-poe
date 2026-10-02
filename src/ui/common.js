@@ -131,6 +131,18 @@ export function modal(content, { onClose, dismissable = true, cls = '' } = {}) {
   return close;
 }
 
+// Our own yes-or-no, in place of the browser's confirm(), which drops fullscreen.
+export function ask(question, yes, no = t('Back')) {
+  return new Promise((done) => {
+    let answered = false;
+    const answer = (v) => { if (answered) return; answered = true; close(); done(v); };
+    const close = modal(h('div.ask', {},
+      h('p.ask-q', {}, question),
+      h('button.btn.wide.danger', { onclick: () => answer(true) }, yes),
+      h('button.btn.wide.ghost', { onclick: () => answer(false) }, no)), { onClose: () => { if (!answered) { answered = true; done(false); } } });
+  });
+}
+
 // A worked example of a stone, computed by the engine itself: a small board
 // before and after, or the squares it leaves the enemy.
 const DEMO_BOARD = { 1: 'O', 3: 'O', 8: 'O', 2: 'X', 7: 'X' };

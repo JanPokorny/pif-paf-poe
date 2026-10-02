@@ -4,7 +4,7 @@
 import { STONES, CONDS, RULES, createGame } from './engine.js';
 import { RELICS, ENEMIES, ACTS, EVENTS } from './content.js';
 import * as R from './run.js';
-import { h, hideToast, tapeUp, art, relicArt, scribbleX, scribbleO, stoneEl, iconEl, toast, modal, pressable, infoStone, infoRelic, ruleChip, stoneCard, relicCard, stoneName, langToggle } from './ui/common.js';
+import { h, hideToast, tapeUp, art, relicArt, scribbleX, scribbleO, stoneEl, iconEl, toast, modal, ask, pressable, infoStone, infoRelic, ruleChip, stoneCard, relicCard, stoneName, langToggle } from './ui/common.js';
 import { icon } from './icons.js';
 import { mountDuel } from './ui/duel.js';
 import { sfx, soundOn, setSound } from './sound.js';
@@ -116,8 +116,8 @@ function showMenu() {
     settingsRow(),
     h('button.btn.wide', { onclick: () => { close(); title(); } }, t('Save & quit to title')),
     h('button.btn.wide.danger', {
-      onclick: () => {
-        if (!confirm(t('Abandon this run? It will count as a loss.'))) return;
+      onclick: async () => {
+        if (!(await ask(t('Abandon this run? It will count as a loss.'), t('Abandon run')))) return;
         close();
         run.over = true; recordEnd(); duelState = null; save(); run = null; title();
       },
@@ -212,7 +212,7 @@ function title() {
         saved?.run && !saved.run.over ? h('button.btn.primary.wide.big.continue', { onclick: () => { run = saved.run; duelState = saved.duel; migrate(); route(); } },
           h('span', {}, t('Continue run')),
           h('span.continue-sub', {}, `${t('Act {n}', { n: saved.run.act })} · ❤ ${saved.run.hearts}`)) : null,
-        h('button.btn.wide.big' + (saved?.run ? '' : '.primary'), { onclick: () => { if (saved?.run && !saved.run.over && !confirm(t('Start over? Your run in progress will be lost.'))) return; newRunMenu(); } }, t('New run')),
+        h('button.btn.wide.big' + (saved?.run ? '' : '.primary'), { onclick: async () => { if (saved?.run && !saved.run.over && !(await ask(t('Start over? Your run in progress will be lost.'), t('New run')))) return; newRunMenu(); } }, t('New run')),
         settingsRow()),
     ));
 }
@@ -668,7 +668,7 @@ function rewardScreen() {
   parts.push(pressHint());
   const pendingBoss = rw.relicChoice?.length && !rw.taken.boss;
   parts.push(h('div.sticky-bottom', {}, h('button.btn.wide.big' + (pendingBoss ? '' : '.primary'), {
-    onclick: () => { if (pendingBoss && !confirm(t('Leave without a boss relic?'))) return; done(); },
+    onclick: async () => { if (pendingBoss && !(await ask(t('Leave without a boss relic?'), t('Continue')))) return; done(); },
   }, (rw.stones.length && !rw.taken.stone) || (rw.once && !rw.taken.once) ? t('Skip') : t('Continue'))));
   screen(topBar(), h('div.page.reward', {}, parts));
 }

@@ -840,3 +840,7 @@ body:has(.duel) #toast.show { transform: translate(-50%, 0) rotate(-1deg); }
 .map-cell .doodle.empty { width: 46%; height: 46%; opacity: 0.45; color: var(--pencil); --rock-fill: #dfe6d2; }
 .map-sheet .map-cell.marked .doodle.empty { display: none; }
 .map-cell.rock.marked .doodle.rock { width: 64%; height: 64%; }
+
+/* Our own yes-or-no dialog. */
+.ask { display: flex; flex-direction: column; gap: 10px; }
+.ask-q { font-size: 1.1rem; text-align: center; margin: 4px 0 6px; }
