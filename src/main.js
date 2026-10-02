@@ -887,7 +887,7 @@ function endScreen(victory) {
     h('div.end-emoji', {}, victory ? art('x', 'trophy', '🏆') : art('x', 'tombstone', '🪦')),
     h('h1', {}, victory ? t('You conquered the Summit!') : t('Your climb ends here')),
     h('p', {}, victory
-      ? t(run.heat ? '{boss} bows. You are the champion at heat {n}.' : '{boss} bows. You are the champion.', { boss: ENEMIES[run.map.boss].name, n: run.heat })
+      ? t(run.heat ? 'You beat {boss}. You are the champion at heat {n}.' : 'You beat {boss}. You are the champion.', { boss: ENEMIES[run.map.boss].name, n: run.heat })
       : t('Fallen in act {n}, {act}.', { n: run.act, act: ACTS[run.act - 1].name })),
     h('div.stats', {},
       h('div', {}, h('b', {}, st.won), tp(st.won, ' duel won', ' duels won')),
