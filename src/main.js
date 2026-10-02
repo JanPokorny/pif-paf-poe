@@ -639,6 +639,8 @@ function pickCard(card, after) {
 }
 
 const pressHint = () => h('div.press-hint', {}, t('Long press for info.'));
+// A row of cards to choose one from, "or" between them.
+const orRow = (cards) => h('div.cards.pick-one', {}, cards.flatMap((c, k) => (k ? [h('span.or', {}, t('or')), c] : [c])));
 
 function rewardScreen() {
   const rw = run.pending;
@@ -653,8 +655,6 @@ function rewardScreen() {
   }
   // What it left behind, as rows of cards: everything in its own row is yours
   // ("~ and ~" between rows); where a row offers a choice, "or" sits between.
-  const or = () => h('span.or', {}, t('or'));
-  const choice = (cards) => h('div.cards.pick-one', {}, cards.flatMap((c, k) => (k ? [or(), c] : [c])));
   const rows = [];
   if (rw.relic) rows.push(h('div.cards.one', {}, relicCard(rw.relic, { onclick: () => infoRelic(rw.relic) })));
   if (rw.once && !rw.taken.once) {
@@ -663,13 +663,13 @@ function rewardScreen() {
     })));
   }
   if (rw.relicChoice?.length && !rw.taken.boss) {
-    rows.push(choice(rw.relicChoice.map((id) => relicCard(id, {
+    rows.push(orRow(rw.relicChoice.map((id) => relicCard(id, {
       onclick: (e) => { R.gainRelic(run, id); rw.taken.boss = id; sfx('coin'); save(); pickCard(e.currentTarget, rewardScreen); },
     }))));
   } else if (rw.taken.boss) rows.push(h('div.cards.one', {}, relicCard(rw.taken.boss, { onclick: () => infoRelic(rw.taken.boss) })));
   if (rw.taken.stone && rw.taken.stone !== true) rows.push(h('div.cards.one', {}, stoneCard({ type: rw.taken.stone }, { onclick: () => infoStone({ type: rw.taken.stone }, 'X') })));
   if (rw.stones.length && !rw.taken.stone) {
-    rows.push(choice(rw.stones.map((st) => stoneCard(st, {
+    rows.push(orRow(rw.stones.map((st) => stoneCard(st, {
       onclick: (e) => {
         const card = e.currentTarget;
         takeStone(st, (ok) => {
@@ -695,10 +695,10 @@ function treasureScreen() {
   screen(topBar(), h('div.page.reward', {},
     h('h1.reward-title', {}, t('Treasure!')),
     h('div.reward-gold', {}, h('span', { html: icon('coin') }), t('+{n} gold', { n: tr.gold })),
-    tr.relic ? [h('div.section-label', {}, t('Inside the chest')), relicCard(tr.relic, { onclick: () => infoRelic(tr.relic) })]
-      : tr.choices?.length ? [h('div.section-label', {}, t('Take one')), h('div.cards', {}, tr.choices.map((id) => relicCard(id, {
+    tr.relic ? h('div.cards.one', {}, relicCard(tr.relic, { onclick: () => infoRelic(tr.relic) }))
+      : tr.choices?.length ? orRow(tr.choices.map((id) => relicCard(id, {
         onclick: (e) => { R.gainRelic(run, id); tr.relic = id; sfx('coin'); save(); pickCard(e.currentTarget, treasureScreen); },
-      })))]
+      })))
         : null,
     pressHint(),
     h('div.sticky-bottom', {}, h('button.btn.wide.big' + (tr.relic || !tr.choices?.length ? '.primary' : ''), { onclick: () => { R.leaveNode(run); route(); } }, tr.relic || !tr.choices?.length ? t('Continue') : t('Skip')))));

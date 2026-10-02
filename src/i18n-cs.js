@@ -78,7 +78,6 @@ export default {
   'Skip': 'Přeskočit',
   'Continue': 'Pokračovat',
   'Treasure!': 'Poklad!',
-  'Inside the chest': 'V truhle',
   'Not enough gold.': 'Málo zlaťáků.',
   'Stones': 'Kameny',
   'Relics and services': 'Talismany a služby',
@@ -154,7 +153,6 @@ export default {
   'Copy result to share': 'Zkopírovat výsledek',
 
   // ── Help ──────────────────────────────────────────────────────────────────
-  'Take one': 'Vezmi si jeden',
   'You feel much better.': 'Je ti mnohem líp.',
   'You keep your coins.': 'Mince si necháš.',
   'It holds its square': 'Drží své políčko',
