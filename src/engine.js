@@ -1,8 +1,8 @@
 // Pif-paf-poe duel engine, grown out of old/engine.js for the roguelike.
 //
-// A duel is tic-tac-toe on a 3x3 board. Both sides have as many plain Pebbles
-// as they like, plus a few special stones that do something when placed --
-// mostly move stones already on the board. You are X, the enemy is O, and the
+// A duel is tic-tac-toe on a 3x3 board. Each side brings a handful of stones:
+// plain Pebbles, and special stones that do something when placed -- mostly
+// move stones already on the board. You are X, the enemy is O, and the
 // enemy always opens; a full board goes to you.
 //
 // Some duels carry a condition for both sides (gravity, no centre, a shared
@@ -129,14 +129,10 @@ def('bumper', {
 
 def('lasso', {
   name: 'Lasso', rarity: 'common', kind: 'move',
-  text: 'Pulls a stone two squares away (diagonals too) one step closer — or all of them.',
-  options(s, pos) {
-    const pulls = lassoPulls(s, pos);
-    if (pulls.length < 2) return [{}];
-    return [{}, ...pulls.map(([from]) => ({ target: from }))];
-  },
-  apply(s, pos, a) {
-    for (const [from, to] of lassoPulls(s, pos)) if (a.target === undefined || a.target === from) move(s, from, to);
+  text: 'Pulls every stone two squares away (diagonals too) one step closer.',
+  options: (s, pos) => (lassoPulls(s, pos).length ? [{}] : []),
+  apply(s, pos) {
+    for (const [from, to] of lassoPulls(s, pos)) move(s, from, to);
   },
 });
 
@@ -175,8 +171,8 @@ def('whirl', {
 });
 
 def('frog', {
-  name: 'Frog', rarity: 'uncommon', kind: 'move',
-  text: 'Leaps over a stone beside it. An enemy stone leapt over goes back to their hand.',
+  name: 'Frog', rarity: 'common', kind: 'move',
+  text: 'Leaps over a stone beside it. An enemy stone leapt over is knocked off the board.',
   options(s, pos) {
     const out = [];
     if (isStuck(s, pos)) return out;
@@ -190,7 +186,7 @@ def('frog', {
     const mid = at((row(pos) + row(a.target)) / 2, (col(pos) + col(a.target)) / 2);
     move(s, pos, a.target);
     const jumped = s.board[mid];
-    if (jumped && jumped.player !== cell.player) returnToHand(s, mid);
+    if (jumped && jumped.player !== cell.player) s.board[mid] = null;
   },
 });
 
@@ -228,11 +224,11 @@ function mirror(s, axis, holds) {
 
 def('firecracker', {
   name: 'Firecracker', rarity: 'rare', kind: 'move',
-  text: 'Blows a stone around it back to its owner\'s hand, and burns itself up.',
+  text: 'Blows a stone around it back to its owner\'s hand. A burnt Pebble stays where it stood.',
   options: (s, pos) => neighbours(pos, true).filter((j) => s.board[j]).map((target) => ({ target })),
   apply(s, pos, a) {
     returnToHand(s, a.target);
-    s.board[pos] = null;
+    s.board[pos].type = 'pebble';
   },
 });
 
@@ -255,10 +251,10 @@ def('parrot', {
 
 def('twin', {
   name: 'Twin', rarity: 'rare', kind: 'move',
-  text: 'A Pebble lands opposite it across the empty centre.',
+  text: 'A Pebble lands on the square opposite it across the board, if that is empty.',
   options(s, pos) {
     const j = 8 - pos;
-    return j !== pos && !s.board[j] && !s.board[4] ? [{ target: j }] : [];
+    return j !== pos && !s.board[j] ? [{ target: j }] : [];
   },
   apply(s, pos, a, cell) {
     s.board[a.target] = { player: cell.player, type: 'pebble', id: s.nextId++ };
@@ -285,10 +281,17 @@ const mine = (s, p) => [...Array(9).keys()].filter((i) => s.board[i]?.player ===
 const theirs = (s, p) => [...Array(9).keys()].filter((i) => s.board[i] && s.board[i].player !== p);
 const empties = (s) => [...Array(9).keys()].filter((i) => !s.board[i]);
 
+// The enemy's newest stone on the board, or -1.
+function newest(s, p) {
+  let best = -1;
+  for (let i = 0; i < 9; i++) if (s.board[i]?.player === p && (best < 0 || s.board[i].id > s.board[best].id)) best = i;
+  return best;
+}
+
 def('overtake', {
-  name: 'Overtake', rarity: 'common', kind: 'once', once: true,
-  text: 'If the enemy holds the centre, that stone goes back to their hand.',
-  options: (s, pos, cell) => (s.board[4] && s.board[4].player !== cell.player ? [{ target: 4 }] : []),
+  name: 'Rewind', rarity: 'uncommon', kind: 'once', once: true,
+  text: 'The enemy\'s last stone goes back to their hand.',
+  options(s, pos, cell) { const j = newest(s, other(cell.player)); return j < 0 ? [] : [{ target: j }]; },
   apply(s, pos, a) { returnToHand(s, a.target); },
 });
 
@@ -352,7 +355,7 @@ def('rehearse', {
 
 def('muffle', {
   name: 'Muffle', rarity: 'common', kind: 'once', once: true,
-  text: 'The enemy\'s next stone does nothing.',
+  text: 'The enemy\'s next special stone does nothing.',
   options: (s, pos, cell) => (s.silenced[other(cell.player)] ? [] : [{}]),
   apply(s, pos, a, cell) { s.silenced[other(cell.player)] = 1; },
 });
@@ -366,8 +369,8 @@ def('pluck', {
 
 def('bribe', {
   name: 'Bribe', rarity: 'rare', kind: 'once', once: true,
-  text: 'An enemy stone off the centre becomes yours.',
-  options: (s, pos, cell) => theirs(s, cell.player).filter((i) => i !== 4).map((target) => ({ target })),
+  text: 'An enemy Pebble beside it becomes yours.',
+  options: (s, pos, cell) => neighbours(pos, false).filter((j) => s.board[j] && s.board[j].player !== cell.player && s.board[j].type === 'pebble').map((target) => ({ target })),
   apply(s, pos, a, cell) { s.board[a.target].player = cell.player; },
 });
 
@@ -465,7 +468,7 @@ function move(s, from, to) {
   s.board[from] = null;
 }
 
-// Back into its owner's hand -- or, for a Pebble, simply off the board.
+// Back into its owner's hand, Pebbles too.
 function returnToHand(s, i) {
   const c = s.board[i];
   s.hands[c.player].push({ type: c.type });
@@ -716,8 +719,8 @@ function afterPlacement(s) {
   const p = s.player, pos = s.placedAt;
   const c = s.board[pos];
   let dud = false;
-  // Muffled, a stone does nothing at all for as long as it stands.
-  if (s.silenced[p] > 0) {
+  // Muffled, a special stone does nothing at all for as long as it stands.
+  if (s.silenced[p] > 0 && c.type !== 'pebble') {
     s.silenced[p]--;
     dud = true;
     c.hushed = true;

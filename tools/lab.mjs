@@ -20,7 +20,7 @@
 import { Worker, isMainThread, parentPort, workerData } from 'node:worker_threads';
 import { cpus } from 'node:os';
 import { mkdirSync, writeFileSync } from 'node:fs';
-import { createGame, applyAction, legalActions, allowedSquares, STONES, STONE_TYPES, CONDS } from '../src/engine.js';
+import { other, createGame, applyAction, legalActions, allowedSquares, STONES, STONE_TYPES, CONDS } from '../src/engine.js';
 import { chooseAction, makeRng } from '../src/ai.js';
 import { ENEMIES } from '../src/content.js';
 import * as R from '../src/run.js';
@@ -79,6 +79,7 @@ function duel(t) {
 // ── Proposed changes, patched into the stone table for one duel ──────────────
 
 const ORIGINAL = Object.fromEntries(Object.entries(STONES).map(([k, v]) => [k, { ...v }]));
+const newest = (s, p) => { let best = -1; for (let i = 0; i < 9; i++) if (s.board[i]?.player === p && (best < 0 || s.board[i].id > s.board[best].id)) best = i; return best; };
 const ORTHO4 = (i) => [i - 3, i + 3, i % 3 ? i - 1 : -1, i % 3 < 2 ? i + 1 : -1].filter((j) => j >= 0 && j < 9);
 const PATCHES = {
   // Bribe: only an enemy Pebble beside it.
@@ -86,19 +87,25 @@ const PATCHES = {
   // Firecracker: leaves a scorched Pebble behind instead of burning away.
   firecracker: { apply(s, pos, a) { const c = s.board[a.target]; s.hands[c.player].push({ type: c.type }); s.board[a.target] = null; s.board[pos].type = 'pebble'; } },
   // Overtake: the enemy's centre stone becomes yours.
-  overtake: { apply(s, pos, a, cell) { s.board[4].player = cell.player; } },
+  'overtake:centre': { apply(s, pos, a, cell) { s.board[4].player = cell.player; } },
   // Twin: opposite across the board, whatever stands in the centre.
   twin: { options: (s, pos) => { const j = 8 - pos; return j !== pos && !s.board[j] ? [{ target: j }] : []; } },
+  // Frog: an enemy stone leapt over turns to your side.
+  'frog:turn': { apply(s, pos, a, cell) { const mid = ((pos + a.target) / 2) | 0; s.board[a.target] = s.board[pos]; s.board[pos] = null; if (s.board[mid] && s.board[mid].player !== cell.player) s.board[mid].player = cell.player; } },
+  // Overtake: the enemy's newest stone goes back to their hand.
+  'overtake:last': { options: (s, pos, cell) => { const t = newest(s, other(cell.player)); return t < 0 ? [] : [{ target: t }]; }, apply(s, pos, a) { const c = s.board[a.target]; s.hands[c.player].push({ type: c.type }); s.board[a.target] = null; } },
+  // Overtake: the enemy's newest stone becomes a plain Pebble.
+  'overtake:dull': { options: (s, pos, cell) => { const t = newest(s, other(cell.player)); return t < 0 ? [] : [{ target: t }]; }, apply(s, pos, a) { s.board[a.target].type = 'pebble'; } },
   // Frog: an enemy stone leapt over is gone, not back in their hand.
-  frog: { apply(s, pos, a, cell) { const mid = ((pos + a.target) / 2) | 0; s.board[a.target] = s.board[pos]; s.board[pos] = null; if (s.board[mid] && s.board[mid].player !== cell.player) s.board[mid] = null; } },
+  'frog:remove': { apply(s, pos, a, cell) { const mid = ((pos + a.target) / 2) | 0; s.board[a.target] = s.board[pos]; s.board[pos] = null; if (s.board[mid] && s.board[mid].player !== cell.player) s.board[mid] = null; } },
   // Lasso: always pulls them all, no choice.
   lasso: { options: (s, pos) => ORIGINAL.lasso.options(s, pos).slice(0, 1) },
 };
 let patched = null;
 function patch(id) {
   if (patched === (id ?? null)) return;
-  for (const k of Object.keys(PATCHES)) Object.assign(STONES[k], ORIGINAL[k]);
-  if (id) Object.assign(STONES[id], PATCHES[id]);
+  for (const k of Object.keys(ORIGINAL)) Object.assign(STONES[k], ORIGINAL[k]);
+  if (id) Object.assign(STONES[id.split(':')[0]], PATCHES[id]);
   patched = id ?? null;
 }
 
@@ -171,12 +178,15 @@ const EXPERIMENTS = {
     const out = [];
     const foes = { 'vs Pebbles': P(5), 'vs Shift': ['shift', ...P(4)], 'vs Magnet+Shift': ['magnet', 'shift', ...P(3)] };
     const cast = Object.keys(ENEMIES).filter((k) => ENEMIES[k].act === 1 && ENEMIES[k].tier !== 'boss');
-    for (const type of Object.keys(PATCHES)) for (const version of ['now', 'new']) {
-      const p = version === 'new' ? type : null;
-      for (const [fk, handO] of Object.entries(foes)) for (let i = 0; i < g; i++) out.push({ key: `${type} ${version}|${fk}`, patch: p, handX: [type, ...P(3)], handO, seed: i + 1 });
+    const only = arg('only', null)?.split(',');
+    const keys = Object.keys(PATCHES).filter((k) => !only || only.includes(k));
+    const versions = [...new Set(keys.map((k) => k.split(':')[0]))].map((k) => [k, null]).concat(keys.map((k) => [k.split(':')[0], k]));
+    for (const [type, p] of versions) {
+      const version = p ?? 'now';
+      for (const [fk, handO] of Object.entries(foes)) for (let i = 0; i < g; i++) out.push({ key: `${version === 'now' ? type + ' now' : version}|${fk}`, patch: p, handX: [type, ...P(3)], handO, seed: i + 1 });
       for (const id of cast) for (let i = 0; i < g / 4; i++) {
         const d = enemyDuel(1, id, i * 31 + 7, { tier: ENEMIES[id].tier });
-        out.push({ key: `${type} ${version}|act 1`, patch: p, handX: [type, ...P(3)], handO: d.handO.map((x) => x.type), conds: d.conds, rules: d.rules, modsO: d.modsO, itersO: d.iters, blunderO: d.blunder, seed: i + 1 });
+        out.push({ key: `${version === 'now' ? type + ' now' : version}|act 1`, patch: p, handX: [type, ...P(3)], handO: d.handO.map((x) => x.type), conds: d.conds, rules: d.rules, modsO: d.modsO, itersO: d.iters, blunderO: d.blunder, seed: i + 1 });
       }
     }
     return out;

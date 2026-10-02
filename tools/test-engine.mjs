@@ -296,17 +296,12 @@ test('Bumper does not push a Mountain', () => {
   play(s, 'bumper', 4);
   expectAt(s, { 1: 101 });
 });
-test('Lasso pulls a stone two squares away one step closer — or all of them', () => {
+test('Lasso pulls every stone two squares away one step closer', () => {
   const s = G();
   lay(s, { 0: 'O pebble', 6: 'O pebble' });
   play(s, 'lasso', 2);   // 0 is two away along the row; 6 along the diagonal
-  applyAction(s, legalActions(s).find((a) => a.target === undefined));
   expectAt(s, { 1: 100, 4: 106 });
-  const t = G();
-  lay(t, { 0: 'O pebble', 6: 'O pebble' });
-  play(t, 'lasso', 2);
-  eff(t, { target: 6 });
-  expectAt(t, { 0: 100, 4: 106 });
+  turnPassedTo(s, 'O');
 });
 test('Swap trades with a stone around it, corners included — not further', () => {
   const s = G();
@@ -325,12 +320,12 @@ test('Whirl turns the ring; the centre stays', () => {
   eff(s, { turn: 1 });
   expectAt(s, { 1: 100, 4: 104 });
 });
-test('Frog leaps over a stone; an enemy stone leapt over goes back to hand', () => {
+test('Frog leaps over a stone; an enemy stone leapt over is knocked off the board', () => {
   const s = G();
   lay(s, { 4: 'O swap' });
   const id = play(s, 'frog', 1);
   expectAt(s, { 7: id, 4: 0, 1: 0 });
-  assert.equal(count(s, 'O', 'swap'), 1);
+  assert.equal(count(s, 'O', 'swap'), 0);
 });
 test('Frog does not leap diagonally', () => {
   const s = G();
@@ -368,12 +363,13 @@ test('Mountain is never moved by stone effects', () => {
   eff(s, { dir: 'left', index: 0 });
   expectAt(s, { 0: 100 });
 });
-test('Firecracker blows a stone back into its owner\'s hand and burns itself up', () => {
+test('Firecracker blows a stone back into its owner\'s hand and leaves a Pebble', () => {
   const s = G();
   lay(s, { 0: 'O shift', 8: 'O pebble' });
-  play(s, 'firecracker', 4);
+  const id = play(s, 'firecracker', 4);
   eff(s, { target: 0 });
-  expectAt(s, { 0: 0, 4: 0, 8: 108 });
+  expectAt(s, { 0: 0, 4: id, 8: 108 });
+  assert.equal(s.board[4].type, 'pebble');
   assert.equal(count(s, 'O', 'shift'), 1);
 });
 test('Turncoat trades sides with an enemy stone beside it', () => {
@@ -397,15 +393,16 @@ test('Parrot with nothing to copy stays a Parrot', () => {
   play(s, 'parrot', 4);
   assert.equal(s.board[4].type, 'parrot');
 });
-test('Twin drops a Pebble facing it through the centre, if both are empty', () => {
+test('Twin drops a Pebble on the square facing it, whatever holds the centre', () => {
   const s = G();
+  lay(s, { 4: 'O pebble' });
   play(s, 'twin', 0);
   assert.equal(s.board[8]?.type, 'pebble');
   assert.equal(s.board[8]?.player, 'X');
   const t = G();
-  lay(t, { 4: 'O pebble' });
+  lay(t, { 8: 'O pebble' });
   play(t, 'twin', 0);
-  assert.equal(t.board[8], null);
+  assert.equal(t.board[8].player, 'O');
 });
 test('Magpie steals a special stone from the enemy\'s hand', () => {
   const s = G({ handO: ['shift', 'rotate'] });
@@ -445,12 +442,16 @@ test('a one-shot stone that makes your line wins', () => {
   eff(s, { from: 5, to: 2 });
   assert.equal(s.winner, 'X');
 });
-test('Overtake sends the enemy\'s centre stone back', () => {
+test('Rewind sends the enemy\'s newest stone back', () => {
   const s = G({ handX: ['overtake'] });
   lay(s, { 4: 'O shift' });
-  play(s, 'overtake', 0);
-  assert.equal(s.board[4], null);
-  assert.equal(count(s, 'O', 'shift'), 1);
+  s.nextId = 200;   // stones placed from here on are newer than the laid ones
+  play(s, 'pebble', 0);
+  play(s, 'rotate', 8);
+  // (it turns itself from 8 to 7, the Shift from 4 to 5)
+  play(s, 'overtake', 2);
+  assert.equal(s.board.filter((c) => c?.type === 'rotate').length, 0);
+  assert.equal(count(s, 'O', 'rotate'), 1);
 });
 test('Relocate moves one of your stones anywhere, itself too', () => {
   const s = G({ handX: ['relocate'] });
@@ -474,11 +475,11 @@ test('Mind Control: the enemy AI plays the stone it was named', () => {
     assert.equal(chooseAction(s, { iters: 200, seed: 7 }).stone, name);
   }
 });
-test('Muffle: a Pebble uses it up too', () => {
+test('Muffle: a Pebble does not use it up', () => {
   const s = G({ handX: ['muffle'] });
   play(s, 'muffle', 8);
   play(s, 'pebble', 0);
-  assert.equal(s.silenced.O, 0);
+  assert.equal(s.silenced.O, 1);
 });
 test('Muffle: the enemy\'s next stone does nothing', () => {
   const s = G({ handX: ['muffle'] });
@@ -495,11 +496,10 @@ test('Pluck and Bribe', () => {
   eff(s, { target: 4 });
   assert.equal(s.board[4], null);
   const t = G({ handX: ['bribe'] });
-  lay(t, { 4: 'O pebble', 2: 'O pebble', 6: 'O pebble' });
-  play(t, 'bribe', 0);
-  assert.ok(!legalActions(t).some((a) => a.target === 4));
-  eff(t, { target: 2 });
-  assert.equal(t.board[2].player, 'X');
+  lay(t, { 4: 'O pebble', 2: 'O shift', 3: 'O pebble', 6: 'O pebble' });
+  play(t, 'bribe', 1);   // beside it: 4 (a Pebble), 2 (not a Pebble); 0 is empty
+  assert.equal(t.board[4].player, 'X');
+  assert.equal(t.board[2].player, 'O');
 });
 test('Rehearse: another stone of yours does its thing again', () => {
   const s = G({ handX: ['rehearse'] });
