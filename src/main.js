@@ -458,10 +458,11 @@ function moonrise(boss, done) {
       h('div.moonrise-name', {}, t('{boss} climbs out of the earth.', { boss: undeadName(boss) }))));
   document.body.append(veil);
   musicEvent('stronger');
+  // It lingers, then the night slowly lifts off the screen already drawn beneath it.
   let gone = false;
-  const go = () => { if (gone) return; gone = true; veil.classList.add('out'); setTimeout(() => { veil.remove(); done(); }, 500); };
+  const go = () => { if (gone) return; gone = true; done(); veil.classList.add('out'); setTimeout(() => veil.remove(), 1600); };
   veil.addEventListener('click', go);
-  setTimeout(go, 3200);
+  setTimeout(go, 4800);
 }
 
 // A stone's name with an (i): tapping the name reads the stone.

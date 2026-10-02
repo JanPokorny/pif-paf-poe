@@ -829,7 +829,7 @@ body:has(.duel) #toast.show { transform: translate(-50%, 0) rotate(-1deg); }
 /* Moonrise: a beaten boss comes back undead. */
 .moonrise { position: fixed; inset: 0; z-index: 50; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 24px;
   background: radial-gradient(ellipse at 50% 40%, #2c3550 0%, #151a2b 70%); color: #e8e4d4; animation: night-in 0.8s ease-out; padding: 24px; text-align: center; }
-.moonrise.out { opacity: 0; transition: opacity 0.5s; }
+.moonrise.out { opacity: 0; transition: opacity 1.5s ease-in-out; pointer-events: none; }
 .moon { width: 110px; height: 110px; border-radius: 50%; background: radial-gradient(circle at 38% 38%, #fffbe6, #f2e7b8 60%, #d8cc95);
   box-shadow: 0 0 40px 10px rgba(255, 246, 200, 0.35); animation: moon-up 2.2s cubic-bezier(.2,.7,.3,1) both; }
 .moonrise-text { font-family: var(--marker); font-size: 1.5rem; animation: text-in 1s ease-out 1s both; }
