@@ -109,6 +109,7 @@ const pick = (a) => a[Math.floor(rand() * a.length)];
         }
         if (await page.locator('.cell.allowed').count()) { await any('.cell.allowed'); break; }
         if (await page.locator('button.hand-slot:not(.forbidden):not(.idle)').count()) { await any('button.hand-slot:not(.forbidden):not(.idle)'); break; }
+        if (await page.locator('.enemy-hand .borrow').count()) { await any('.enemy-hand .borrow'); break; }   // Open Hands
         break;   // the enemy is thinking
       }
       case 'reward': case 'treasure': {
