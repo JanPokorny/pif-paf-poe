@@ -221,12 +221,9 @@ function mirror(s, axis, holds) {
 
 def('firecracker', {
   name: 'Firecracker', rarity: 'rare', kind: 'move', reach: 'around',
-  text: 'Blows a stone around it back to its owner\'s hand. A burnt Pebble stays where it stood.',
+  text: 'Blows a stone around it back to its owner\'s hand.',
   options: (s, pos) => neighbours(pos, true).filter((j) => s.board[j]).map((target) => ({ target })),
-  apply(s, pos, a) {
-    returnToHand(s, a.target);
-    s.board[pos].type = 'pebble';
-  },
+  apply(s, pos, a) { returnToHand(s, a.target); },
 });
 
 def('turncoat', {

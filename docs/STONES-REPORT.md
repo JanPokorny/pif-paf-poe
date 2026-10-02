@@ -444,7 +444,7 @@ Everything in §8 except the "beside / around" wording is now in the game.
 | stone | change | act 1, before → after¹ | dud, before → after |
 |---|---|---:|---:|
 | Bribe | an enemy **Pebble beside it** becomes yours | 84% → 67% | 2% → 93%² |
-| Firecracker | leaves a burnt Pebble | 21% → 52% | 19% → 1% |
+| Firecracker | stays on its square (it used to burn up; for a while it became a Pebble, which played the same) | 21% → 52% | 19% → 1% |
 | Twin | the facing square only needs to be empty | 33% → 47% | 82% → 3% |
 | Lasso | pulls every stone in reach, no choice | 32% → 34% | 87% → 85% |
 | Frog | the leapt enemy stone is knocked off the board | 27% → 37% | 72% → 66% |

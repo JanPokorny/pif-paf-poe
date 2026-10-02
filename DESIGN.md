@@ -161,7 +161,7 @@ the stronger and the more skill a stone wants, the rarer.
 | Pebble | starter | 23% | 7% | 10% |
 
 `docs/STONES-REPORT.md` has the rest: duds, choices, skill, pairs, boss builds, and what changed
-(Bribe takes only a Pebble beside it, Firecracker leaves a Pebble, Bumper knocks stones off the
+(Bribe takes only a Pebble beside it, Firecracker stays on its square, Bumper knocks stones off the
 edge, Lasso fetches any enemy stone, Mountain ignores restrictions, Mind Control's stone does
 nothing, Rehearse copies your last special, Twin needs no empty centre,
 Lasso pulls all at once, Frog knocks the stone it leaps off the board, Muffle hushes the next

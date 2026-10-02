@@ -371,7 +371,7 @@ export const CS_DATA = {
     frog: { name: 'Žabák', text: 'Přeskočí kámen vedle sebe. Přeskočený soupeřův kámen vyletí z desky.' },
     beacon: { name: 'Maják', text: 'Vyber jeho řádek, nebo sloupec: soupeř musí hrát tam.' },
     flip: { name: 'Salto', text: 'Zrcadlí desku podle osy nebo úhlopříčky. Tenhle kámen drží své políčko.' },
-    firecracker: { name: 'Petarda', text: 'Odpálí kámen kolem sebe zpět majiteli do ruky. Na jejím místě zůstane ohořelý oblázek.' },
+    firecracker: { name: 'Petarda', text: 'Odpálí kámen kolem sebe zpět majiteli do ruky.' },
     turncoat: { name: 'Přeběhlík', text: 'Vymění strany se soupeřovým kamenem vedle sebe: ten je teď tvůj, tenhle jeho.' },
     parrot: { name: 'Papoušek', text: 'Stane se kopií speciálního kamene, který soupeř položil naposledy, a udělá, co dělá on.' },
     twin: { name: 'Dvojče', text: 'Oblázek přistane na protější pole přes desku, je-li volné.' },

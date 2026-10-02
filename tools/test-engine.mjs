@@ -361,13 +361,13 @@ test('Mountain is never moved by stone effects', () => {
   eff(s, { dir: 'left', index: 0 });
   expectAt(s, { 0: 100 });
 });
-test('Firecracker blows a stone back into its owner\'s hand and leaves a Pebble', () => {
+test('Firecracker blows a stone back into its owner\'s hand and stays', () => {
   const s = G();
   lay(s, { 0: 'O shift', 8: 'O pebble' });
   const id = play(s, 'firecracker', 4);
   eff(s, { target: 0 });
   expectAt(s, { 0: 0, 4: id, 8: 108 });
-  assert.equal(s.board[4].type, 'pebble');
+  assert.equal(s.board[4].type, 'firecracker');
   assert.equal(count(s, 'O', 'shift'), 1);
 });
 test('Turncoat trades sides with an enemy stone beside it', () => {
@@ -507,7 +507,7 @@ test('Rehearse becomes a copy of your last special stone', () => {
   play(s, 'rehearse', 7);   // a Firecracker again
   eff(s, { target: 8 });
   assert.equal(s.board[8], null);
-  assert.equal(s.board[7].type, 'pebble');
+  assert.equal(s.board[7].type, 'firecracker');
   const t = G({ handX: ['rehearse'] });
   play(t, 'rehearse', 4);   // nothing placed yet: it stays itself
   assert.equal(t.board[4].type, 'rehearse');
