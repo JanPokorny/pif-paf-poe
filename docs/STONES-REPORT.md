@@ -302,15 +302,21 @@ opening Magnet. A plucked Magnet is simply placed again.
   four-stone hand. A rare stone that plays below a Pebble feels like a bug.
   *Suggestion:* it stays as a Pebble ("leaves a scorched Pebble"), or it goes
   back to your hand with the stone it blew.
-- **Overtake**: 92% duds. Even when it works, the enemy just re-places the
-  centre stone.
-  *Suggestion:* "The enemy's centre stone becomes yours." That gives it the
-  niche the nerfed Bribe no longer covers (Bribe excludes the centre). Or drop
-  it.
-- **Twin**: it requires an empty centre, but the enemy opens and takes the
-  centre almost every duel, so it fizzles 82% of the time.
+- **Your hand decides the enemy's opening.** The enemy sees your stones (the
+  duel is open information), and it opens to dodge them:
+  - Holding Overtake, the enemy *never* opens in the centre (0 of 100 duels,
+    against Shift + Pebbles).
+  - Holding Twin, it opens in the centre *every* time (150 of 150) to block it.
+
+  So any stone whose condition the opener controls is dead against an attentive
+  enemy. That explains Overtake's 92% and Twin's 82% duds.
+- **Overtake**: it can only ever hit the centre, so the enemy simply keeps out
+  of it. Making it convert the centre stone instead changes nothing (measured,
+  §8). *Suggestion:* drop it, or give it a target the enemy can't avoid (e.g.
+  "the enemy's last-placed stone goes back to their hand").
+- **Twin**: it needs an empty centre, and the enemy fills the centre at once.
   *Suggestion:* "opposite it across the board, if that square is empty",
-  without the centre condition.
+  without the centre condition: 35% → 48% in act 1 (§8).
 - **Colossus's undead phase** has the same rules as phase 1. Give it a
   `rules2`, e.g. `['column', 'headstart']`.
 - **Carpenter's undead Patience** never matters: Elbow games almost never
@@ -377,15 +383,52 @@ trick.
 
 1. Nerf Bribe (enemy Pebble beside it).
 2. Fix Firecracker (leaves a Pebble).
-3. Rework Overtake (the centre stone becomes yours) and Twin (drop the centre
-   condition).
+3. Twin drops the centre condition. Overtake gets a target the enemy can't
+   dodge, or goes.
 4. Give the Colossus a real undead phase; replace the Carpenter's Patience.
 5. Fix the difficulty order: move Magpie Meg to elite or act 3, Summit Yeti
    down or harder, and Stinky Skunk later in act 1.
-6. Make Lasso no-choice; Frog removes instead of returning; Muffle hits the
-   next *special* stone.
+6. Make Lasso no-choice (no loss of power, measured). Muffle hits the next
+   *special* stone. Frog: removing instead of returning helps only a little;
+   it needs a bigger rethink.
 7. Unify "beside" / "around" and highlight the affected squares.
 8. Hint at the Grandmaster's build ("He chooses which of your stones you play").
 
 None of these are applied. This report only measures; the changes are yours to
 pick.
+
+---
+
+## 9. The proposals, measured
+
+`node tools/lab.mjs proposals`: each change patched into the engine for the
+duel only.
+
+- Standard hands: 300 games each. The stone + 3 Pebbles, enemy opens.
+- Act 1: the whole act-1 cast with real hands, 75 games per enemy.
+
+| stone | version | vs Pebbles | vs Shift | vs Magnet+Shift | act 1 |
+|---|---|---:|---:|---:|---:|
+| Bribe | now | 99% | 98% | 25% | 84% |
+| | *enemy Pebble beside it* | 98% | 96% | 0% | **59%** |
+| Firecracker | now | 2% | 3% | 0% | 21% |
+| | *leaves a Pebble* | 98% | 87% | 0% | **50%** |
+| Twin | now | 78% | 23% | 0% | 35% |
+| | *no centre condition* | 85% | 58% | 0% | **48%** |
+| Lasso | now | 79% | 34% | 0% | 32% |
+| | *always pulls all, no choice* | 76% | 37% | 0% | 33% |
+| Frog | now | 39% | 21% | 5% | 28% |
+| | *leapt enemy stone removed* | 43% | 26% | 8% | 31% |
+| Overtake | now | 36% | 20% | 0% | 28% |
+| | *centre stone becomes yours* | 31% | 13% | 0% | 32% |
+
+For comparison, act-1 means for stones as they are: Pebble 25%, Magnet 53%,
+Beacon 57%, Magpie 59%.
+
+- **The Bribe nerf** lands it next to Magpie and Beacon: still a top rare, no
+  longer an auto-win.
+- **The Firecracker fix** takes it from a trap to a good rare.
+- **Twin without the centre condition** is a solid rare.
+- **Lasso without its choice** keeps its power, so that change is free
+  clarity.
+- **Frog and Overtake** barely move. They need different ideas, not tweaks.

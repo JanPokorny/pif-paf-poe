@@ -11,6 +11,7 @@
 //   bosses    every boss phase against a set of builds: which build each needs
 //   pairs     the strongest stones two by two (+ 2 Pebbles)
 //   conds     each condition, typical pouch against a typical enemy
+//   proposals the changes the stone report suggests, measured against the stones as they are
 //   slots     each stone in a hand of four and of five: what the fifth slot changes
 //   effects   how often each stone does nothing, and how many choices it asks for
 //
@@ -35,6 +36,7 @@ const SPECIALS = STONE_TYPES.filter((t) => t !== 'pebble');
 // stones that move things), cramped the enemy (for restrictions), and how
 // many effect choices it offered.
 function duel(t) {
+  patch(t.patch);
   const rng = makeRng(t.seed);
   const s = createGame({ handX: t.handX, handO: t.handO, first: t.first ?? 'O', conds: t.conds ?? [], rules: t.rules ?? [], modsO: t.modsO ?? {}, log: false });
   const track = {};
@@ -72,6 +74,32 @@ function duel(t) {
     applyAction(s, a);
   }
   return { key: t.key, exp: t.exp, won: s.winner === 'X' ? 1 : 0, reason: s.reason, turns: s.turns, track };
+}
+
+// ── Proposed changes, patched into the stone table for one duel ──────────────
+
+const ORIGINAL = Object.fromEntries(Object.entries(STONES).map(([k, v]) => [k, { ...v }]));
+const ORTHO4 = (i) => [i - 3, i + 3, i % 3 ? i - 1 : -1, i % 3 < 2 ? i + 1 : -1].filter((j) => j >= 0 && j < 9);
+const PATCHES = {
+  // Bribe: only an enemy Pebble beside it.
+  bribe: { options: (s, pos, cell) => ORTHO4(pos).filter((j) => s.board[j] && s.board[j].player !== cell.player && s.board[j].type === 'pebble').map((target) => ({ target })) },
+  // Firecracker: leaves a scorched Pebble behind instead of burning away.
+  firecracker: { apply(s, pos, a) { const c = s.board[a.target]; s.hands[c.player].push({ type: c.type }); s.board[a.target] = null; s.board[pos].type = 'pebble'; } },
+  // Overtake: the enemy's centre stone becomes yours.
+  overtake: { apply(s, pos, a, cell) { s.board[4].player = cell.player; } },
+  // Twin: opposite across the board, whatever stands in the centre.
+  twin: { options: (s, pos) => { const j = 8 - pos; return j !== pos && !s.board[j] ? [{ target: j }] : []; } },
+  // Frog: an enemy stone leapt over is gone, not back in their hand.
+  frog: { apply(s, pos, a, cell) { const mid = ((pos + a.target) / 2) | 0; s.board[a.target] = s.board[pos]; s.board[pos] = null; if (s.board[mid] && s.board[mid].player !== cell.player) s.board[mid] = null; } },
+  // Lasso: always pulls them all, no choice.
+  lasso: { options: (s, pos) => ORIGINAL.lasso.options(s, pos).slice(0, 1) },
+};
+let patched = null;
+function patch(id) {
+  if (patched === (id ?? null)) return;
+  for (const k of Object.keys(PATCHES)) Object.assign(STONES[k], ORIGINAL[k]);
+  if (id) Object.assign(STONES[id], PATCHES[id]);
+  patched = id ?? null;
 }
 
 // ── Experiments: lists of duel set-ups ──────────────────────────────────────
@@ -135,6 +163,21 @@ const EXPERIMENTS = {
     for (const type of STONE_TYPES) for (const id of cast) for (let i = 0; i < g; i++) {
       const d = enemyDuel(1, id, i * 31 + 7);
       out.push({ key: `${type}|${id}`, handX: [type, ...P(3)], handO: d.handO.map((x) => x.type), conds: d.conds, rules: d.rules, modsO: d.modsO, itersO: d.iters, blunderO: d.blunder, seed: i + 1 });
+    }
+    return out;
+  },
+  proposals(g) {
+    // Each proposed change against the original: standard hands and the act-1 cast.
+    const out = [];
+    const foes = { 'vs Pebbles': P(5), 'vs Shift': ['shift', ...P(4)], 'vs Magnet+Shift': ['magnet', 'shift', ...P(3)] };
+    const cast = Object.keys(ENEMIES).filter((k) => ENEMIES[k].act === 1 && ENEMIES[k].tier !== 'boss');
+    for (const type of Object.keys(PATCHES)) for (const version of ['now', 'new']) {
+      const p = version === 'new' ? type : null;
+      for (const [fk, handO] of Object.entries(foes)) for (let i = 0; i < g; i++) out.push({ key: `${type} ${version}|${fk}`, patch: p, handX: [type, ...P(3)], handO, seed: i + 1 });
+      for (const id of cast) for (let i = 0; i < g / 4; i++) {
+        const d = enemyDuel(1, id, i * 31 + 7, { tier: ENEMIES[id].tier });
+        out.push({ key: `${type} ${version}|act 1`, patch: p, handX: [type, ...P(3)], handO: d.handO.map((x) => x.type), conds: d.conds, rules: d.rules, modsO: d.modsO, itersO: d.iters, blunderO: d.blunder, seed: i + 1 });
+      }
     }
     return out;
   },

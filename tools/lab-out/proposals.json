@@ -1,0 +1,1741 @@
+{
+ "exp": "proposals",
+ "games": 300,
+ "secs": 184.817,
+ "by": {
+  "bribe now|vs Pebbles": {
+   "n": 300,
+   "won": 298,
+   "full": 41,
+   "turns": 1675,
+   "track": {
+    "bribe": {
+     "placed": 300,
+     "dud": 10,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 32,
+     "hushed": 0,
+     "hushedPebble": 0
+    }
+   }
+  },
+  "bribe now|vs Shift": {
+   "n": 300,
+   "won": 293,
+   "full": 50,
+   "turns": 1699,
+   "track": {
+    "bribe": {
+     "placed": 299,
+     "dud": 10,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 28,
+     "hushed": 0,
+     "hushedPebble": 0
+    }
+   }
+  },
+  "bribe now|vs Magnet+Shift": {
+   "n": 300,
+   "won": 75,
+   "full": 20,
+   "turns": 1753,
+   "track": {
+    "bribe": {
+     "placed": 221,
+     "dud": 4,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 78,
+     "hushed": 0,
+     "hushedPebble": 0
+    },
+    "magnet": {
+     "placed": 0,
+     "dud": 0,
+     "bite": 3,
+     "restrictTurns": 12,
+     "choices": 0,
+     "hushed": 0,
+     "hushedPebble": 0
+    }
+   }
+  },
+  "bribe now|act 1": {
+   "n": 750,
+   "won": 631,
+   "full": 87,
+   "turns": 4011,
+   "track": {
+    "bribe": {
+     "placed": 695,
+     "dud": 6,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 382,
+     "hushed": 0,
+     "hushedPebble": 0
+    },
+    "shift": {
+     "placed": 10,
+     "dud": 1,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 40,
+     "hushed": 0,
+     "hushedPebble": 0
+    },
+    "magnet": {
+     "placed": 3,
+     "dud": 0,
+     "bite": 33,
+     "restrictTurns": 62,
+     "choices": 0,
+     "hushed": 0,
+     "hushedPebble": 0
+    },
+    "mountain": {
+     "placed": 2,
+     "dud": 0,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 0,
+     "hushed": 0,
+     "hushedPebble": 0
+    },
+    "rotate": {
+     "placed": 6,
+     "dud": 2,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 6,
+     "hushed": 0,
+     "hushedPebble": 0
+    },
+    "stinky": {
+     "placed": 11,
+     "dud": 0,
+     "bite": 69,
+     "restrictTurns": 75,
+     "choices": 0,
+     "hushed": 0,
+     "hushedPebble": 0
+    },
+    "bumper": {
+     "placed": 3,
+     "dud": 2,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 0,
+     "hushed": 0,
+     "hushedPebble": 0
+    },
+    "lasso": {
+     "placed": 4,
+     "dud": 1,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 0,
+     "hushed": 0,
+     "hushedPebble": 0
+    },
+    "twin": {
+     "placed": 2,
+     "dud": 2,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 0,
+     "hushed": 0,
+     "hushedPebble": 0
+    },
+    "muffle": {
+     "placed": 1,
+     "dud": 0,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 0,
+     "hushed": 1,
+     "hushedPebble": 1
+    }
+   }
+  },
+  "bribe new|vs Pebbles": {
+   "n": 300,
+   "won": 293,
+   "full": 31,
+   "turns": 1616,
+   "track": {
+    "bribe": {
+     "placed": 300,
+     "dud": 7,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 0,
+     "hushed": 0,
+     "hushedPebble": 0
+    }
+   }
+  },
+  "bribe new|vs Shift": {
+   "n": 300,
+   "won": 287,
+   "full": 14,
+   "turns": 1273,
+   "track": {
+    "bribe": {
+     "placed": 300,
+     "dud": 17,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 4,
+     "hushed": 0,
+     "hushedPebble": 0
+    }
+   }
+  },
+  "bribe new|vs Magnet+Shift": {
+   "n": 300,
+   "won": 1,
+   "full": 0,
+   "turns": 1693,
+   "track": {
+    "bribe": {
+     "placed": 221,
+     "dud": 211,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 0,
+     "hushed": 0,
+     "hushedPebble": 0
+    }
+   }
+  },
+  "bribe new|act 1": {
+   "n": 750,
+   "won": 445,
+   "full": 99,
+   "turns": 4265,
+   "track": {
+    "bribe": {
+     "placed": 603,
+     "dud": 176,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 0,
+     "hushed": 0,
+     "hushedPebble": 0
+    },
+    "shift": {
+     "placed": 5,
+     "dud": 1,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 20,
+     "hushed": 0,
+     "hushedPebble": 0
+    },
+    "magnet": {
+     "placed": 1,
+     "dud": 0,
+     "bite": 2,
+     "restrictTurns": 3,
+     "choices": 0,
+     "hushed": 0,
+     "hushedPebble": 0
+    },
+    "rotate": {
+     "placed": 6,
+     "dud": 5,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 12,
+     "hushed": 0,
+     "hushedPebble": 0
+    },
+    "stinky": {
+     "placed": 11,
+     "dud": 0,
+     "bite": 21,
+     "restrictTurns": 21,
+     "choices": 0,
+     "hushed": 0,
+     "hushedPebble": 0
+    },
+    "lasso": {
+     "placed": 3,
+     "dud": 2,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 0,
+     "hushed": 0,
+     "hushedPebble": 0
+    },
+    "bumper": {
+     "placed": 3,
+     "dud": 0,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 0,
+     "hushed": 0,
+     "hushedPebble": 0
+    },
+    "twin": {
+     "placed": 7,
+     "dud": 2,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 0,
+     "hushed": 0,
+     "hushedPebble": 0
+    },
+    "muffle": {
+     "placed": 2,
+     "dud": 0,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 0,
+     "hushed": 2,
+     "hushedPebble": 1
+    }
+   }
+  },
+  "firecracker now|vs Pebbles": {
+   "n": 300,
+   "won": 5,
+   "full": 2,
+   "turns": 1943,
+   "track": {
+    "firecracker": {
+     "placed": 297,
+     "dud": 108,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 19,
+     "hushed": 0,
+     "hushedPebble": 0
+    }
+   }
+  },
+  "firecracker now|vs Shift": {
+   "n": 300,
+   "won": 8,
+   "full": 7,
+   "turns": 1915,
+   "track": {
+    "firecracker": {
+     "placed": 297,
+     "dud": 138,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 21,
+     "hushed": 0,
+     "hushedPebble": 0
+    }
+   }
+  },
+  "firecracker now|vs Magnet+Shift": {
+   "n": 300,
+   "won": 0,
+   "full": 0,
+   "turns": 2170,
+   "track": {
+    "firecracker": {
+     "placed": 297,
+     "dud": 63,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 53,
+     "hushed": 0,
+     "hushedPebble": 0
+    }
+   }
+  },
+  "firecracker now|act 1": {
+   "n": 750,
+   "won": 156,
+   "full": 60,
+   "turns": 4988,
+   "track": {
+    "firecracker": {
+     "placed": 683,
+     "dud": 322,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 154,
+     "hushed": 0,
+     "hushedPebble": 0
+    },
+    "shift": {
+     "placed": 9,
+     "dud": 3,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 36,
+     "hushed": 0,
+     "hushedPebble": 0
+    },
+    "magnet": {
+     "placed": 8,
+     "dud": 0,
+     "bite": 17,
+     "restrictTurns": 19,
+     "choices": 0,
+     "hushed": 0,
+     "hushedPebble": 0
+    },
+    "mountain": {
+     "placed": 3,
+     "dud": 0,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 0,
+     "hushed": 0,
+     "hushedPebble": 0
+    },
+    "rotate": {
+     "placed": 7,
+     "dud": 3,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 16,
+     "hushed": 0,
+     "hushedPebble": 0
+    },
+    "stinky": {
+     "placed": 12,
+     "dud": 0,
+     "bite": 19,
+     "restrictTurns": 21,
+     "choices": 0,
+     "hushed": 0,
+     "hushedPebble": 0
+    },
+    "lasso": {
+     "placed": 3,
+     "dud": 3,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 0,
+     "hushed": 0,
+     "hushedPebble": 0
+    },
+    "bumper": {
+     "placed": 2,
+     "dud": 1,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 0,
+     "hushed": 0,
+     "hushedPebble": 0
+    },
+    "twin": {
+     "placed": 10,
+     "dud": 4,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 0,
+     "hushed": 0,
+     "hushedPebble": 0
+    },
+    "muffle": {
+     "placed": 4,
+     "dud": 0,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 0,
+     "hushed": 4,
+     "hushedPebble": 1
+    }
+   }
+  },
+  "firecracker new|vs Pebbles": {
+   "n": 300,
+   "won": 293,
+   "full": 234,
+   "turns": 2781,
+   "track": {
+    "firecracker": {
+     "placed": 300,
+     "dud": 3,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 43,
+     "hushed": 0,
+     "hushedPebble": 0
+    }
+   }
+  },
+  "firecracker new|vs Shift": {
+   "n": 300,
+   "won": 262,
+   "full": 248,
+   "turns": 2856,
+   "track": {
+    "firecracker": {
+     "placed": 300,
+     "dud": 9,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 25,
+     "hushed": 0,
+     "hushedPebble": 0
+    }
+   }
+  },
+  "firecracker new|vs Magnet+Shift": {
+   "n": 300,
+   "won": 0,
+   "full": 0,
+   "turns": 2382,
+   "track": {
+    "firecracker": {
+     "placed": 300,
+     "dud": 3,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 39,
+     "hushed": 0,
+     "hushedPebble": 0
+    }
+   }
+  },
+  "firecracker new|act 1": {
+   "n": 750,
+   "won": 377,
+   "full": 154,
+   "turns": 5507,
+   "track": {
+    "firecracker": {
+     "placed": 720,
+     "dud": 30,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 218,
+     "hushed": 0,
+     "hushedPebble": 0
+    },
+    "shift": {
+     "placed": 8,
+     "dud": 2,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 32,
+     "hushed": 0,
+     "hushedPebble": 0
+    },
+    "magnet": {
+     "placed": 4,
+     "dud": 0,
+     "bite": 7,
+     "restrictTurns": 8,
+     "choices": 0,
+     "hushed": 0,
+     "hushedPebble": 0
+    },
+    "rotate": {
+     "placed": 6,
+     "dud": 3,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 10,
+     "hushed": 0,
+     "hushedPebble": 0
+    },
+    "stinky": {
+     "placed": 6,
+     "dud": 0,
+     "bite": 12,
+     "restrictTurns": 13,
+     "choices": 0,
+     "hushed": 0,
+     "hushedPebble": 0
+    },
+    "lasso": {
+     "placed": 4,
+     "dud": 1,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 0,
+     "hushed": 0,
+     "hushedPebble": 0
+    },
+    "bumper": {
+     "placed": 3,
+     "dud": 2,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 0,
+     "hushed": 0,
+     "hushedPebble": 0
+    },
+    "twin": {
+     "placed": 7,
+     "dud": 1,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 0,
+     "hushed": 0,
+     "hushedPebble": 0
+    },
+    "muffle": {
+     "placed": 6,
+     "dud": 0,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 0,
+     "hushed": 6,
+     "hushedPebble": 3
+    }
+   }
+  },
+  "overtake now|vs Pebbles": {
+   "n": 300,
+   "won": 109,
+   "full": 73,
+   "turns": 1936,
+   "track": {
+    "overtake": {
+     "placed": 254,
+     "dud": 253,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 0,
+     "hushed": 0,
+     "hushedPebble": 0
+    }
+   }
+  },
+  "overtake now|vs Shift": {
+   "n": 300,
+   "won": 59,
+   "full": 44,
+   "turns": 1655,
+   "track": {
+    "overtake": {
+     "placed": 218,
+     "dud": 212,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 0,
+     "hushed": 0,
+     "hushedPebble": 0
+    }
+   }
+  },
+  "overtake now|vs Magnet+Shift": {
+   "n": 300,
+   "won": 0,
+   "full": 0,
+   "turns": 1570,
+   "track": {
+    "overtake": {
+     "placed": 261,
+     "dud": 259,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 0,
+     "hushed": 0,
+     "hushedPebble": 0
+    }
+   }
+  },
+  "overtake now|act 1": {
+   "n": 750,
+   "won": 209,
+   "full": 82,
+   "turns": 4278,
+   "track": {
+    "overtake": {
+     "placed": 600,
+     "dud": 512,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 0,
+     "hushed": 0,
+     "hushedPebble": 0
+    },
+    "shift": {
+     "placed": 8,
+     "dud": 4,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 32,
+     "hushed": 0,
+     "hushedPebble": 0
+    },
+    "magnet": {
+     "placed": 5,
+     "dud": 0,
+     "bite": 9,
+     "restrictTurns": 13,
+     "choices": 0,
+     "hushed": 0,
+     "hushedPebble": 0
+    },
+    "mountain": {
+     "placed": 1,
+     "dud": 0,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 0,
+     "hushed": 0,
+     "hushedPebble": 0
+    },
+    "rotate": {
+     "placed": 5,
+     "dud": 4,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 10,
+     "hushed": 0,
+     "hushedPebble": 0
+    },
+    "stinky": {
+     "placed": 7,
+     "dud": 0,
+     "bite": 18,
+     "restrictTurns": 18,
+     "choices": 0,
+     "hushed": 0,
+     "hushedPebble": 0
+    },
+    "bumper": {
+     "placed": 2,
+     "dud": 1,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 0,
+     "hushed": 0,
+     "hushedPebble": 0
+    },
+    "lasso": {
+     "placed": 3,
+     "dud": 0,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 8,
+     "hushed": 0,
+     "hushedPebble": 0
+    },
+    "twin": {
+     "placed": 7,
+     "dud": 2,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 0,
+     "hushed": 0,
+     "hushedPebble": 0
+    },
+    "muffle": {
+     "placed": 4,
+     "dud": 0,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 0,
+     "hushed": 4,
+     "hushedPebble": 1
+    }
+   }
+  },
+  "overtake new|vs Pebbles": {
+   "n": 300,
+   "won": 94,
+   "full": 52,
+   "turns": 1890,
+   "track": {
+    "overtake": {
+     "placed": 225,
+     "dud": 225,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 0,
+     "hushed": 0,
+     "hushedPebble": 0
+    }
+   }
+  },
+  "overtake new|vs Shift": {
+   "n": 300,
+   "won": 40,
+   "full": 23,
+   "turns": 1569,
+   "track": {
+    "overtake": {
+     "placed": 157,
+     "dud": 157,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 0,
+     "hushed": 0,
+     "hushedPebble": 0
+    }
+   }
+  },
+  "overtake new|vs Magnet+Shift": {
+   "n": 300,
+   "won": 0,
+   "full": 0,
+   "turns": 1460,
+   "track": {
+    "overtake": {
+     "placed": 232,
+     "dud": 232,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 0,
+     "hushed": 0,
+     "hushedPebble": 0
+    }
+   }
+  },
+  "overtake new|act 1": {
+   "n": 750,
+   "won": 243,
+   "full": 74,
+   "turns": 4130,
+   "track": {
+    "overtake": {
+     "placed": 506,
+     "dud": 429,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 0,
+     "hushed": 0,
+     "hushedPebble": 0
+    },
+    "shift": {
+     "placed": 5,
+     "dud": 1,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 20,
+     "hushed": 0,
+     "hushedPebble": 0
+    },
+    "magnet": {
+     "placed": 6,
+     "dud": 0,
+     "bite": 12,
+     "restrictTurns": 17,
+     "choices": 0,
+     "hushed": 0,
+     "hushedPebble": 0
+    },
+    "mountain": {
+     "placed": 2,
+     "dud": 0,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 0,
+     "hushed": 0,
+     "hushedPebble": 0
+    },
+    "rotate": {
+     "placed": 6,
+     "dud": 1,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 10,
+     "hushed": 0,
+     "hushedPebble": 0
+    },
+    "stinky": {
+     "placed": 9,
+     "dud": 0,
+     "bite": 25,
+     "restrictTurns": 28,
+     "choices": 0,
+     "hushed": 0,
+     "hushedPebble": 0
+    },
+    "bumper": {
+     "placed": 3,
+     "dud": 1,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 0,
+     "hushed": 0,
+     "hushedPebble": 0
+    },
+    "lasso": {
+     "placed": 3,
+     "dud": 1,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 0,
+     "hushed": 0,
+     "hushedPebble": 0
+    },
+    "twin": {
+     "placed": 6,
+     "dud": 0,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 0,
+     "hushed": 0,
+     "hushedPebble": 0
+    },
+    "muffle": {
+     "placed": 4,
+     "dud": 0,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 0,
+     "hushed": 4,
+     "hushedPebble": 2
+    }
+   }
+  },
+  "twin now|vs Pebbles": {
+   "n": 300,
+   "won": 235,
+   "full": 232,
+   "turns": 2255,
+   "track": {
+    "twin": {
+     "placed": 295,
+     "dud": 295,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 0,
+     "hushed": 0,
+     "hushedPebble": 0
+    }
+   }
+  },
+  "twin now|vs Shift": {
+   "n": 300,
+   "won": 69,
+   "full": 69,
+   "turns": 1662,
+   "track": {
+    "twin": {
+     "placed": 259,
+     "dud": 259,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 0,
+     "hushed": 0,
+     "hushedPebble": 0
+    }
+   }
+  },
+  "twin now|vs Magnet+Shift": {
+   "n": 300,
+   "won": 0,
+   "full": 0,
+   "turns": 1514,
+   "track": {
+    "twin": {
+     "placed": 246,
+     "dud": 246,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 0,
+     "hushed": 0,
+     "hushedPebble": 0
+    }
+   }
+  },
+  "twin now|act 1": {
+   "n": 750,
+   "won": 264,
+   "full": 98,
+   "turns": 3922,
+   "track": {
+    "twin": {
+     "placed": 669,
+     "dud": 274,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 0,
+     "hushed": 0,
+     "hushedPebble": 0
+    },
+    "shift": {
+     "placed": 9,
+     "dud": 4,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 36,
+     "hushed": 0,
+     "hushedPebble": 0
+    },
+    "magnet": {
+     "placed": 6,
+     "dud": 0,
+     "bite": 8,
+     "restrictTurns": 10,
+     "choices": 0,
+     "hushed": 0,
+     "hushedPebble": 0
+    },
+    "mountain": {
+     "placed": 3,
+     "dud": 0,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 0,
+     "hushed": 0,
+     "hushedPebble": 0
+    },
+    "rotate": {
+     "placed": 4,
+     "dud": 0,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 2,
+     "hushed": 0,
+     "hushedPebble": 0
+    },
+    "stinky": {
+     "placed": 14,
+     "dud": 0,
+     "bite": 20,
+     "restrictTurns": 29,
+     "choices": 0,
+     "hushed": 0,
+     "hushedPebble": 0
+    },
+    "bumper": {
+     "placed": 3,
+     "dud": 3,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 0,
+     "hushed": 0,
+     "hushedPebble": 0
+    },
+    "lasso": {
+     "placed": 3,
+     "dud": 0,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 6,
+     "hushed": 0,
+     "hushedPebble": 0
+    },
+    "muffle": {
+     "placed": 3,
+     "dud": 0,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 0,
+     "hushed": 3,
+     "hushedPebble": 2
+    }
+   }
+  },
+  "twin new|vs Pebbles": {
+   "n": 300,
+   "won": 256,
+   "full": 181,
+   "turns": 2145,
+   "track": {
+    "twin": {
+     "placed": 285,
+     "dud": 142,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 0,
+     "hushed": 0,
+     "hushedPebble": 0
+    }
+   }
+  },
+  "twin new|vs Shift": {
+   "n": 300,
+   "won": 175,
+   "full": 125,
+   "turns": 1849,
+   "track": {
+    "twin": {
+     "placed": 294,
+     "dud": 90,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 0,
+     "hushed": 0,
+     "hushedPebble": 0
+    }
+   }
+  },
+  "twin new|vs Magnet+Shift": {
+   "n": 300,
+   "won": 0,
+   "full": 0,
+   "turns": 1240,
+   "track": {
+    "twin": {
+     "placed": 293,
+     "dud": 6,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 0,
+     "hushed": 0,
+     "hushedPebble": 0
+    }
+   }
+  },
+  "twin new|act 1": {
+   "n": 750,
+   "won": 357,
+   "full": 94,
+   "turns": 3830,
+   "track": {
+    "twin": {
+     "placed": 680,
+     "dud": 74,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 0,
+     "hushed": 0,
+     "hushedPebble": 0
+    },
+    "shift": {
+     "placed": 8,
+     "dud": 3,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 32,
+     "hushed": 0,
+     "hushedPebble": 0
+    },
+    "magnet": {
+     "placed": 3,
+     "dud": 0,
+     "bite": 7,
+     "restrictTurns": 8,
+     "choices": 0,
+     "hushed": 0,
+     "hushedPebble": 0
+    },
+    "rotate": {
+     "placed": 3,
+     "dud": 2,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 2,
+     "hushed": 0,
+     "hushedPebble": 0
+    },
+    "mountain": {
+     "placed": 2,
+     "dud": 0,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 0,
+     "hushed": 0,
+     "hushedPebble": 0
+    },
+    "stinky": {
+     "placed": 14,
+     "dud": 0,
+     "bite": 19,
+     "restrictTurns": 28,
+     "choices": 0,
+     "hushed": 0,
+     "hushedPebble": 0
+    },
+    "lasso": {
+     "placed": 2,
+     "dud": 0,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 3,
+     "hushed": 0,
+     "hushedPebble": 0
+    },
+    "bumper": {
+     "placed": 5,
+     "dud": 5,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 0,
+     "hushed": 0,
+     "hushedPebble": 0
+    },
+    "muffle": {
+     "placed": 4,
+     "dud": 0,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 0,
+     "hushed": 4,
+     "hushedPebble": 4
+    }
+   }
+  },
+  "frog now|vs Pebbles": {
+   "n": 300,
+   "won": 118,
+   "full": 80,
+   "turns": 1978,
+   "track": {
+    "frog": {
+     "placed": 268,
+     "dud": 256,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 0,
+     "hushed": 0,
+     "hushedPebble": 0
+    }
+   }
+  },
+  "frog now|vs Shift": {
+   "n": 300,
+   "won": 62,
+   "full": 43,
+   "turns": 1697,
+   "track": {
+    "frog": {
+     "placed": 240,
+     "dud": 224,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 0,
+     "hushed": 0,
+     "hushedPebble": 0
+    }
+   }
+  },
+  "frog now|vs Magnet+Shift": {
+   "n": 300,
+   "won": 14,
+   "full": 10,
+   "turns": 1650,
+   "track": {
+    "frog": {
+     "placed": 269,
+     "dud": 226,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 0,
+     "hushed": 0,
+     "hushedPebble": 0
+    }
+   }
+  },
+  "frog now|act 1": {
+   "n": 750,
+   "won": 210,
+   "full": 84,
+   "turns": 4416,
+   "track": {
+    "frog": {
+     "placed": 655,
+     "dud": 482,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 2,
+     "hushed": 0,
+     "hushedPebble": 0
+    },
+    "shift": {
+     "placed": 6,
+     "dud": 2,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 24,
+     "hushed": 0,
+     "hushedPebble": 0
+    },
+    "magnet": {
+     "placed": 2,
+     "dud": 0,
+     "bite": 4,
+     "restrictTurns": 6,
+     "choices": 0,
+     "hushed": 0,
+     "hushedPebble": 0
+    },
+    "rotate": {
+     "placed": 8,
+     "dud": 2,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 14,
+     "hushed": 0,
+     "hushedPebble": 0
+    },
+    "mountain": {
+     "placed": 2,
+     "dud": 0,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 0,
+     "hushed": 0,
+     "hushedPebble": 0
+    },
+    "stinky": {
+     "placed": 9,
+     "dud": 0,
+     "bite": 19,
+     "restrictTurns": 19,
+     "choices": 0,
+     "hushed": 0,
+     "hushedPebble": 0
+    },
+    "bumper": {
+     "placed": 3,
+     "dud": 3,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 0,
+     "hushed": 0,
+     "hushedPebble": 0
+    },
+    "lasso": {
+     "placed": 1,
+     "dud": 0,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 0,
+     "hushed": 0,
+     "hushedPebble": 0
+    },
+    "twin": {
+     "placed": 7,
+     "dud": 0,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 0,
+     "hushed": 0,
+     "hushedPebble": 0
+    },
+    "muffle": {
+     "placed": 5,
+     "dud": 0,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 0,
+     "hushed": 5,
+     "hushedPebble": 3
+    }
+   }
+  },
+  "frog new|vs Pebbles": {
+   "n": 300,
+   "won": 128,
+   "full": 82,
+   "turns": 1955,
+   "track": {
+    "frog": {
+     "placed": 268,
+     "dud": 260,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 0,
+     "hushed": 0,
+     "hushedPebble": 0
+    }
+   }
+  },
+  "frog new|vs Shift": {
+   "n": 300,
+   "won": 77,
+   "full": 53,
+   "turns": 1718,
+   "track": {
+    "frog": {
+     "placed": 249,
+     "dud": 236,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 0,
+     "hushed": 0,
+     "hushedPebble": 0
+    }
+   }
+  },
+  "frog new|vs Magnet+Shift": {
+   "n": 300,
+   "won": 23,
+   "full": 16,
+   "turns": 1651,
+   "track": {
+    "frog": {
+     "placed": 265,
+     "dud": 239,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 0,
+     "hushed": 0,
+     "hushedPebble": 0
+    }
+   }
+  },
+  "frog new|act 1": {
+   "n": 750,
+   "won": 235,
+   "full": 95,
+   "turns": 4333,
+   "track": {
+    "frog": {
+     "placed": 623,
+     "dud": 449,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 0,
+     "hushed": 0,
+     "hushedPebble": 0
+    },
+    "shift": {
+     "placed": 8,
+     "dud": 4,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 32,
+     "hushed": 0,
+     "hushedPebble": 0
+    },
+    "magnet": {
+     "placed": 3,
+     "dud": 0,
+     "bite": 5,
+     "restrictTurns": 7,
+     "choices": 0,
+     "hushed": 0,
+     "hushedPebble": 0
+    },
+    "mountain": {
+     "placed": 2,
+     "dud": 0,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 0,
+     "hushed": 0,
+     "hushedPebble": 0
+    },
+    "rotate": {
+     "placed": 4,
+     "dud": 3,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 4,
+     "hushed": 0,
+     "hushedPebble": 0
+    },
+    "stinky": {
+     "placed": 8,
+     "dud": 0,
+     "bite": 18,
+     "restrictTurns": 18,
+     "choices": 0,
+     "hushed": 0,
+     "hushedPebble": 0
+    },
+    "bumper": {
+     "placed": 2,
+     "dud": 1,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 0,
+     "hushed": 0,
+     "hushedPebble": 0
+    },
+    "lasso": {
+     "placed": 1,
+     "dud": 0,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 0,
+     "hushed": 0,
+     "hushedPebble": 0
+    },
+    "twin": {
+     "placed": 7,
+     "dud": 0,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 0,
+     "hushed": 0,
+     "hushedPebble": 0
+    },
+    "muffle": {
+     "placed": 6,
+     "dud": 0,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 0,
+     "hushed": 5,
+     "hushedPebble": 3
+    }
+   }
+  },
+  "lasso now|vs Pebbles": {
+   "n": 300,
+   "won": 238,
+   "full": 227,
+   "turns": 2231,
+   "track": {
+    "lasso": {
+     "placed": 289,
+     "dud": 264,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 27,
+     "hushed": 0,
+     "hushedPebble": 0
+    }
+   }
+  },
+  "lasso now|vs Shift": {
+   "n": 300,
+   "won": 102,
+   "full": 100,
+   "turns": 1776,
+   "track": {
+    "lasso": {
+     "placed": 263,
+     "dud": 215,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 32,
+     "hushed": 0,
+     "hushedPebble": 0
+    }
+   }
+  },
+  "lasso now|vs Magnet+Shift": {
+   "n": 300,
+   "won": 0,
+   "full": 0,
+   "turns": 1524,
+   "track": {
+    "lasso": {
+     "placed": 259,
+     "dud": 255,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 0,
+     "hushed": 0,
+     "hushedPebble": 0
+    }
+   }
+  },
+  "lasso now|act 1": {
+   "n": 750,
+   "won": 243,
+   "full": 125,
+   "turns": 4434,
+   "track": {
+    "lasso": {
+     "placed": 647,
+     "dud": 305,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 289,
+     "hushed": 0,
+     "hushedPebble": 0
+    },
+    "shift": {
+     "placed": 6,
+     "dud": 2,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 24,
+     "hushed": 0,
+     "hushedPebble": 0
+    },
+    "magnet": {
+     "placed": 3,
+     "dud": 0,
+     "bite": 6,
+     "restrictTurns": 8,
+     "choices": 0,
+     "hushed": 0,
+     "hushedPebble": 0
+    },
+    "mountain": {
+     "placed": 3,
+     "dud": 0,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 0,
+     "hushed": 0,
+     "hushedPebble": 0
+    },
+    "rotate": {
+     "placed": 5,
+     "dud": 2,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 6,
+     "hushed": 0,
+     "hushedPebble": 0
+    },
+    "stinky": {
+     "placed": 7,
+     "dud": 0,
+     "bite": 16,
+     "restrictTurns": 16,
+     "choices": 0,
+     "hushed": 0,
+     "hushedPebble": 0
+    },
+    "bumper": {
+     "placed": 2,
+     "dud": 2,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 0,
+     "hushed": 0,
+     "hushedPebble": 0
+    },
+    "twin": {
+     "placed": 7,
+     "dud": 1,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 0,
+     "hushed": 0,
+     "hushedPebble": 0
+    },
+    "muffle": {
+     "placed": 1,
+     "dud": 0,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 0,
+     "hushed": 1,
+     "hushedPebble": 1
+    }
+   }
+  },
+  "lasso new|vs Pebbles": {
+   "n": 300,
+   "won": 227,
+   "full": 213,
+   "turns": 2222,
+   "track": {
+    "lasso": {
+     "placed": 284,
+     "dud": 254,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 0,
+     "hushed": 0,
+     "hushedPebble": 0
+    }
+   }
+  },
+  "lasso new|vs Shift": {
+   "n": 300,
+   "won": 111,
+   "full": 106,
+   "turns": 1825,
+   "track": {
+    "lasso": {
+     "placed": 250,
+     "dud": 209,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 0,
+     "hushed": 0,
+     "hushedPebble": 0
+    }
+   }
+  },
+  "lasso new|vs Magnet+Shift": {
+   "n": 300,
+   "won": 0,
+   "full": 0,
+   "turns": 1518,
+   "track": {
+    "lasso": {
+     "placed": 262,
+     "dud": 250,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 0,
+     "hushed": 0,
+     "hushedPebble": 0
+    }
+   }
+  },
+  "lasso new|act 1": {
+   "n": 750,
+   "won": 245,
+   "full": 123,
+   "turns": 4426,
+   "track": {
+    "lasso": {
+     "placed": 644,
+     "dud": 324,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 0,
+     "hushed": 0,
+     "hushedPebble": 0
+    },
+    "shift": {
+     "placed": 7,
+     "dud": 3,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 28,
+     "hushed": 0,
+     "hushedPebble": 0
+    },
+    "magnet": {
+     "placed": 2,
+     "dud": 0,
+     "bite": 4,
+     "restrictTurns": 5,
+     "choices": 0,
+     "hushed": 0,
+     "hushedPebble": 0
+    },
+    "mountain": {
+     "placed": 2,
+     "dud": 0,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 0,
+     "hushed": 0,
+     "hushedPebble": 0
+    },
+    "rotate": {
+     "placed": 5,
+     "dud": 2,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 6,
+     "hushed": 0,
+     "hushedPebble": 0
+    },
+    "stinky": {
+     "placed": 13,
+     "dud": 0,
+     "bite": 23,
+     "restrictTurns": 25,
+     "choices": 0,
+     "hushed": 0,
+     "hushedPebble": 0
+    },
+    "twin": {
+     "placed": 7,
+     "dud": 0,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 0,
+     "hushed": 0,
+     "hushedPebble": 0
+    },
+    "muffle": {
+     "placed": 3,
+     "dud": 0,
+     "bite": 0,
+     "restrictTurns": 0,
+     "choices": 0,
+     "hushed": 3,
+     "hushedPebble": 3
+    }
+   }
+  }
+ }
+}
