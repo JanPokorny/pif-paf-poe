@@ -3,9 +3,9 @@
 **Play it: https://janpokorny.github.io/pif-paf-poe/**
 
 Tic-tac-toe where the pieces move, as a mobile-friendly browser roguelike drawn on a notebook
-page. Duel a cast of enemies on a 3×3 board. You bring at least four stones into every duel —
-Pebbles, and special stones that *do something* when placed; more as you buy slots — and they
-can be crafted, two into one of a higher tier, along the way. One-shot stones do one strong
+page. Duel a cast of enemies on a 3×3 board. Every duel you bring the special stones
+your energy pays for — stones that *do something* when placed — and Pebbles fill the hand up to
+four. Stones can be crafted, two into one of a higher tier, along the way. One-shot stones do one strong
 thing and are gone from the pouch once played. Some duels carry a condition for both sides
 (gravity, a hollow centre, open hands); bosses bring no stones at all, only a rule in their
 favour.

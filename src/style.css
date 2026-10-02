@@ -858,3 +858,16 @@ body:has(.duel) #toast.show { transform: translate(-50%, 0) rotate(-1deg); }
 /* On view but out of reach: two squares from every mark. Seen, not yet to be taken. */
 .map-cell.far { cursor: default; }
 .map-cell.far > .doodle, .map-cell.far > .label, .map-cell.far > .elite-star { opacity: 0.4; filter: grayscale(0.6); }
+
+/* Energy: what the stones you bring may cost together. */
+.topbar .energy { display: flex; align-items: center; gap: 3px; color: #c58a0e; font-family: var(--marker); cursor: pointer; }
+.topbar .energy .icon, .energy-ico .icon, .reward-energy .icon { width: 18px; height: 18px; color: #e0a516; }
+.stone .cost { position: absolute; top: -5px; left: -5px; z-index: 2; display: flex; gap: 2px; padding: 2px 3px; border-radius: 8px; background: var(--card); box-shadow: 0 1px 0 rgba(0, 0, 0, 0.15); transform: rotate(calc(-1 * var(--tilt, 0deg))); }
+.stone .cost i { width: 6px; height: 6px; border-radius: 50%; background: #e0a516; box-shadow: inset 0 0 0 1px rgba(120, 80, 0, 0.35); }
+.stone.mini .cost i { width: 5px; height: 5px; }
+.energy-slot { display: flex; justify-content: center; margin: 2px 0 6px; }
+.energy-bar { display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px; border-radius: 14px 12px 15px 11px; background: var(--card); box-shadow: 0 1px 0 rgba(0, 0, 0, 0.12); }
+.energy-bar i { width: 14px; height: 14px; border-radius: 50%; border: 2px solid #e0a516; background: transparent; transition: background 0.2s, transform 0.2s; }
+.energy-bar i.on { background: #e0a516; transform: scale(1.08); }
+.energy-bar i.over { border-color: var(--red); background: var(--red); }
+.pebble-fill { min-height: 1.2em; }

@@ -110,15 +110,14 @@ test('Pebbles are stones in the hand like any other, and run out', () => {
   play(s, 'pebble', 2); play(s, 'pebble', 6);
   assert.deepEqual(legalActions(s).map((a) => a.stone), ['shift']);
 });
-test('a side with no stones left passes; when neither can place, the duel ends as a full board', () => {
+test('a side with no stones left finds a Pebble on its turn', () => {
   const s = G({ handX: ['pebble'], pebblesX: [], handO: ['pebble', 'pebble'], pebblesO: [] });
   play(s, 'pebble', 0);
   play(s, 'pebble', 8);
-  turnPassedTo(s, 'O');   // X has nothing left: O again
+  assert.equal(s.player, 'X');   // X's turn, with an empty hand: it finds one
+  assert.deepEqual(s.hands.X.map((x) => x.type), ['pebble']);
   play(s, 'pebble', 2);
-  assert.equal(s.over, true);
-  assert.equal(s.reason, 'full');
-  assert.equal(s.winner, 'O');   // X opened here, so the tie goes to O
+  assert.equal(s.over, false);
 });
 test('a special stone leaves the hand when placed', () => {
   const s = G({ handX: ['mountain', 'mountain'] });
@@ -696,15 +695,20 @@ test('a rule with nothing to choose leaves the boss\'s turn plain', () => {
 
 group('run');
 const RUN = await import('../src/run.js');
-test('a special stone found joins the last hand: a free slot, else in place of a Pebble', () => {
-  const run = RUN.newRun({ seed: 1 });
+test('stones cost energy; a stone found joins the last hand if the energy pays for it', () => {
+  const run = RUN.newRun({ seed: 1 });   // 1 energy, nothing in the pouch
   const hand = () => RUN.defaultHand(run).map((u) => run.pouch.find((x) => x.uid === u).type).sort();
-  run.lastHand = RUN.defaultHand(run);   // a duel played with four Pebbles
-  RUN.gainStone(run, { type: 'shift' });
-  assert.deepEqual(hand(), ['pebble', 'pebble', 'pebble', 'shift']);
-  run.slots = (run.slots ?? 4) + 1;
-  RUN.gainStone(run, { type: 'magnet' });   // a fifth slot: the hand fills it, then a Pebble makes room
-  assert.deepEqual(hand(), ['magnet', 'pebble', 'pebble', 'pebble', 'shift']);
+  assert.deepEqual(RUN.playerHand(run, RUN.defaultHand(run)).map((x) => x.type), ['pebble', 'pebble', 'pebble', 'pebble']);
+  run.lastHand = RUN.defaultHand(run);
+  RUN.gainStone(run, { type: 'shift' });   // common: 1
+  assert.deepEqual(hand(), ['shift']);
+  RUN.gainStone(run, { type: 'rotate' });   // no energy left for it
+  assert.deepEqual(hand(), ['shift']);
+  run.energy = 4;
+  RUN.gainStone(run, { type: 'beacon' });   // rare: 3, and 3 are left
+  assert.deepEqual(hand(), ['beacon', 'shift']);
+  assert.equal(RUN.handCost(run, RUN.defaultHand(run)), 4);
+  assert.deepEqual(RUN.playerHand(run, RUN.defaultHand(run)).map((x) => x.type).sort(), ['beacon', 'pebble', 'pebble', 'shift']);
 });
 
 // ── cloneState ──────────────────────────────────────────────────────────────

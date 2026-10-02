@@ -43,24 +43,29 @@ export const HEAT = [
   { n: 5, text: 'Enemies never blunder.' },
 ];
 
-// Pebbles are stones like any other now, and they run out: you start with
-// four, bring at least four into every duel, and never own fewer.
-export const MIN_HAND = 4;
-export const START = { pouch: Array(MIN_HAND).fill('pebble'), hearts: 6, gold: 30, slots: MIN_HAND };
-export const MAX_SLOTS = 7;
-// The enemy opens, so a full board takes five of its stones.
+// Energy decides what you bring into a duel: each special stone costs some
+// (a common 1, an uncommon 2, a rare 3) and together they may cost no more than
+// you have. Pebbles are free and never sit in the pouch: they fill your hand up
+// to four stones at the start of a duel, the enemy's up to five (it opens, so a
+// full board takes five of its stones).
+export const HAND = 4;
 const ENEMY_STONES = 5;
+export const START = { pouch: [], hearts: 6, gold: 30, energy: 1 };
+export const COST = { starter: 0, common: 1, uncommon: 2, rare: 3 };
+export const costOf = (type) => COST[STONES[type]?.rarity] ?? 0;
+export const energyOf = (run) => (run.energy ?? START.energy) + (has(run, 'deep-pockets') ? 1 : 0);
+export const handCost = (run, uids) => uids.reduce((n, u) => n + costOf(run.pouch.find((x) => x.uid === u)?.type), 0);
 
 const stone = (run, type) => ({ type, uid: run.nextUid++ });
 
 export function newRun({ seed = (Math.random() * 2 ** 31) | 0, heat = 0 } = {}) {
   const hearts = START.hearts - (heat >= 3 ? 1 : 0);
   const run = {
-    v: 3, seed, rs: seed, heat,
+    v: 4, seed, rs: seed, heat,
     act: 1, atBoss: false, map: null,
     hearts, maxHearts: hearts,
     gold: START.gold, pouch: [], relics: [],
-    slots: START.slots,
+    energy: START.energy,
     lastHand: null, nextUid: 1,
     rematchUsed: {}, phoenixUsed: false,
     stats: { won: 0, lost: 0, elites: 0, bosses: 0, gold: 0, started: Date.now() },
@@ -72,11 +77,7 @@ export function newRun({ seed = (Math.random() * 2 ** 31) | 0, heat = 0 } = {}) 
 }
 
 export const has = (run, relic) => run.relics.includes(relic);
-export const pouchCap = (run) => 10 + (has(run, 'satchel') ? 2 : 0);
-// How many stones you may bring into a duel, Pebbles included.
-export const handSize = (run) => Math.min(MAX_SLOTS + 1, (run.slots ?? MIN_HAND) + (has(run, 'deep-pockets') ? 1 : 0));
-// Never fewer than four stones: Pebbles fill the gap.
-export function topUp(run) { while (run.pouch.length < MIN_HAND) run.pouch.push(stone(run, 'pebble')); }
+export const pouchCap = (run) => 8 + (has(run, 'satchel') ? 2 : 0);
 export const stoneName = (s) => STONES[s.type].name;
 export const isOnce = (s) => !!STONES[s.type]?.once;
 
@@ -102,12 +103,10 @@ export function craftChoices(run, a, b) {
 // Trade the two stones (by uid) for the one chosen.
 export function craft(run, uidA, uidB, result) {
   run.pouch = run.pouch.filter((s) => s.uid !== uidA && s.uid !== uidB);
-  const made = gainStone(run, result);
-  topUp(run);
-  return made;
+  return gainStone(run, result);
 }
-// The stones a workshop will take: anything but Pebbles.
-export const craftable = (run) => run.pouch.filter((s) => s.type !== 'pebble');
+// The stones a workshop will take: all of them.
+export const craftable = (run) => run.pouch;
 
 // ── The map ─────────────────────────────────────────────────────────────────
 //
@@ -607,7 +606,9 @@ export function hurt(run, n) {
 function rollEnemyHand(run, enemy, tier, context) {
   if (tier === 'boss') return [];
   const act = ACTS[Math.max(0, (enemy.act || run.act) - 1)];
-  let size = enemy.size ?? act.size;
+  // Enemies grow with the acts as your energy does: one special stone in the
+  // first, two in the second, three in the third; an elite brings one more.
+  let size = enemy.size ?? act.size + (tier === 'elite' ? 1 : 0);
   if (run.heat >= 4 && tier === 'elite') size++;
   if (context.easy) size = Math.min(size, 1);
   const hand = enemy.core.slice(0, size);
@@ -626,7 +627,7 @@ export function prepareDuel(run, enemyId, context = {}) {
   let heatIters = (tier === 'boss' ? 1 : [1, 0.8, 0.6][Math.max(0, run.act - 1)]) * (run.heat >= 1 ? 1.5 : 1);
   for (const type of enemy.once ?? []) handO.push({ type });
   // Pebbles to fill its hand: enough for a full board, and one to spare.
-  for (let k = Math.max(1, ENEMY_STONES - handO.length); k > 0; k--) handO.push({ type: 'pebble' });
+  for (let k = ENEMY_STONES - handO.length; k > 0; k--) handO.push({ type: 'pebble' });
   const modsO = { ...(enemy.mods ?? {}) };
   let conds = [], rules = [];
   if (tier === 'boss') {
@@ -668,8 +669,11 @@ export const QUIRKS = {
 };
 
 // What the player brings: the chosen stones (by uid) as a duel hand.
+// The chosen stones, and Pebbles up to a hand of four.
 export function playerHand(run, uids) {
-  return uids.map((u) => run.pouch.find((s) => s.uid === u)).filter(Boolean).map((s) => ({ type: s.type }));
+  const hand = uids.map((u) => run.pouch.find((s) => s.uid === u)).filter(Boolean).map((s) => ({ type: s.type }));
+  while (hand.length < HAND) hand.push({ type: 'pebble' });
+  return hand;
 }
 
 export function playerMods(run) {
@@ -686,13 +690,15 @@ export function gameConfig(run, duel, uids) {
 }
 
 // The default loadout: last time's stones if still owned, topped up.
+// The default loadout: last time's stones if still owned and affordable, then
+// the dearest stones the energy still pays for.
 export function defaultHand(run) {
-  const size = handSize(run);
+  const energy = energyOf(run);
   const owned = new Set(run.pouch.map((s) => s.uid));
-  const rank = (s) => ({ starter: -1, common: 0, uncommon: 0.2, rare: 0.4 }[STONES[s.type].rarity] ?? 0);
-  const chosen = (run.lastHand ?? []).filter((u) => owned.has(u)).slice(0, size);
-  const rest = run.pouch.filter((s) => !chosen.includes(s.uid)).sort((a, b) => rank(b) - rank(a));
-  while (chosen.length < Math.min(size, run.pouch.length)) chosen.push(rest.shift().uid);
+  const chosen = [];
+  const take = (u) => { if (!chosen.includes(u) && handCost(run, [...chosen, u]) <= energy) chosen.push(u); };
+  for (const u of run.lastHand ?? []) if (owned.has(u)) take(u);
+  if (!run.lastHand) for (const s of [...run.pouch].sort((a, b) => costOf(b.type) - costOf(a.type))) take(s.uid);
   return chosen;
 }
 
@@ -775,9 +781,11 @@ export function duelWon(run) {
   if (rand(run) < onceChance) reward.once = randomOnce(run);
   const big = duel.tier === 'elite' || duel.tier === 'boss';
   if (duel.tier === 'elite' || duel.event === 'hermit' || duel.event === 'nightowl') reward.relic = randomRelic(run);
-  if (duel.tier === 'elite') run.stats.elites++;
+  if (duel.tier === 'elite') { run.stats.elites++; run.energy = (run.energy ?? START.energy) + 1; reward.energy = 1; }
   if (duel.tier === 'boss') {
     run.stats.bosses++;
+    run.energy = (run.energy ?? START.energy) + 2;   // a boss beaten: more energy for the climb
+    reward.energy = 2;
     reward.relicChoice = shuffle(run, BOSS_RELICS.filter((r) => !has(run, r))).slice(0, 3);
     run.hearts = Math.min(run.maxHearts, run.hearts + 3);
   }
@@ -880,7 +888,6 @@ export function spendOnce(run, uids, spent) {
     left.splice(k, 1);
     run.pouch = run.pouch.filter((x) => x !== st);
   }
-  topUp(run);
 }
 
 export function randomRelic(run, rarity = null) {
@@ -906,16 +913,11 @@ export function gainRelic(run, id) {
 export function gainStone(run, s) {
   const st = stone(run, s.type);
   run.pouch.push(st);
-  // A new special stone goes into the hand you last took into a duel: into a
-  // free slot, or in place of a Pebble.
-  if (st.type !== 'pebble' && run.lastHand) {
-    const typeOf = (u) => run.pouch.find((x) => x.uid === u)?.type;
-    const hand = run.lastHand.filter((u) => typeOf(u));
-    if (hand.length < handSize(run)) hand.push(st.uid);
-    else {
-      const i = hand.findLastIndex((u) => typeOf(u) === 'pebble');
-      if (i >= 0) hand[i] = st.uid;
-    }
+  // A new stone goes into the hand you last took into a duel, if the energy
+  // left over pays for it.
+  if (run.lastHand) {
+    const hand = run.lastHand.filter((u) => run.pouch.some((x) => x.uid === u));
+    if (handCost(run, hand) + costOf(st.type) <= energyOf(run)) hand.push(st.uid);
     run.lastHand = hand;
   }
   return st;
@@ -951,9 +953,7 @@ export function makeShop(run) {
   return {
     stones, once, relics,
     healPrice: price(run, 30),
-    slotPrice: price(run, 60 + 40 * (run.slots - START.slots)),
-    healed: 0, slotted: false,
+    energyPrice: price(run, 50 + 10 * ((run.energy ?? START.energy) - START.energy)),
+    healed: 0, energized: false,
   };
 }
-
-export const canAddSlot = (run) => run.slots < MAX_SLOTS;

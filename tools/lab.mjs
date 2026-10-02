@@ -173,16 +173,21 @@ function enemyDuel(act, id, seed, ctx = {}) {
 }
 
 // Typical pouches by act: what a player has found by then, as the rewards
-// offer it (two special stones in act 1, four in act 2, five in act 3), the
-// hand filled up to the act's slots with Pebbles.
-const SLOTS = { 1: 4, 2: 5, 3: 6 };
+// offer it (two special stones in act 1, four in act 2, five in act 3), of
+// which the dearest the act's energy pays for (1, 3, 5) come along, and
+// Pebbles fill the hand up to four.
+const ENERGY = Object.fromEntries((arg('energy', '1,4,8')).split(',').map((v, i) => [i + 1, +v]));
+const SLOTS = { 1: 4, 2: 4, 3: 4 };
 function typicalHand(act, seed) {
   const run = runAt(act, seed * 13 + 1);
   const found = { 1: 2, 2: 4, 3: 5 }[act];
+  const pouch = [];
+  for (let i = 0; i < found; i++) pouch.push(R.randomStone(run, null, act === 1 ? 'normal' : 'elite').type);
+  if (act >= 2) pouch.push(R.randomOnce(run).type);
   const hand = [];
-  for (let i = 0; i < found; i++) hand.push(R.randomStone(run, null, act === 1 ? 'normal' : 'elite').type);
-  if (act >= 2) hand.push(R.randomOnce(run).type);
-  return [...hand.slice(0, SLOTS[act]), ...P(SLOTS[act] - hand.length)];
+  let left = ENERGY[act];
+  for (const t of pouch.sort((x, y) => R.costOf(y) - R.costOf(x))) if (R.costOf(t) <= left) { hand.push(t); left -= R.costOf(t); }
+  return [...hand, ...P(R.HAND - hand.length)];
 }
 
 const BUILDS = {

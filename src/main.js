@@ -4,7 +4,7 @@
 import { STONES, CONDS, RULES, createGame } from './engine.js';
 import { RELICS, ENEMIES, ACTS, EVENTS } from './content.js';
 import * as R from './run.js';
-import { h, hideToast, tapeUp, art, relicArt, scribbleX, scribbleO, stoneEl, iconEl, toast, modal, ask, pressable, infoStone, infoRelic, ruleChip, stoneCard, relicCard, stoneName, langToggle } from './ui/common.js';
+import { h, hideToast, tapeUp, art, relicArt, scribbleX, scribbleO, stoneEl, iconEl, toast, modal, ask, pressable, infoStone, infoRelic, ruleChip, stoneCard, relicCard, stoneName, langToggle, energyBar } from './ui/common.js';
 import { icon } from './icons.js';
 import { mountDuel } from './ui/duel.js';
 import { sfx, soundOn, setSound } from './sound.js';
@@ -69,6 +69,7 @@ function topBar(menu = showMenu) {
   return h('div.topbar', {},
     hearts,
     h('div.gold', {}, h('span', { html: icon('coin') }), run.gold),
+    h('div.energy', { onclick: () => toast(t('Energy: what your stones may cost together in a duel.')) }, h('span', { html: icon('energy') }), R.energyOf(run)),
     h('div.where', {}, t('Act {n} · {name}', { n: run.act, name: ACTS[run.act - 1].name.replace(/^The /, '') })),
     h('button.icon-btn', { onclick: showPouch, 'aria-label': t('Your pouch') }, h('span', { html: icon('hand') })),
     h('button.icon-btn', { onclick: menu, 'aria-label': t('Menu') }, h('span', { html: icon('gear') })));
@@ -103,7 +104,8 @@ function relicStrip() {
 function showPouch() {
   const body = h('div.pouch-view', {},
     h('h2', {}, t('Pouch · {n}/{cap}', { n: run.pouch.length, cap: R.pouchCap(run) })),
-    h('div.stone-grid', {}, run.pouch.map((s) => h('button.pouch-slot', { onclick: () => infoStone(s, 'X') }, stoneEl(s, 'X'), h('span', {}, stoneName(s))))),
+    run.pouch.length ? h('div.stone-grid', {}, run.pouch.map((s) => h('button.pouch-slot', { onclick: () => infoStone(s, 'X') }, stoneEl(s, 'X', { cost: true }), h('span', {}, stoneName(s)))))
+      : h('p.dim', {}, t('No special stones yet. Pebbles you always have.')),
     h('h2', {}, t('Relics')),
     run.relics.length ? h('div.relic-list', {}, run.relics.map((r) => h('button.relic-row', { onclick: () => infoRelic(r) }, h('span.relic-token.small', {}, relicArt(r)), h('span', {}, h('b', {}, RELICS[r].name), h('br'), RELICS[r].text)))) : h('p.dim', {}, t('No relics yet.')),
     h('button.btn.wide', { onclick: () => close() }, t('Close')));
@@ -169,11 +171,14 @@ const RETIRED = { rail: 'shift', pivot: 'rotate', electromagnet: 'magnet', stenc
 function migrate() {
   for (const st of run.pouch) st.type = RETIRED[st.type] ?? st.type;
   run.pouch = run.pouch.filter((st) => STONES[st.type]);
-  // Pebbles in the pouch, and slots counted with them.
-  if ((run.v ?? 2) < 3) {
-    run.v = 3;
-    run.slots = (run.slots ?? 2) + 2;
-    for (let k = 0; k < R.MIN_HAND; k++) run.pouch.push({ type: 'pebble', uid: run.nextUid++ });
+  // Energy in place of slots, and no Pebbles in the pouch: a slot past four
+  // becomes energy, and each act already climbed one more.
+  if ((run.v ?? 2) < 4) {
+    run.energy = run.energy ?? Math.max(1, (run.slots ?? 4) - 3) + (run.act - 1);
+    delete run.slots;
+    run.pouch = run.pouch.filter((st) => st.type !== 'pebble');
+    run.lastHand = null;
+    run.v = 4;
     if (duelState) { duelState = null; if (run.screen === 'duel') run.screen = 'predual'; }
   }
   // Tricks are one-shot stones now: into the pouch they go.
@@ -476,29 +481,29 @@ function infoName(s, player) {
 function preDuel() {
   const duel = run.pending.duel;
   const enemy = ENEMIES[duel.enemyId];
-  const size = R.handSize(run);
+  const energy = R.energyOf(run);
   let chosen = R.defaultHand(run);
   const grid = h('div.stone-row.pick');
-  const count = h('span.count');
+  const bar = h('div.energy-slot');
+  const fill = h('div.press-hint.pebble-fill');
   const fight = h('button.btn.primary.wide.big', { onclick: begin }, t('Fight!'));
   const draw = () => {
     grid.replaceChildren(...run.pouch.map((s) => {
       const on = chosen.includes(s.uid);
-      return pressable(h('button.stone-pick' + (on ? '.on' : ''), { 'aria-label': stoneName(s) }, stoneEl(s, 'X')), {
+      return pressable(h('button.stone-pick' + (on ? '.on' : ''), { 'aria-label': stoneName(s) }, stoneEl(s, 'X', { cost: true })), {
         tap: () => {
           if (on) chosen = chosen.filter((u) => u !== s.uid);
-          else if (chosen.length < size) chosen.push(s.uid);
-          else { toast(t('Only {n}.', { n: size })); return; }
+          else if (R.handCost(run, [...chosen, s.uid]) <= energy) chosen.push(s.uid);
+          else { toast(t('Not enough energy: it costs {n}, {left} left.', { n: R.costOf(s.type), left: energy - R.handCost(run, chosen) }), 'bad'); return; }
           sfx('click');
           draw();
         },
         long: () => infoStone(s, 'X'),
       });
     }));
-    count.textContent = `${chosen.length}/${size}`;
-    const need = R.MIN_HAND - chosen.length;
-    fight.disabled = need > 0;
-    fight.textContent = need > 0 ? t('Pick {n} more', { n: need }) : t('Fight!');
+    bar.replaceChildren(energyBar(R.handCost(run, chosen), energy));
+    const pebbles = Math.max(0, R.HAND - chosen.length);
+    fill.textContent = pebbles ? t('Pebbles fill the rest of your hand: {n}.', { n: pebbles }) : '';
   };
   draw();
 
@@ -523,15 +528,17 @@ function preDuel() {
           h('div.enemy-name.big', {}, isUndead(duel) ? undeadName(enemy) : enemy.name),
           h('div.quote', {}, t('“{quote}”', { quote: enemy.quote })))),
       h('div.section-label', {}, t('Their stones')),
-      h('div.stone-row', {}, [...new Set(duel.handO.map((s) => s.type))].map((type) => {
+      duel.handO.some((s) => s.type !== 'pebble') ? h('div.stone-row', {}, [...new Set(duel.handO.filter((s) => s.type !== 'pebble').map((s) => s.type))].map((type) => {
         const n = duel.handO.filter((s) => s.type === type).length;
         return h('button.stone-pick', { onclick: () => infoStone({ type }, 'O'), 'aria-label': stoneName({ type }) },
           stoneEl({ type }, 'O'), n > 1 ? h('span.hand-count', {}, `×${n}`) : null);
-      })),
+      })) : h('div.press-hint', {}, t('Only Pebbles.')),
       facts.length ? h('div.duel-facts.facts-card', {}, facts) : null,
-      h('div.section-label', {}, t('Your stones '), count),
-      grid,
-      h('div.press-hint', {}, t('Long press stone for info.')),
+      h('div.section-label', {}, t('Your stones')),
+      bar,
+      run.pouch.length ? grid : h('div.press-hint', {}, t('No special stones yet: Pebbles only.')),
+      fill,
+      run.pouch.length ? h('div.press-hint', {}, t('Long press stone for info.')) : null,
       h('div.sticky-bottom', {}, fight)));
 
   function begin() {
@@ -633,6 +640,7 @@ function rewardScreen() {
   const done = () => { R.leaveNode(run); route(); };
   const parts = [h('h1.reward-title', {}, rw.gift ? t('A gift!') : rw.tier === 'boss' ? t('Boss defeated!') : t('Victory!'))];
   if (rw.gold) parts.push(h('div.reward-gold', {}, h('span', { html: icon('coin') }), t('+{n} gold', { n: rw.gold })));
+  if (rw.energy) parts.push(h('div.reward-gold.reward-energy', {}, h('span', { html: icon('energy') }), t('+{n} energy', { n: rw.energy })));
   if (rw.relic && !rw.taken.relic) {
     R.gainRelic(run, rw.relic);
     rw.taken.relic = true;
@@ -723,8 +731,8 @@ function shopScreen(redraw = false) {
         price: r.price, sold: r.sold || R.has(run, r.relic), dear: run.gold < r.price,
         onclick: () => buy(r.price, (pay) => { R.gainRelic(run, r.relic); r.sold = true; pay(); }),
       })),
-      serviceCard('hand', t('+1 slot'), shop.slotPrice,
-        shop.slotted || !R.canAddSlot(run), () => buy(shop.slotPrice, (pay) => { run.slots++; shop.slotted = true; pay(); toast(t('{n} slots', { n: R.handSize(run) }), 'good'); })),
+      serviceCard('energy', t('+1 energy'), shop.energyPrice ?? shop.slotPrice,
+        shop.energized || shop.slotted, () => buy(shop.energyPrice ?? shop.slotPrice, (pay) => { run.energy = (run.energy ?? 1) + 1; shop.energized = true; pay(); toast(t('{n} energy', { n: R.energyOf(run) }), 'good'); })),
       serviceCard('heart', '+1 ❤', shop.healPrice,
         run.hearts >= run.maxHearts || shop.healed >= 2, () => buy(shop.healPrice, (pay) => { run.hearts++; shop.healed++; sfx('heal'); pay(); }))),
     pressHint(),

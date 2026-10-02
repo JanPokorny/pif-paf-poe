@@ -10,7 +10,7 @@ numbers. The camp game's own reasoning is in `old/adr/`.
 - **Restrictions compose.** Every enemy Magnet, Stinky and Beacon pulls at once and you place
   where you satisfy as many as any square can (`old/adr/2026-08-18-…`).
 - **Counterattacks → one-shot stones.** The camp game's counterattacks became tricks, spent
-  at the end of a turn; now they are stones like any other, brought in a slot and placed on the
+  at the end of a turn; now they are stones like any other, brought along like any other and placed on the
   board, that then do their one thing (Rewind, Relocate, Mirror, Mind Control, Rehearse, Nudge,
   Muffle, Pluck, Bribe). Once played in a duel, won or lost, one is gone from the pouch. They
   have a dashed outline, come as their own reward and shop shelf, and are cheaper than stones.
@@ -23,15 +23,19 @@ numbers. The camp game's own reasoning is in `old/adr/`.
 The first version ran fast: a hand of five or six stones, all of them spent by the end of a
 duel, and a rule for who wins when someone runs out. The second version slows it down.
 
-- **Pebbles run out.** Pebbles are stones in the pouch like any other. A run starts with four
-  of them and nothing else, and the pouch never holds fewer than four: Pebbles top it up when a
-  one-shot stone is spent or a workshop trades two stones for one (Pebbles cannot be traded).
-  A stone sent back off the board, a Pebble too, goes back into its owner's hand. A full board
-  (or forty turns) goes to whoever moved second.
-- **Four stones a duel, at least.** You bring between four and your hand size (four at first;
-  shops sell more slots, up to seven, and Deep Pockets adds one). The pouch holds ten. The enemy
-  opens, so it brings enough for a full board: its stones and Pebbles, five or more. A side with
-  nothing left to place passes; when neither can place, the duel ends as a full board does.
+- **Energy.** What you bring into a duel is a decision of its own: every special stone costs
+  energy (common 1, uncommon 2, rare 3, a dot each in the stone's corner), and together they may
+  cost no more than you have. A run starts with 1. Beating an elite gives 1, an act's boss 2;
+  every shop sells 1 (once a visit), the Meditating Monk trades one for a max heart or 40 gold,
+  and Second Wind (a boss relic) adds 1. Picking stones before a duel fills a bar of dots.
+- **No Pebbles in the pouch.** Pebbles are free and never owned: they fill your hand up to four
+  stones at the start of a duel, and the enemy's up to five (it opens, so a full board takes five
+  of its stones). A side whose hand is empty on its turn finds a Pebble ("You found a pebble!"),
+  so nobody ever passes. A stone sent back off the board goes back into its owner's hand. A full
+  board (or forty turns) goes to whoever moved second. The pouch holds eight special stones.
+- **Enemies grow as you do:** one special stone in act 1, two in act 2, three in act 3; an elite
+  brings one more. Measured at the energy a player has by then (1, 4, 8: `node tools/lab.mjs
+  enemies --energy 1,4,8`).
 - **The enemy always opens**, so a full board is always yours: hold out and you win. Plain
   tic-tac-toe is a draw, so the opener's specials are what make a duel winnable for it.
 - **No spaces, no vetoes.** The spaces that switched a stone type off are gone. Regular enemies
@@ -175,17 +179,19 @@ iterations and a blunder rate. `node tools/balance.mjs` duels a bot with a typic
 every enemy (`--life 1` for a boss's undead phase); `node tools/runbot.mjs` plays
 whole runs headless; `node tools/lab.mjs` measures stones, enemies and bosses in bulk.
 
-A typical pouch for the act, 250 iterations and 5% blunders, against each enemy
-(`node tools/lab.mjs enemies`): normal enemies 52–83%, elites 41–63%; bosses at first 54–91% and
-risen 42–62%.
+A typical pouch for the act (what the act's energy, 1, 4 and 8, pays for), 250 iterations and 5%
+blunders, against each boss (`node tools/lab.mjs tune`): at first 57–91% and risen 49–69%.
 
 At heat 0 (six hearts), bots that play the map sensibly, pick their stones by strength and keep one that moves things win:
 
 | player bot | runs won |
 |---|---|
-| 80 iterations, 20% blunders | about 30% |
-| 150 iterations, 10% blunders | about 54% |
-| 300 iterations, no blunders | about 69% |
+| 80 iterations, 20% blunders | about 15% |
+| 150 iterations, 10% blunders | about 36% |
+| 300 iterations, no blunders | about 57% |
+
+(With energy the bot reaches about 1, 4 and 9 energy in the three acts. Before energy, when the
+hand grew with bought slots, the same bots won about 30%, 54% and 69%.)
 
 Heat 1–5 raises it after each win: deeper search, dearer shops, a heart fewer,
 bigger elite hands, no blunders.

@@ -22,11 +22,17 @@ function playDuel(run, cfg, piters, pblunder, rng) {
   // only Pebbles: nothing for a Magpie to steal or a Parrot to copy.
   const dead = duel.tier === 'boss' ? ['magpie', 'parrot', 'mind-control'] : [];
   const worth = (x) => (dead.includes(x.type) ? 0 : value(x));
-  const sorted = run.pouch.slice().sort((a, b) => worth(b) - worth(a));
-  const picked = sorted.slice(0, R.handSize(run));
-  const mover = sorted.find((x) => STONES[x.type].kind === 'move');
-  if (mover && !picked.some((x) => STONES[x.type].kind === 'move')) picked[picked.length - 1] = mover;
-  const hand = picked.map((x) => x.uid);
+  // The best set the energy pays for (every subset: the pouch is small), each
+  // stone worth what it adds over the Pebble it replaces; a mover is worth a bonus.
+  const energy = R.energyOf(run), P0 = value({ type: 'pebble' });
+  let hand = [], best = 0;
+  const pouch = run.pouch.slice(0, 12);
+  for (let m = 1; m < 1 << pouch.length; m++) {
+    const set = pouch.filter((_, i) => m & (1 << i));
+    if (set.reduce((n, x) => n + R.costOf(x.type), 0) > energy) continue;
+    const sc = set.reduce((n, x) => n + worth(x) - P0, 0) + (set.some((x) => STONES[x.type].kind === 'move') ? 0.2 : 0);
+    if (sc > best) { best = sc; hand = set.map((x) => x.uid); }
+  }
   const s = createGame({ ...R.gameConfig(run, duel, hand), log: false });
   let n = 0;
   while (!s.over && n++ < 300) {
@@ -114,11 +120,13 @@ function playRun(spec) {
       }
       case 'shop': {
         const shop = run.pending.shop;
-        if (run.gold >= shop.slotPrice && R.canAddSlot(run) && run.pouch.length > R.handSize(run)) { run.gold -= shop.slotPrice; run.slots++; }
+        const wants = () => run.pouch.reduce((n, x) => n + R.costOf(x.type), 0) > R.energyOf(run);
+        const energize = () => { if (!shop.energized && run.gold >= shop.energyPrice && wants()) { run.gold -= shop.energyPrice; run.energy++; shop.energized = true; } };
+        energize();
         if (run.hearts < run.maxHearts && run.gold >= shop.healPrice) { run.gold -= shop.healPrice; run.hearts++; }
         for (const r of shop.relics) if (!r.sold && run.gold >= r.price) { run.gold -= r.price; R.gainRelic(run, r.relic); r.sold = true; }
         for (const s of shop.stones.slice().sort((a, b) => value(b) - value(a))) if (!s.sold && run.gold >= s.price && value(s) > 1.2) { run.gold -= s.price; takeStone(run, s); s.sold = true; }
-        if (run.gold >= shop.slotPrice && R.canAddSlot(run) && run.pouch.length > R.handSize(run)) { run.gold -= shop.slotPrice; run.slots++; }
+        energize();
         R.leaveNode(run);
         break;
       }
@@ -144,7 +152,7 @@ function playRun(spec) {
   if (!run.over) throw new Error('run did not end: ' + run.screen);
   // JSON round trip must survive (the save format).
   JSON.parse(JSON.stringify(run));
-  return { seed: spec.seed, victory: run.victory, act: run.act, row: run.map.visited, hearts: run.hearts, lines, lineDeath, log: log.join(' '), relics: run.relics.join(','), pouch: run.pouch.map((s) => s.type).join(',') + ` slots ${run.slots}` };
+  return { seed: spec.seed, victory: run.victory, act: run.act, row: run.map.visited, hearts: run.hearts, lines, lineDeath, log: log.join(' '), relics: run.relics.join(','), pouch: run.pouch.map((s) => s.type).join(',') + ` energy ${R.energyOf(run)}`, energy: R.energyOf(run) };
 }
 
 if (!isMainThread) {
@@ -164,5 +172,7 @@ if (!isMainThread) {
     console.log(`seed ${r.seed}: ${r.victory ? 'VICTORY' : `died act ${r.act} after ${r.row} squares`}  | ${r.log}\n    relics ${r.relics}\n    pouch ${r.pouch}`);
   }
   const ok = res.filter((r) => !r.error);
+  const byAct = [1, 2, 3].map((a) => { const r = ok.filter((x) => x.act >= a); return r.length ? (r.reduce((n, x) => n + (x.act === a ? x.energy : 0), 0) / Math.max(1, r.filter((x) => x.act === a).length)).toFixed(1) : '-'; });
+  console.log(`\nenergy where runs ended, by act: ${byAct.join(' / ')}`);
   console.log(`\n${ok.filter((r) => r.victory).length}/${ok.length} victories; mean act reached ${(ok.reduce((a, r) => a + r.act, 0) / ok.length).toFixed(2)}; boss lines ${(ok.reduce((a, r) => a + r.lines, 0) / ok.length).toFixed(1)} a run, the last blow in ${ok.filter((r) => r.lineDeath).length}; ${((Date.now() - t0) / 1000).toFixed(0)}s`);
 }

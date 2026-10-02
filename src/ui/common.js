@@ -2,6 +2,7 @@
 
 import { STONES, CONDS, RULES, BLOCKS, RING, createGame, legalActions, applyAction, cloneState, allowedSquares, touching, adjacent } from '../engine.js';
 import { RELICS } from '../content.js';
+import { costOf } from '../run.js';
 import { icon, ICONS } from '../icons.js';
 import { t, lang, setLang, LANGS } from '../i18n.js';
 
@@ -53,7 +54,19 @@ export function stoneEl(s, player = 'X', opts = {}) {
     title: STONES[s.type]?.name,
   });
   updateStone(el, s, player, opts);
+  // `cost`: its energy, as dots in the corner.
+  if (opts.cost) el.append(costDots(s.type));
   return el;
+}
+export function costDots(type) {
+  const n = costOf(type);
+  return h('span.cost', { 'aria-label': t('{n} energy', { n }) }, ...Array.from({ length: n }, () => h('i')));
+}
+// The energy you have, as dots: `used` of them filled.
+export function energyBar(used, total) {
+  return h('div.energy-bar' + (used > total ? '.over' : ''), { 'aria-label': t('Energy {used}/{n}', { used, n: total }) },
+    h('span.energy-ico', { html: icon('energy') }),
+    ...Array.from({ length: Math.max(total, used) }, (_, i) => h('i' + (i < used ? '.on' : '') + (i >= total ? '.over' : ''))));
 }
 
 export function updateStone(el, s, player, opts = {}) {
@@ -293,7 +306,7 @@ export function infoStone(s, player = 'X', extra = '') {
   const body = h('div.info-stone', {},
     h('div.info-head', {}, stoneEl(s, player), h('div', {},
       h('div.info-name', {}, stoneName(s)),
-      h('div.info-rarity.' + st.rarity, {}, st.once ? `${t('one-shot')} · ${t(st.rarity)}` : t(st.rarity)))),
+      h('div.info-rarity.' + st.rarity, {}, [st.once ? t('one-shot') : null, t(st.rarity), costOf(s.type) ? t('{n} energy', { n: costOf(s.type) }) : null].filter(Boolean).join(' · ')))),
     h('p', {}, stoneText(s)),
     stoneDemo(s),
     st.once ? h('p.info-plus', {}, t('One use: once played, it is gone from your pouch.')) : null,
@@ -333,7 +346,7 @@ export function ruleChip(kind, id, cls = '') {
 export function stoneCard(s, { onclick, price, sold, dear, footer } = {}) {
   const st = STONES[s.type];
   return pressable(h(`button.card.stone-card.${st.rarity}${sold ? '.sold' : dear ? '.dear' : ''}`, { disabled: sold || undefined, 'aria-label': stoneName(s) },
-    stoneEl(s, 'X'),
+    stoneEl(s, 'X', { cost: true }),
     h('div.card-name', {}, stoneName(s)),
     price !== undefined ? h('div.price', {}, iconEl('coin'), price) : null,
     footer ?? null), { tap: onclick, long: () => infoStone(s, 'X') });

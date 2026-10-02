@@ -2,7 +2,7 @@
 //
 // A duel is tic-tac-toe on a 3x3 board. Each side brings a handful of stones:
 // plain Pebbles, and special stones that do something when placed -- mostly
-// move stones already on the board. You are X, the enemy is O, and the
+// move stones already on the board. A side whose hand is empty finds a Pebble. You are X, the enemy is O, and the
 // enemy always opens; a full board goes to you.
 //
 // Some duels carry a condition for both sides (gravity, no centre, a shared
@@ -665,18 +665,15 @@ function passTurn(s) {
   settle(s);
 }
 
-// Stones run out. A side with nothing left to place passes; when neither can
-// place, the duel ends as a full board does.
+// Stones run out, but nobody is ever stuck: a side with nothing left to place
+// finds a Pebble on its turn.
 export function canMove(s, p) {
   return s.hands[p].length > 0 || (s.conds.includes('shared') && s.hands[other(p)].some((h) => h.type !== 'pebble'));
 }
 function settle(s) {
   if (s.over || s.phase !== 'select' || canMove(s, s.player)) return;
-  if (!canMove(s, other(s.player))) { finish(s, s.rules.includes('patient') ? 'O' : other(s.first), 'full'); return; }
-  note(s, `pass:${s.player}`);
-  s.player = other(s.player);
-  s.turns++;
-  s.half = false;
+  s.hands[s.player].push({ type: 'pebble' });
+  note(s, `found:${s.player}`);
 }
 
 function afterEffect(s) {

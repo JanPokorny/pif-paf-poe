@@ -16,8 +16,8 @@ export const RELICS = {
     text: 'The first stone each duel that does something does it twice.' },
   'iron-heart': { name: 'Iron Heart', emoji: '🫀', rarity: 'common',
     text: '+2 max hearts, and heal 2 now.' },
-  'deep-pockets': { name: 'Deep Pockets', emoji: '👖', rarity: 'rare',
-    text: 'One more stone slot: bring one more special stone into every duel.' },
+  'deep-pockets': { name: 'Second Wind', emoji: '🌬️', rarity: 'rare',
+    text: '+1 energy: bring stones worth one more into every duel.' },
   satchel: { name: 'Satchel', emoji: '🎒', rarity: 'common',
     text: 'Your pouch holds 2 more stones.' },
   'lucky-coin': { name: 'Lucky Coin', emoji: '🪙', rarity: 'common',
@@ -73,7 +73,7 @@ export const ENEMIES = {
     core: ['shift', 'shift'], pool: ['shift', 'rotate'], iters: 60, blunder: 0.45,
     quote: 'Wheee! Everything slides!' },
   clinger: { name: 'Clingy Crab', emoji: '🦀', act: 1, tier: 'normal',
-    core: ['magnet'], pool: ['shift', 'mountain'], iters: 60, blunder: 0.42,
+    core: ['magnet'], pool: ['shift', 'mountain'], iters: 25, blunder: 0.6,
     quote: 'Come closer. Closer!' },
   rock: { name: 'Grumbling Rock', emoji: '🪨', act: 1, tier: 'normal',
     core: ['mountain'], pool: ['mountain', 'rotate', 'shift'], iters: 60, blunder: 0.3,
@@ -82,7 +82,7 @@ export const ENEMIES = {
     core: ['rotate', 'rotate'], pool: ['rotate', 'lasso'], iters: 70, blunder: 0.38,
     quote: 'Round and round and round.' },
   skunk: { name: 'Stinky Skunk', emoji: '🦨', act: 1, tier: 'normal',
-    core: ['stinky', 'lasso'], pool: ['stinky', 'shift', 'lasso'], iters: 70, blunder: 0.38,
+    core: ['stinky', 'lasso'], pool: ['stinky', 'shift', 'lasso'], iters: 25, blunder: 0.6,
     quote: 'Keep your distance.' },
   mole: { name: 'Bumbling Hamster', emoji: '🐹', act: 1, tier: 'normal',
     core: ['bumper', 'lasso'], pool: ['bumper', 'lasso'], iters: 70, blunder: 0.3,
@@ -92,17 +92,17 @@ export const ENEMIES = {
     quote: 'What goes up…' },
   // elites
   twins: { name: 'The Twins', emoji: '👯', act: 1, tier: 'elite',
-    core: ['twin', 'frog'], pool: ['shift', 'magnet'], iters: 90, blunder: 0.28,
+    core: ['twin', 'frog'], pool: ['shift', 'magnet'], iters: 50, blunder: 0.42,
     quote: 'Two for the price of one!' },
   stenchlord: { name: 'Lord of Stench', emoji: '🧅', act: 1, tier: 'elite',
-    core: ['stinky', 'frog', 'magnet'], pool: ['shift', 'rotate', 'mountain'], iters: 70, blunder: 0.32,
-    once: ['nudge'], quote: 'You will stand where I let you.' },
+    core: ['stinky', 'frog', 'magnet'], pool: ['shift', 'rotate', 'mountain'], iters: 40, blunder: 0.45,
+    quote: 'You will stand where I let you.' },
   // bosses
   oak: { name: 'The Old Oak', emoji: '🌳', act: 1, tier: 'boss',
-    rules: ['clinch'], rules2: ['clinch', 'reserved'], iters: 300, blunder: 0.08,
+    rules: ['clinch'], rules2: ['reserved'], iters: 150, blunder: 0.15,
     quote: 'Stay close to me, little one.' },
   scarecrow: { name: 'The Scarecrow', emoji: '🌾', act: 1, tier: 'boss',
-    rules: ['reserved'], rules2: ['reserved', 'spy'], iters: 220, blunder: 0.12,
+    rules: ['reserved'], rules2: ['reserved', 'spy'], iters: 40, blunder: 0.36,
     quote: 'The middle of the field is mine.' },
 
   // Act 2 — the Quarry
@@ -136,13 +136,13 @@ export const ENEMIES = {
     once: ['nudge'], quote: 'I. DO. NOT. MOVE.' },
   // bosses
   colossus: { name: 'Clockwork Colossus', emoji: '⚙️', act: 2, tier: 'boss',
-    rules: ['column'], rules2: ['column', 'headstart'], iters: 200, blunder: 0.04,
+    rules: ['column'], rules2: ['column', 'spy'], iters: 60, blunder: 0.2,
     quote: 'TICK. TOCK. THAT COLUMN, PLEASE.' },
   mirrorknight: { name: 'The Mirror Knight', emoji: '🛡️', act: 2, tier: 'boss',
-    rules: ['spy', 'headstart'], rules2: ['spy', 'headstart', 'reserved'], iters: 500, blunder: 0.04,
+    rules: ['spy'], rules2: ['spy', 'reserved'], iters: 500, blunder: 0.04,
     quote: 'Your left is my right.' },
   carpenter: { name: 'The Carpenter', emoji: '🪚', act: 2, tier: 'boss',
-    rules: ['elko', 'reserved'], rules2: ['elko', 'reserved', 'headstart'], iters: 500, blunder: 0.04,
+    rules: ['elko'], rules2: ['elko', 'spy'], iters: 300, blunder: 0.1,
     quote: 'Straight lines are for amateurs.' },
 
   // Act 3 — the Summit
@@ -178,13 +178,13 @@ export const ENEMIES = {
   // Double Time: plain stones cannot hold out. It wants restrictions and
   // something that moves; risen, it also names the stone you play.
   twinkings: { name: 'The Twin Kings', emoji: '🎭', act: 3, tier: 'boss',
-    rules: ['double', 'reserved'], rules2: ['double', 'tactics', 'reserved'], iters: 600, blunder: 0.03,
+    rules: ['double'], rules2: ['double', 'tactics'], iters: 600, blunder: 0.03,
     quote: 'Two crowns, two moves.' },
 };
 
 export const ACTS = [
-  { n: 1, name: 'The Meadow', bosses: ['oak', 'scarecrow'], size: 2, cond: 0.25, gold: [14, 22] },
-  { n: 2, name: 'The Quarry', bosses: ['colossus', 'mirrorknight', 'carpenter'], size: 3, cond: 0.35, gold: [18, 28] },
+  { n: 1, name: 'The Meadow', bosses: ['oak', 'scarecrow'], size: 1, cond: 0.25, gold: [14, 22] },
+  { n: 2, name: 'The Quarry', bosses: ['colossus', 'mirrorknight', 'carpenter'], size: 2, cond: 0.35, gold: [18, 28] },
   { n: 3, name: 'The Summit', bosses: ['grandmaster', 'twinkings'], size: 3, cond: 0.4, gold: [22, 34] },
 ];
 
@@ -319,6 +319,17 @@ export const EVENTS = [
       { label: 'Borrow a book', detail: 'Gain a random uncommon one-shot stone.', can: (r, api) => api.pouchRoom(),
         act: (r, api) => api.gainRandomOnce('uncommon') },
       { label: 'Leave', act: () => t('You put the books back.') },
+    ],
+  },
+  {
+    id: 'monk', title: 'The Meditating Monk', emoji: '🧘',
+    text: 'A monk sits still as a stone on a mossy rock. "Breathe with me, traveller."',
+    choices: [
+      { label: 'Breathe deeply', detail: '+1 energy. Lose 1 max heart.', can: (r) => r.maxHearts > 2,
+        act: (r) => { r.energy = (r.energy ?? 1) + 1; r.maxHearts--; r.hearts = Math.min(r.hearts, r.maxHearts); return t('Your mind clears. +1 energy.'); } },
+      { label: 'Donate 40 gold', detail: '+1 energy.', can: (r) => r.gold >= 40,
+        act: (r) => { r.gold -= 40; r.energy = (r.energy ?? 1) + 1; return t('The monk bows. +1 energy.'); } },
+      { label: 'Tiptoe past', act: () => t('You leave the monk to the quiet.') },
     ],
   },
   {

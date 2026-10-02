@@ -181,7 +181,7 @@ export function mountDuel(root, opts) {
       e.addEventListener('click', () => { if (!e.classList.contains('target')) tapEnemyStone(st); });
       return h('div.hand-slot.enemy-slot', {}, e, n > 1 ? h('span.hand-count', {}, `×${n}`) : null);
     }));
-    if (!theirs.length) enemyHand.append(h('span.dim.small', {}, t('No stones left.')));
+    if (!theirs.length) enemyHand.append(h('span.dim.small', {}, t('Empty: a pebble turns up on their turn.')));
 
     // Player hand, one stone per kind with a count. During a turn in
     // progress, show the hand as it was. A long press reads a stone.
@@ -195,7 +195,7 @@ export function mountDuel(root, opts) {
       return b;
     };
     hand.replaceChildren(...groupHand(base.hands.X).map(({ st, k, n }) => slot(k, st, n)));
-    if (!base.hands.X.length) hand.append(h('span.dim.small', {}, t('No stones left: you pass.')));
+    if (!base.hands.X.length) hand.append(h('span.dim.small', {}, t('Empty: you find a pebble on your turn.')));
 
   }
 
@@ -617,8 +617,8 @@ export function mountDuel(root, opts) {
       if (l === 'silenced') toast(t(me ? 'Hushed! Your stone does nothing.' : 'Hushed! {enemy}\'s stone does nothing.', v), me ? 'bad' : 'good');
       else if (l === 'echo') toast(t('Echo! It goes again.'), 'good');
       else if (l.startsWith('copy:')) { const [, by, what] = l.split(':'); toast(t('The {parrot} copies {stone}!', { parrot: STONES[by].name, stone: STONES[what].name })); }
-      else if (l === 'pass:X') toast(t('No stones left: you pass.'), 'bad');
-      else if (l === 'pass:O') toast(t('{enemy} has no stones left and passes.', v), 'good');
+      else if (l === 'found:X') toast(t('You found a pebble!'), 'good');
+      else if (l === 'found:O') toast(t('{enemy} finds a pebble!', v), 'bad');
       else if (l === 'cond:gravity') { /* shown as a step of its own */ }
       else if (l === 'rule:double' && !me) { /* the caption says it */ }
       else if (l === 'rule:headstart') toast(t('{rule}: {enemy} goes again!', { ...v, rule: RULES.headstart.name }), 'bad');
