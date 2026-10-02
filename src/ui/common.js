@@ -186,7 +186,7 @@ function stoneDemo(s) {
       applyAction(g, { type: 'select', stone: s.type });
       // Before: the stone drawn where it lands, nothing done yet.
       const before = cloneState(g).board;
-      before[pos] = { player: 'X', type: s.type, id: 99 };
+      before[pos] = { player: 'X', type: s.type, id: g.nextId };
       applyAction(g, { type: 'place', pos });
       const opts = g.phase === 'effect' ? legalActions(g) : [null];
       for (const o of opts) {
@@ -199,7 +199,7 @@ function stoneDemo(s) {
       }
     }
     if (!best || !best.moved) return null;
-    return h('div.demo', {}, demoBoard(best.before, { [best.pos]: 'placed' }), h('div.demo-arrow', {}, '→'), demoBoard(best.after));
+    return h('div.demo', {}, animatedDemo(best.before, best.after, best.pos));
   } catch { return null; }
 }
 
@@ -211,6 +211,68 @@ function reachDemo(st) {
   for (let i = 0; i < 9; i++) marks[i] = i === 4 ? 'placed' : near(4, i) ? 'ok' : '';
   return h('div.demo.reach-demo', {}, demoBoard({ 4: { player: 'X', type: st.id } }, marks),
     h('div.demo-cap', {}, st.reach === 'around' ? t('Around: all eight squares, corners too.') : t('Beside: the four squares that share a side.')));
+}
+
+// The example played out on one small board, over and over: the stone lands,
+// then every stone slides to where it ends up; what leaves fades, what is new
+// appears, what changes side or kind turns.
+const DEMO_CELL = 36, DEMO_STONE = 30;
+function animatedDemo(before, after, pos) {
+  const board = demoBoard([], {});
+  board.classList.add('anim');
+  const spot = (i) => `${(i % 3) * DEMO_CELL + (DEMO_CELL - DEMO_STONE) / 2}px ${((i / 3) | 0) * DEMO_CELL + (DEMO_CELL - DEMO_STONE) / 2}px`;
+  const where = (b, id) => b.findIndex((c) => c?.id === id);
+  const ids = [...new Set([...before, ...after].filter(Boolean).map((c) => c.id))];
+  const placedId = before[pos].id;
+  const els = new Map(ids.map((id) => {
+    const c = before[where(before, id)] ?? after[where(after, id)];
+    const el = stoneEl(c, c.player, { mini: true });
+    el.classList.add('demo-stone');
+    board.append(el);
+    return [id, el];
+  }));
+  const cellAt = (i) => board.children[i];
+  const reset = () => {
+    cellAt(pos).classList.remove('placed');
+    for (const [id, el] of els) {
+      el.classList.add('still');
+      const i = where(before, id);
+      const c = i >= 0 ? before[i] : after[where(after, id)];
+      updateStone(el, c, c.player, { mini: true, stuck: !!c.stuck });
+      el.style.translate = spot(i >= 0 ? i : where(after, id));
+      const shown = i >= 0 && id !== placedId;
+      el.style.opacity = shown ? 1 : 0;
+      el.style.scale = shown ? 1 : 0.4;
+    }
+    void board.offsetWidth;   // the reset lands before anything moves
+    for (const el of els.values()) el.classList.remove('still');
+  };
+  const land = () => {
+    cellAt(pos).classList.add('placed');
+    const el = els.get(placedId);
+    el.style.opacity = 1; el.style.scale = 1;
+  };
+  const play = () => {
+    for (const [id, el] of els) {
+      const i = where(after, id);
+      if (i < 0) { el.style.opacity = 0; el.style.scale = 0.4; continue; }
+      const c = after[i];
+      updateStone(el, c, c.player, { mini: true, stuck: !!c.stuck });
+      el.style.translate = spot(i);
+      el.style.opacity = 1; el.style.scale = 1;
+    }
+  };
+  // One loop: still, land, act, hold. It stops once the card is closed.
+  const loop = () => {
+    if (!board.isConnected && board.dataset.started) return;
+    board.dataset.started = '1';
+    reset();
+    setTimeout(land, 500);
+    setTimeout(play, 1300);
+    setTimeout(loop, 3800);
+  };
+  loop();
+  return board;
 }
 
 export function infoStone(s, player = 'X', extra = '') {
