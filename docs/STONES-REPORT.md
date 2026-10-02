@@ -432,3 +432,108 @@ Beacon 57%, Magpie 59%.
 - **Lasso without its choice** keeps its power, so that change is free
   clarity.
 - **Frog and Overtake** barely move. They need different ideas, not tweaks.
+
+---
+
+## 10. After the changes (applied)
+
+Everything in §8 except the "beside / around" wording is now in the game.
+
+### Stones
+
+| stone | change | act 1, before → after¹ | dud, before → after |
+|---|---|---:|---:|
+| Bribe | an enemy **Pebble beside it** becomes yours | 84% → 67% | 2% → 93%² |
+| Firecracker | leaves a burnt Pebble | 21% → 52% | 19% → 1% |
+| Twin | the facing square only needs to be empty | 33% → 47% | 82% → 3% |
+| Lasso | pulls every stone in reach, no choice | 32% → 34% | 87% → 85% |
+| Frog | the leapt enemy stone is knocked off the board | 27% → 37% | 72% → 66% |
+| Overtake → **Rewind** | the enemy's last stone goes back to their hand | 29% → 56% | 92% → 0% |
+| Muffle | hushes the next *special* stone (Pebbles don't use it up) | 31% → 45% | – |
+
+¹ Act-1 mean of the matrix. The "after" column also reflects the retuned
+enemies, which are a little easier in act 1 (the Pebble went from 25% to 29%).
+
+² Bribe is now a narrow counter: against Pebble-heavy hands it is still 96%
+(vs Shift + 4 Pebbles), but against special-heavy hands it rarely finds a
+target. Its boss build is gone: Pluck + Bribe no longer beats every boss.
+
+### Rarities, by measured power
+
+| | common | uncommon | rare |
+|---|---|---|---|
+| stones | Shift, Rotate, Stinky, Mountain, Lasso, Frog, **Bumper** | **Magnet**, Swap, 2048, Whirl, Flip, **Turncoat**, **Twin**, **Parrot** | **Beacon**, Firecracker, Magpie |
+| one-shots | Nudge, Mirror, Muffle, **Mind Control**, **Rehearse** | **Rewind**, **Relocate** | Pluck, Bribe |
+
+Bold marks a stone that moved. Beacon is strong and easy to play, so it went
+up to rare. Magnet went up to uncommon. Turncoat, Twin and Parrot went down to
+uncommon. Bumper, Mind Control and Rehearse are the weakest stones and are now
+common, the ones you see often but rarely want.
+
+### Enemies and bosses (typical pouch, 200 games each)
+
+| | before | after |
+|---|---|---|
+| act-1 normals | 45–83% | 54–82% |
+| act-1 elites | 38–48% | 41–49% |
+| act-2 normals | 34–87% (Magpie Meg the hardest of the act) | 60–79% |
+| act-2 elites | 42–44% | 45–55% |
+| act-3 normals | 39–91% (Yeti the easiest in the game) | 52–83% |
+| act-3 elites | 42–58% | 48–63% |
+| boss first / undead, Oak | 87 / 37% | 91 / 50% |
+| Scarecrow | 74 / 24% | 64 / 54% |
+| Colossus | 68 / **68%** (no change) | 82 / 56% |
+| Mirror Knight | 90 / 56% | 78 / 62% |
+| Carpenter | 83 / **83%** (no change) | 84 / 51% |
+| Grandmaster | 33 / 12% | 54 / 42% |
+| Twin Kings | 64 / 63% | 78 / 46% |
+
+What changed:
+
+- Weak enemies (Lasso Lou, Leapin' Frog, Bumper Bee, Quarry Miner) gained a
+  Magnet or Stinky and sharper play.
+- Gravity favoured the player, so the Quarry Miner lost it. The Yeti keeps it
+  but carries a Muffle.
+- Over-hard enemies were eased with simpler cores and more blunders: Stinky
+  Skunk, Clingy Crab, Lord of Stench, the Twins and Magpie Meg.
+- Boss rules:
+  - Oak's undead phase: Clinch + Reserved.
+  - Scarecrow's: Reserved + Spy.
+  - Colossus and Carpenter now rise with Head Start.
+  - Mirror Knight: Head Start from the first phase.
+  - Twin Kings: Reserved from the first phase; undead adds Tactics.
+  - Grandmaster's undead phase: Spy in place of Reserved, and it thinks harder
+    (new `iters2` field).
+- Patience is no longer used by any boss.
+
+### Builds each boss wants, now
+
+- **Grandmaster**: restrictions or plain Pebbles (86–90%). Movers are turned
+  against you (22–30%).
+- **Colossus** (undead) and **Carpenter** (undead): restrictions *and* movers
+  together (73–92%). Either kind alone gets under 45%.
+- **Twin Kings**: Magnet + movers (63–99%). Restrictions alone get 20%.
+- **Mirror Knight**: restrictions (78–91%). Movers alone get 8–23%.
+- **Oak / Scarecrow**: almost any real build. Pebbles and Mountains lose.
+
+### Whole runs (`node tools/runbot.mjs --runs 128`, heat 0)
+
+| player bot | before | after |
+|---|---:|---:|
+| 80 iterations, 20% blunders | ~12% | 20% |
+| 150 iterations, 10% blunders | ~13% | 34% |
+| 300 iterations, no blunders | ~34% | 52% |
+
+The bot now leaves Magpie, Parrot and Mind Control at home against bosses,
+as a player would. Those stones are always dead against a boss.
+
+### Still open
+
+- **"Beside" vs "around" wording**, and a highlight of the affected squares
+  while a stone is selected.
+- **Bumper, Rehearse, Mind Control, Lasso and Mountain are still near Pebble
+  strength.** They are commons now; an eight-way Bumper or a Bribe that also
+  reaches corners measured no better.
+- **Act 1's bosses are the most common run-enders for the bots.** Each is
+  about 50% in its undead phase, and an act-1 pouch is small.
+- **Boss lines on the map cost 2 hearts each.** That is unchanged.

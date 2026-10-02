@@ -114,7 +114,7 @@ its own, with its boss.
 - **Terrain by act.** The Meadow's obstacles are firs and its empty ground tiny shrubs; the
   Quarry's are boulders and gravel; the Summit's crags and tufts of grass in the snow.
 
-Balance is still open: bosses are hard for the bots (2 runs of 32 won).
+Balance was measured and retuned in `docs/STONES-REPORT.md`; the run bots (see Difficulty) win a fifth to a half of their runs.
 
 ## The stones
 
@@ -126,34 +126,34 @@ the stronger and the more skill a stone wants, the rarer.
 
 | stone | rarity | act 1 | act 2 | act 3 |
 |---|---|---:|---:|---:|
-| Magpie | rare | 63% | 34% | 34% |
-| Pluck | rare, one-shot | 47% | 32% | 28% |
-| Rewind | uncommon, one-shot | 48% | 31% | 26% |
-| Beacon | rare | 49% | 29% | 26% |
-| Firecracker | rare | 47% | 29% | 24% |
-| Magnet | uncommon | 47% | 26% | 16% |
-| Bribe | rare, one-shot | 59% | 18% | 11% |
-| Stinky | common | 40% | 25% | 19% |
-| Turncoat | uncommon | 39% | 25% | 19% |
-| Shift | common | 44% | 21% | 16% |
-| Twin | uncommon | 44% | 25% | 11% |
-| Relocate | uncommon, one-shot | 40% | 21% | 17% |
-| Swap | uncommon | 40% | 21% | 16% |
-| Nudge | common, one-shot | 38% | 21% | 17% |
-| Rotate | common | 38% | 21% | 11% |
-| Parrot | uncommon | 37% | 18% | 13% |
-| Muffle | common, one-shot | 38% | 18% | 11% |
-| 2048 | uncommon | 37% | 18% | 11% |
-| Mirror | common, one-shot | 34% | 17% | 13% |
-| Frog | common | 32% | 16% | 16% |
-| Whirl | uncommon | 32% | 16% | 13% |
-| Flip | uncommon | 33% | 15% | 12% |
-| Mountain | common | 32% | 15% | 12% |
-| Lasso | common | 32% | 13% | 11% |
-| Mind Control | common, one-shot | 27% | 15% | 8% |
-| Bumper | common | 27% | 13% | 9% |
-| Rehearse | common, one-shot | 27% | 12% | 9% |
-| Pebble | starter | 26% | 10% | 11% |
+| Magpie | rare | 68% | 29% | 29% |
+| Pluck | rare, one-shot | 53% | 21% | 26% |
+| Rewind | uncommon, one-shot | 56% | 21% | 24% |
+| Firecracker | rare | 52% | 23% | 22% |
+| Beacon | rare | 61% | 15% | 18% |
+| Bribe | rare, one-shot | 67% | 9% | 10% |
+| Magnet | uncommon | 55% | 13% | 13% |
+| Relocate | uncommon, one-shot | 45% | 18% | 17% |
+| Stinky | common | 47% | 16% | 17% |
+| Nudge | common, one-shot | 46% | 17% | 16% |
+| Shift | common | 48% | 15% | 14% |
+| Swap | uncommon | 47% | 15% | 15% |
+| Turncoat | uncommon | 41% | 21% | 14% |
+| Twin | uncommon | 47% | 15% | 6% |
+| 2048 | uncommon | 43% | 14% | 10% |
+| Muffle | common, one-shot | 45% | 10% | 11% |
+| Rotate | common | 41% | 14% | 10% |
+| Frog | common | 37% | 11% | 15% |
+| Parrot | uncommon | 38% | 12% | 12% |
+| Flip | uncommon | 39% | 9% | 10% |
+| Whirl | uncommon | 37% | 9% | 10% |
+| Mirror | common, one-shot | 38% | 8% | 10% |
+| Mountain | common | 36% | 7% | 9% |
+| Lasso | common | 34% | 7% | 10% |
+| Pebble | starter | 29% | 6% | 10% |
+| Mind Control | common, one-shot | 31% | 8% | 6% |
+| Rehearse | common, one-shot | 28% | 7% | 8% |
+| Bumper | common | 28% | 6% | 8% |
 
 `docs/STONES-REPORT.md` has the rest: duds, choices, skill, pairs, boss builds, and what changed
 (Bribe takes only a Pebble beside it, Firecracker leaves a Pebble, Twin needs no empty centre,
@@ -175,9 +175,9 @@ At heat 0 (six hearts), bots that play the map sensibly, pick their stones by st
 
 | player bot | runs won |
 |---|---|
-| 80 iterations, 20% blunders | about 12% |
-| 150 iterations, 10% blunders | about 13% |
-| 300 iterations, no blunders | about 34% |
+| 80 iterations, 20% blunders | about 20% |
+| 150 iterations, 10% blunders | about 34% |
+| 300 iterations, no blunders | about 52% |
 
 Heat 1–5 raises it after each win: deeper search, dearer shops, a heart fewer,
 bigger elite hands, no blunders.
