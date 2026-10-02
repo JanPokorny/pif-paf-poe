@@ -89,7 +89,7 @@ its own, with its boss.
   classes, shifted so you never start on one — plus scattered ones, likelier the further you
   have spread and the more live lines you hold. Rocks take about a third of the page; a bot that
   plays for its line gets one before the page fills 62% of the time, in about seven steps
-  (`node tools/maprocks.mjs`). A *Pickaxe* breaks one rock.
+  (`node tools/maprocks.mjs`). Nothing breaks a rock.
 - **No forks at the start.** Within three squares of the boss's first mark, no two open lines of
   three share a square, so every line there is a single threat the boss can block. The 9×9
   around the start is laid out when the page is made: the lattice, then greedily the rock that
@@ -101,8 +101,8 @@ its own, with its boss.
   rises and the boss climbs back out of the earth as its undead self ("Undead Old Oak"), with its
   harder rule. A boss won is a boss relic, three hearts and 60 gold. **Elites** are just
   stronger regular enemies: bigger hands, two hearts if lost, a red star in the corner.
-- **Map aids.** A duel won may offer, instead of a stone, a *Double Step* (the boss does not
-  answer one step) or a *Pickaxe*. Elites always offer one.
+- **No map aids.** Duels used to offer a *Double Step* (the boss skipped a reply) or a *Pickaxe*
+  (broke a rock) instead of a stone; they are gone. A duel's reward is stones, gold and relics.
 - **The page by distance** (`node tools/mapgen.mjs`, measured over whole explored pages):
   obstacles are densest near the start, where the fork-free layout holds (about half of rings
   1–4), and thin out ring by ring (a quarter by ring 9). Empty squares — nothing on them, just the

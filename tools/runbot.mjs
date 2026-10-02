@@ -93,7 +93,6 @@ function playRun(spec) {
           const mine = R.lineReach(run.map, k), theirs = R.lineReach(run.map, k, 'O');
           return (mine >= 2 ? 100 : 0) + (theirs >= 2 ? 50 : 0) + mine * 4 + theirs * 2 + (want[R.cellAt(run.map, k).kind] ?? 0) * 2 + R.rand(run);
         };
-        if (run.aids?.double && R.lineReach(run.map, opts.sort((a, b) => score(b) - score(a))[0]) >= 1) R.toggleAid(run, 'double');
         R.enterNode(run, opts.sort((a, b) => score(b) - score(a))[0]);
         break;
       }

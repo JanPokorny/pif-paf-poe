@@ -314,7 +314,6 @@ function mapScreen() {
   // With no X of yours first (a fresh page), the O comes at once.
   const oAt = freshX ? 1.4 : 0.15;
   (map.revealO ?? []).forEach((k, i) => appear.set(k, oAt + 0.7 + i * 0.05));
-  const breaching = map.armed === 'breach';
   const grid = [];
   for (let y = y0; y <= y1; y++) {
     for (let x = x0; x <= x1; x++) {
@@ -323,10 +322,9 @@ function mapScreen() {
       if (!c) { grid.push(h('div.map-fog', { 'aria-hidden': 'true' }, '?')); continue; }
       const kind = c.kind;
       const can = kind === 'lair' ? map.open : reach.has(k);
-      const el = h(`button.map-cell.${kind}` + (can && kind !== 'lair' ? '.reach' : '') + (c.mark && kind !== 'lair' ? '.marked' : '') + (kind === 'lair' && map.open ? '.open' : '') + (breaching && kind === 'rock' ? '.breachable' : ''), {
+      const el = h(`button.map-cell.${kind}` + (can && kind !== 'lair' ? '.reach' : '') + (c.mark && kind !== 'lair' ? '.marked' : '') + (kind === 'lair' && map.open ? '.open' : ''), {
         'aria-label': NODE_NAME[kind] ?? boss.name, dataset: { k },
         onclick: () => {
-          if (breaching && kind === 'rock') { R.breach(run, k); sfx('thud'); save(); mapScreen(); return; }
           if (kind === 'lair') {
             if (!can) { toast(t('{boss}\'s lair. Three Xs in a row open it.', { boss: boss.name })); return; }
             sfx('click');
@@ -389,10 +387,6 @@ function mapScreen() {
     ? h('div.door-hint.open', {}, h('span', { html: icon('crown') }), t('The lair is open: tap it to face {boss}.', { boss: boss.name }))
     : h('div.door-hint', {}, h('span', { html: icon('crown') }), t('Three Xs in a row open the boss\'s lair.'),
 )
-  // Map aids won in duels: arm one for the next step.
-  const aids = R.AID_TYPES.filter((a) => run.aids?.[a]).length ? h('div.aids', {}, R.AID_TYPES.filter((a) => run.aids?.[a]).map((a) => h('button.aid' + (map.armed === a ? '.armed' : ''), {
-    onclick: () => { R.toggleAid(run, a); sfx('click'); save(); mapScreen(); if (map.armed) toast(t(R.AIDS[a].text)); },
-  }, h('span.aid-ico', { html: icon(a === 'breach' ? 'mountain' : 'rule-headstart') }), `${t(R.AIDS[a].name)} ×${run.aids[a]}`))) : null;
   // Lines of pencil between the squares on view, each a little crooked.
   const W = cols * 100, H = rows * 100;
   let paths = '';
@@ -416,11 +410,9 @@ function mapScreen() {
   screen(topBar(), relicStrip(),
     h('div.map-page', {},
       door,
-      aids,
       scroller,
       h('div.map-news', {}, news),
-      h('div.map-help', {}, breaching ? t('Tap a rock to break it.')
-        : !R.xCount(run) ? t('Pick any free square.') : ''),
+      h('div.map-help', {}, !R.xCount(run) ? t('Pick any free square.') : ''),
       threats.size ? h('div.map-help.red', {}, t('Dashed circle: the boss wins a line there.')) : null));
   // Keep the newest marks in view, scrolling the sheet only, never the page.
   requestAnimationFrame(() => {
@@ -616,12 +608,6 @@ function pickCard(card, after) {
   setTimeout(after, 480);
 }
 
-// A map aid as a reward card.
-function aidCard(kind, onclick) {
-  return pressable(h('button.card.aid-card', { 'aria-label': t(R.AIDS[kind].name) },
-    h('div.trick-token', { html: icon(kind === 'breach' ? 'mountain' : 'rule-headstart') }),
-    h('div.card-name', {}, t(R.AIDS[kind].name))), { tap: onclick, long: () => toast(t(R.AIDS[kind].text)) });
-}
 const pressHint = () => h('div.press-hint', {}, t('Long press for info.'));
 
 function rewardScreen() {
@@ -649,11 +635,10 @@ function rewardScreen() {
         onclick: (e) => { R.gainRelic(run, id); rw.taken.boss = id; sfx('coin'); save(); pickCard(e.currentTarget, rewardScreen); },
       }))));
   } else if (rw.taken.boss) parts.push(h('div.section-label', {}, t('Boss relic')), relicCard(rw.taken.boss, { onclick: () => infoRelic(rw.taken.boss) }));
-  if (rw.taken.stone && rw.taken.stone !== true && !rw.taken.stone.startsWith('aid:')) parts.push(h('div.section-label', {}, t('You took the {stone}.', { stone: STONES[rw.taken.stone].name })), h('div.cards.one', {}, stoneCard({ type: rw.taken.stone }, {})));
-  if (rw.taken.stone?.startsWith?.('aid:')) parts.push(h('div.section-label', {}, t('You took a map aid: {aid}.', { aid: t(R.AIDS[rw.taken.stone.slice(4)].name) })));
+  if (rw.taken.stone && rw.taken.stone !== true) parts.push(h('div.section-label', {}, t('You took the {stone}.', { stone: STONES[rw.taken.stone].name })), h('div.cards.one', {}, stoneCard({ type: rw.taken.stone }, {})));
   if (rw.stones.length && !rw.taken.stone) {
     parts.push(h('div.section-label', {}, t('Take one')),
-      h('div.cards', {}, rw.aid ? aidCard(rw.aid, (e) => { R.gainAid(run, rw.aid); rw.taken.stone = `aid:${rw.aid}`; sfx('coin'); save(); pickCard(e.currentTarget, rewardScreen); }) : null, rw.stones.map((s) => stoneCard(s, {
+      h('div.cards', {}, rw.stones.map((s) => stoneCard(s, {
         onclick: (e) => {
           const card = e.currentTarget;
           takeStone(s, (ok) => {

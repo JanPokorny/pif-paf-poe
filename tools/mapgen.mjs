@@ -25,8 +25,7 @@ for (let seed = 1; seed <= N; seed++) {
     open.sort(([a], [b]) => R.ringOf(...R.coords(a)) - R.ringOf(...R.coords(b)));
     map.at = open[0][0];
     // Mark without the boss answering, so the walk covers the page.
-    run.aids.double = 1; map.armed = 'double';
-    R.settleCell(run, 'X');
+    R.settleCell(run, 'X', { quiet: true });
     run.hearts = 99; run.over = false;
   }
   for (const [k, c] of Object.entries(map.cells)) {

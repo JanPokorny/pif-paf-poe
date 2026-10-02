@@ -61,7 +61,6 @@ export function newRun({ seed = (Math.random() * 2 ** 31) | 0, heat = 0 } = {}) 
     hearts, maxHearts: hearts,
     gold: START.gold, pouch: [], relics: [],
     slots: START.slots,
-    aids: { double: 0, breach: 0 },   // map aids won in duels
     lastHand: null, nextUid: 1,
     rematchUsed: {}, phoenixUsed: false,
     stats: { won: 0, lost: 0, elites: 0, bosses: 0, gold: 0, started: Date.now() },
@@ -333,7 +332,6 @@ export function makeMap(run) {
     lines: [],         // lines of three, crossed through: {mark, cells}
     visited: 0,
     fights: 0,         // duels revealed so far, for the gentle first few
-    armed: null,       // a map aid about to be used
   };
   map.cells['0,0'] = { kind: 'boss-mark', mark: 'O' };
   run.map = map;
@@ -525,7 +523,8 @@ function bossFills(run) {
   }
 }
 
-export function settleCell(run, mark) {
+// `quiet`: the boss does not answer (for tools that walk a whole page).
+export function settleCell(run, mark, { quiet = false } = {}) {
   const map = run.map;
   if (map.at === null) return;
   const wasOpen = map.open;
@@ -550,9 +549,7 @@ export function settleCell(run, mark) {
   if (claimLine(map, at)) map.open = true;
   // Squares cleared past an open door pay a little extra: a reason to press on.
   if (wasOpen) { map.bonus = 10; run.gold += 10; }
-  const aid = map.armed;
-  if (aid) { run.aids[aid]--; map.armed = null; }
-  if (aid !== 'double') {
+  if (!quiet) {
     map.lastO = bossTurn(run);
     if (map.lastO) map.revealO = reveal(run, ...coords(map.lastO));
   }
@@ -574,32 +571,6 @@ export function hurt(run, n) {
   run.over = true;
   run.screen = 'gameover';
   run.pending = null;
-  return true;
-}
-
-// ── Map aids, won in duels ───────────────────────────────────────────────────
-//
-//   double: the boss does not answer your next step
-//   breach: a rock you choose crumbles, and the square under it comes into view
-export const AIDS = {
-  double: { name: 'Double Step', text: 'One step the boss does not answer.' },
-  breach: { name: 'Pickaxe', text: 'Break one rock.' },
-};
-export const AID_TYPES = Object.keys(AIDS);
-// Arm an aid for the next step, or put it away again.
-export function toggleAid(run, kind) {
-  const map = run.map;
-  if (map.armed === kind) { map.armed = null; return; }
-  if ((run.aids?.[kind] ?? 0) > 0) map.armed = kind;
-}
-// With the Pickaxe armed, break the rock at k.
-export function breach(run, k) {
-  const map = run.map;
-  if (map.armed !== 'breach' || map.cells[k]?.kind !== 'rock') return false;
-  delete map.cells[k];
-  revealCell(run, ...coords(k), true, true);
-  run.aids.breach--;
-  map.armed = null;
   return true;
 }
 
@@ -774,8 +745,6 @@ export function duelWon(run) {
   if (duel.event !== 'thief') reward.stones = stoneChoices(run, duel.tier);
   const onceChance = duel.tier === 'normal' ? 0.3 : duel.tier === 'event' ? 0 : 0.7;
   if (rand(run) < onceChance) reward.once = randomOnce(run);
-  // Instead of a stone, help on the map.
-  if (duel.event !== 'thief' && duel.tier !== 'boss' && rand(run) < (duel.tier === 'normal' ? 0.4 : 1)) reward.aid = pick(run, AID_TYPES);
   const big = duel.tier === 'elite' || duel.tier === 'boss';
   if (duel.tier === 'elite' || duel.event === 'hermit' || duel.event === 'nightowl') reward.relic = randomRelic(run);
   if (duel.tier === 'elite') run.stats.elites++;
@@ -924,7 +893,6 @@ export function gainStone(run, s) {
   return st;
 }
 
-export function gainAid(run, kind) { run.aids = run.aids ?? { double: 0, breach: 0 }; run.aids[kind] = (run.aids[kind] ?? 0) + 1; }
 export const pouchFull = (run) => run.pouch.length >= pouchCap(run);
 
 // ── Shop ────────────────────────────────────────────────────────────────────

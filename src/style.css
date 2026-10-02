@@ -730,17 +730,10 @@ body:has(.duel) #toast.show { transform: translate(-50%, 0) rotate(-1deg); }
 .logo-board .letter.o { color: var(--red); }
 @keyframes letter-in { to { transform: rotate(var(--tilt)) scale(1); opacity: 1; } }
 @media (prefers-reduced-motion: reduce) { .logo-board .letter { animation: none; transform: rotate(var(--tilt)); opacity: 1; } }
-/* Map aids: tap to arm one for the next step. */
-.aids { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; }
-.aid { display: inline-flex; align-items: center; gap: 6px; font: inherit; font-size: 1rem; padding: 6px 12px; border: 1.5px dashed var(--blue); border-radius: 14px 12px 15px 11px; background: var(--card); color: var(--blue); cursor: pointer; }
-.aid.armed { background: var(--blue); color: #fff; border-style: solid; animation: wiggle 1.4s ease-in-out infinite; }
-.aid-ico, .aid-ico .icon { width: 18px; height: 18px; }
 .mini-sq.elite .icon { width: 80%; height: 80%; }
 /* Rocks: nobody marks them, no line runs through them. */
 .map-cell.rock { cursor: default; color: var(--ink); --rock-fill: #cfccc6; }
 .map-cell.rock.marked .doodle.rock { width: 60%; height: 60%; opacity: 0.4; }
-.map-cell.breachable { animation: wiggle 1.2s ease-in-out infinite; cursor: pointer; }
-.map-cell.breachable::before { content: ''; position: absolute; inset: 10%; border-radius: 42% 35% 46% 38%; background: var(--hi); }
 
 /* Language, music and sound: one line of small buttons. */
 .settings-row { display: flex; justify-content: center; align-items: center; gap: 6px; margin-top: 4px; }
