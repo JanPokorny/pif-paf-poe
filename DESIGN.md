@@ -11,7 +11,7 @@ numbers. The camp game's own reasoning is in `old/adr/`.
   where you satisfy as many as any square can (`old/adr/2026-08-18-…`).
 - **Counterattacks → one-shot stones.** The camp game's counterattacks became tricks, spent
   at the end of a turn; now they are stones like any other, brought in a slot and placed on the
-  board, that then do their one thing (Overtake, Relocate, Mirror, Mind Control, Rehearse, Nudge,
+  board, that then do their one thing (Rewind, Relocate, Mirror, Mind Control, Rehearse, Nudge,
   Muffle, Pluck, Bribe). Once played in a duel, won or lost, one is gone from the pouch. They
   have a dashed outline, come as their own reward and shop shelf, and are cheaper than stones.
   Encore, which handed back your last special stone, did not survive the change.
@@ -118,35 +118,58 @@ Balance is still open: bosses are hard for the bots (2 runs of 32 won).
 
 ## The stones
 
-18 types. Every stone's card shows an example computed by the engine.
+27 special types and the Pebble. Every stone's card shows an example computed by the engine.
 
-A hand of one stone plus a Shift against a Shift and a Rotate, both seats, 80 games, MCTS at 200
-iterations (`node tools/stones.mjs`):
+One stone, the rest of the act's hand Pebbles (four, five, six stones), against every enemy of the
+act as the game rolls them, 60 games each (`node tools/lab.mjs matrix`). Rarity follows power:
+the stronger and the more skill a stone wants, the rarer.
 
-| stone | win | | stone | win |
-|---|---|---|---|---|
-| Lighthouse | 81% | | Turncoat | 46% |
-| Electromagnet | 80% | | Kaleidoscope | 45% |
-| Stench | 76% | | Flip, Parrot | 44% |
-| Rail | 76% | | Bumper, Cyclone | 43% |
-| Stinky | 74% | | Pivot | 41% |
-| Magnet | 73% | | Rotate, Whirl | 39% |
-| Beacon | 69% | | Kangaroo | 34% |
-| Magpie | 68% | | Frog | 30% |
-| Twin | 64% | | Bomb | 26% |
-| Shift | 57% | | Lasso, Firecracker | 25% |
-| Teleport, 4096 | 55–56% | | Pebble | 14% |
-| 2048, Swap, Mountain, Blast | 49–53% | | | |
+| stone | rarity | act 1 | act 2 | act 3 |
+|---|---|---:|---:|---:|
+| Magpie | rare | 63% | 34% | 34% |
+| Pluck | rare, one-shot | 47% | 32% | 28% |
+| Rewind | uncommon, one-shot | 48% | 31% | 26% |
+| Beacon | rare | 49% | 29% | 26% |
+| Firecracker | rare | 47% | 29% | 24% |
+| Magnet | uncommon | 47% | 26% | 16% |
+| Bribe | rare, one-shot | 59% | 18% | 11% |
+| Stinky | common | 40% | 25% | 19% |
+| Turncoat | uncommon | 39% | 25% | 19% |
+| Shift | common | 44% | 21% | 16% |
+| Twin | uncommon | 44% | 25% | 11% |
+| Relocate | uncommon, one-shot | 40% | 21% | 17% |
+| Swap | uncommon | 40% | 21% | 16% |
+| Nudge | common, one-shot | 38% | 21% | 17% |
+| Rotate | common | 38% | 21% | 11% |
+| Parrot | uncommon | 37% | 18% | 13% |
+| Muffle | common, one-shot | 38% | 18% | 11% |
+| 2048 | uncommon | 37% | 18% | 11% |
+| Mirror | common, one-shot | 34% | 17% | 13% |
+| Frog | common | 32% | 16% | 16% |
+| Whirl | uncommon | 32% | 16% | 13% |
+| Flip | uncommon | 33% | 15% | 12% |
+| Mountain | common | 32% | 15% | 12% |
+| Lasso | common | 32% | 13% | 11% |
+| Mind Control | common, one-shot | 27% | 15% | 8% |
+| Bumper | common | 27% | 13% | 9% |
+| Rehearse | common, one-shot | 27% | 12% | 9% |
+| Pebble | starter | 26% | 10% | 11% |
 
-The table was measured with the evolved forms still in; they are gone now. Twin won 93% and now
-needs the centre empty too.
+`docs/STONES-REPORT.md` has the rest: duds, choices, skill, pairs, boss builds, and what changed
+(Bribe takes only a Pebble beside it, Firecracker leaves a Pebble, Twin needs no empty centre,
+Lasso pulls all at once, Frog knocks the stone it leaps off the board, Muffle hushes the next
+*special* stone, and Overtake became Rewind).
 
 ## Difficulty
 
 Enemies are the same Monte Carlo search as the camp game's AI (`src/ai.js`), dialled by
 iterations and a blunder rate. `node tools/balance.mjs` duels a bot with a typical pouch against
 every enemy (`--life 1` for a boss's undead phase); `node tools/runbot.mjs` plays
-whole runs headless; `node tools/stones.mjs` measures the stones.
+whole runs headless; `node tools/lab.mjs` measures stones, enemies and bosses in bulk.
+
+A typical pouch for the act, 250 iterations and 5% blunders, against each enemy
+(`node tools/lab.mjs enemies`): normal enemies 52–83%, elites 41–63%; bosses at first 54–91% and
+risen 42–62%.
 
 At heat 0 (six hearts), bots that play the map sensibly, pick their stones by strength and keep one that moves things win:
 
