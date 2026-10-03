@@ -107,8 +107,8 @@ function showPouch() {
     h('h2', {}, t('Pouch · {n}', { n: run.pouch.length })),
     run.pouch.length ? h('div.stone-grid', {}, run.pouch.map((p) => R.asBrought(run, p)).map((s) => h('button.pouch-slot', { onclick: () => infoStone(s, 'X') }, stoneEl(s, 'X', { cost: true }), h('span', {}, stoneName(s)))))
       : h('p.dim', {}, t('No special stones yet. Pebbles you always have.')),
-    h('h2', {}, t('Relics')),
-    run.relics.length ? h('div.relic-list', {}, run.relics.map((r) => h('button.relic-row', { onclick: () => infoRelic(r) }, h('span.relic-token.small', {}, relicArt(r)), h('span', {}, h('b', {}, RELICS[r].name), h('br'), RELICS[r].text)))) : h('p.dim', {}, t('No relics yet.')),
+    h('h2', {}, t('Talismans')),
+    run.relics.length ? h('div.relic-list', {}, run.relics.map((r) => h('button.relic-row', { onclick: () => infoRelic(r) }, h('span.relic-token.small', {}, relicArt(r)), h('span', {}, h('b', {}, RELICS[r].name), h('br'), RELICS[r].text)))) : h('p.dim', {}, t('No talismans yet.')),
     h('button.btn.wide.ghost', { onclick: () => close() }, t('Close')));
   const close = modal(body, { cls: 'tall' });
 }
@@ -741,7 +741,7 @@ function shopScreen(redraw = false) {
       onclick: () => infoStone(x, 'X', '', offer(x.price, (pay) => takeStone(x, (ok) => { if (ok) { x.sold = true; pay(); } }))),
     }))),
     // Relics and services share a row of cards.
-    h('div.section-label', {}, t('Relics and services')),
+    h('div.section-label', {}, t('Talismans and services')),
     h('div.cards.scroll', {},
       shop.relics.map((r) => relicCard(r.relic, {
         price: r.price, sold: r.sold || R.has(run, r.relic), dear: run.gold < r.price,
@@ -876,7 +876,7 @@ function eventScreen() {
     },
   };
   const choices = result
-    ? [h('p.event-result', {}, result), h('button.btn.primary.wide.big', { onclick: () => { R.leaveNode(run); route(); } }, t('Continue'))]
+    ? [h('p.event-result', {}, result)]
     : ev.choices.map((c) => {
       const ok = !c.can || c.can(run, api);
       return h('button.choice' + (ok ? '' : '.disabled'), {
@@ -897,7 +897,9 @@ function eventScreen() {
     h('div.event-emoji', {}, art('event', ev.id, ev.emoji)),
     h('h2', {}, ev.title),
     h('p', {}, ev.text),
-    h('div.choices', {}, choices)));
+    h('div.choices', {}, choices),
+    // The way on, in the bottom bar like every Continue.
+    result ? h('div.sticky-bottom', {}, h('button.btn.primary.wide.big', { onclick: () => { R.leaveNode(run); route(); } }, t('Continue'))) : null));
 }
 
 // ── The end ─────────────────────────────────────────────────────────────────

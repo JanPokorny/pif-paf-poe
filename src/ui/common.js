@@ -401,7 +401,7 @@ export function infoRelic(id, action = null) {
   const r = RELICS[id];
   const body = h('div.info-stone', {},
     h('div.info-head', {}, h('div.relic-token', {}, relicArt(id)), h('div', {},
-      h('div.info-name', {}, r.name), h('div.info-rarity.' + r.rarity, {}, t('relic') + ' · ' + t(r.rarity)))),
+      h('div.info-name', {}, r.name), h('div.info-rarity.' + r.rarity, {}, t('talisman') + ' · ' + t(r.rarity)))),
     h('p', {}, r.text),
     // A + talisman: each stone it upgrades, and what its + form does.
     r.upgrades ? h('div.plus-list', {}, r.upgrades.map((x) => h('div.plus-row', {},

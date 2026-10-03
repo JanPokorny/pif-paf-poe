@@ -267,7 +267,7 @@ export const EVENTS = [
     id: 'hermit', title: 'The Hermit\'s Challenge', emoji: '🧙',
     text: '"A duel, traveller? Beat me and take my trinket. Lose, and it costs you a heart."',
     choices: [
-      { label: 'Accept the duel', detail: 'Win: a relic. Lose: −1 heart.', act: (r, api) => api.fight('hermit') },
+      { label: 'Accept the duel', detail: 'Win: a talisman. Lose: −1 heart.', act: (r, api) => api.fight('hermit') },
       { label: 'Decline', act: () => t('The hermit returns to his tea.') },
     ],
   },
@@ -284,7 +284,7 @@ export const EVENTS = [
     id: 'chest', title: 'The Suspicious Chest', emoji: '🧰',
     text: 'A chest sits alone in the grass. It is almost certainly trapped.',
     choices: [
-      { label: 'Open it', detail: 'Gain a relic. Lose 1 heart.', can: (r) => r.hearts > 1,
+      { label: 'Open it', detail: 'Gain a talisman. Lose 1 heart.', can: (r) => r.hearts > 1,
         act: (r, api) => { r.hearts--; return api.gainRandomRelic(t('A needle pricks your thumb, but inside…')); } },
       { label: 'Leave it', act: () => t('Wise, probably.') },
     ],
@@ -368,7 +368,7 @@ export const EVENTS = [
     id: 'nightowl', title: 'The Night Owl', emoji: '🦉',
     text: '"Hoo. A late game, traveller? I play only the best — and I pay the best."',
     choices: [
-      { label: 'Play the Owl', detail: 'A hard duel. Win: a relic and gold. Lose: −1 heart.', act: (r, api) => api.fight('nightowl') },
+      { label: 'Play the Owl', detail: 'A hard duel. Win: a talisman and gold. Lose: −1 heart.', act: (r, api) => api.fight('nightowl') },
       { label: 'Get some sleep', detail: 'Heal 1 heart.', act: (r) => { r.hearts = Math.min(r.maxHearts, r.hearts + 1); return t('You sleep soundly.'); } },
     ],
   },
