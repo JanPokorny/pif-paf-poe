@@ -30,6 +30,8 @@
   --hand: 'Patrick Hand', 'Comic Sans MS', 'Chalkboard SE', system-ui, sans-serif;
   --marker: 'Caveat Brush', 'Patrick Hand', 'Comic Sans MS', system-ui, sans-serif;
   --safe-b: env(safe-area-inset-bottom, 0px);
+  /* Room under a bottom button: phones round their corners even where they report no inset. */
+  --button-b: max(22px, calc(8px + var(--safe-b)));
   --safe-t: env(safe-area-inset-top, 0px);
   color-scheme: light;
 }
@@ -388,7 +390,7 @@ b { font-weight: 400; background: linear-gradient(transparent 55%, var(--hi) 55%
 .info-name-link { cursor: pointer; padding: 2px 0; }
 .info-name-link .i { color: var(--blue); font-size: 0.9em; }
 .slot-info { position: absolute; top: 0; right: 4px; color: var(--blue); font-size: 1rem; padding: 2px; }
-.sticky-bottom { position: sticky; bottom: 0; padding: 12px 0 calc(6px + var(--safe-b)); background: linear-gradient(transparent, var(--paper) 35%); z-index: 3; }
+.sticky-bottom { position: sticky; bottom: 0; padding: 12px 0 var(--button-b); background: linear-gradient(transparent, var(--paper) 35%); z-index: 3; }
 
 /* ── Index cards: rewards and the shop ───────────────────────────────────── */
 .cards { display: flex; flex-wrap: wrap; justify-content: center; gap: 14px 8px; padding-top: 8px; }
@@ -452,7 +454,7 @@ b { font-weight: 400; background: linear-gradient(transparent 55%, var(--hi) 55%
 .modal-back { position: fixed; inset: 0; z-index: 50; background: rgba(60, 48, 20, 0.35); display: flex; align-items: flex-end; justify-content: center; animation: fade 0.15s; }
 .modal-back.closing { opacity: 0; transition: opacity 0.15s; pointer-events: none; }
 .modal {
-  width: calc(100% - 16px); max-width: 500px; max-height: 86dvh; overflow-y: auto; margin-bottom: calc(8px + var(--safe-b));
+  width: calc(100% - 16px); max-width: 500px; max-height: 86dvh; overflow-y: auto; margin-bottom: var(--button-b);
   background-color: var(--card); border-radius: 3px; padding: 20px 16px 16px; position: relative;
   background-image: linear-gradient(90deg, transparent 30px, var(--margin) 30px, var(--margin) 31.5px, transparent 31.5px), repeating-linear-gradient(transparent 0 25px, var(--grid) 25px 26px);
   box-shadow: 0 10px 30px rgba(40, 30, 0, 0.35); animation: slideup 0.2s ease-out;
@@ -536,7 +538,7 @@ b { font-weight: 400; background: linear-gradient(transparent 55%, var(--hi) 55%
 .back-map { flex: none; display: inline-flex; align-items: center; gap: 4px; }
 
 /* Critique pass */
-.result-banner { top: auto; bottom: calc(8px + var(--safe-b)); left: 14px; right: 14px; padding: 16px 16px 12px; }
+.result-banner { top: auto; bottom: var(--button-b); left: 14px; right: 14px; padding: 16px 16px 12px; }
 .result-title { font-size: 2rem; }
 .cell.chosen::after { background: none; border: 3px solid var(--red); border-radius: 48% 52% 45% 55%; filter: url(#pencil); inset: 5%; }
 .arrow.chosen, .rot.chosen { background: var(--pink); }
@@ -692,7 +694,7 @@ h1, h2, .status-line:not(.is-log), .btn.primary, .enemy-name, .card-name, .secti
 .map-cell.gift .doodle { color: var(--rare); }
 /* In a duel the notes go up top, clear of the hand and the info line. */
 /* Toasts keep clear of the button bar at the bottom, and in a duel of the top bar. */
-body:has(.sticky-bottom) #toast { bottom: calc(96px + var(--safe-b)); }
+body:has(.sticky-bottom) #toast { bottom: calc(90px + var(--button-b)); }
 body:has(.duel) #toast { bottom: auto; top: calc(62px + var(--safe-t)); transform: translate(-50%, -30px) rotate(-2deg); }
 body:has(.duel) #toast.show { transform: translate(-50%, 0) rotate(-1deg); }
 /* The 3x3 page: bigger squares, and the line that ended it. */

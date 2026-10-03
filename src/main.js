@@ -564,7 +564,7 @@ function preDuel() {
       }), duel.handO.some((s) => s.type === 'pebble') ? pebbles('O', duel.handO.filter((s) => s.type === 'pebble').length, duel.handO.length) : null),
       h('div.section-label.with-bar', {}, h('span', {}, t('Your stones')), bar),
       grid,
-      run.pouch.length ? h('div.press-hint', {}, t('Long press stone for info.')) : null,
+      run.pouch.length ? h('div.press-hint', {}, t('Choose which stones to take into the duel. Long press for info.')) : null,
       h('div.sticky-bottom.pair', {},
         canBack ? h('button.btn.ghost.big.back-map', { onclick: () => { R.retreat(run); route(); } }, h('span', { html: icon('back') }), t('Back to the map')) : null,
         fight)));

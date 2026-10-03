@@ -345,6 +345,7 @@ export default {
   'Buy': 'Koupit',
   'One more energy in every duel from now on: room for a costlier stone.': 'Odteď o energii víc v každém duelu: místo pro dražší kámen.',
   'Heal one heart. Twice per shop at most.': 'Vyléčí jedno srdce. Nejvýš dvakrát v jednom obchodě.',
+  'Choose which stones to take into the duel. Long press for info.': 'Vyber, které kameny si vezmeš do boje. Podržením zobrazíš popis.',
   'Long press stone for info.': 'Podržením kamene zobrazíš popis.',
   'Empty: a pebble turns up on their turn.': 'Prázdno: na tahu se soupeři najde oblázek.',
   'Open Hands: their stones are yours too.': 'Otevřené ruce: hraj i jeho kameny.',
