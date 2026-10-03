@@ -22,13 +22,15 @@
 import { Worker, isMainThread, parentPort, workerData } from 'node:worker_threads';
 import { cpus } from 'node:os';
 import { mkdirSync, writeFileSync } from 'node:fs';
-import { other, createGame, applyAction, legalActions, allowedSquares, STONES, STONE_TYPES, CONDS } from '../src/engine.js';
+import { other, createGame, applyAction, legalActions, allowedSquares, STONES, STONE_TYPES, PLUS_STONES, CONDS } from '../src/engine.js';
 import { chooseAction, makeRng } from '../src/ai.js';
 import { ENEMIES } from '../src/content.js';
 import * as R from '../src/run.js';
 
 const arg = (k, d) => { const i = process.argv.indexOf('--' + k); return i > 0 ? process.argv[i + 1] : d; };
 const P = (n) => Array(Math.max(0, n)).fill('pebble');
+// Every stone, and the + form of each that has one ('shift+').
+const WITH_PLUS = [...STONE_TYPES, ...PLUS_STONES.map((t) => `${t}+`)];
 const SPECIALS = STONE_TYPES.filter((t) => t !== 'pebble');
 
 // ── One duel ────────────────────────────────────────────────────────────────
@@ -50,13 +52,13 @@ function duel(t) {
       ? { iterations: t.itersX ?? 250, blunder: t.blunderX ?? 0.05, rng }
       : { iterations: t.itersO ?? 250, blunder: t.blunderO ?? 0, rng });
     if (me && a.type === 'place' && s.selected && s.selected.type !== 'pebble') {
-      const type = s.selected.type;
+      const kind = s.selected.type, type = kind + (s.selected.plus ? '+' : '');   // a + form counted on its own
       const snap = (skip) => JSON.stringify([s.board.map((c) => (c && c.id !== skip ? [c.id, c.player] : null)), s.hands.O.length, s.forced, s.silenced.O]);
       const hushed = s.silenced.X > 0;
       const before = snap(null), handBefore = s.hands.X.length, pid = s.nextId;   // the hand already gave the stone up at select
       applyAction(s, a);
       bump(type, 'placed');
-      const st = STONES[type];
+      const st = STONES[kind];
       if (s.phase === 'effect') bump(type, 'choices', legalActions(s).length);
       // Let the effect play out within X's turn.
       while (!s.over && s.player === 'X' && s.phase === 'effect') applyAction(s, chooseAction(s, { iterations: t.itersX ?? 250, blunder: t.blunderX ?? 0.05, rng }));
@@ -196,8 +198,8 @@ const EXPERIMENTS = {
   power(g) {
     const out = [];
     const foes = { 'vs Pebbles': P(5), 'vs Shift': ['shift', ...P(4)], 'vs Magnet+Shift': ['magnet', 'shift', ...P(3)] };
-    for (const type of STONE_TYPES) for (const [fk, handO] of Object.entries(foes)) for (let i = 0; i < g; i++) {
-      out.push({ key: `${type}|${fk}`, handX: [type === 'pebble' ? 'pebble' : type, ...P(3)], handO, seed: i + 1 });
+    for (const type of WITH_PLUS) for (const [fk, handO] of Object.entries(foes)) for (let i = 0; i < g; i++) {
+      out.push({ key: `${type}|${fk}`, handX: [type, ...P(3)], handO, seed: i + 1 });
     }
     return out;
   },
@@ -266,7 +268,7 @@ const EXPERIMENTS = {
     const out = [];
     for (const [id, e] of Object.entries(ENEMIES)) {
       if (!e.act || e.tier === 'boss') continue;
-      for (const type of arg('stones', null)?.split(',') ?? STONE_TYPES) for (let i = 0; i < g; i++) {
+      for (const type of arg('stones', null)?.split(',') ?? WITH_PLUS) for (let i = 0; i < g; i++) {
         const d = enemyDuel(e.act, id, i * 31 + 7, { tier: e.tier });
         out.push({ key: `${type}|${id}`, handX: [type, ...P(SLOTS[e.act] - 1)], handO: d.handO.map((x) => x.type + (x.plus ? '+' : '')), conds: d.conds, rules: d.rules, modsO: d.modsO, itersO: d.iters, blunderO: d.blunder, seed: i + 1 });
       }
@@ -320,7 +322,7 @@ const EXPERIMENTS = {
   effects(g) {
     // Every stone in mixed realistic hands, many times: for its effect statistics.
     const out = [];
-    for (const type of SPECIALS) for (let i = 0; i < g; i++) {
+    for (const type of WITH_PLUS.filter((x) => x !== 'pebble')) for (let i = 0; i < g; i++) {
       const run = runAt(2, i * 7 + 11);
       const other = R.randomStone(run).type;
       out.push({ key: type, handX: [type, other, ...P(3)], handO: ['magnet', 'shift', 'rotate', ...P(2)], seed: i + 1 });
