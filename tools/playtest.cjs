@@ -95,7 +95,7 @@ const pick = (a) => a[Math.floor(rand() * a.length)];
         if (!(await any('.map-cell.reach'))) await any('.map-cell');
         break;
       }
-      case 'predual': await snap('predual-' + (st.tier ?? 'x')); if (rand() < 0.15) await any('.stone-row.pick .stone-pick'); await click(page.locator('.sticky-bottom .btn').first()); break;
+      case 'predual': await snap('predual-' + (st.tier ?? 'x')); if (rand() < 0.15) await any('.stone-row.pick .stone-pick'); await click(page.locator('.sticky-bottom .btn.primary').first()); break;   // Fight, not Back to the map
       case 'duel': {
         await snap('duel-' + (st.tier ?? 'x'));
         const banner = page.locator('.result-banner button, .result button');
