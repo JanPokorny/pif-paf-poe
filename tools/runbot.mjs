@@ -1,7 +1,8 @@
 // Plays whole runs headless with a simple bot, to catch flow bugs and to see
 // how far a player of a given strength gets.
 //
-//   node tools/runbot.mjs --runs 8 --piters 150 --pblunder 0.1 [--heat 0] [--linedmg 2]
+//   node tools/runbot.mjs --runs 8 --piters 150 --pblunder 0.1 [--heat 0] [--linedmg 2] [--each 1]
+//   (--each 1 prints every run's story; the summary says where runs end and what hurts)
 
 import { Worker, isMainThread, parentPort, workerData } from 'node:worker_threads';
 import { cpus } from 'node:os';
@@ -69,12 +70,19 @@ function playRun(spec) {
   const run = R.newRun({ seed: spec.seed, heat: spec.heat });
   const rng = makeRng(spec.seed);
   const log = [];
+  // Where the run hurt: every duel fought, and every heart lost and to what.
+  const duels = [], hurts = [];
+  let blow = null;   // what took the last heart
   let guard = 0, lines = 0, lineDeath = false;
   if (spec.linedmg != null) R.MAPCFG.lineDamage = spec.linedmg;
   while (!run.over && guard++ < 3000) {
-    const page = run.map, seen = page?.oLines ?? 0;
-    step(run.screen);
+    const page = run.map, seen = page?.oLines ?? 0, hearts = run.hearts, screen = run.screen, act = run.act;
+    const d = run.pending?.duel;
+    const what = (screen === 'predual' || screen === 'duel') && d ? `${d.enemyId}${d.tier === 'boss' ? `(boss${d.bossWins ? ', undead' : ''})` : d.tier !== 'normal' ? `(${d.tier})` : ''}`
+      : screen === 'event' ? `event ${run.pending?.id}` : 'boss line on the map';
+    step(screen);
     if (run.map === page && page && page.oLines > seen) { lines += page.oLines - seen; if (run.over) lineDeath = true; }
+    if (run.hearts < hearts || (run.over && !run.victory && hearts > 0)) { hurts.push({ act, what, n: hearts - run.hearts }); blow = what; }
   }
   function step(screen) {
     switch (screen) {
@@ -97,6 +105,7 @@ function playRun(spec) {
       case 'predual': case 'duel': {
         const d = run.pending.duel;
         const won = playDuel(run, null, spec.piters, spec.pblunder, rng);
+        duels.push({ act: run.act, enemy: d.enemyId, tier: d.tier, undead: d.tier === 'boss' && d.bossWins > 0, won });
         log.push(`${run.act}:${d.enemyId}${d.tier !== 'normal' ? '(' + d.tier + ')' : ''}${won ? '+' : '-'}`);
         if (won) R.duelWon(run); else R.duelLost(run);
         break;
@@ -144,7 +153,36 @@ function playRun(spec) {
   if (!run.over) throw new Error('run did not end: ' + run.screen);
   // JSON round trip must survive (the save format).
   JSON.parse(JSON.stringify(run));
-  return { seed: spec.seed, victory: run.victory, act: run.act, row: run.map.visited, hearts: run.hearts, lines, lineDeath, log: log.join(' '), relics: run.relics.join(','), pouch: run.pouch.map((s) => s.type).join(',') + ` energy ${R.energyOf(run)}`, energy: R.energyOf(run) };
+  return { seed: spec.seed, victory: run.victory, act: run.act, row: run.map.visited, duels, hurts, blow, hearts: run.hearts, lines, lineDeath, log: log.join(' '), relics: run.relics.join(','), pouch: run.pouch.map((s) => s.type).join(',') + ` energy ${R.energyOf(run)}`, energy: R.energyOf(run) };
+}
+
+// Where runs end and what hurts: the hard parts of a climb.
+function report(ok) {
+  const pct = (a, b) => (b ? `${Math.round((100 * a) / b)}%` : '-');
+  const table = (title, rows, head) => {
+    console.log(`\n${title}`);
+    console.log(head);
+    for (const r of rows) console.log(r);
+  };
+  // How far runs get.
+  const reach = [1, 2, 3].map((a) => ok.filter((r) => r.act >= a).length);
+  console.log(`\nruns reaching act 1 / 2 / 3: ${reach.join(' / ')}; won ${ok.filter((r) => r.victory).length}`);
+  // What dealt the last blow, by act.
+  const deaths = {};
+  for (const r of ok) if (!r.victory) { const k = `act ${r.act}: ${r.blow ?? '?'}`; deaths[k] = (deaths[k] ?? 0) + 1; }
+  table('where runs end (the last heart)', Object.entries(deaths).sort((a, b) => b[1] - a[1]).map(([k, n]) => `  ${String(n).padStart(3)}  ${k}`), '  runs  act: cause');
+  // Hearts lost, by cause.
+  const hurt = {};
+  for (const r of ok) for (const h of r.hurts) { const k = `act ${h.act}: ${h.what}`; hurt[k] = (hurt[k] ?? 0) + h.n; }
+  table('hearts lost, per run (top 15)', Object.entries(hurt).sort((a, b) => b[1] - a[1]).slice(0, 15).map(([k, n]) => `  ${(n / ok.length).toFixed(2).padStart(5)}  ${k}`), '  ❤/run  act: cause');
+  // Every enemy: how often it is fought and beaten.
+  const foes = {};
+  for (const r of ok) for (const d of r.duels) {
+    const k = `act ${d.act}: ${d.enemy}${d.tier === 'boss' ? (d.undead ? ' (boss, undead)' : ' (boss)') : d.tier !== 'normal' ? ` (${d.tier})` : ''}`;
+    const f = (foes[k] ??= { n: 0, won: 0 }); f.n++; if (d.won) f.won++;
+  }
+  table('duels by enemy (hardest first, at least 5 fought)', Object.entries(foes).filter(([, f]) => f.n >= 5).sort((a, b) => a[1].won / a[1].n - b[1].won / b[1].n)
+    .map(([k, f]) => `  ${pct(f.won, f.n).padStart(4)}  ${String(f.n).padStart(4)}  ${k}`), '   won  fought  act: enemy');
 }
 
 if (!isMainThread) {
@@ -161,10 +199,12 @@ if (!isMainThread) {
   const res = (await Promise.all(chunks.map((c) => new Promise((ok, bad) => { const w = new Worker(new URL(import.meta.url), { workerData: c }); w.on('message', ok); w.on('error', bad); })))).flat();
   for (const r of res) {
     if (r.error) { console.log(`seed ${r.seed}: ERROR ${r.error}`); continue; }
+    if (arg('each', null) === null) continue;   // --each 1: every run's story
     console.log(`seed ${r.seed}: ${r.victory ? 'VICTORY' : `died act ${r.act} after ${r.row} squares`}  | ${r.log}\n    relics ${r.relics}\n    pouch ${r.pouch}`);
   }
   const ok = res.filter((r) => !r.error);
   const byAct = [1, 2, 3].map((a) => { const r = ok.filter((x) => x.act >= a); return r.length ? (r.reduce((n, x) => n + (x.act === a ? x.energy : 0), 0) / Math.max(1, r.filter((x) => x.act === a).length)).toFixed(1) : '-'; });
   console.log(`\nenergy where runs ended, by act: ${byAct.join(' / ')}`);
+  report(ok);
   console.log(`\n${ok.filter((r) => r.victory).length}/${ok.length} victories; mean act reached ${(ok.reduce((a, r) => a + r.act, 0) / ok.length).toFixed(2)}; boss lines ${(ok.reduce((a, r) => a + r.lines, 0) / ok.length).toFixed(1)} a run, the last blow in ${ok.filter((r) => r.lineDeath).length}; ${((Date.now() - t0) / 1000).toFixed(0)}s`);
 }
