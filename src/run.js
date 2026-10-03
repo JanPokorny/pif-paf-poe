@@ -602,6 +602,11 @@ export function hurt(run, n) {
 
 // ── Duels ───────────────────────────────────────────────────────────────────
 
+// A condition that makes no sense with a stone the enemy brings: Open Hands
+// with a Magpie (why steal what is yours to play anyway?).
+const CLASH = { shared: ['magpie'] };
+const clashes = (cond, hand) => (CLASH[cond] ?? []).some((type) => hand.some((s) => s.type === type));
+
 function rollEnemyHand(run, enemy, tier, context) {
   if (tier === 'boss') return [];
   const act = ACTS[Math.max(0, (enemy.act || run.act) - 1)];
@@ -640,7 +645,7 @@ export function prepareDuel(run, enemyId, context = {}) {
     const act = ACTS[run.act - 1];
     const chance = context.easy ? 0 : act.cond + (tier === 'elite' ? 0.25 : 0);
     if (enemy.cond) conds = [enemy.cond];
-    else if (rand(run) < chance) conds = [pick(run, Object.keys(CONDS))];
+    else if (rand(run) < chance) conds = [pick(run, Object.keys(CONDS).filter((c) => !clashes(c, handO)))];
   }
   // Elites past the first act carry a quirk, so the same face is not the same fight.
   let quirk = null;
@@ -649,6 +654,7 @@ export function prepareDuel(run, enemyId, context = {}) {
     if (quirk === 'tricky') handO.push(randomOnce(run));
     if (quirk === 'stocked') handO.unshift({ type: pick(run, enemy.pool) });
     if (quirk === 'keen') heatIters *= 1.5;
+    conds = conds.filter((c) => !clashes(c, handO));
   }
   // A boss's undead phase may think harder than its first.
   const baseIters = tier === 'boss' && (context.bossWins ?? 0) > 0 && enemy.iters2 ? enemy.iters2 : enemy.iters;
