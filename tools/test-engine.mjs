@@ -575,6 +575,15 @@ test('Open Hands: play the other side\'s special stone as your own', () => {
   assert.equal(s.board[4].player, 'X');
   assert.equal(count(s, 'O', 'shift'), 0);
 });
+test('Open Hands: the other side\'s Pebbles are on offer too', () => {
+  const s = G({ conds: ['shared'], handX: ['shift'], pebblesX: [], handO: ['pebble', 'pebble'], pebblesO: [] });
+  const a = legalActions(s).find((x) => x.stone === 'pebble' && x.from === 'O');
+  assert.ok(a);
+  applyAction(s, a);
+  applyAction(s, { type: 'place', pos: 4 });
+  assert.equal(s.board[4].player, 'X');
+  assert.equal(count(s, 'O', 'pebble'), 1);
+});
 test('without Open Hands the other side\'s stones are not on offer', () => {
   const s = G({ handO: ['shift'] });
   assert.ok(!legalActions(s).some((a) => a.stone === 'shift'));

@@ -178,7 +178,7 @@ export function mountDuel(root, opts) {
     enemyHand.replaceChildren(...kinds.map(({ st, n }) => {
       const e = stoneEl(st, 'O');
       const key = `O:${st.type}`;
-      if (shared && selecting && st.type !== 'pebble') { if (slotAction(s, key)) e.classList.add('borrow'); else e.classList.add('forbidden'); }
+      if (shared && selecting) { if (slotAction(s, key)) e.classList.add('borrow'); else e.classList.add('forbidden'); }
       if (shared && inTurn && selKey === key && s.phase === 'place') e.classList.add('selected');
       e.addEventListener('click', () => { if (!e.classList.contains('target')) tapEnemyStone(st); });
       return h('div.hand-slot.enemy-slot', {}, e, n > 1 ? h('span.hand-count', {}, `×${n}`) : null);

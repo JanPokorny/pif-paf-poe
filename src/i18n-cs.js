@@ -394,7 +394,7 @@ export const CS_DATA = {
   conds: {
     gravity: { name: 'Gravitace', text: 'Po každém tahu kameny spadnou co nejníž. Hory drží.' },
     nocentre: { name: 'Dutý střed', text: 'Na prostřední pole nesmí hrát nikdo.' },
-    shared: { name: 'Otevřené ruce', text: 'Každý smí hrát i soupeřovy speciální kameny. Kameny změní barvu na toho, kdo je zahrál.' },
+    shared: { name: 'Otevřené ruce', text: 'Každý smí hrát i soupeřovy kameny. Kameny změní barvu na toho, kdo je zahrál.' },
   },
 
   rules: {

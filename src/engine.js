@@ -368,7 +368,7 @@ export const ONCE_STONES = STONE_TYPES.filter((t) => STONES[t].once);
 export const CONDS = {
   gravity: { name: 'Gravity', text: 'After every turn, stones fall as far down as they can. Mountains hold.' },
   nocentre: { name: 'Hollow', text: 'Nobody may place on the centre square.' },
-  shared: { name: 'Open Hands', text: 'Either side may play the other\'s special stones. A stone takes the colour of whoever plays it.' },
+  shared: { name: 'Open Hands', text: 'Either side may play the other\'s stones. A stone takes the colour of whoever plays it.' },
 };
 
 // ── Boss rules: a boss plays only Pebbles, but brings one of these ───────────
@@ -565,11 +565,11 @@ function selectActions(s) {
     seen.add(h.type);
     out.push({ type: 'select', stone: h.type });
   }
-  // Open Hands: the other side's specials are yours to play too.
+  // Open Hands: the other side's stones, Pebbles too, are yours to play.
   if (s.conds.includes('shared')) {
     const theirs = new Set();
     for (const h of s.hands[other(p)]) {
-      if (theirs.has(h.type) || h.type === 'pebble') continue;
+      if (theirs.has(h.type)) continue;
       theirs.add(h.type);
       out.push({ type: 'select', stone: h.type, from: other(p) });
     }
