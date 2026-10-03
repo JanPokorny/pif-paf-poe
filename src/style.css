@@ -937,7 +937,7 @@ body:has(.duel) #toast.show { transform: translate(-50%, 0) rotate(-1deg); }
 /* The log: text from just right of the red margin line, the numbers in the
    margin with their dots lined up, one entry to a ruled line, Close at the foot. */
 .log-view { display: flex; flex-direction: column; min-height: calc(58dvh - 36px); padding-left: 22px; }
-.log-view h2 { margin: 0 0 6px; line-height: 40px; }
+.log-view h2 { margin: 0; padding-top: 6px; line-height: 31px; }   /* 37px: the list then starts where its text sits on the rules */
 .log-list { max-height: 55vh; overflow: auto; margin: 0 0 12px -38px; padding: 0 0 0 38px; list-style: none; counter-reset: log; font-size: 1rem; line-height: 26px; }
 .log-list li { margin: 0; position: relative; counter-increment: log; }
 .log-list li::before { content: counter(log) '.'; position: absolute; right: calc(100% + 11px); top: 0; text-align: right; white-space: nowrap; }
