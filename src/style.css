@@ -388,7 +388,7 @@ b { font-weight: 400; background: linear-gradient(transparent 55%, var(--hi) 55%
 .info-name-link { cursor: pointer; padding: 2px 0; }
 .info-name-link .i { color: var(--blue); font-size: 0.9em; }
 .slot-info { position: absolute; top: 0; right: 4px; color: var(--blue); font-size: 1rem; padding: 2px; }
-.sticky-bottom { position: sticky; bottom: 0; padding: 12px 0 var(--button-b); z-index: 3; }
+.sticky-bottom { position: sticky; bottom: 0; padding: 12px 0 var(--button-b); z-index: 3; align-self: stretch; }
 .sticky-bottom { pointer-events: none; }
 .sticky-bottom > * { pointer-events: auto; }
 
@@ -431,7 +431,6 @@ b { font-weight: 400; background: linear-gradient(transparent 55%, var(--hi) 55%
 .service:disabled { opacity: 0.4; }
 
 .rest { align-items: center; text-align: center; }
-.rest > .sticky-bottom { align-self: stretch; }
 .rest > .sticky-bottom:not(.pair) { display: flex; }
 .rest > .sticky-bottom:not(.pair) > .btn { flex: 1; }
 .campfire, .event-emoji, .end-emoji { font-size: 4.2rem; }
@@ -476,6 +475,8 @@ b { font-weight: 400; background: linear-gradient(transparent 55%, var(--hi) 55%
 .info-extra { color: var(--pencil); font-size: 1rem; }
 .menu { display: flex; flex-direction: column; gap: 10px; padding-left: 22px; }
 .pouch-view { display: flex; flex-direction: column; gap: 10px; padding-left: 22px; }
+.modal.tall > .pouch-view { min-height: calc(58dvh - 36px); }
+.pouch-view > :not(.btn) + .btn { margin-top: auto; }   /* the buttons at the foot of the sheet, as in the log */
 .relic-row { display: flex; gap: 10px; align-items: center; text-align: left; padding: 6px 8px; font-size: 1rem; }
 .help { display: flex; flex-direction: column; gap: 12px; min-height: 50dvh; padding-left: 22px; }
 .help-page { flex: 1; font-size: 1.1rem; }
