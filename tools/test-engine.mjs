@@ -484,6 +484,19 @@ test('a one-shot is a kind of its own in hand, even beside the same stone made +
   applyAction(s, { type: 'place', pos: 0 });
   assert.deepEqual(s.spent.X, ['shift+']);
 });
+test('Open Hands: your one-shot played by the enemy is not spent from your pouch', () => {
+  const s = G({ conds: ['shared'], handX: ['muffle', { type: 'swap', plus: true, once: true }], first: 'O' });
+  s.player = 'O';
+  for (const stone of ['muffle', 'swap']) {
+    if (s.player !== 'O') play(s, 'pebble', s.board.findIndex((c) => !c));   // your turn back: a Pebble
+    const a = legalActions(s).find((x) => x.from === 'X' && x.stone === stone);
+    applyAction(s, a);
+    applyAction(s, { type: 'place', pos: legalActions(s)[0].pos });
+    while (!s.over && s.phase === 'effect') applyAction(s, legalActions(s)[0]);
+  }
+  assert.deepEqual(s.spent.X, []);
+  assert.deepEqual(s.spent.O, []);
+});
 test('Open Hands: a one-shot + stone of theirs can be borrowed', () => {
   const s = G({ conds: ['shared'], handO: [{ type: 'swap', plus: true, once: true }] });
   const a = legalActions(s).find((x) => x.from === 'O' && x.stone === 'swap');
