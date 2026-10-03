@@ -502,9 +502,14 @@ function preDuel() {
   let chosen = R.defaultHand(run);
   const grid = h('div.stone-row.pick');
   const bar = h('div.energy-slot');
-  const fill = h('div.press-hint.pebble-fill');
+  // The Pebbles that fill a hand, as one stone with a count; a tap says why.
+  const pebbles = (player, n, size) => h('button.stone-pick.pebble-pick', {
+    'aria-label': stoneName({ type: 'pebble' }),
+    onclick: () => infoStone({ type: 'pebble' }, player, t(player === 'X' ? 'Pebbles fill your hand up to {n} stones.' : 'Pebbles fill their hand up to {n} stones.', { n: size })),
+  }, stoneEl({ type: 'pebble' }, player), h('span.hand-count', {}, `×${n}`));
   const fight = h('button.btn.primary.wide.big', { onclick: begin }, t('Fight!'));
   const draw = () => {
+    const fill = Math.max(0, R.HAND - chosen.length);
     grid.replaceChildren(...run.pouch.map((s) => {
       const on = chosen.includes(s.uid);
       return pressable(h('button.stone-pick' + (on ? '.on' : ''), { 'aria-label': stoneName(s) }, stoneEl(s, 'X', { cost: true })), {
@@ -524,10 +529,8 @@ function preDuel() {
         },
         long: () => infoStone(s, 'X'),
       });
-    }));
+    }), fill ? pebbles('X', fill, R.HAND) : null);
     bar.replaceChildren(energyBar(R.handCost(run, chosen), energy));
-    const pebbles = Math.max(0, R.HAND - chosen.length);
-    fill.textContent = pebbles ? t('Pebbles fill the rest of your hand: {n}.', { n: pebbles }) : '';
   };
   draw();
 
@@ -554,14 +557,13 @@ function preDuel() {
           h('div.quote', {}, t('“{quote}”', { quote: enemy.quote })))),
       facts.length ? h('div.mod-notes', {}, facts) : null,
       h('div.section-label', {}, t('Their stones')),
-      duel.handO.some((s) => s.type !== 'pebble') ? h('div.stone-row', {}, [...new Set(duel.handO.filter((s) => s.type !== 'pebble').map((s) => s.type))].map((type) => {
+      h('div.stone-row', {}, [...new Set(duel.handO.filter((s) => s.type !== 'pebble').map((s) => s.type))].map((type) => {
         const n = duel.handO.filter((s) => s.type === type).length;
         return h('button.stone-pick', { onclick: () => infoStone({ type }, 'O'), 'aria-label': stoneName({ type }) },
           stoneEl({ type }, 'O'), n > 1 ? h('span.hand-count', {}, `×${n}`) : null);
-      })) : h('div.press-hint', {}, t('Only Pebbles.')),
+      }), duel.handO.some((s) => s.type === 'pebble') ? pebbles('O', duel.handO.filter((s) => s.type === 'pebble').length, duel.handO.length) : null),
       h('div.section-label.with-bar', {}, h('span', {}, t('Your stones')), bar),
-      run.pouch.length ? grid : h('div.press-hint', {}, t('No special stones yet: Pebbles only.')),
-      fill,
+      grid,
       run.pouch.length ? h('div.press-hint', {}, t('Long press stone for info.')) : null,
       h('div.sticky-bottom.pair', {},
         canBack ? h('button.btn.ghost.big.back-map', { onclick: () => { R.retreat(run); route(); } }, h('span', { html: icon('back') }), t('Back to the map')) : null,
