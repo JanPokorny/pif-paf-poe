@@ -305,13 +305,11 @@ test('Bumper does not push a Mountain', () => {
   play(s, 'bumper', 4);
   expectAt(s, { 1: 101 });
 });
-test('Lasso pulls an enemy stone in its row or column next to it; Lasso+ any stone, from anywhere', () => {
+test('Lasso pulls any enemy stone next to it; Lasso+ yours too', () => {
   const s = G();
-  lay(s, { 0: 'O pebble', 8: 'O pebble', 6: 'X pebble' });
-  play(s, 'lasso', 2);   // in line: 0 (row) and 8 (column); 6 is not in line
-  sameSet(effectOpts(s).map((o) => o.from), [0, 8]);
-  eff(s, { from: 0, to: 1 });
-  expectAt(s, { 1: 100, 8: 108, 6: 106 });
+  lay(s, { 6: 'O pebble', 5: 'O pebble', 0: 'X pebble' });
+  play(s, 'lasso', 2);   // beside 2: 1 (empty) and 5 (already beside, stays); one choice, made on its own
+  expectAt(s, { 1: 106, 5: 105, 0: 100 });
   const t = G();
   lay(t, { 6: 'X pebble' });
   play(t, 'lasso+', 2);
@@ -741,15 +739,15 @@ test('stones cost energy; a stone found joins the last hand if the energy pays f
   const hand = () => RUN.defaultHand(run).map((u) => run.pouch.find((x) => x.uid === u).type).sort();
   assert.deepEqual(RUN.playerHand(run, RUN.defaultHand(run)).map((x) => x.type), ['pebble', 'pebble', 'pebble', 'pebble']);
   run.lastHand = RUN.defaultHand(run);
-  RUN.gainStone(run, { type: 'shift' });   // common: 1
-  assert.deepEqual(hand(), ['shift']);
-  RUN.gainStone(run, { type: 'rotate' });   // no energy left for it
-  assert.deepEqual(hand(), ['shift']);
+  RUN.gainStone(run, { type: 'rotate' });   // common: 1
+  assert.deepEqual(hand(), ['rotate']);
+  RUN.gainStone(run, { type: 'mountain' });   // no energy left for it
+  assert.deepEqual(hand(), ['rotate']);
   run.energy = 4;
   RUN.gainStone(run, { type: 'firecracker' });   // rare: 3, and 3 are left
-  assert.deepEqual(hand(), ['firecracker', 'shift']);
+  assert.deepEqual(hand(), ['firecracker', 'rotate']);
   assert.equal(RUN.handCost(run, RUN.defaultHand(run)), 4);
-  assert.deepEqual(RUN.playerHand(run, RUN.defaultHand(run)).map((x) => x.type).sort(), ['firecracker', 'pebble', 'pebble', 'shift']);
+  assert.deepEqual(RUN.playerHand(run, RUN.defaultHand(run)).map((x) => x.type).sort(), ['firecracker', 'pebble', 'pebble', 'rotate']);
 });
 
 // ── cloneState ──────────────────────────────────────────────────────────────

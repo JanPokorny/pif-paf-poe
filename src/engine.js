@@ -87,7 +87,7 @@ def('pebble', {
 });
 
 def('shift', {
-  name: 'Shift', rarity: 'common', kind: 'move',
+  name: 'Shift', rarity: 'uncommon', kind: 'move',
   text: 'Slide this stone\'s row or column one step. What falls off the end wraps around.',
   options: (s, pos) => DIRS.map((dir) => ({ dir, index: dir === 'left' || dir === 'right' ? row(pos) : col(pos) })),
   apply(s, pos, a) { stepAlong(s, lineOrder(a.index, a.dir)); },
@@ -119,7 +119,7 @@ def('magnet', {
 });
 
 def('stinky', {
-  name: 'Stinky', rarity: 'common', kind: 'restrict', reach: 'beside',
+  name: 'Stinky', rarity: 'uncommon', kind: 'restrict', reach: 'beside',
   text: 'The enemy must not place beside it.',
   restrict: (sq, m) => !adjacent(sq, m),
   plus: { reach: 'line', text: 'The enemy must not place in its row or column.', restrict: (sq, m) => !inLine(sq, m) },
@@ -139,7 +139,7 @@ def('gravity', {
 });
 
 def('bumper', {
-  name: 'Bumper', rarity: 'uncommon', kind: 'move', reach: 'beside',
+  name: 'Bumper', rarity: 'rare', kind: 'move', reach: 'beside',
   text: 'Pushes each enemy stone beside it one step away. One pushed off the edge is knocked off the board.',
   options: () => [{}],
   apply(s, pos, a, cell) {
@@ -168,31 +168,25 @@ def('bumper', {
   },
 });
 
+// Lasso: pull a stone from anywhere onto an empty square beside it; the
+// enemy's only, or for a Lasso+ yours too.
+const lassoOptions = (anyone) => (s, pos, cell) => {
+  const out = [];
+  const beside = neighbours(pos, false);
+  for (let i = 0; i < 9; i++) {
+    const c = s.board[i];
+    if (i === pos || !c || (!anyone && c.player === cell.player) || isStuck(s, i) || beside.includes(i)) continue;
+    for (const to of beside) if (!s.board[to]) out.push({ from: i, to });
+  }
+  return out;
+};
+
 def('lasso', {
   name: 'Lasso', rarity: 'common', kind: 'move', reach: 'beside',
-  text: 'Pulls an enemy stone in its row or column onto the empty square beside it.',
-  options(s, pos, cell) {
-    const out = [];
-    for (const dir of ORTHO) {
-      const close = step(pos, dir), far = step(pos, dir, 2);
-      if (far < 0 || s.board[close] || !s.board[far] || s.board[far].player === cell.player || isStuck(s, far)) continue;
-      out.push({ from: far, to: close });
-    }
-    return out;
-  },
+  text: 'Pulls any enemy stone onto an empty square beside it.',
+  options: lassoOptions(false),
   apply(s, pos, a) { move(s, a.from, a.to); },
-  plus: {
-    text: 'Pulls any stone, yours too, onto an empty square beside it.',
-    options(s, pos) {
-      const out = [];
-      const beside = neighbours(pos, false);
-      for (let i = 0; i < 9; i++) {
-        if (i === pos || !s.board[i] || isStuck(s, i) || beside.includes(i)) continue;
-        for (const to of beside) if (!s.board[to]) out.push({ from: i, to });
-      }
-      return out;
-    },
-  },
+  plus: { text: 'Pulls any stone, yours too, onto an empty square beside it.', options: lassoOptions(true) },
 });
 
 def('swap', {
@@ -259,7 +253,7 @@ const bonfireOptions = (both) => (s, pos) => {
 };
 
 def('bonfire', {
-  name: 'Bonfire', rarity: 'uncommon', kind: 'move', reach: 'beside',
+  name: 'Bonfire', rarity: 'common', kind: 'move', reach: 'beside',
   text: 'The stones beside it trade places, one step round it clockwise.',
   options: bonfireOptions(false),
   apply(s, pos, a) { const ring = besideRound(pos); stepAlong(s, a.spin > 0 ? ring : ring.reverse()); },
@@ -279,7 +273,7 @@ def('firecracker', {
 });
 
 def('parrot', {
-  name: 'Parrot', rarity: 'uncommon', kind: 'copy', copies: 'enemy',
+  name: 'Parrot', rarity: 'common', kind: 'copy', copies: 'enemy',
   text: 'Becomes a copy of the last stone the enemy placed, and does what it does.',
   plus: {
     copies: null,
@@ -306,7 +300,7 @@ def('parrot', {
 });
 
 def('twin', {
-  name: 'Twin', rarity: 'uncommon', kind: 'move',
+  name: 'Twin', rarity: 'common', kind: 'move',
   text: 'A Pebble lands on the square opposite it across the board, if that is empty.',
   options(s, pos) {
     const j = 8 - pos;

@@ -372,7 +372,7 @@ export const CS_DATA = {
       plusText: 'Všechny kameny sjedou co nejdál směrem, který vybereš. Hory drží.' },
     bumper: { name: 'Nárazník', text: 'Odstrčí každý soupeřův kámen vedle sebe o krok dál. Ten, co by vypadl z desky, z ní vyletí.',
       plusText: 'Odstrčí každý soupeřův kámen ve svém řádku a sloupci o krok dál. Ten, co by vypadl z desky, z ní vyletí.' },
-    lasso: { name: 'Laso', text: 'Přitáhne soupeřův kámen ze svého řádku nebo sloupce na volné pole vedle sebe.',
+    lasso: { name: 'Laso', text: 'Přitáhne libovolný soupeřův kámen na volné pole vedle sebe.',
       plusText: 'Přitáhne libovolný kámen, i tvůj, na volné pole vedle sebe.' },
     swap: { name: 'Prohoz', text: 'Vymění si místo s kamenem vedle sebe.', plusText: 'Vymění si místo s libovolným kamenem na desce.' },
     frog: { name: 'Žabák', text: 'Přeskočí kámen vedle sebe. Přeskočený soupeřův kámen vyletí z desky.',
