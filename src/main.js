@@ -529,7 +529,7 @@ function preDuel() {
         },
         long: () => infoStone(s, 'X'),
       });
-    }), fill ? pebbles('X', fill, R.HAND) : null);
+    }), ...(fill ? [pebbles('X', fill, R.HAND)] : []));
     bar.replaceChildren(energyBar(R.handCost(run, chosen), energy));
   };
   draw();
