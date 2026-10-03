@@ -69,20 +69,6 @@ function gear() {
   return P(d + 'Z') + C(0, 0, 2.2);
 }
 
-function spiral() {
-  let d = '';
-  const t0 = 0, t1 = 2.35 * Math.PI, steps = 60;
-  let last;
-  for (let i = 0; i <= steps; i++) {
-    const t = t0 + ((t1 - t0) * i) / steps;
-    const r = 1.2 + 5.3 * (i / steps);
-    const x = r2(r * Math.cos(t)), y = r2(r * Math.sin(t));
-    d += `${i ? 'L' : 'M'} ${x} ${y} `;
-    last = t;
-  }
-  return d;
-}
-
 // Open jaw trap: two jaws hinged on the left, teeth pointing inward.
 function snare() {
   const H = [-6.2, 0];
@@ -186,7 +172,6 @@ const RAW = {
     P('M -5.2 -2 C -4 -6.4 2.8 -6.8 4.5 -3.6') + head(5.2, -1.4, 72) +
     P('M 1.6 5.6 C 0 6.8 -1.8 6.8 -3 6.2') + head(-4.2, 5.2, 205, 2.2, 1.3),
 
-  whirl: DOT(0, 0, 1.6) + P(spiral()) + head(...pt(0, 0, 6.5, 2.35 * 180 + 14), 2.35 * 180 + 14 + 95),
 
   frog:
     DOT(0, 4.2, 2.2) +
@@ -219,9 +204,6 @@ const RAW = {
     DOT(3.2, -4, 1.1) +
     [0, 60, 120, 180, 240, 300].map((a) => { const s = pt(3.2, -4, 2.1, a + 30), e = pt(3.2, -4, 3.7, a + 30); return P(`M ${s[0]} ${s[1]} L ${e[0]} ${e[1]}`, SW(1.3)); }).join(''),
 
-  turncoat:
-    C(0, 0, 3.8) + P('M 0 -3.8 A 3.8 3.8 0 0 0 0 3.8 Z', ' fill="currentColor"') +
-    arcArrow(0, 0, 6.6, 275, 345, 2.3, 1.4) + arcArrow(0, 0, 6.6, 95, 165, 2.3, 1.4),
 
   parrot:
     P('M 1.4 -3.2 C 0.2 -6.6 -5.8 -6.6 -5.8 -1.2 C -5.8 2.8 -4.2 5.4 -2.6 7') +
@@ -237,9 +219,6 @@ const RAW = {
     DOT(-6.5, -5.4, 1.2) + DOT(0, -6.3, 1.2) + DOT(6.5, -5.4, 1.2),
 
   // ---------- TRICKS ----------
-  // Undo: the U-turn arrow, as on the duel's own undo button.
-  overtake: P('M -5.6 -4.2 H 1.8 A 4.2 4.2 0 0 1 1.8 4.2 H -2.6 M -2.4 -7.6 L -5.8 -4.2 L -2.4 -0.8', SW(1.8)),
-
   relocate:
     GRID + DOT(-4.67, 4.67, 2.5) + C(4.67, -4.67, 2.2, SW(1.1)) +
     P('M -4.67 1.4 C -6 -3.4 -2 -7.4 0.8 -7.2', SW(1.3)) + head(2.8, -7, 5, 2.4, 1.4),
@@ -267,13 +246,7 @@ const RAW = {
     P('M -6 1.4 C -5.6 4.8 -3 6.4 0 6.4 C 3 6.4 5.6 4.8 6 1.4') +
     P('M -7.2 3 L -6 1.4 L -4.2 2.4 M 7.2 3 L 6 1.4 L 4.2 2.4'),
 
-  pluck:
-    P('M -1.8 -7 L 0.4 1.2 M 4.8 -7 L 2.6 1.2 M -1.8 -7 H 4.8') +
-    DOT(1.5, 4.4, 2.5) + arrow(-5.8, 6, -5.8, -3.8, 2.3, 1.4),
 
-  bribe:
-    `<ellipse cx="0" cy="-3.8" rx="5.6" ry="2.2"/>` +
-    P('M -5.6 -3.8 V 3.8 A 5.6 2.2 0 0 0 5.6 3.8 V -3.8 M -5.6 -1.2 A 5.6 2.2 0 0 0 5.6 -1.2 M -5.6 1.3 A 5.6 2.2 0 0 0 5.6 1.3', ''),
 
   reinforce:
     `<g transform="translate(-1.8 2.4) scale(0.85)">${P(PEBBLE, SW(1.76))}</g>` +

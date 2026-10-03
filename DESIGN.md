@@ -11,8 +11,8 @@ numbers. The camp game's own reasoning is in `old/adr/`.
   where you satisfy as many as any square can (`old/adr/2026-08-18-…`).
 - **Counterattacks → one-shot stones.** The camp game's counterattacks became tricks, spent
   at the end of a turn; now they are stones like any other, brought along like any other and placed on the
-  board, that then do their one thing (Undo, Relocate, Mirror, Mind Control, Rehearse, Nudge,
-  Muffle, Pluck, Bribe). Once played in a duel, won or lost, one is gone from the pouch. They
+  board, that then do their one thing (Relocate, Mirror, Mind Control, Rehearse, Nudge,
+  Muffle). Once played in a duel, won or lost, one is gone from the pouch. They
   have a dashed outline, come as their own reward and shop shelf, and are cheaper than stones.
   Encore, which handed back your last special stone, did not survive the change.
 - **Boss rules** come from an older iteration's sheet of special rules (Taktika, Náskok, Elko,
@@ -135,7 +135,8 @@ Balance was measured and retuned in `docs/STONES-REPORT.md`; the run bots (see D
 
 ## The stones
 
-27 special types and the Pebble. Every stone's card shows an example computed by the engine.
+22 special types and the Pebble. Whirl, Undo, Pluck, Bribe and Turncoat were removed as near
+duplicates (of Bonfire, of each other and Firecracker, of Swap); see `docs/STONE-FAMILIES.md`. Every stone's card shows an example computed by the engine.
 
 One stone, the rest of the act's hand Pebbles (four, five, six stones), against every enemy of the
 act as the game rolls them, 60 games each (`node tools/lab.mjs matrix`). Rarity follows power:
@@ -145,13 +146,9 @@ the stronger and the more skill a stone wants, the rarer.
 |---|---|---:|---:|---:|
 | Magpie | rare | 69% | 30% | 29% |
 | Bumper | uncommon | 53% | 16% | 25% |
-| Undo | uncommon, one-shot | 49% | 21% | 24% |
 | Firecracker | rare | 48% | 22% | 22% |
-| Pluck | rare, one-shot | 46% | 20% | 25% |
 | Beacon | rare | 54% | 17% | 17% |
-| Bribe | rare, one-shot | 64% | 11% | 10% |
 | Relocate | uncommon, one-shot | 43% | 17% | 17% |
-| Turncoat | uncommon | 39% | 21% | 16% |
 | Stinky | common | 46% | 13% | 16% |
 | Nudge | common, one-shot | 41% | 16% | 16% |
 | Magnet | uncommon | 49% | 12% | 11% |
@@ -167,7 +164,6 @@ the stronger and the more skill a stone wants, the rarer.
 | Mind Control | common, one-shot | 37% | 11% | 10% |
 | Mountain | common | 37% | 10% | 10% |
 | Bonfire | uncommon | see below | | |
-| Whirl | uncommon | 33% | 9% | 10% |
 | Mirror | common, one-shot | 33% | 9% | 11% |
 | Rehearse | common, one-shot | 26% | 7% | 10% |
 | Pebble | starter | 23% | 7% | 10% |

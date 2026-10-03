@@ -21,7 +21,6 @@ export const LINES = [
   [0, 4, 8], [2, 4, 6],
 ];
 export const BLOCKS = { TL: [0, 1, 3, 4], TR: [1, 2, 4, 5], BL: [3, 4, 6, 7], BR: [4, 5, 7, 8] };
-export const RING = [0, 1, 2, 5, 8, 7, 6, 3];   // the outer ring, clockwise
 const SYMMETRIC = [[0, 8], [1, 7], [2, 6], [3, 5]];
 export const DIRS = ['up', 'down', 'left', 'right'];
 const DELTA = {
@@ -157,16 +156,6 @@ def('swap', {
   },
 });
 
-def('whirl', {
-  name: 'Whirl', rarity: 'uncommon', kind: 'move',
-  text: 'The eight outer squares turn one step, either way. The centre stays.',
-  options: () => [{ turn: 1 }, { turn: -1 }],
-  apply(s, pos, a) {
-    const order = a.turn > 0 ? RING : RING.slice().reverse();
-    for (let k = 0; k < Math.abs(a.turn); k++) stepAlong(s, order);
-  },
-});
-
 def('frog', {
   name: 'Frog', rarity: 'common', kind: 'move', reach: 'beside',
   text: 'Leaps over a stone beside it. An enemy stone leapt over is knocked off the board.',
@@ -225,18 +214,6 @@ def('firecracker', {
   apply(s, pos, a) { returnToHand(s, a.target); },
 });
 
-def('turncoat', {
-  name: 'Turncoat', rarity: 'uncommon', kind: 'move', reach: 'beside',
-  text: 'Trades sides with an enemy stone beside it: that one becomes yours, this one theirs.',
-  options(s, pos, cell) {
-    return neighbours(pos, false).filter((j) => s.board[j] && s.board[j].player !== cell.player).map((target) => ({ target }));
-  },
-  apply(s, pos, a) {
-    const mine = s.board[pos], theirs = s.board[a.target];
-    [mine.player, theirs.player] = [theirs.player, mine.player];
-  },
-});
-
 def('parrot', {
   name: 'Parrot', rarity: 'uncommon', kind: 'copy', copies: 'enemy',
   text: 'Becomes a copy of the last special stone the enemy placed, and does what it does.',
@@ -271,22 +248,7 @@ def('magpie', {
 // One-shot stones: placed like any other, then they do their one thing. Once
 // played in a duel, one is gone from your pouch for good.
 const mine = (s, p) => [...Array(9).keys()].filter((i) => s.board[i]?.player === p);
-const theirs = (s, p) => [...Array(9).keys()].filter((i) => s.board[i] && s.board[i].player !== p);
 const empties = (s) => [...Array(9).keys()].filter((i) => !s.board[i]);
-
-// The enemy's newest stone on the board, or -1.
-function newest(s, p) {
-  let best = -1;
-  for (let i = 0; i < 9; i++) if (s.board[i]?.player === p && (best < 0 || s.board[i].id > s.board[best].id)) best = i;
-  return best;
-}
-
-def('overtake', {
-  name: 'Undo', rarity: 'uncommon', kind: 'once', once: true,
-  text: 'The enemy\'s last stone goes back to their hand.',
-  options(s, pos, cell) { const j = newest(s, other(cell.player)); return j < 0 ? [] : [{ target: j }]; },
-  apply(s, pos, a) { returnToHand(s, a.target); },
-});
 
 def('relocate', {
   name: 'Relocate', rarity: 'uncommon', kind: 'once', once: true,
@@ -340,20 +302,6 @@ def('muffle', {
   text: 'The enemy\'s next special stone does nothing.',
   options: (s, pos, cell) => (s.silenced[other(cell.player)] ? [] : [{}]),
   apply(s, pos, a, cell) { s.silenced[other(cell.player)] = 1; },
-});
-
-def('pluck', {
-  name: 'Pluck', rarity: 'rare', kind: 'once', once: true,
-  text: 'Any enemy stone goes back to their hand.',
-  options: (s, pos, cell) => theirs(s, cell.player).map((target) => ({ target })),
-  apply(s, pos, a) { returnToHand(s, a.target); },
-});
-
-def('bribe', {
-  name: 'Bribe', rarity: 'rare', kind: 'once', once: true, reach: 'beside',
-  text: 'An enemy Pebble beside it becomes yours.',
-  options: (s, pos, cell) => neighbours(pos, false).filter((j) => s.board[j] && s.board[j].player !== cell.player && s.board[j].type === 'pebble').map((target) => ({ target })),
-  apply(s, pos, a, cell) { s.board[a.target].player = cell.player; },
 });
 
 export const STONE_TYPES = Object.keys(STONES);

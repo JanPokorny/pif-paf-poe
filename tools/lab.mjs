@@ -81,7 +81,6 @@ function duel(t) {
 // ── Proposed changes, patched into the stone table for one duel ──────────────
 
 const ORIGINAL = Object.fromEntries(Object.entries(STONES).map(([k, v]) => [k, { ...v }]));
-const newest = (s, p) => { let best = -1; for (let i = 0; i < 9; i++) if (s.board[i]?.player === p && (best < 0 || s.board[i].id > s.board[best].id)) best = i; return best; };
 const enemyPulls = (s, pos, cell) => {
   const out = [];
   for (const [dr, dc] of [[-1, -1], [-1, 0], [-1, 1], [0, -1], [0, 1], [1, -1], [1, 0], [1, 1]]) {
@@ -121,8 +120,6 @@ const PATCHES = {
   // Mind Control: the stone named does nothing, too.
   'mind-control:hush': { apply(s, pos, a, cell) { s.forced = { player: other(cell.player), stone: a.stone }; if (a.stone !== 'pebble') s.silenced[other(cell.player)] = 1; } },
 
-  // Bribe: an enemy Pebble around it, corners included.
-  'bribe:around': { options: (s, pos, cell) => AROUND(pos).filter((j) => s.board[j] && s.board[j].player !== cell.player && s.board[j].type === 'pebble').map((target) => ({ target })) },
   // Bumper: pushes in all eight directions.
   'bumper:eight': { apply(s, pos, a, cell) {
     const moves = [];
@@ -133,20 +130,12 @@ const PATCHES = {
     }
     for (const [f, t] of moves) { s.board[t] = s.board[f]; s.board[f] = null; }
   } },
-  // Bribe: only an enemy Pebble beside it.
-  bribe: { options: (s, pos, cell) => ORTHO4(pos).filter((j) => s.board[j] && s.board[j].player !== cell.player && s.board[j].type === 'pebble').map((target) => ({ target })) },
   // Firecracker: leaves a scorched Pebble behind instead of burning away.
   firecracker: { apply(s, pos, a) { const c = s.board[a.target]; s.hands[c.player].push({ type: c.type }); s.board[a.target] = null; s.board[pos].type = 'pebble'; } },
-  // Overtake: the enemy's centre stone becomes yours.
-  'overtake:centre': { apply(s, pos, a, cell) { s.board[4].player = cell.player; } },
   // Twin: opposite across the board, whatever stands in the centre.
   twin: { options: (s, pos) => { const j = 8 - pos; return j !== pos && !s.board[j] ? [{ target: j }] : []; } },
   // Frog: an enemy stone leapt over turns to your side.
   'frog:turn': { apply(s, pos, a, cell) { const mid = ((pos + a.target) / 2) | 0; s.board[a.target] = s.board[pos]; s.board[pos] = null; if (s.board[mid] && s.board[mid].player !== cell.player) s.board[mid].player = cell.player; } },
-  // Overtake: the enemy's newest stone goes back to their hand.
-  'overtake:last': { options: (s, pos, cell) => { const t = newest(s, other(cell.player)); return t < 0 ? [] : [{ target: t }]; }, apply(s, pos, a) { const c = s.board[a.target]; s.hands[c.player].push({ type: c.type }); s.board[a.target] = null; } },
-  // Overtake: the enemy's newest stone becomes a plain Pebble.
-  'overtake:dull': { options: (s, pos, cell) => { const t = newest(s, other(cell.player)); return t < 0 ? [] : [{ target: t }]; }, apply(s, pos, a) { s.board[a.target].type = 'pebble'; } },
   // Frog: an enemy stone leapt over is gone, not back in their hand.
   'frog:remove': { apply(s, pos, a, cell) { const mid = ((pos + a.target) / 2) | 0; s.board[a.target] = s.board[pos]; s.board[pos] = null; if (s.board[mid] && s.board[mid].player !== cell.player) s.board[mid] = null; } },
   // Lasso: always pulls them all, no choice.
@@ -198,9 +187,9 @@ const BUILDS = {
   'Magnet + Shift': ['magnet', 'shift'],
   'Beacon + Stinky': ['beacon', 'stinky'],
   'two Mountains': ['mountain', 'mountain'],
-  'Swap + Turncoat': ['swap', 'turncoat'],
-  '2048 + Whirl': ['2048', 'whirl'],
-  'one-shots (Pluck, Bribe)': ['pluck', 'bribe'],
+  'Swap + Lasso': ['swap', 'lasso'],
+  '2048 + Bonfire': ['2048', 'bonfire'],
+  'one-shots (Relocate, Nudge)': ['relocate', 'nudge'],
   'Magnet, Stinky, Shift, Rotate': ['magnet', 'stinky', 'shift', 'rotate'],
 };
 
@@ -315,7 +304,7 @@ const EXPERIMENTS = {
     return out;
   },
   pairs(g) {
-    const top = (arg('top', 'magnet,stinky,beacon,shift,swap,twin,turncoat,magpie,2048,bonfire,rotate,mountain,bribe,pluck')).split(',');
+    const top = (arg('top', 'magnet,stinky,beacon,shift,swap,twin,magpie,2048,bonfire,rotate,mountain,relocate,nudge')).split(',');
     const out = [];
     for (let a = 0; a < top.length; a++) for (let b = a; b < top.length; b++) for (let i = 0; i < g; i++) {
       out.push({ key: `${top[a]}+${top[b]}`, handX: [top[a], top[b], ...P(2)], handO: ['magnet', 'shift', 'rotate', ...P(2)], seed: i + 1 });

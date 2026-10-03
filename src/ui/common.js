@@ -1,6 +1,6 @@
 // Small DOM helpers shared by every screen.
 
-import { STONES, CONDS, RULES, BLOCKS, RING, createGame, legalActions, applyAction, cloneState, allowedSquares, touching, adjacent } from '../engine.js';
+import { STONES, CONDS, RULES, BLOCKS, createGame, legalActions, applyAction, cloneState, allowedSquares, touching, adjacent } from '../engine.js';
 import { RELICS } from '../content.js';
 import { costOf } from '../run.js';
 import { icon, ICONS } from '../icons.js';
@@ -231,7 +231,6 @@ function areaOf(st, pos, o) {
     const r = (pos / 3) | 0, c = pos % 3;
     return { cells: o.dir === 'left' || o.dir === 'right' ? [r * 3, r * 3 + 1, r * 3 + 2] : [c, c + 3, c + 6], cap: t('Its row or its column.') };
   }
-  if (st.id === 'whirl') return { cells: RING, cap: t('The eight outer squares.') };
   return null;
 }
 

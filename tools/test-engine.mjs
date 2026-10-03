@@ -318,13 +318,6 @@ test('Swap trades with a stone around it, corners included — not further', () 
   const id = play(t, 'swap', 4);
   expectAt(t, { 4: 100, 0: id });
 });
-test('Whirl turns the ring; the centre stays', () => {
-  const s = G();
-  lay(s, { 4: 'O pebble', 0: 'O pebble' });
-  play(s, 'whirl', 8);
-  eff(s, { turn: 1 });
-  expectAt(s, { 1: 100, 4: 104 });
-});
 test('Frog leaps over a stone; an enemy stone leapt over is knocked off the board', () => {
   const s = G();
   lay(s, { 4: 'O swap' });
@@ -386,13 +379,6 @@ test('Firecracker blows a stone back into its owner\'s hand and stays', () => {
   assert.equal(s.board[4].type, 'firecracker');
   assert.equal(count(s, 'O', 'shift'), 1);
 });
-test('Turncoat trades sides with an enemy stone beside it', () => {
-  const s = G();
-  lay(s, { 1: 'O pebble' });
-  play(s, 'turncoat', 4);
-  assert.equal(s.board[1].player, 'X');
-  assert.equal(s.board[4].player, 'O');
-});
 test('Parrot becomes the enemy\'s last special stone', () => {
   const s = G();
   play(s, 'pebble', 8);
@@ -440,7 +426,7 @@ test('A Pebble sent back goes back into its owner\'s hand', () => {
 group('one-shot stones');
 
 test('one-shot stones are marked once and counted as spent when played from your hand', () => {
-  assert.ok(ONCE_STONES.length >= 8);
+  assert.ok(ONCE_STONES.length >= 6);
   for (const t of ONCE_STONES) assert.ok(STONES[t].once && STONES[t].text, t);
   const s = G({ handX: ['nudge', 'nudge'] });
   lay(s, { 8: 'O pebble' });
@@ -455,17 +441,6 @@ test('a one-shot stone that makes your line wins', () => {
   play(s, 'nudge', 8);
   eff(s, { from: 5, to: 2 });
   assert.equal(s.winner, 'X');
-});
-test('Undo sends the enemy\'s newest stone back', () => {
-  const s = G({ handX: ['overtake'] });
-  lay(s, { 4: 'O shift' });
-  s.nextId = 200;   // stones placed from here on are newer than the laid ones
-  play(s, 'pebble', 0);
-  play(s, 'rotate', 8);
-  // (it turns itself from 8 to 7, the Shift from 4 to 5)
-  play(s, 'overtake', 2);
-  assert.equal(s.board.filter((c) => c?.type === 'rotate').length, 0);
-  assert.equal(count(s, 'O', 'rotate'), 1);
 });
 test('Relocate moves one of your stones anywhere, itself too', () => {
   const s = G({ handX: ['relocate'] });
@@ -502,18 +477,6 @@ test('Muffle: the enemy\'s next stone does nothing', () => {
   play(s, 'bumper', 4);
   expectAt(s, { 1: 101 });
   assert.ok(s.board[4].hushed);
-});
-test('Pluck and Bribe', () => {
-  const s = G({ handX: ['pluck'] });
-  lay(s, { 4: 'O shift', 2: 'O pebble' });
-  play(s, 'pluck', 0);
-  eff(s, { target: 4 });
-  assert.equal(s.board[4], null);
-  const t = G({ handX: ['bribe'] });
-  lay(t, { 4: 'O pebble', 2: 'O shift', 3: 'O pebble', 6: 'O pebble' });
-  play(t, 'bribe', 1);   // beside it: 4 (a Pebble), 2 (not a Pebble); 0 is empty
-  assert.equal(t.board[4].player, 'X');
-  assert.equal(t.board[2].player, 'O');
 });
 test('Rehearse becomes a copy of your last special stone', () => {
   const s = G({ handX: ['rehearse', 'firecracker'] });
@@ -769,7 +732,7 @@ test('mutating a clone leaves the original alone', () => {
   const before = snap(s);
   const c = cloneState(s);
   c.board[0].player = 'O'; c.board[0].stuck = false; c.board[1] = null;
-  c.hands.X.pop(); c.spent.X.push('pluck');
+  c.hands.X.pop(); c.spent.X.push('nudge');
   c.silenced.X = 3; c.placements.O = 7; c.echo.X = true; c.lastSpecial.O = 'rotate';
   applyAction(c, legalActions(c)[0]);
   assert.equal(snap(s), before);
