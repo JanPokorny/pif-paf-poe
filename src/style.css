@@ -880,7 +880,9 @@ body:has(.duel) #toast.show { transform: translate(-50%, 0) rotate(-1deg); }
 .stone .cost { position: absolute; top: -5px; left: -5px; z-index: 2; display: flex; gap: 2px; padding: 2px 3px; border-radius: 8px; background: var(--card); box-shadow: 0 1px 0 rgba(0, 0, 0, 0.15); }
 .stone .cost i { width: 7px; height: 7px; border-radius: 50%; background: var(--blue-wash); box-shadow: inset 0 0 0 1.5px var(--blue); }
 .stone.mini .cost i { width: 5px; height: 5px; }
-.energy-slot { display: flex; justify-content: center; margin: 2px 0 6px; }
+.energy-slot { display: flex; }
+/* 'Your stones' with the energy bar at the right end of the same line. */
+.section-label.with-bar { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
 .energy-bar { display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px; border-radius: 14px 12px 15px 11px; background: var(--card); box-shadow: 0 1px 0 rgba(0, 0, 0, 0.12); }
 .energy-bar i { width: 14px; height: 14px; border-radius: 50%; border: 2px solid var(--blue); opacity: 0.35; background: transparent; transition: background 0.2s, transform 0.2s, opacity 0.2s; }
 .energy-bar i.on { background: var(--blue-wash); opacity: 1; transform: scale(1.08); }

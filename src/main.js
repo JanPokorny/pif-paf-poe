@@ -540,8 +540,7 @@ function preDuel() {
         return h('button.stone-pick', { onclick: () => infoStone({ type }, 'O'), 'aria-label': stoneName({ type }) },
           stoneEl({ type }, 'O'), n > 1 ? h('span.hand-count', {}, `×${n}`) : null);
       })) : h('div.press-hint', {}, t('Only Pebbles.')),
-      h('div.section-label', {}, t('Your stones')),
-      bar,
+      h('div.section-label.with-bar', {}, h('span', {}, t('Your stones')), bar),
       run.pouch.length ? grid : h('div.press-hint', {}, t('No special stones yet: Pebbles only.')),
       fill,
       run.pouch.length ? h('div.press-hint', {}, t('Long press stone for info.')) : null,
