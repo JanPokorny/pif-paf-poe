@@ -614,8 +614,6 @@ function duelScreen() {
 
 function showDuelMenu() {
   const body = h('div.menu', {},
-    h('h2', {}, t('Paused')),
-    h('button.btn.wide', { onclick: () => { close(); showPouch(); } }, t('Pouch & relics')),
     settingsRow(),
     h('button.btn.wide', { onclick: () => { close(); title(); } }, t('Save & quit to title')),
     h('button.btn.wide.ghost', { onclick: () => close() }, t('Resume')));
@@ -658,7 +656,7 @@ function rewardScreen() {
     save();
   }
   // What it left behind, as rows of cards: everything in a row of its own is
-  // yours ("~ and ~" between rows); where a row offers a choice ("or" between
+  // yours ("— and —" between rows, the dashes drawn); where a row offers a choice ("or" between
   // its cards), tap one to choose it. Continue takes it all, once every
   // choice is made.
   rw.sel = rw.sel ?? {};
@@ -671,7 +669,7 @@ function rewardScreen() {
   const pick = (key, value) => ({ label: t('Pick'), run: choose(key, value) });
   if (want.boss) rows.push(radioRow(rw.sel.boss, rw.relicChoice.map((id) => [id, relicCard(id, { onclick: () => infoRelic(id, pick('boss', id)) })])));
   if (want.stone) rows.push(radioRow(rw.sel.stone, rw.stones.map((st, k) => [k, stoneCard(st, { onclick: () => infoStone(st, 'X', '', pick('stone', k)) })])));
-  rows.forEach((r, k) => { if (k) parts.push(h('div.and-sep', {}, t('~ and ~'))); parts.push(r); });
+  rows.forEach((r, k) => { if (k) parts.push(h('div.and-sep', {}, h('span.dash'), t('and'), h('span.dash'))); parts.push(r); });
   const ready = (!want.boss || rw.sel.boss !== undefined) && (!want.stone || rw.sel.stone !== undefined);
   parts.push(h('div.sticky-bottom', {}, h('button.btn.wide.big.primary', {
     disabled: !ready || undefined,

@@ -903,8 +903,11 @@ body:has(.duel) #toast.show { transform: translate(-50%, 0) rotate(-1deg); }
 .mod-title { font-family: var(--marker); font-size: 1.1rem; line-height: 1.15; }
 .mod-text { font-size: 0.98rem; line-height: 1.25; color: var(--ink); }
 
-/* Rewards: "~ and ~" between rows you get all of, "or" between the cards of a choice. */
-.and-sep { text-align: center; font-family: var(--hand); font-size: 1.05rem; color: var(--pencil); margin: 6px 0 2px; letter-spacing: 0.04em; }
+/* Rewards: "— and —" between rows you get all of, "or" between the cards of a choice. */
+.and-sep { display: flex; align-items: center; justify-content: center; gap: 8px; font-family: var(--hand); font-size: 1.05rem; color: var(--pencil); margin: 6px 0 2px; }
+.and-sep .dash { width: 3ch; height: 2px; background: currentColor; border-radius: 2px; filter: url(#pencil); }
+.and-sep .dash:first-child { transform: rotate(-2deg); }
+.and-sep .dash:last-child { transform: rotate(1.5deg); }
 .cards.pick-one { align-items: center; }
 .cards .or { flex: none; align-self: center; font-family: var(--hand); font-size: 0.95rem; color: var(--pencil); padding: 0 1px; display: inline-block; transition: opacity 0.3s; }
 .cards .or.unpicked { opacity: 0; }
