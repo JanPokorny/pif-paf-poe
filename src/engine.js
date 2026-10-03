@@ -368,7 +368,7 @@ export const ONCE_STONES = STONE_TYPES.filter((t) => STONES[t].once);
 export const CONDS = {
   gravity: { name: 'Gravity', text: 'After every turn, stones fall as far down as they can. Mountains hold.' },
   nocentre: { name: 'Hollow', text: 'Nobody may place on the centre square.' },
-  shared: { name: 'Open Hands', text: 'Either side may play the other\'s special stones.' },
+  shared: { name: 'Open Hands', text: 'Either side may play the other\'s special stones. A stone takes the colour of whoever plays it.' },
 };
 
 // ── Boss rules: a boss plays only Pebbles, but brings one of these ───────────
