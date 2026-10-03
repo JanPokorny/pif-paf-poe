@@ -109,7 +109,7 @@ export const ENEMIES = {
     quote: 'You will stand where I let you.' },
   // bosses
   oak: { name: 'The Old Oak', emoji: '🌳', act: 1, tier: 'boss',
-    rules: ['clinch'], rules2: ['clinch', 'reserved'], iters: 150, blunder: 0.15,
+    rules: ['clinch'], rules2: ['clinch', 'reserved'], iters: 100, blunder: 0.22,
     quote: 'Stay close to me, little one.' },
   scarecrow: { name: 'The Scarecrow', emoji: '🌾', act: 1, tier: 'boss',
     rules: ['reserved'], rules2: ['reserved', 'spy'], iters: 40, blunder: 0.36,

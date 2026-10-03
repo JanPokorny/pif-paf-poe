@@ -87,7 +87,7 @@ def('pebble', {
 });
 
 def('shift', {
-  name: 'Shift', rarity: 'uncommon', kind: 'move',
+  name: 'Shift', rarity: 'common', kind: 'move',
   text: 'Slide this stone\'s row or column one step. What falls off the end wraps around.',
   options: (s, pos) => DIRS.map((dir) => ({ dir, index: dir === 'left' || dir === 'right' ? row(pos) : col(pos) })),
   apply(s, pos, a) { stepAlong(s, lineOrder(a.index, a.dir)); },
@@ -119,7 +119,7 @@ def('magnet', {
 });
 
 def('stinky', {
-  name: 'Stinky', rarity: 'uncommon', kind: 'restrict', reach: 'beside',
+  name: 'Stinky', rarity: 'common', kind: 'restrict', reach: 'beside',
   text: 'The enemy must not place beside it.',
   restrict: (sq, m) => !adjacent(sq, m),
   plus: { reach: 'line', text: 'The enemy must not place in its row or column.', restrict: (sq, m) => !inLine(sq, m) },
@@ -253,7 +253,7 @@ const bonfireOptions = (both) => (s, pos) => {
 };
 
 def('bonfire', {
-  name: 'Bonfire', rarity: 'common', kind: 'move', reach: 'beside',
+  name: 'Bonfire', rarity: 'uncommon', kind: 'move', reach: 'beside',
   text: 'The stones beside it trade places, one step round it clockwise.',
   options: bonfireOptions(false),
   apply(s, pos, a) { const ring = besideRound(pos); stepAlong(s, a.spin > 0 ? ring : ring.reverse()); },
@@ -273,7 +273,7 @@ def('firecracker', {
 });
 
 def('parrot', {
-  name: 'Parrot', rarity: 'common', kind: 'copy', copies: 'enemy',
+  name: 'Parrot', rarity: 'uncommon', kind: 'copy', copies: 'enemy',
   text: 'Becomes a copy of the last stone the enemy placed, and does what it does.',
   plus: {
     copies: null,
@@ -300,7 +300,7 @@ def('parrot', {
 });
 
 def('twin', {
-  name: 'Twin', rarity: 'common', kind: 'move',
+  name: 'Twin', rarity: 'uncommon', kind: 'move',
   text: 'A Pebble lands on the square opposite it across the board, if that is empty.',
   options(s, pos) {
     const j = 8 - pos;
@@ -374,7 +374,7 @@ export const RULES = {
   headstart: { name: 'Head Start', text: 'The boss plays twice on its first turn.' },
   double: { name: 'Double Time', text: 'Every turn is two stones in a row, for both sides. The boss starts.' },
   elko: { name: 'Elbow', text: 'Rows do not count: an L of three wins.' },
-  clinch: { name: 'Clinch', text: 'You must place beside one of the boss\'s stones, if you can.' },
+  clinch: { name: 'Clinch', text: 'You must place beside one of the boss\'s stones, or where you block its line.' },
   column: { name: 'Column', text: 'Each turn the boss closes a column to you.', dictate: true },
   spy: { name: 'Spy', text: 'Each turn the boss picks which way your stones move.', dictate: true },
   patient: { name: 'Patience', text: 'A full board goes to the boss.' },
@@ -406,6 +406,8 @@ export function winningLine(s, player) {
   return shapesOf(s).find((l) => l.every(mine)) ?? null;
 }
 
+// Would `player` complete a winning shape on square i?
+const blocksLine = (s, i, player) => shapesOf(s).some((l) => l.includes(i) && l.every((j) => j === i || s.board[j]?.player === player));
 const freeSquares = (b) => { const o = []; for (let i = 0; i < 9; i++) if (!b[i]) o.push(i); return o; };
 
 // Every restriction the opponent has on the board pulls at once, and you must
@@ -428,7 +430,8 @@ export function allowedSquares(s) {
   if (s.conds.includes('nocentre')) narrow((i) => i !== 4);
   if (p === 'X') {
     if (s.rules.includes('reserved')) narrow((i) => i !== 4);
-    if (s.rules.includes('clinch')) narrow((i) => s.board.some((c, j) => c && c.player === 'O' && adjacent(i, j)));
+    // Beside one of its stones -- or blocking one of its lines, so a diagonal can always be stopped.
+    if (s.rules.includes('clinch')) narrow((i) => s.board.some((c, j) => c && c.player === 'O' && adjacent(i, j)) || blocksLine(s, i, 'O'));
     if (s.dictate?.kind === 'column') narrow((i) => col(i) !== s.dictate.value);
   }
   if (s.mods[p].freeFirst && s.placements[p] === 0) return pool;
