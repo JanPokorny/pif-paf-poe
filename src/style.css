@@ -851,6 +851,9 @@ body:has(.duel) #toast.show { transform: translate(-50%, 0) rotate(-1deg); }
 .map-cell.rock.marked .doodle.rock { width: 64%; height: 64%; }
 
 /* Our own yes-or-no dialog. */
+.info-actions { display: flex; flex-direction: column; gap: 8px; margin-top: 4px; }
+.info-actions .price-tag { display: inline-flex; align-items: center; gap: 3px; margin-left: 6px; }
+.info-actions .price-tag .icon { width: 1em; height: 1em; }
 .ask { display: flex; flex-direction: column; gap: 10px; }
 .ask-q { font-size: 1.1rem; text-align: center; margin: 4px 0 6px; }
 

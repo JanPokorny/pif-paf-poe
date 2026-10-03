@@ -53,6 +53,7 @@ const pick = (a) => a[Math.floor(rand() * a.length)];
       screenName = (st?.screen ?? 'title') + '+modal';
       await snap(screenName.replace('+', '-') + (await page.locator('.modal .ask').count() ? '-ask' : await page.locator('.modal .stone-grid').count() ? '-grid' : ''));
       if (await page.locator('.modal .ask').count()) { await click(page.locator('.modal .ask button').first()); continue; }
+      if (await page.locator('.modal .info-actions button.primary:not([disabled])').count() && rand() < 0.75) { await click(page.locator('.modal .info-actions button.primary')); continue; }
       if (await page.locator('.modal .cards .card').count() && rand() < 0.8) { await any('.modal .cards .card'); continue; }
       if (await page.locator('.modal .stone-grid .pouch-slot').count() && rand() < 0.7) { await any('.modal .stone-grid .pouch-slot'); await page.waitForTimeout(100); await click(page.locator('.modal button.primary').first()); continue; }
       await click(page.locator('.modal button.btn').last()); continue;

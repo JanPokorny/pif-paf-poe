@@ -4,7 +4,7 @@
 import { STONES, CONDS, RULES, createGame } from './engine.js';
 import { RELICS, ENEMIES, ACTS, EVENTS } from './content.js';
 import * as R from './run.js';
-import { h, hideToast, tapeUp, art, relicArt, scribbleX, scribbleO, stoneEl, iconEl, toast, modal, ask, pressable, infoStone, infoRelic, infoRule, stoneCard, relicCard, stoneName, langToggle, energyBar, statusLine } from './ui/common.js';
+import { h, hideToast, tapeUp, art, relicArt, scribbleX, scribbleO, stoneEl, iconEl, toast, modal, ask, pressable, infoStone, infoRelic, infoRule, infoThing, stoneCard, relicCard, stoneName, langToggle, energyBar, statusLine } from './ui/common.js';
 import { icon } from './icons.js';
 import { mountDuel } from './ui/duel.js';
 import { sfx, soundOn, setSound } from './sound.js';
@@ -637,7 +637,6 @@ function pickFromPouch(prompt, cb, { filter = () => true, cancel = t('Cancel') }
   const close = modal(body, { dismissable: false, cls: 'tall' });
 }
 
-const pressHint = () => h('div.press-hint', {}, t('Long press for info.'));
 // A row of cards to choose one from, "or" between them.
 const orRow = (cards) => h('div.cards.pick-one', {}, cards.flatMap((c, k) => (k ? [h('span.or', {}, t('or')), c] : [c])));
 // The same as radio buttons: [value, card] pairs, the chosen one marked, the others faded.
@@ -670,10 +669,10 @@ function rewardScreen() {
   if (rw.relic) rows.push(h('div.cards.one', {}, relicCard(rw.relic, { onclick: () => infoRelic(rw.relic) })));
   if (want.once) rows.push(h('div.cards.one', {}, stoneCard(rw.once, { onclick: () => infoStone(rw.once, 'X') })));
   const choose = (key, value) => () => { rw.sel[key] = value; sfx('click'); save(); rewardScreen(); };
-  if (want.boss) rows.push(radioRow(rw.sel.boss, rw.relicChoice.map((id) => [id, relicCard(id, { onclick: choose('boss', id) })])));
-  if (want.stone) rows.push(radioRow(rw.sel.stone, rw.stones.map((st, k) => [k, stoneCard(st, { onclick: choose('stone', k) })])));
+  const pick = (key, value) => ({ label: t('Pick'), run: choose(key, value) });
+  if (want.boss) rows.push(radioRow(rw.sel.boss, rw.relicChoice.map((id) => [id, relicCard(id, { onclick: () => infoRelic(id, pick('boss', id)) })])));
+  if (want.stone) rows.push(radioRow(rw.sel.stone, rw.stones.map((st, k) => [k, stoneCard(st, { onclick: () => infoStone(st, 'X', '', pick('stone', k)) })])));
   rows.forEach((r, k) => { if (k) parts.push(h('div.and-sep', {}, t('~ and ~'))); parts.push(r); });
-  parts.push(pressHint());
   const ready = (!want.boss || rw.sel.boss !== undefined) && (!want.stone || rw.sel.stone !== undefined);
   parts.push(h('div.sticky-bottom', {}, h('button.btn.wide.big.primary', {
     disabled: !ready || undefined,
@@ -695,9 +694,8 @@ function treasureScreen() {
     h('h1.reward-title', {}, t('Treasure!')),
     h('div.reward-gold', {}, h('span', { html: icon('coin') }), t('+{n} gold', { n: tr.gold })),
     tr.relic ? h('div.cards.one', {}, relicCard(tr.relic, { onclick: () => infoRelic(tr.relic) }))
-      : tr.choices?.length ? radioRow(tr.sel, tr.choices.map((id) => [id, relicCard(id, { onclick: () => { tr.sel = id; sfx('click'); save(); treasureScreen(); } })]))
+      : tr.choices?.length ? radioRow(tr.sel, tr.choices.map((id) => [id, relicCard(id, { onclick: () => infoRelic(id, { label: t('Pick'), run: () => { tr.sel = id; sfx('click'); save(); treasureScreen(); } }) })]))
         : null,
-    pressHint(),
     h('div.sticky-bottom', {}, h('button.btn.wide.big.primary', {
       disabled: (!tr.relic && tr.choices?.length && tr.sel === undefined) || undefined,
       onclick: () => { if (!tr.relic && tr.sel !== undefined) { R.gainRelic(run, tr.sel); sfx('coin'); } R.leaveNode(run); route(); },
@@ -719,29 +717,32 @@ function shopScreen(redraw = false) {
     if (run.gold < cost) { toast(t('Not enough gold.'), 'bad'); return; }
     fn(() => { run.gold -= cost; sfx('coin'); save(); shopScreen(true); });
   };
+  // Every ware opens its card first; the card's button buys it.
+  const offer = (cost, fn) => ({ label: [t('Buy'), h('span.price-tag', {}, iconEl('coin'), cost)], disabled: run.gold < cost, run: () => buy(cost, fn) });
   screen(...(redraw ? [KEEP_SCROLL] : []), topBar(), h('div.page.shop', {},
     h('div.section-label', {}, t('Stones')),
     h('div.cards.scroll', {}, shop.stones.map((s) => stoneCard(s, {
       price: s.price, sold: s.sold, dear: run.gold < s.price,
-      onclick: () => buy(s.price, (pay) => takeStone(s, (ok) => { if (ok) { s.sold = true; pay(); } })),
+      onclick: () => infoStone(s, 'X', '', offer(s.price, (pay) => takeStone(s, (ok) => { if (ok) { s.sold = true; pay(); } }))),
     }))),
     h('div.section-label', {}, t('One-shot stones')),
     h('div.cards.scroll', {}, (shop.once ?? []).map((x) => stoneCard(x, {
       price: x.price, sold: x.sold, dear: run.gold < x.price,
-      onclick: () => buy(x.price, (pay) => takeStone(x, (ok) => { if (ok) { x.sold = true; pay(); } })),
+      onclick: () => infoStone(x, 'X', '', offer(x.price, (pay) => takeStone(x, (ok) => { if (ok) { x.sold = true; pay(); } }))),
     }))),
     // Relics and services share a row of cards.
     h('div.section-label', {}, t('Relics and services')),
     h('div.cards.scroll', {},
       shop.relics.map((r) => relicCard(r.relic, {
         price: r.price, sold: r.sold || R.has(run, r.relic), dear: run.gold < r.price,
-        onclick: () => buy(r.price, (pay) => { R.gainRelic(run, r.relic); r.sold = true; pay(); }),
+        onclick: () => infoRelic(r.relic, offer(r.price, (pay) => { R.gainRelic(run, r.relic); r.sold = true; pay(); })),
       })),
       serviceCard('energy', t('+1 energy'), shop.energyPrice ?? shop.slotPrice,
-        shop.energized || shop.slotted, () => buy(shop.energyPrice ?? shop.slotPrice, (pay) => { run.energy = (run.energy ?? 1) + 1; shop.energized = true; pay(); toast(t('{n} energy', { n: R.energyOf(run) }), 'good'); })),
+        shop.energized || shop.slotted, () => infoThing({ art: icon('energy'), name: t('+1 energy'), text: t('One more energy in every duel from now on: room for a costlier stone.') },
+          offer(shop.energyPrice ?? shop.slotPrice, (pay) => { run.energy = (run.energy ?? 1) + 1; shop.energized = true; pay(); toast(t('{n} energy', { n: R.energyOf(run) }), 'good'); }))),
       serviceCard('heart', '+1 ❤', shop.healPrice,
-        run.hearts >= run.maxHearts || shop.healed >= 2, () => buy(shop.healPrice, (pay) => { run.hearts++; shop.healed++; sfx('heal'); pay(); }))),
-    pressHint(),
+        run.hearts >= run.maxHearts || shop.healed >= 2, () => infoThing({ art: icon('heart'), name: '+1 ❤', text: t('Heal one heart. Twice per shop at most.') },
+          offer(shop.healPrice, (pay) => { run.hearts++; shop.healed++; sfx('heal'); pay(); })))),
     h('div.sticky-bottom', {}, h('button.btn.primary.wide.big', { onclick: () => { R.leaveNode(run); route(); } }, t('Leave shop')))));
 }
 

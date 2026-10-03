@@ -352,7 +352,16 @@ function animatedDemo(before, after, pos, { area = null, marks = null } = {}) {
   return board;
 }
 
-export function infoStone(s, player = 'X', extra = '') {
+// The buttons under an info card: OK alone, or an action (Buy, Pick) over Close.
+// action: {label, run, disabled}; run() is called once the card has closed.
+function infoButtons(close, action) {
+  if (!action) return h('button.btn.wide', { onclick: () => close() }, t('OK'));
+  return h('div.info-actions', {},
+    h('button.btn.wide.primary', { disabled: action.disabled || undefined, onclick: () => { close(); action.run(); } }, action.label),
+    h('button.btn.wide.ghost', { onclick: () => close() }, t('Close')));
+}
+
+export function infoStone(s, player = 'X', extra = '', action = null) {
   const st = STONES[s.type];
   const body = h('div.info-stone', {},
     h('div.info-head', {}, stoneEl(s, player), h('div', {},
@@ -362,17 +371,27 @@ export function infoStone(s, player = 'X', extra = '') {
     stoneDemo(s),
     st.once ? h('p.info-plus', {}, t('One use: once played, it is gone from your pouch.')) : null,
     extra ? h('p.info-extra', {}, extra) : null,
-    h('button.btn.wide', { onclick: () => close() }, t('OK')));
+    infoButtons(() => close(), action));
   const close = modal(body);
 }
 
-export function infoRelic(id) {
+export function infoRelic(id, action = null) {
   const r = RELICS[id];
   const body = h('div.info-stone', {},
     h('div.info-head', {}, h('div.relic-token', {}, relicArt(id)), h('div', {},
       h('div.info-name', {}, r.name), h('div.info-rarity.' + r.rarity, {}, t('relic') + ' · ' + t(r.rarity)))),
     h('p', {}, r.text),
-    h('button.btn.wide', { onclick: () => close() }, t('OK')));
+    infoButtons(() => close(), action));
+  const close = modal(body);
+}
+
+// The same card for anything else on offer (a shop's services): a picture, a name, what it does.
+export function infoThing({ art: pic, name, kind = '', text }, action = null) {
+  const body = h('div.info-stone', {},
+    h('div.info-head', {}, h('div.relic-token', { html: pic }), h('div', {},
+      h('div.info-name', {}, name), kind ? h('div.info-rarity', {}, kind) : null)),
+    h('p', {}, text),
+    infoButtons(() => close(), action));
   const close = modal(body);
 }
 
@@ -393,14 +412,15 @@ export function ruleChip(kind, id, cls = '') {
 }
 
 // A card for reward and shop screens.
-// Cards are small: picture, name, price. Tap takes or buys; a long press reads.
+// Cards are small: picture, name, price. A tap opens the card (where to take or
+// buy it); so does a long press, as on stones everywhere else.
 export function stoneCard(s, { onclick, price, sold, dear, footer } = {}) {
   const st = STONES[s.type];
   return pressable(h(`button.card.stone-card.${st.rarity}${sold ? '.sold' : dear ? '.dear' : ''}`, { disabled: sold || undefined, 'aria-label': stoneName(s) },
     stoneEl(s, 'X', { cost: true }),
     h('div.card-name', {}, stoneName(s)),
     price !== undefined ? h('div.price', {}, iconEl('coin'), price) : null,
-    footer ?? null), { tap: onclick, long: () => infoStone(s, 'X') });
+    footer ?? null), { tap: onclick, long: onclick ?? (() => infoStone(s, 'X')) });
 }
 
 export function relicCard(id, { onclick, price, sold, dear } = {}) {
@@ -408,7 +428,7 @@ export function relicCard(id, { onclick, price, sold, dear } = {}) {
   return pressable(h(`button.card.relic-card.${r.rarity}${sold ? '.sold' : dear ? '.dear' : ''}`, { disabled: sold || undefined, 'aria-label': r.name },
     h('div.relic-token', {}, relicArt(id)),
     h('div.card-name', {}, r.name),
-    price !== undefined ? h('div.price', {}, iconEl('coin'), price) : null), { tap: onclick, long: () => infoRelic(id) });
+    price !== undefined ? h('div.price', {}, iconEl('coin'), price) : null), { tap: onclick, long: onclick ?? (() => infoRelic(id)) });
 }
 
 // The EN · CS switch. Changing it reloads the page.
