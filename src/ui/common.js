@@ -179,7 +179,7 @@ export function statusLine({ history = [], title = '' } = {}) {
     const list = h('ol.log-list', {}, history.map((x) => h('li.' + (x.kind || 'plain'), {}, x.text)));
     const close = modal(h('div.log-view', {}, h('h2', {}, title || t('What happened')),
       history.length ? list : h('p.dim', {}, t('Nothing yet.')),
-      h('button.btn.wide.ghost.big.log-close', { onclick: () => close() }, t('Close'))), { cls: 'tall' });
+      h('button.btn.wide.ghost.log-close', { onclick: () => close() }, t('Close'))), { cls: 'tall' });
     requestAnimationFrame(() => { list.scrollTop = list.scrollHeight; });
   }
   render(instruction);
@@ -371,7 +371,8 @@ function animatedDemo(before, after, pos, { area = null, marks = null } = {}) {
 // The buttons under an info card: OK alone, or an action (Buy, Pick) over Close.
 // action: {label, run, disabled}; run() is called once the card has closed.
 function infoButtons(close, action) {
-  if (!action) return h('button.btn.wide', { onclick: () => close() }, t('OK'));
+  // Dismissing is always the dashed button; an action on the card, yellow.
+  if (!action) return h('button.btn.wide.ghost', { onclick: () => close() }, t('Close'));
   return h('div.info-actions', {},
     h('button.btn.wide.primary', { disabled: action.disabled || undefined, onclick: () => { close(); action.run(); } }, action.label),
     h('button.btn.wide.ghost', { onclick: () => close() }, t('Close')));
@@ -427,7 +428,7 @@ export function infoRule(kind, id) {
     h('div.info-head', {}, h('div.trick-token', { html: icon(`${kind}-${id}`) }), h('div', {},
       h('div.info-name', {}, r.name), h('div.info-rarity', {}, kind === 'cond' ? t('for both sides') : t('boss rule')))),
     h('p', {}, r.text),
-    h('button.btn.wide', { onclick: () => close() }, t('OK'))));
+    h('button.btn.wide.ghost', { onclick: () => close() }, t('Close'))));
 }
 export function ruleChip(kind, id, cls = '') {
   const r = ruleOf(kind, id);

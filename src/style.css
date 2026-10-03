@@ -537,8 +537,8 @@ b { font-weight: 400; background: linear-gradient(transparent 55%, var(--hi) 55%
 .map-cell .cell-space { position: absolute; right: -12px; bottom: -4px; width: 16px; height: 16px; color: var(--pencil); }
 .map-cell .cell-space .icon { width: 16px; height: 16px; }
 .sticky-bottom.pair { display: flex; gap: 8px; align-items: stretch; }
-.sticky-bottom.pair > .btn.wide { flex: 1; width: auto; min-width: 0; }
-.sticky-bottom.pair > .btn.primary { flex: 1.6; white-space: nowrap; }
+.sticky-bottom.pair > .btn { flex: 1 1 auto; width: auto; white-space: nowrap; padding-left: 14px; padding-right: 14px; }
+.sticky-bottom.pair > .btn.primary { flex-grow: 1.6; }
 .back-map { flex: none; display: inline-flex; align-items: center; gap: 4px; }
 
 /* Critique pass */

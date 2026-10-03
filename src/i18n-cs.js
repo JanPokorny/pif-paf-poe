@@ -25,7 +25,6 @@ export default {
   'Music: off': 'Hudba: vypnutá',
   'Resume': 'Pokračovat',
   'Title': 'Na začátek',
-  'OK': 'OK',
 
   'Continue run': 'Pokračovat ve výpravě',
   'Start over? Your run in progress will be lost.': 'Začít znovu? Rozehraná výprava se ztratí.',

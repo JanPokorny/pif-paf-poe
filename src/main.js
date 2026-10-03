@@ -109,13 +109,12 @@ function showPouch() {
       : h('p.dim', {}, t('No special stones yet. Pebbles you always have.')),
     h('h2', {}, t('Relics')),
     run.relics.length ? h('div.relic-list', {}, run.relics.map((r) => h('button.relic-row', { onclick: () => infoRelic(r) }, h('span.relic-token.small', {}, relicArt(r)), h('span', {}, h('b', {}, RELICS[r].name), h('br'), RELICS[r].text)))) : h('p.dim', {}, t('No relics yet.')),
-    h('button.btn.wide', { onclick: () => close() }, t('Close')));
+    h('button.btn.wide.ghost', { onclick: () => close() }, t('Close')));
   const close = modal(body, { cls: 'tall' });
 }
 
 function showMenu() {
   const body = h('div.menu', {},
-    h('h2', {}, t('Menu')),
     settingsRow(),
     h('button.btn.wide', { onclick: () => { close(); title(); } }, t('Save & quit to title')),
     h('button.btn.wide.danger', {
@@ -210,6 +209,7 @@ function title() {
   duelView = null;
   setScene('title', 0);
   const saved = loadJSON(SAVE);
+  const resumable = saved?.run && !saved.run.over;
   screen(
     h('div.title', {},
       h('div.logo', {},
@@ -223,10 +223,11 @@ function title() {
           }, 'PIFPAFPOE'[i]))),
       ),
       h('div.title-buttons', {},
-        saved?.run && !saved.run.over ? h('button.btn.primary.wide.big.continue', { onclick: () => { run = saved.run; duelState = saved.duel; migrate(); route(); } },
+        resumable ? h('button.btn.primary.wide.big.continue', { onclick: () => { run = saved.run; duelState = saved.duel; migrate(); route(); } },
           h('span', {}, t('Continue run')),
           h('span.continue-sub', {}, `${t('Act {n}', { n: saved.run.act })} · ❤ ${saved.run.hearts}`)) : null,
-        h('button.btn.wide.big' + (saved?.run ? '' : '.primary'), { onclick: async () => { if (saved?.run && !saved.run.over && !(await ask(t('Start over? Your run in progress will be lost.'), t('New run')))) return; newRunMenu(); } }, t('New run')),
+        // The yellow button is Continue when there is a run to go back to, else New run.
+        h('button.btn.wide.big' + (resumable ? '' : '.primary'), { onclick: async () => { if (resumable && !(await ask(t('Start over? Your run in progress will be lost.'), t('New run')))) return; newRunMenu(); } }, t('New run')),
         settingsRow()),
     ));
 }
@@ -913,7 +914,7 @@ function shareResult(victory) {
   const line = victory ? t('Conquered the Summit 🏆') : t('Fell in act {n} ({act})', { n: run.act, act: ACTS[run.act - 1].name });
   const text = `${head}\n${line}\n${t('{won} duels won, {lost} lost', { won: run.stats.won, lost: run.stats.lost })}\n${grid}\n${location.href.split('#')[0]}`;
   (navigator.clipboard?.writeText(text) ?? Promise.reject()).then(() => toast(t('Copied!'), 'good'), () => {
-    const close = modal(h('div.menu', {}, h('h2', {}, t('Your result')), h('pre.share', {}, text), h('button.btn.wide', { onclick: () => close() }, t('OK'))));
+    const close = modal(h('div.menu', {}, h('h2', {}, t('Your result')), h('pre.share', {}, text), h('button.btn.wide.ghost', { onclick: () => close() }, t('Close'))));
   });
 }
 
@@ -939,8 +940,10 @@ function endScreen(victory) {
     relicStrip(),
     victory && meta.maxHeat > run.heat ? h('p.good', {}, t('Heat {n} unlocked!', { n: run.heat + 1 })) : null,
     h('button.btn.wide', { onclick: () => shareResult(victory) }, t('Copy result to share')),
-    h('button.btn.primary.wide.big', { onclick: () => { run = null; duelState = null; newRunMenu(); } }, t('New run')),
-    h('button.btn.wide', { onclick: () => { run = null; title(); } }, t('Title'))));
+    // Leaving is the dashed button, the way on the yellow one at the bottom, as everywhere.
+    h('div.sticky-bottom.pair', {},
+      h('button.btn.ghost.big.wide', { onclick: () => { run = null; title(); } }, t('Title')),
+      h('button.btn.primary.big.wide', { onclick: () => { run = null; duelState = null; newRunMenu(); } }, t('New run')))));
   try { localStorage.removeItem(SAVE); } catch { /* ignore */ }
 }
 
