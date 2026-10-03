@@ -390,7 +390,9 @@ b { font-weight: 400; background: linear-gradient(transparent 55%, var(--hi) 55%
 .info-name-link { cursor: pointer; padding: 2px 0; }
 .info-name-link .i { color: var(--blue); font-size: 0.9em; }
 .slot-info { position: absolute; top: 0; right: 4px; color: var(--blue); font-size: 1rem; padding: 2px; }
-.sticky-bottom { position: sticky; bottom: 0; padding: 12px 0 var(--button-b); background: linear-gradient(transparent, var(--paper) 35%); z-index: 3; }
+.sticky-bottom { position: sticky; bottom: 0; padding: 12px 0 var(--button-b); z-index: 3; }
+.sticky-bottom { pointer-events: none; }
+.sticky-bottom > * { pointer-events: auto; }
 
 /* ── Index cards: rewards and the shop ───────────────────────────────────── */
 .cards { display: flex; flex-wrap: wrap; justify-content: center; gap: 14px 8px; padding-top: 8px; }
