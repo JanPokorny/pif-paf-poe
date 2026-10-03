@@ -229,6 +229,8 @@ function demoBoard(board, marks = {}) {
 // with a word on what they are.
 function areaOf(st, pos, o) {
   const ring = (near) => [...Array(9).keys()].filter((i) => near(pos, i));
+  if (st.id === 'parrot') return { cells: [], cap: t('Here it copies a Shift, and slides like one.') };
+  if (st.id === 'swap' && st !== STONES.swap) return { cells: [], cap: t('Any stone on the board.') };
   if (st.reach === 'beside') return { cells: ring(adjacent), cap: t('Beside: the four squares that share a side.') };
   const inLine = (a, b) => a !== b && (((a / 3) | 0) === ((b / 3) | 0) || a % 3 === b % 3);
   if (st.reach === 'line') return { cells: ring(inLine), cap: t('Its whole row and column.') };
@@ -244,10 +246,13 @@ function areaOf(st, pos, o) {
 function stoneDemo(s) {
   const st = specOf(s);
   const plus = s.plus && STONES[s.type].plus ? { plus: true } : {};
-  const fresh = () => {
+  // The sample board; a copying stone gets an enemy Shift to copy, one played last.
+  const copies = s.type === 'parrot';
+  const fresh = (empty = false) => {
     const g = createGame({ handX: [{ type: s.type, ...plus }], first: 'X', log: false });
     let id = 50;
-    for (const [i, p] of Object.entries(DEMO_BOARD)) g.board[+i] = { player: p, type: 'pebble', id: id++ };
+    if (!empty) for (const [i, p] of Object.entries(DEMO_BOARD)) g.board[+i] = { player: p, type: copies && +i === 8 ? 'shift' : 'pebble', id: id++ };
+    if (copies) g.lastPlaced.O = { type: 'shift' };
     g.nextId = 100;
     return g;
   };
@@ -266,11 +271,13 @@ function stoneDemo(s) {
       for (let i = 0; i < 9; i++) if (!g.board[i]) marks[i] = ok.has(i) ? 'ok' : 'no';
       return h('div.demo', {}, animatedDemo(before, g.board, 4, { marks }), h('div.demo-cap', {}, t('Placed in the centre: the enemy may only use the marked squares.')));
     }
-    if (!st.apply) return null;
+    if (!st.apply && !st.copies) return null;
     // The placement and choice that change the board the most.
     let best = null;
-    for (const pos of [4, 0, 5, 7, 1]) {
-      const g = fresh();
+    // On the sample board; a stone that needs room (a Twin) on an empty one.
+    for (const [pos, empty] of [[4], [0], [5], [7], [1], [0, true], [4, true]]) {
+      if (empty && best?.moved) break;
+      const g = fresh(empty);
       if (g.board[pos]) continue;
       applyAction(g, { type: 'select', stone: s.type, ...plus });
       // Before: the stone drawn where it lands, nothing done yet.
@@ -281,6 +288,8 @@ function stoneDemo(s) {
       for (const o of opts) {
         const after = cloneState(g);
         if (o) applyAction(after, o);
+        // A Parrot+ became another stone: let that one act too.
+        for (let k = 0; k < 3 && after.phase === 'effect' && after.player === 'X'; k++) applyAction(after, legalActions(after)[0]);
         const same = (a, b) => (!a && !b) || (a && b && a.player === b.player && a.type === b.type);
         const moved = after.board.reduce((n, c, i) => n + (same(c, before[i]) ? 0 : 1), 0)
           + (after.hands.X.length !== g.hands.X.length || after.hands.O.length !== g.hands.O.length ? 2 : 0);

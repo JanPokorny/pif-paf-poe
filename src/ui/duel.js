@@ -580,7 +580,9 @@ export function mountDuel(root, opts) {
   // A committed step: announce what happened, then carry on.
   function commitState(next, action) {
     const logs = next.log ?? [];
-    if (action) said('X', action.type === 'place' ? t('played {stone} on the {square}', { stone: stoneName(state.selected), square: sq(action.pos) }) : describe(action));
+    // A Parrot+ choosing what to copy says so itself (the 'copy' log below).
+    const copying = action?.type === 'effect' && state.board[state.placedAt]?.type === 'parrot';
+    if (action && !copying) said('X', action.type === 'place' ? t('played {stone} on the {square}', { stone: stoneName(state.selected), square: sq(action.pos) }) : describe(action));
     state = next;
     state.log = [];
     preview = null;
