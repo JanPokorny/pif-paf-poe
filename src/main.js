@@ -390,7 +390,7 @@ function mapScreen() {
   if (lastO && map.cells[lastO]?.kind !== 'boss-mark') news.push([oAt * 1000, { m: 'o', node: map.cells[lastO].kind }]);
   if (map.news === 'oline') news.push([2200, { m: 'oline', n: R.MAPCFG.lineDamage }]);
   if (opening) news.push([3600, { m: 'open' }]);
-  if (map.bonus) news.push([300, { m: 'bonus', n: map.bonus }]);
+  if (map.news === 'thrown') news.push([0, { m: 'thrown', n: 1 }]);
   news.sort((a, b) => a[0] - b[0]);
   const risen = (map.bossWins ?? 0) > 0;
   const bossName = risen ? undeadName(boss) : boss.name;
@@ -401,13 +401,12 @@ function mapScreen() {
         : e.m === 'o' ? [t('{boss} marks the {node} square.', { boss: boss.name, node }), 'bad']
           : e.m === 'oline' ? [t('{boss}: three in a row — −{n} ❤', { boss: boss.name, n: e.n }), 'bad']
             : e.m === 'open' ? [t('Three in a row: the lair opens!'), 'good']
-              : e.m === 'bonus' ? [t('Past the open lair: +{n} 🪙', { n: e.n }), 'good'] : ['', ''];
+              : e.m === 'thrown' ? [t('{boss} throws you out (−{n} ❤). The lair is shut again.', { boss: bossName, n: e.n }), 'bad'] : ['', ''];
   };
   const line = statusLine({ history: map.log.map((e) => { const [text, kind] = say(e); return { text, kind }; }) });
   map.log.push(...news.map(([, e]) => e));
   if (map.log.length > 60) map.log.splice(0, map.log.length - 60);
   for (const [ms, e] of news) setTimeout(() => { if (line.el.isConnected) line.log(...say(e)); }, ms);
-  map.bonus = 0;
   map.news = null;
   // What to do next: the lair, once it glows; until then, the way to open it.
   const instruct = (open) => line.instruct(open ? t('The lair is open: tap it to face {boss}.', { boss: bossName })
@@ -542,12 +541,9 @@ function preDuel() {
     ...(duel.conds ?? []).map((c) => note('cond', icon(`cond-${c}`), CONDS[c].name, CONDS[c].text, () => infoRule('cond', c))),
     duel.quirk ? note('quirk', icon('star'), R.QUIRKS[duel.quirk].name, R.QUIRKS[duel.quirk].text) : null,
   ].filter(Boolean);
-  const moonrise = duel.tier === 'boss' && duel.bossWins === 0 && enemy.rules2 && enemy.rules2.join() !== duel.rules.join()
-    ? h('div.press-hint.moon-note', {}, t('At moonrise: {rules}', { rules: enemy.rules2.map((r) => RULES[r].name).join(', ') })) : null;
   const canBack = !duel.event;
   screen(topBar(),
     h('div.page', {},
-      canBack ? h('button.btn.ghost.small.back-map', { onclick: () => { R.retreat(run); route(); } }, h('span', { html: icon('back') }), t('Back to the map')) : null,
       h('div.enemy-card.' + duel.tier + (isUndead(duel) ? '.undead' : ''), {},
         h('button.stake', { onclick: () => toast(t('Will cost you {n} ❤ on loss.', { n: R.heartsLost(duel) })), 'aria-label': t('Will cost you {n} ❤ on loss.', { n: R.heartsLost(duel) }) },
           h('span', { html: icon('sword') }), String(R.heartsLost(duel))),
@@ -557,7 +553,6 @@ function preDuel() {
           h('div.enemy-name.big', {}, isUndead(duel) ? undeadName(enemy) : enemy.name),
           h('div.quote', {}, t('“{quote}”', { quote: enemy.quote })))),
       facts.length ? h('div.mod-notes', {}, facts) : null,
-      moonrise,
       h('div.section-label', {}, t('Their stones')),
       duel.handO.some((s) => s.type !== 'pebble') ? h('div.stone-row', {}, [...new Set(duel.handO.filter((s) => s.type !== 'pebble').map((s) => s.type))].map((type) => {
         const n = duel.handO.filter((s) => s.type === type).length;
@@ -568,7 +563,9 @@ function preDuel() {
       run.pouch.length ? grid : h('div.press-hint', {}, t('No special stones yet: Pebbles only.')),
       fill,
       run.pouch.length ? h('div.press-hint', {}, t('Long press stone for info.')) : null,
-      h('div.sticky-bottom', {}, fight)));
+      h('div.sticky-bottom.pair', {},
+        canBack ? h('button.btn.ghost.big.back-map', { onclick: () => { R.retreat(run); route(); } }, h('span', { html: icon('back') }), t('Back to the map')) : null,
+        fight)));
 
   function begin() {
     run.lastHand = chosen.slice();
@@ -606,7 +603,7 @@ function duelScreen() {
         if (res.kind === 'rematch') toast(t('🎟️ {relic}: try again!', { relic: RELICS.rematch.name }));
         else if (res.kind === 'dead') { /* recorded by the end screen */ }
         else if (res.kind === 'lost') { toast(`−${R.heartsLost(duel)} ❤`, 'bad'); flash = 'hurt'; }
-        else if (res.kind === 'boss-retry') { toast(t('−1 ❤. Again!'), 'bad'); flash = 'hurt'; }
+        else if (res.kind === 'boss-out') flash = 'hurt';
       }
       route();
     },

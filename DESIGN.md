@@ -86,9 +86,11 @@ its own, with its boss.
   next to an X or an O can be taken, by you or by the boss. The outer ring is on view, dimmed:
   you see what lies past the square you step on before you commit a line to it.
 - **The lair.** The boss's lair takes the place of one of the obstacles next to its first mark: a
-  wall like any other, until your three in a row opens it (+10 gold for every square past that).
+  wall like any other, until your three in a row opens it.
   Open, it glows, and tapping it starts the boss duel. You may step back to the map from the
   boss as from any duel; it waits in its lair as it was, risen already if you beat it once.
+  Lose to it and it throws you out (−1 ❤): the lair shuts, and another line of three opens it
+  again, the boss still risen if you had beaten it once.
   The boss's three in a row costs you a heart (two made it the last blow in a quarter of the bots' runs). There is no page limit any more: the lair opens
   only to your line, and when nothing on view is free the boss moves again (into the fog beside
   the page if it must) until something is.

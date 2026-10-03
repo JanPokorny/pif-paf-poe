@@ -555,11 +555,9 @@ function bossFills(run) {
 export function settleCell(run, mark, { quiet = false } = {}) {
   const map = run.map;
   if (map.at === null) return;
-  const wasOpen = map.open;
   const at = map.at;
   map.at = null;
   map.lastO = null;
-  map.bonus = 0;
   map.news = null;
   map.visited++;
   // For the page to animate: what was just marked, and what each mark revealed.
@@ -575,8 +573,6 @@ export function settleCell(run, mark, { quiet = false } = {}) {
   map.freshX = at;
   map.revealX = reveal(run, ...coords(at));
   if (claimLine(map, at)) map.open = true;
-  // Squares cleared past an open door pay a little extra: a reason to press on.
-  if (wasOpen) { map.bonus = 10; run.gold += 10; }
   if (!quiet) {
     map.lastO = bossTurn(run);
     if (map.lastO) map.revealO = reveal(run, ...coords(map.lastO));
@@ -813,10 +809,20 @@ export function duelLost(run) {
     return { kind: 'rematch' };
   }
   if (hurt(run, heartsLost(duel))) return { kind: 'dead' };
+  // Lost to the boss: thrown out of its lair, which shuts. Another line of
+  // three opens it again; a boss beaten once is still risen when you return.
   if (duel.tier === 'boss') {
-    run.pending = { kind: 'duel', duel: prepareDuel(run, duel.enemyId, { bossRound: duel.bossRound + 1, bossWins: duel.bossWins }) };
-    run.screen = 'predual';
-    return { kind: 'boss-retry' };
+    const map = run.map;
+    map.bossWins = duel.bossWins;
+    map.bossRound = duel.bossRound + 1;
+    map.open = false;
+    map.doorHeard = false;
+    map.at = null;
+    map.news = 'thrown';
+    run.atBoss = false;
+    run.pending = null;
+    run.screen = 'map';
+    return { kind: 'boss-out' };
   }
   run.pending = null;
   settleCell(run, 'O');

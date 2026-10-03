@@ -531,7 +531,9 @@ b { font-weight: 400; background: linear-gradient(transparent 55%, var(--hi) 55%
 .map-cell .elite-star .icon { width: 100%; height: 100%; fill: var(--red); }
 .map-cell .cell-space { position: absolute; right: -12px; bottom: -4px; width: 16px; height: 16px; color: var(--pencil); }
 .map-cell .cell-space .icon { width: 16px; height: 16px; }
-.back-map { align-self: flex-start; min-height: 36px; }
+.sticky-bottom.pair { display: flex; gap: 8px; align-items: stretch; }
+.sticky-bottom.pair > .btn.wide { flex: 1; width: auto; min-width: 0; }
+.back-map { flex: none; display: inline-flex; align-items: center; gap: 4px; }
 
 /* Critique pass */
 .result-banner { top: auto; bottom: calc(8px + var(--safe-b)); left: 14px; right: 14px; padding: 16px 16px 12px; }
@@ -823,7 +825,6 @@ body:has(.duel) #toast.show { transform: translate(-50%, 0) rotate(-1deg); }
   .section-label { margin: 0; }
   .card .stone { --size: 42px; margin: 2px 0; }
   .relic-token { width: 44px; height: 44px; font-size: 1.8rem; }
-  .back-map { padding-top: 2px; padding-bottom: 2px; }
 }
 
 /* Moonrise: a beaten boss comes back undead. */
@@ -894,7 +895,6 @@ body:has(.duel) #toast.show { transform: translate(-50%, 0) rotate(-1deg); }
 .mod-body { display: flex; flex-direction: column; gap: 1px; min-width: 0; }
 .mod-title { font-family: var(--marker); font-size: 1.1rem; line-height: 1.15; }
 .mod-text { font-size: 0.98rem; line-height: 1.25; color: var(--ink); }
-.moon-note { margin: -4px 0 8px; }
 
 /* Rewards: "~ and ~" between rows you get all of, "or" between the cards of a choice. */
 .and-sep { text-align: center; font-family: var(--hand); font-size: 1.05rem; color: var(--pencil); margin: 6px 0 2px; letter-spacing: 0.04em; }
