@@ -188,14 +188,16 @@ function layStart(run, map) {
   for (let y = -R; y <= R; y++) for (let x = -R; x <= R; x++) for (const [dx, dy] of DIRS4) {
     const w = [];
     for (let j = 0; j < LINE; j++) w.push([x + j * dx, y + j * dy]);
-    if (w.every(([wx, wy]) => inside(wx, wy)) && !w.some(([wx, wy]) => !wx && !wy)) windows.push(w.map(([wx, wy]) => keyOf(wx, wy)));
+    if (w.every(([wx, wy]) => inside(wx, wy))) windows.push(w.map(([wx, wy]) => keyOf(wx, wy)));
   }
   const near = (k) => { const [x, y] = coords(k); return Math.max(Math.abs(x), Math.abs(y)) <= OPENING.near; };
   const forksOf = () => {
     const open = windows.filter((w) => !w.some((k) => rocks.has(k)));
     const forks = [];
     for (let i = 0; i < open.length; i++) for (let j = i + 1; j < open.length; j++) {
-      if (open[i].some((k) => near(k) && open[j].includes(k))) forks.push([open[i], open[j]]);
+      // Lines through the boss's first mark count too: two that share a free
+      // square besides it (a two with both ends open) are a fork its next mark makes.
+      if (open[i].some((k) => k !== '0,0' && near(k) && open[j].includes(k))) forks.push([open[i], open[j]]);
     }
     return forks;
   };
@@ -204,7 +206,7 @@ function layStart(run, map) {
     if (!forks.length) break;
     // The square that breaks the most forks; the origin's neighbours last.
     const score = new Map();
-    for (const pair of forks) for (const k of new Set(pair.flat())) score.set(k, (score.get(k) ?? 0) + 1);
+    for (const pair of forks) for (const k of new Set(pair.flat())) if (k !== '0,0') score.set(k, (score.get(k) ?? 0) + 1);
     let best = null, bestScore = -Infinity;
     for (const [k, n] of score) {
       const [x, y] = coords(k);
