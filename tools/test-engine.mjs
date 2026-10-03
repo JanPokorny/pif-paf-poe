@@ -484,6 +484,13 @@ test('a one-shot is a kind of its own in hand, even beside the same stone made +
   applyAction(s, { type: 'place', pos: 0 });
   assert.deepEqual(s.spent.X, ['shift+']);
 });
+test('Open Hands: a one-shot + stone of theirs can be borrowed', () => {
+  const s = G({ conds: ['shared'], handO: [{ type: 'swap', plus: true, once: true }] });
+  const a = legalActions(s).find((x) => x.from === 'O' && x.stone === 'swap');
+  assert.ok(a && a.plus && a.once);
+  applyAction(s, a);
+  assert.equal(s.selected.type, 'swap');
+});
 test('a + one-shot is spent as itself, the plain stone of its kind stays', () => {
   const s = G({ handX: [{ type: 'shift', plus: true, once: true }, 'shift'] });
   play(s, 'shift+', 0);

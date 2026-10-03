@@ -573,10 +573,10 @@ function selectActions(s) {
   if (s.conds.includes('shared')) {
     const theirs = new Set();
     for (const h of s.hands[other(p)]) {
-      const key = h.type + (h.plus ? '+' : '');
+      const key = h.type + (h.plus ? '+' : '') + (h.once ? '!' : '');
       if (theirs.has(key)) continue;
       theirs.add(key);
-      out.push({ type: 'select', stone: h.type, from: other(p), ...(h.plus && { plus: true }) });
+      out.push({ type: 'select', stone: h.type, from: other(p), ...(h.plus && { plus: true }), ...(h.once && { once: true }) });
     }
   }
   if (s.forced?.player === p) {

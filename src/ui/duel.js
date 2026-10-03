@@ -41,7 +41,7 @@ function stageOf(cands) {
 // A hand as one entry per kind of stone (a + form a kind of its own): {st, k (its first index), n}.
 const sameKind = (a, b) => a.type === b.type && !!a.plus === !!b.plus && !!a.once === !!b.once;
 // The key of a stone in the enemy's hand, as a hand slot: 'O:shift' or 'O:shift+'.
-const enemyKey = (st) => `O:${st.type}${st.plus ? '+' : ''}`;
+const enemyKey = (st) => `O:${st.type}${st.plus ? '+' : ''}${st.once ? '!' : ''}`;   // '!': a one-shot
 function groupHand(hand) {
   const out = [];
   hand.forEach((st, k) => {
@@ -160,9 +160,11 @@ export function mountDuel(root, opts) {
     }
   }
 
-  const slotStone = (key) => (typeof key === 'string'
-    ? { type: key.slice(2).replace(/\+$/, ''), ...(key.endsWith('+') && { plus: true }) }
-    : (snapshot ?? state).hands.X[key]);
+  const slotStone = (key) => {
+    if (typeof key !== 'string') return (snapshot ?? state).hands.X[key];
+    const m = key.slice(2).match(/^(.*?)(\+?)(!?)$/);
+    return { type: m[1], ...(m[2] && { plus: true }), ...(m[3] && { once: true }) };
+  };
   // Which select action a hand slot stands for: a hand index, or 'O:type'
   // for a stone taken from the enemy's hand (Open Hands).
   const slotAction = (s, key) => {
