@@ -142,7 +142,7 @@ stone's card shows an example computed by the engine.
 - **The + tier.** Twelve stones have a + form, the same stone with a wider effect (usually from
   beside to its whole row and column). A + stone comes as a one-shot (in one-shot rewards and
   shop shelves) or through a talisman that makes every stone of that kind you bring its + form,
-  offered only for kinds in your pouch. A + stone wears a star.
+  offered only for kinds in your pouch. A + stone has a small + in the corner of its face.
 - **Rarity follows power** (`node tools/lab.mjs matrix`, `power`, `effects`), and power decides
   the energy cost.
 

@@ -27,7 +27,8 @@ export function h(tag, attrs = {}, ...children) {
 }
 
 // A hand-drawn star sticker (unused while no stone is special enough).
-const STAR = '<svg class="badge-plus" viewBox="-10 -10 20 20" aria-hidden="true"><path d="M0 -8.5 L2.4 -2.7 L8.6 -2.4 L3.8 1.5 L5.4 7.6 L0 4.2 L-5.4 7.6 L-3.8 1.5 L-8.6 -2.4 L-2.4 -2.7 Z"/></svg>';
+// A + stone: a small + drawn in the stone's own ink, in the corner of its face.
+const STAR = '<svg class="badge-plus" viewBox="-10 -10 20 20" aria-hidden="true"><path d="M0 -6.5 V6.5 M-6.5 0 H6.5"/></svg>';
 
 // Pen marks, as SVG strings in a 0..100 box: an X in two strokes, an O in one
 // loop that overshoots where it closes. `fresh` draws them in.

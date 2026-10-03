@@ -3,7 +3,7 @@
 Some stones have a **+ tier**: the same stone with a wider effect. A + stone comes two ways:
 
 - **as a one-shot**: one-shot rewards and shop one-shots include + stones (a dashed outline, a
-  star). It costs one energy less than its stone (a common one is free). Played once, it is gone
+  + in the corner). It costs one energy less than its stone (a common one is free). Played once, it is gone
   from the pouch;
 - **as a talisman**: each + talisman covers a group of stones, and every stone of those kinds you
   bring plays as its + form. It is offered only when your pouch holds one of them.

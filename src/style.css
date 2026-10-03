@@ -180,8 +180,8 @@ b { font-weight: 400; background: linear-gradient(transparent 55%, var(--hi) 55%
 .stone.O { color: var(--red); }
 .stone.O::before { background: var(--red-wash); border: 2.5px solid var(--red); border-radius: 50% 47% 52% 49%; }
 .stone .glyph { position: relative; width: 64%; height: 64%; filter: url(#ink); }
-.stone .badge-plus { display: none; position: absolute; bottom: -9px; right: -9px; width: 22px; height: 22px; z-index: 2; }
-.stone .badge-plus path { fill: #ffd83d; stroke: var(--ink); stroke-width: 1.3; stroke-linejoin: round; }
+.stone .badge-plus { display: none; position: absolute; bottom: 5%; right: 5%; width: 27%; height: 27%; z-index: 2; pointer-events: none; }
+.stone .badge-plus path { fill: none; stroke: currentColor; stroke-width: 3.4; stroke-linecap: round; }
 .stone.plus .badge-plus { display: block; }
 .stone .tape { display: none; position: absolute; left: -12%; right: -12%; top: 38%; height: 26%; background: var(--tape); transform: rotate(-24deg); z-index: 2; box-shadow: 0 1px 1px rgba(0,0,0,0.1); }
 .stone.stuck .tape { display: block; }
@@ -197,7 +197,6 @@ b { font-weight: 400; background: linear-gradient(transparent 55%, var(--hi) 55%
 .stone.once::before { border-style: dashed; }
 .stone.mini { --size: 30px; }
 .stone.mini::before { border-width: 2px; }
-.stone.mini .badge-plus { width: 16px; height: 16px; bottom: -7px; right: -7px; }
 
 /* ── The duel ────────────────────────────────────────────────────────────── */
 .duel-host { flex: 1; display: flex; }
@@ -262,7 +261,6 @@ b { font-weight: 400; background: linear-gradient(transparent 55%, var(--hi) 55%
   pointer-events: none; z-index: 2;
 }
 .stone.on-board::before { border-width: 3px; }
-.stone.on-board .badge-plus { width: 26px; height: 26px; bottom: -9px; right: -9px; }
 .stone.on-board.pop { animation: fade-in 0.3s ease-out; }
 /* A board stone sits where its transform puts it, so anything that grows or
    shrinks it works on its drawing (the paper and the glyph), about its own centre. */
@@ -642,7 +640,6 @@ h1, h2, .btn.primary, .enemy-name, .card-name, .section-label { letter-spacing: 
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; transition-duration: 0.01ms !important; }
 }
-.hand-slot .badge-plus { bottom: -6px; right: -6px; }
 .slot-plain { padding: 3px 5px; }
 .slot-name { max-width: none; overflow: visible; font-size: 0.68rem; } .hand-slot { padding: 5px 2px; min-width: 0; }
 /* The endless sheet */
@@ -962,8 +959,8 @@ body:has(.duel) #toast.show { transform: translate(-50%, 0) rotate(-1deg); }
 /* A + talisman: the stone it upgrades, with the + star. */
 .art.upgrade { position: relative; display: inline-flex; align-items: center; justify-content: center; width: 100%; height: 100%; gap: 1px; }
 .art.upgrade .icon { width: 46%; height: 46%; }
-.art.upgrade .badge-plus { display: block; position: absolute; right: -8px; bottom: -6px; width: 18px; height: 18px; }
-.art.upgrade .badge-plus path { fill: #ffd83d; stroke: var(--ink); stroke-width: 1.3; stroke-linejoin: round; }
+.art.upgrade .badge-plus { display: block; position: absolute; right: 4%; bottom: 4%; width: 26%; height: 26%; }
+.art.upgrade .badge-plus path { fill: none; stroke: currentColor; stroke-width: 3.4; stroke-linecap: round; }
 
 .plus-list { display: flex; flex-direction: column; gap: 8px; }
 .plus-row { display: flex; align-items: center; gap: 10px; font-size: 0.95rem; line-height: 1.2; }
