@@ -239,7 +239,8 @@ const RAW = {
     DOT(-6.5, -5.4, 1.2) + DOT(0, -6.3, 1.2) + DOT(6.5, -5.4, 1.2),
 
   // ---------- TRICKS ----------
-  overtake: GRID + C(0, 0, 2.4, SW(1.4)) + arrow(2.2, -2.2, 7.2, -7.2),
+  // Undo: the U-turn arrow, as on the duel's own undo button.
+  overtake: GRID + P('M -5.6 -4.2 H 1.8 A 4.2 4.2 0 0 1 1.8 4.2 H -2.6 M -2.4 -7.6 L -5.8 -4.2 L -2.4 -0.8', SW(1.8)),
 
   relocate:
     GRID + DOT(-4.67, 4.67, 2.5) + C(4.67, -4.67, 2.2, SW(1.1)) +

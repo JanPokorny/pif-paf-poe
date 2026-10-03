@@ -283,7 +283,7 @@ function newest(s, p) {
 }
 
 def('overtake', {
-  name: 'Rewind', rarity: 'uncommon', kind: 'once', once: true,
+  name: 'Undo', rarity: 'uncommon', kind: 'once', once: true,
   text: 'The enemy\'s last stone goes back to their hand.',
   options(s, pos, cell) { const j = newest(s, other(cell.player)); return j < 0 ? [] : [{ target: j }]; },
   apply(s, pos, a) { returnToHand(s, a.target); },

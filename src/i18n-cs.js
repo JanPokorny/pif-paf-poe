@@ -380,7 +380,7 @@ export const CS_DATA = {
     parrot: { name: 'Papoušek', text: 'Stane se kopií speciálního kamene, který soupeř položil naposledy, a udělá, co dělá on.' },
     twin: { name: 'Dvojče', text: 'Oblázek přistane na protější pole přes desku, je-li volné.' },
     magpie: { name: 'Straka', text: 'Ukradne soupeři z ruky speciální kámen podle tvé volby.' },
-    overtake: { name: 'Přetočit', text: 'Poslední kámen soupeře se mu vrátí do ruky.' },
+    overtake: { name: 'Zpět', text: 'Poslední kámen soupeře se mu vrátí do ruky.' },
     relocate: { name: 'Ústup', text: 'Přesuň jeden svůj kámen, i tenhle, na libovolné volné políčko.' },
     mirror: { name: 'Zrcadlo', text: 'Prohoď obsah dvou polí naproti sobě přes střed.' },
     nudge: { name: 'Šťouchnutí', text: 'Posuň libovolný kámen o krok na volné políčko vedle něj.' },

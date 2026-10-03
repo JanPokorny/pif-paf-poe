@@ -11,7 +11,7 @@ numbers. The camp game's own reasoning is in `old/adr/`.
   where you satisfy as many as any square can (`old/adr/2026-08-18-…`).
 - **Counterattacks → one-shot stones.** The camp game's counterattacks became tricks, spent
   at the end of a turn; now they are stones like any other, brought along like any other and placed on the
-  board, that then do their one thing (Rewind, Relocate, Mirror, Mind Control, Rehearse, Nudge,
+  board, that then do their one thing (Undo, Relocate, Mirror, Mind Control, Rehearse, Nudge,
   Muffle, Pluck, Bribe). Once played in a duel, won or lost, one is gone from the pouch. They
   have a dashed outline, come as their own reward and shop shelf, and are cheaper than stones.
   Encore, which handed back your last special stone, did not survive the change.
@@ -145,7 +145,7 @@ the stronger and the more skill a stone wants, the rarer.
 |---|---|---:|---:|---:|
 | Magpie | rare | 69% | 30% | 29% |
 | Bumper | uncommon | 53% | 16% | 25% |
-| Rewind | uncommon, one-shot | 49% | 21% | 24% |
+| Undo | uncommon, one-shot | 49% | 21% | 24% |
 | Firecracker | rare | 48% | 22% | 22% |
 | Pluck | rare, one-shot | 46% | 20% | 25% |
 | Beacon | rare | 54% | 17% | 17% |
@@ -177,7 +177,7 @@ the stronger and the more skill a stone wants, the rarer.
 edge, Lasso fetches any enemy stone, Mountain ignores restrictions, Mind Control's stone does
 nothing, Rehearse copies your last special, Twin needs no empty centre,
 Lasso pulls all at once, Frog knocks the stone it leaps off the board, Muffle hushes the next
-*special* stone, and Overtake became Rewind).
+*special* stone, and Overtake became Rewind, later Undo).
 
 ## Difficulty
 

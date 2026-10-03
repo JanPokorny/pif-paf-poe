@@ -447,7 +447,7 @@ test('a one-shot stone that makes your line wins', () => {
   eff(s, { from: 5, to: 2 });
   assert.equal(s.winner, 'X');
 });
-test('Rewind sends the enemy\'s newest stone back', () => {
+test('Undo sends the enemy\'s newest stone back', () => {
   const s = G({ handX: ['overtake'] });
   lay(s, { 4: 'O shift' });
   s.nextId = 200;   // stones placed from here on are newer than the laid ones
