@@ -1,6 +1,6 @@
 // Small DOM helpers shared by every screen.
 
-import { STONES, CONDS, RULES, BLOCKS, createGame, legalActions, applyAction, cloneState, allowedSquares, adjacent, specOf } from '../engine.js';
+import { STONES, CONDS, RULES, createGame, legalActions, applyAction, cloneState, allowedSquares, specOf } from '../engine.js';
 import { RELICS } from '../content.js';
 import { costOf } from '../run.js';
 import { icon, ICONS } from '../icons.js';
@@ -226,21 +226,9 @@ function demoBoard(board, marks = {}) {
   }
   return g;
 }
-// The squares a stone works on, from where it lands: lit up before it acts,
-// with a word on what they are.
-function areaOf(st, pos, o) {
-  const ring = (near) => [...Array(9).keys()].filter((i) => near(pos, i));
-  if (st.id === 'parrot') return { cells: [], cap: t('Here it copies a Shift, and slides like one.') };
-  if (st.id === 'swap' && st !== STONES.swap) return { cells: [], cap: t('Any stone on the board.') };
-  if (st.reach === 'beside') return { cells: ring(adjacent), cap: t('Beside: the four squares that share a side.') };
-  const inLine = (a, b) => a !== b && (((a / 3) | 0) === ((b / 3) | 0) || a % 3 === b % 3);
-  if (st.reach === 'line') return { cells: ring(inLine), cap: t('Its whole row and column.') };
-  if (st.id === 'rotate' && o?.block) return { cells: BLOCKS[o.block], cap: t('One of the 2×2 blocks it is in.') };
-  if (st.id === 'shift' && o?.dir) {
-    const r = (pos / 3) | 0, c = pos % 3;
-    if (st !== STONES[st.id]) return { cells: o.dir === 'left' || o.dir === 'right' ? [o.index * 3, o.index * 3 + 1, o.index * 3 + 2] : [o.index, o.index + 3, o.index + 6], cap: t('Any row or column.') };
-    return { cells: o.dir === 'left' || o.dir === 'right' ? [r * 3, r * 3 + 1, r * 3 + 2] : [c, c + 3, c + 6], cap: t('Its row or its column.') };
-  }
+// A word under the example where the picture alone does not say it.
+function demoCaption(st) {
+  if (st.id === 'parrot') return t('Here it copies a Shift, and slides like one.');
   return null;
 }
 
@@ -298,8 +286,8 @@ function stoneDemo(s) {
       }
     }
     if (!best || !best.moved) return null;
-    const area = areaOf(st, best.pos, best.o);
-    return h('div.demo', {}, animatedDemo(best.before, best.after, best.pos, { area: area?.cells }), area ? h('div.demo-cap', {}, area.cap) : null);
+    const cap = demoCaption(st);
+    return h('div.demo', {}, animatedDemo(best.before, best.after, best.pos), cap ? h('div.demo-cap', {}, cap) : null);
   } catch { return null; }
 }
 
@@ -307,7 +295,7 @@ function stoneDemo(s) {
 // then every stone slides to where it ends up; what leaves fades, what is new
 // appears, what changes side or kind turns.
 const DEMO_CELL = 36, DEMO_STONE = 30;
-function animatedDemo(before, after, pos, { area = null, marks = null } = {}) {
+function animatedDemo(before, after, pos, { marks = null } = {}) {
   const board = demoBoard([], {});
   board.classList.add('anim');
   const spot = (i) => `${(i % 3) * DEMO_CELL + (DEMO_CELL - DEMO_STONE) / 2}px ${((i / 3) | 0) * DEMO_CELL + (DEMO_CELL - DEMO_STONE) / 2}px`;
@@ -323,9 +311,10 @@ function animatedDemo(before, after, pos, { area = null, marks = null } = {}) {
   }));
   const cellAt = (i) => board.children[i];
   const reset = () => {
-    for (let i = 0; i < 9; i++) cellAt(i).classList.remove('placed', 'area', 'ok', 'no');
+    for (let i = 0; i < 9; i++) cellAt(i).classList.remove('placed', 'ok', 'no');
     for (const [id, el] of els) {
       el.classList.add('still');
+      el.classList.remove('flash');
       const i = where(before, id);
       const c = i >= 0 ? before[i] : after[where(after, id)];
       updateStone(el, c, c.player, { mini: true, stuck: !!c.stuck });
@@ -342,7 +331,16 @@ function animatedDemo(before, after, pos, { area = null, marks = null } = {}) {
     const el = els.get(placedId);
     el.style.opacity = 1; el.style.scale = 1;
   };
-  const light = () => { for (const i of area ?? []) cellAt(i).classList.add('area'); };
+  // The stones the effect works on -- those that move, change or leave -- flash
+  // a moment before it acts.
+  const acted = ids.filter((id) => {
+    if (id === placedId) return false;
+    const i = where(before, id), k = where(after, id);
+    if (i < 0) return false;
+    const a = before[i], b = after[k];
+    return k !== i || !b || a.player !== b.player || a.type !== b.type;
+  });
+  const light = () => { for (const id of acted) els.get(id).classList.add('flash'); };
   const play = () => {
     for (const [i, m] of Object.entries(marks ?? {})) cellAt(+i).classList.add(m);
     for (const [id, el] of els) {
@@ -354,16 +352,17 @@ function animatedDemo(before, after, pos, { area = null, marks = null } = {}) {
       el.style.opacity = 1; el.style.scale = 1;
     }
   };
-  // One loop: still, land, light up what it works on, act, hold. It stops
+  // One loop: still, land, flash what it works on, act, hold. It stops
   // once the card is closed.
+  const flash = acted.length > 0;
   const loop = () => {
     if (!board.isConnected && board.dataset.started) return;
     board.dataset.started = '1';
     reset();
     setTimeout(land, 500);
-    if (area) setTimeout(light, 1000);
-    setTimeout(play, area ? 1900 : 1300);
-    setTimeout(loop, area ? 4600 : 3800);
+    if (flash) setTimeout(light, 1000);
+    setTimeout(play, flash ? 1700 : 1300);
+    setTimeout(loop, flash ? 4400 : 3800);
   };
   loop();
   return board;

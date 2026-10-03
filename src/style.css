@@ -629,9 +629,10 @@ h1, h2, .btn.primary, .enemy-name, .card-name, .section-label { letter-spacing: 
 .demo-arrow { font-size: 1.6rem; color: var(--pencil); }
 .demo-board.anim { position: relative; }
 .demo-board.anim .demo-cell { transition: background 0.25s; }
+.demo-stone.flash { animation: demo-flash 0.6s ease-in-out; }
+@keyframes demo-flash { 50% { scale: 1.28; filter: drop-shadow(0 0 3px rgba(43, 42, 51, 0.55)); } }
 .demo-stone { position: absolute; left: 0; top: 0; transition: translate 0.6s ease-in-out, opacity 0.35s, scale 0.3s cubic-bezier(0.3, 1.6, 0.5, 1); }
 .demo-stone.still { transition: none; }
-.demo-cell.area { background: #fff; border-radius: 26%; box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.08), 0 1px 4px rgba(0, 0, 0, 0.1); }
 .demo-board.anim .demo-cell.placed { background: var(--hi); }
 .demo-cap { font-size: 0.9rem; color: var(--pencil); flex: 1; min-width: 120px; }
 .card-info { position: absolute; top: 4px; right: 8px; color: var(--blue); font-size: 1.2rem; padding: 4px; }
