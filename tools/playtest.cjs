@@ -118,7 +118,11 @@ const pick = (a) => a[Math.floor(rand() * a.length)];
         // Choose in every row that offers a choice, then Continue.
         const rows = page.locator('.cards.pick-one');
         for (let r = 0; r < await rows.count(); r++) {
-          if (!(await rows.nth(r).locator('.card.chosen').count())) { const cs = rows.nth(r).locator('.card'); await click(cs.nth(Math.floor(rand() * await cs.count()))); await page.waitForTimeout(150); }
+          if (!(await rows.nth(r).locator('.card.chosen').count())) {
+            // A tap opens the card; its Pick button chooses it.
+            const cs = rows.nth(r).locator('.card'); await click(cs.nth(Math.floor(rand() * await cs.count()))); await page.waitForTimeout(250);
+            await click(page.locator('.modal .info-actions button.primary')); await page.waitForTimeout(250);
+          }
         }
         const go = page.locator('.sticky-bottom .btn');
         if (await go.isDisabled().catch(() => false)) { errors.push(`[${st.screen}] Continue still disabled after choosing`); }
