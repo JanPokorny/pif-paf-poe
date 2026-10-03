@@ -94,12 +94,14 @@ export function mountDuel(root, opts) {
   const chips = h('div.chips');
   const cells = Array.from({ length: 9 }, (_, i) => h('div.cell', { dataset: { i } }));
   const stonesLayer = h('div.stones');
+  // The squares a stone acts on, lit white beneath the stones.
+  const glows = Array.from({ length: 9 }, (_, i) => h('div.glow', { style: `--r: ${Math.floor(i / 3)}; --c: ${i % 3}` }));
   const overlay = h('div.overlay');
   const lineLayer = h('div.winline');
   const gridLines = h('div.board-lines', { html: `<svg viewBox="0 0 300 300" preserveAspectRatio="none" aria-hidden="true">
     <path d="M101 8 C 98 90, 104 190, 99 292"/><path d="M200 6 C 203 100, 197 200, 202 293"/>
     <path d="M7 100 C 90 97, 200 104, 294 99"/><path d="M8 201 C 100 204, 190 197, 293 202"/></svg>` });
-  const board = h('div.board', {}, gridLines, h('div.cells', {}, cells), stonesLayer, lineLayer, overlay);
+  const board = h('div.board', {}, gridLines, h('div.glows', {}, glows), h('div.cells', {}, cells), stonesLayer, lineLayer, overlay);
   const actions = h('div.actions');
   const hand = h('div.hand.player-hand');
   const info = h('div.info-line');
@@ -240,7 +242,8 @@ export function mountDuel(root, opts) {
 
   function clearOverlay() {
     overlay.replaceChildren();
-    cells.forEach((c) => c.classList.remove('allowed', 'target', 'chosen', 'from', 'reach'));
+    cells.forEach((c) => c.classList.remove('allowed', 'target', 'chosen', 'from'));
+    glows.forEach((g) => g.classList.remove('on'));
   }
 
   // Squares, arrows and buttons for the choice at hand.
@@ -407,10 +410,12 @@ export function mountDuel(root, opts) {
       const dud = preview.logs?.includes('silenced');
       setStatus(dud ? t('{why} — it will do nothing. Confirm?', { why: t('Hushed') }) : t('This is what happens. Confirm?'), dud ? 'lose-note' : 'you');
       cells[preview.action.pos].classList.add('chosen');
-      for (const i of allowedSquares(state)) cells[i].classList.add('allowed');
-      // The squares it acts on from there: beside it (four) or around it (eight).
+      // The squares it acts on from there, white: beside it (four) or around it (eight).
+      // The other places it could go stay lit yellow.
       const reach = STONES[state.selected?.type]?.reach, at = preview.action.pos;
-      if (reach) for (let i = 0; i < 9; i++) if ((reach === 'around' ? touching : adjacent)(at, i)) cells[i].classList.add('reach');
+      const acts = (i) => reach && (reach === 'around' ? touching : adjacent)(at, i);
+      for (let i = 0; i < 9; i++) if (acts(i)) glows[i].classList.add('on');
+      for (const i of allowedSquares(state)) if (!acts(i)) cells[i].classList.add('allowed');
       renderActions([undo, h('button.btn.primary', { onclick: confirm }, h('span', { html: icon('check') }), t('Confirm'))]);
       verdict();
     } else if (state.phase === 'effect') {
