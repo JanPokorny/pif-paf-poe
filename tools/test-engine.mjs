@@ -735,6 +735,25 @@ test('a rule with nothing to choose leaves the boss\'s turn plain', () => {
 
 group('run');
 const RUN = await import('../src/run.js');
+test('a + one-shot costs one energy less; a + talisman makes a group of stones their + form', () => {
+  assert.equal(RUN.costOf({ type: 'swap' }), 2);
+  assert.equal(RUN.costOf({ type: 'swap', plus: true, once: true }), 1);
+  assert.equal(RUN.costOf({ type: 'shift', plus: true, once: true }), 0);
+  const run = RUN.newRun({ seed: 2 });
+  RUN.gainStone(run, { type: 'rotate' });
+  RUN.gainStone(run, { type: 'bonfire' });
+  RUN.gainRelic(run, 'plus-turn');
+  const hand = RUN.playerHand(run, run.pouch.map((x) => x.uid));
+  assert.deepEqual(hand.filter((x) => x.type !== 'pebble').map((x) => !!x.plus), [true, true]);
+});
+test('a + talisman is offered only for stones in the pouch', () => {
+  const run = RUN.newRun({ seed: 3 });
+  RUN.gainStone(run, { type: 'magnet' });
+  for (let i = 0; i < 200; i++) {
+    const r = RUN.randomRelic(run);
+    if (r?.startsWith('plus-')) assert.equal(r, 'plus-fence');
+  }
+});
 test('stones cost energy; a stone found joins the last hand if the energy pays for it', () => {
   const run = RUN.newRun({ seed: 1 });   // 1 energy, nothing in the pouch
   const hand = () => RUN.defaultHand(run).map((u) => run.pouch.find((x) => x.uid === u).type).sort();

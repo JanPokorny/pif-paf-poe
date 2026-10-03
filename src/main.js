@@ -2,7 +2,7 @@
 // run.screen, rendered into #app.
 
 import { STONES, CONDS, RULES, createGame } from './engine.js';
-import { RELICS, ENEMIES, ACTS, EVENTS } from './content.js';
+import { RELICS, OLD_PLUS_RELICS, ENEMIES, ACTS, EVENTS } from './content.js';
 import * as R from './run.js';
 import { h, hideToast, tapeUp, art, relicArt, scribbleX, scribbleO, stoneEl, iconEl, toast, modal, ask, pressable, infoStone, infoRelic, infoRule, infoThing, stoneCard, relicCard, stoneName, langToggle, energyBar, statusLine } from './ui/common.js';
 import { icon } from './icons.js';
@@ -193,7 +193,8 @@ function migrate() {
   for (const x of run.tricks ?? []) if (STONES[x]?.once) run.pouch.push({ type: x, uid: run.nextUid++ });
   delete run.tricks;
   if (duelState && (!duelState.spent || duelState.phase === 'trick')) { duelState = null; if (run.screen === 'duel') run.screen = 'predual'; }
-  run.relics = run.relics.filter((x) => RELICS[x]);
+  // Per-stone + talismans became grouped ones.
+  run.relics = [...new Set(run.relics.map((x) => OLD_PLUS_RELICS[x] ?? x))].filter((x) => RELICS[x]);
   // A duel in progress with a retired stone in it starts over.
   const known = (h) => STONES[h.type];
   if (duelState && !(duelState.hands.X.every(known) && duelState.hands.O.every(known) && duelState.board.every((c) => !c || known(c)))) {

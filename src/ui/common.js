@@ -45,7 +45,7 @@ export function art(kind, id, emoji) {
 }
 // A + talisman shows the stone it upgrades, starred.
 export const relicArt = (id) => (RELICS[id]?.upgrades
-  ? h('span.art.upgrade', { html: icon(RELICS[id].upgrades) + STAR })
+  ? h('span.art.upgrade', { html: RELICS[id].upgrades.map((x) => icon(x)).join('') + STAR })
   : art('relic', id, RELICS[id]?.emoji ?? '?'));
 
 export const iconEl = (name, cls = '') => h('span.icon-wrap', { html: icon(name, cls) });
@@ -58,11 +58,11 @@ export function stoneEl(s, player = 'X', opts = {}) {
   });
   updateStone(el, s, player, opts);
   // `cost`: its energy, as dots in the corner.
-  if (opts.cost) el.append(costDots(s.type));
+  if (opts.cost) el.append(costDots(s));
   return el;
 }
-export function costDots(type) {
-  const n = costOf(type);
+export function costDots(s) {
+  const n = costOf(s);
   return h('span.cost', { 'aria-label': t('{n} energy', { n }) }, ...Array.from({ length: n }, () => h('i')));
 }
 // The energy you have, as dots: `used` of them filled.
@@ -375,7 +375,7 @@ export function infoStone(s, player = 'X', extra = '', action = null) {
   const body = h('div.info-stone', {},
     h('div.info-head', {}, stoneEl(s, player), h('div', {},
       h('div.info-name', {}, stoneName(s)),
-      h('div.info-rarity.' + st.rarity, {}, [once ? t('one-shot') : null, t(st.rarity), costOf(s.type) ? t('{n} energy', { n: costOf(s.type) }) : null].filter(Boolean).join(' · ')))),
+      h('div.info-rarity.' + st.rarity, {}, [once ? t('one-shot') : null, t(st.rarity), costOf(s) ? t('{n} energy', { n: costOf(s) }) : null].filter(Boolean).join(' · ')))),
     h('p', {}, stoneText(s)),
     stoneDemo(s),
     // A plain stone that has a + tier says what its + form does.
@@ -393,6 +393,9 @@ export function infoRelic(id, action = null) {
     h('div.info-head', {}, h('div.relic-token', {}, relicArt(id)), h('div', {},
       h('div.info-name', {}, r.name), h('div.info-rarity.' + r.rarity, {}, t('relic') + ' · ' + t(r.rarity)))),
     h('p', {}, r.text),
+    // A + talisman: each stone it upgrades, and what its + form does.
+    r.upgrades ? h('div.plus-list', {}, r.upgrades.map((x) => h('div.plus-row', {},
+      stoneEl({ type: x, plus: true }, 'X', { mini: true }), h('span', {}, h('b', {}, `${STONES[x].name}+: `), STONES[x].plusText)))) : null,
     infoButtons(() => close(), action));
   const close = modal(body);
 }

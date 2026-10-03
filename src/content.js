@@ -39,16 +39,29 @@ export const RELICS = {
   'war-chest': { name: 'War Chest', emoji: '💰', rarity: 'rare',
     text: 'Gain 150 gold now.' },
 };
-// A talisman for each stone with a + tier: every stone of that kind you bring
-// is its + form. Offered only for stones in your pouch. Name and text are read
-// when shown, so they come in the language in use.
-for (const type of PLUS_STONES) {
-  RELICS[`plus-${type}`] = {
-    upgrades: type, rarity: 'uncommon', emoji: '✨',
-    get name() { return `${STONES[type].name}+`; },
-    get text() { return t('Your {stone} stones are always {stone}+: {plus}', { stone: STONES[type].name, plus: STONES[type].plusText }); },
+// + talismans: every stone of their kinds you bring is its + form. Kinds go
+// together by what they do and how much their + form adds (docs/STONE-FAMILIES.md).
+// Offered only when the pouch holds one of them. Text is read when shown, in
+// the language in use.
+const PLUS_TALISMANS = {
+  'plus-turn': { stones: ['rotate', 'bonfire'], rarity: 'uncommon', emoji: '🌀', name: 'Weathervane' },
+  'plus-slide': { stones: ['shift', 'gravity'], rarity: 'uncommon', emoji: '🛷', name: 'Sled' },
+  'plus-reach': { stones: ['swap', 'lasso'], rarity: 'uncommon', emoji: '🪝', name: 'Long Arm' },
+  'plus-blast': { stones: ['firecracker', 'bumper'], rarity: 'rare', emoji: '🧨', name: 'Fuse' },
+  'plus-fence': { stones: ['magnet', 'stinky'], rarity: 'uncommon', emoji: '🪧', name: 'Boundary Stone' },
+  'plus-trick': { stones: ['frog', 'parrot'], rarity: 'common', emoji: '🎩', name: 'Trickster\'s Hat' },
+};
+for (const [id, p] of Object.entries(PLUS_TALISMANS)) {
+  RELICS[id] = {
+    upgrades: p.stones, rarity: p.rarity, emoji: p.emoji, name: p.name,
+    get text() {
+      const names = p.stones.map((x) => STONES[x].name);
+      return t('Your {stones} stones play as their + form.', { stones: names.join(t(' and ')) });
+    },
   };
 }
+// Saves from when each stone had a talisman of its own.
+export const OLD_PLUS_RELICS = Object.fromEntries(Object.entries(PLUS_TALISMANS).flatMap(([id, p]) => p.stones.map((x) => [`plus-${x}`, id])));
 export const BOSS_RELICS = ['deep-pockets', 'echo', 'phoenix', 'war-chest'];
 export const RELIC_TYPES = Object.keys(RELICS);
 

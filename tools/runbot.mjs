@@ -30,7 +30,7 @@ function playDuel(run, cfg, piters, pblunder, rng) {
   const pouch = run.pouch.slice(0, 12);
   for (let m = 1; m < 1 << pouch.length; m++) {
     const set = pouch.filter((_, i) => m & (1 << i));
-    if (set.reduce((n, x) => n + R.costOf(x.type), 0) > energy) continue;
+    if (set.reduce((n, x) => n + R.costOf(x), 0) > energy) continue;
     const sc = set.reduce((n, x) => n + worth(x) - P0, 0) + (set.some((x) => STONES[x.type].kind === 'move') ? 0.2 : 0);
     if (sc > best) { best = sc; hand = set.map((x) => x.uid); }
   }
@@ -121,7 +121,7 @@ function playRun(spec) {
       }
       case 'shop': {
         const shop = run.pending.shop;
-        const wants = () => run.pouch.reduce((n, x) => n + R.costOf(x.type), 0) > R.energyOf(run);
+        const wants = () => run.pouch.reduce((n, x) => n + R.costOf(x), 0) > R.energyOf(run);
         const energize = () => { if (!shop.energized && run.gold >= shop.energyPrice && wants()) { run.gold -= shop.energyPrice; run.energy++; shop.energized = true; } };
         energize();
         if (run.hearts < run.maxHearts && run.gold >= shop.healPrice) { run.gold -= shop.healPrice; run.hearts++; }

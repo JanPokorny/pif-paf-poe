@@ -52,9 +52,13 @@ export const HAND = 4;
 const ENEMY_STONES = 5;
 export const START = { pouch: [], hearts: 6, gold: 30, energy: 1 };
 export const COST = { starter: 0, common: 1, uncommon: 2, rare: 3 };
-export const costOf = (type) => COST[STONES[type]?.rarity] ?? 0;
+// What a stone costs to bring: by its rarity, and a + one-shot one less.
+export const costOf = (s) => {
+  const type = s?.type ?? s, base = COST[STONES[type]?.rarity] ?? 0;
+  return s?.plus && s?.once ? Math.max(0, base - 1) : base;
+};
 export const energyOf = (run) => (run.energy ?? START.energy) + (has(run, 'deep-pockets') ? 1 : 0);
-export const handCost = (run, uids) => uids.reduce((n, u) => n + costOf(run.pouch.find((x) => x.uid === u)?.type), 0);
+export const handCost = (run, uids) => uids.reduce((n, u) => n + costOf(run.pouch.find((x) => x.uid === u)), 0);
 
 // A stone in the pouch: {uid, type}, and for a + one-shot `plus` and `once`.
 const stone = (run, s) => ({ type: s.type ?? s, uid: run.nextUid++, ...(s.plus && { plus: true }), ...(s.once && { once: true }) });
@@ -81,7 +85,7 @@ export const has = (run, relic) => run.relics.includes(relic);
 export const stoneName = (s) => STONES[s.type].name;
 export const isOnce = (s) => !!(s.once || STONES[s.type]?.once);
 // A stone as you bring it: its + form if it is a + one-shot or a talisman upgrades its kind.
-export const upgraded = (run, s) => !!(s.plus || has(run, `plus-${s.type}`));
+export const upgraded = (run, s) => !!(s.plus || run.relics.some((r) => RELICS[r]?.upgrades?.includes(s.type)));
 export const asBrought = (run, s) => (upgraded(run, s) ? { ...s, plus: true } : s);
 
 // ── Crafting ────────────────────────────────────────────────────────────────
@@ -711,7 +715,7 @@ export function defaultHand(run) {
   const chosen = [];
   const take = (u) => { if (!chosen.includes(u) && handCost(run, [...chosen, u]) <= energy) chosen.push(u); };
   for (const u of run.lastHand ?? []) if (owned.has(u)) take(u);
-  if (!run.lastHand) for (const s of [...run.pouch].sort((a, b) => costOf(b.type) - costOf(a.type))) take(s.uid);
+  if (!run.lastHand) for (const s of [...run.pouch].sort((a, b) => costOf(b) - costOf(a))) take(s.uid);
   return chosen;
 }
 
@@ -918,7 +922,7 @@ export function spendOnce(run, uids, spent) {
 }
 
 // A + talisman only for a kind of stone you keep in your pouch.
-const relicFits = (run, r) => !RELICS[r].upgrades || run.pouch.some((x) => x.type === RELICS[r].upgrades && !isOnce(x));
+const relicFits = (run, r) => !RELICS[r].upgrades || run.pouch.some((x) => RELICS[r].upgrades.includes(x.type) && !isOnce(x));
 export function randomRelic(run, rarity = null) {
   let pool = RELIC_TYPES.filter((r) => !has(run, r) && !BOSS_RELICS.includes(r) && relicFits(run, r));
   if (rarity) pool = pool.filter((r) => RELICS[r].rarity === rarity);
@@ -946,7 +950,7 @@ export function gainStone(run, s) {
   // left over pays for it.
   if (run.lastHand) {
     const hand = run.lastHand.filter((u) => run.pouch.some((x) => x.uid === u));
-    if (handCost(run, hand) + costOf(st.type) <= energyOf(run)) hand.push(st.uid);
+    if (handCost(run, hand) + costOf(st) <= energyOf(run)) hand.push(st.uid);
     run.lastHand = hand;
   }
   return st;

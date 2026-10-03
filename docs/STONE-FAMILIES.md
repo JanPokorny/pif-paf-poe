@@ -3,9 +3,23 @@
 Some stones have a **+ tier**: the same stone with a wider effect. A + stone comes two ways:
 
 - **as a one-shot**: one-shot rewards and shop one-shots include + stones (a dashed outline, a
-  star). Played once, it is gone from the pouch;
-- **as a talisman**: "Shift+" makes every Shift you bring a Shift+. A + talisman is offered only
-  for a kind of stone in your pouch.
+  star). It costs one energy less than its stone (a common one is free). Played once, it is gone
+  from the pouch;
+- **as a talisman**: each + talisman covers a group of stones, and every stone of those kinds you
+  bring plays as its + form. It is offered only when your pouch holds one of them.
+
+| talisman | stones | rarity |
+|---|---|---|
+| Weathervane (Korouhev) | Waltz, Bonfire | uncommon |
+| Sled (Saně) | Shift, Gravity | uncommon |
+| Long Arm (Dlouhá ruka) | Swap, Lasso | uncommon |
+| Boundary Stone (Mezník) | Magnet, Stinky | uncommon |
+| Fuse (Doutnák) | Firecracker, Bumper | rare |
+| Trickster's Hat (Šibalův klobouk) | Frog, Parrot | common |
+
+The groups pair stones by what they do and by how much their + form adds: the two strongest
++ forms (Firecracker's and Bumper's reach) make the one rare talisman, the two that add least
+(Frog's and Parrot's) the one common.
 
 **"Beside" always means the four squares that share a side.** A + form usually stretches from
 beside to the whole row and column. (The map is the one place where "next to" counts corners.)
