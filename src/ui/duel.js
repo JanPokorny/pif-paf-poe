@@ -141,7 +141,8 @@ export function mountDuel(root, opts) {
         setTimeout(() => e.classList.remove('hop'), 450);
       }
       e.dataset.at = i;
-      e.classList.toggle('last', c.id === lastEnemyId);
+      // Their latest stone, ringed on your turn only: not while they play, nor once it is over.
+      e.classList.toggle('last', c.id === lastEnemyId && !busy && !state.over && state.player === 'X');
       e.style.setProperty('--r', row(i));
       e.style.setProperty('--c', col(i));
       e.style.setProperty('--tilt', `${((c.id * 37) % 9) - 4}deg`);
