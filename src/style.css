@@ -918,3 +918,7 @@ body:has(.duel) #toast.show { transform: translate(-50%, 0) rotate(-1deg); }
 .cards.pick-one .card.unchosen { opacity: 0.45; }
 
 @media (max-width: 419px) { .topbar .where-name { display: none; } }
+
+.energy-bar.shake { animation: shake-no 0.4s ease-in-out; }
+.energy-bar.shake i { border-color: var(--red); }
+@keyframes shake-no { 20% { translate: -5px 0; } 40% { translate: 5px 0; } 60% { translate: -4px 0; } 80% { translate: 3px 0; } }

@@ -198,7 +198,6 @@ export default {
 
   'Energy: what your stones may cost together in a duel.': 'Energie: kolik smějí tvé kameny v souboji stát dohromady.',
   'No special stones yet. Pebbles you always have.': 'Zatím žádné speciální kameny. Oblázky máš vždycky.',
-  'Not enough energy: it costs {n}, {left} left.': 'Málo energie: stojí {n}, zbývá {left}.',
   'Pebbles fill the rest of your hand: {n}.': 'Zbytek ruky doplní oblázky: {n}.',
   'Only Pebbles.': 'Jen oblázky.',
   'Your stones': 'Tvoje kameny',

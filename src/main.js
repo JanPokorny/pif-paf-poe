@@ -495,7 +495,14 @@ function preDuel() {
         tap: () => {
           if (on) chosen = chosen.filter((u) => u !== s.uid);
           else if (R.handCost(run, [...chosen, s.uid]) <= energy) chosen.push(s.uid);
-          else { toast(t('Not enough energy: it costs {n}, {left} left.', { n: R.costOf(s.type), left: energy - R.handCost(run, chosen) }), 'bad'); return; }
+          else {
+            // Over budget: the energy bar shakes its head.
+            const e = bar.firstChild;
+            e?.classList.remove('shake'); void e?.offsetWidth; e?.classList.add('shake');
+            e?.addEventListener('animationend', () => e.classList.remove('shake'), { once: true });
+            sfx('undo');
+            return;
+          }
           sfx('click');
           draw();
         },
