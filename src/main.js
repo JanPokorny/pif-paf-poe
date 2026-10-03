@@ -503,10 +503,14 @@ function preDuel() {
   const grid = h('div.stone-row.pick');
   const bar = h('div.energy-slot');
   // The Pebbles that fill a hand, as one stone with a count; a tap says why.
-  const pebbles = (player, n, size) => h('button.stone-pick.pebble-pick', {
-    'aria-label': stoneName({ type: 'pebble' }),
-    onclick: () => infoStone({ type: 'pebble' }, player, t(player === 'X' ? 'Pebbles fill your hand up to {n} stones.' : 'Pebbles fill their hand up to {n} stones.', { n: size })),
-  }, stoneEl({ type: 'pebble' }, player), h('span.hand-count', {}, `×${n}`));
+  const pebbles = (player, n, size) => {
+    const chip = h('button.stone-pick.pebble-pick', {
+      'aria-label': stoneName({ type: 'pebble' }),
+      onclick: () => infoStone({ type: 'pebble' }, player, t(player === 'X' ? 'Pebbles fill your hand up to {n} stones.' : 'Pebbles fill their hand up to {n} stones.', { n: size })),
+    }, stoneEl({ type: 'pebble' }, player), h('span.hand-count', {}, `×${n}`));
+    if (!n) chip.classList.add('none');   // a full hand: no Pebbles, shown faint
+    return chip;
+  };
   const fight = h('button.btn.primary.wide.big', { onclick: begin }, t('Fight!'));
   const draw = () => {
     const fill = Math.max(0, R.HAND - chosen.length);
@@ -529,7 +533,7 @@ function preDuel() {
         },
         long: () => infoStone(s, 'X'),
       });
-    }), ...(fill ? [pebbles('X', fill, R.HAND)] : []));
+    }), pebbles('X', fill, R.HAND));
     bar.replaceChildren(energyBar(R.handCost(run, chosen), energy));
   };
   draw();

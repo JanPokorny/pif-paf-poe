@@ -888,6 +888,7 @@ body:has(.duel) #toast.show { transform: translate(-50%, 0) rotate(-1deg); }
 .energy-bar i.over { border-color: var(--red); background: var(--red); }
 .stone-row .pebble-pick { margin-left: 6px; }
 .stone-row.pick .pebble-pick { opacity: 1; }
+.stone-row.pick .pebble-pick.none { opacity: 0.35; }
 
 /* A duel's rules and conditions: each a slip of paper, its icon on the left. */
 .mod-notes { display: flex; flex-direction: column; gap: 8px; margin: 4px 0 10px; }
