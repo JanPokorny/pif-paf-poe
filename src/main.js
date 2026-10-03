@@ -105,7 +105,7 @@ function relicStrip() {
 function showPouch() {
   const body = h('div.pouch-view', {},
     h('h2', {}, t('Pouch · {n}', { n: run.pouch.length })),
-    run.pouch.length ? h('div.stone-grid', {}, run.pouch.map((s) => h('button.pouch-slot', { onclick: () => infoStone(s, 'X') }, stoneEl(s, 'X', { cost: true }), h('span', {}, stoneName(s)))))
+    run.pouch.length ? h('div.stone-grid', {}, run.pouch.map((p) => R.asBrought(run, p)).map((s) => h('button.pouch-slot', { onclick: () => infoStone(s, 'X') }, stoneEl(s, 'X', { cost: true }), h('span', {}, stoneName(s)))))
       : h('p.dim', {}, t('No special stones yet. Pebbles you always have.')),
     h('h2', {}, t('Relics')),
     run.relics.length ? h('div.relic-list', {}, run.relics.map((r) => h('button.relic-row', { onclick: () => infoRelic(r) }, h('span.relic-token.small', {}, relicArt(r)), h('span', {}, h('b', {}, RELICS[r].name), h('br'), RELICS[r].text)))) : h('p.dim', {}, t('No relics yet.')),
@@ -166,11 +166,18 @@ function settingsRow() {
   return row;
 }
 
-// Saves from before the evolved stones were retired: back to their plain forms.
-const RETIRED = { rail: 'shift', pivot: 'rotate', electromagnet: 'magnet', stench: 'stinky', 4096: '2048', blast: 'bumper',
-  teleport: 'swap', cyclone: 'bonfire', whirl: 'bonfire', turncoat: 'swap', overtake: 'relocate', pluck: 'relocate', bribe: 'relocate', kangaroo: 'frog', lighthouse: 'beacon', kaleidoscope: 'bonfire', flip: 'bonfire', bomb: 'firecracker' };
+// Saves with stones since retired: what each became. 'x+' is a + one-shot.
+const RETIRED = { rail: 'shift', pivot: 'rotate', electromagnet: 'magnet', stench: 'stinky', 4096: 'gravity', 2048: 'gravity', blast: 'bumper',
+  teleport: 'swap', cyclone: 'bonfire', whirl: 'bonfire', turncoat: 'swap', overtake: 'relocate', pluck: 'relocate', bribe: 'relocate',
+  kangaroo: 'frog', lighthouse: 'magnet', beacon: 'magnet', kaleidoscope: 'bonfire', flip: 'bonfire', bomb: 'firecracker',
+  mirror: 'swap+', nudge: 'lasso+', rehearse: 'parrot+' };
 function migrate() {
-  for (const st of run.pouch) st.type = RETIRED[st.type] ?? st.type;
+  for (const st of run.pouch) {
+    const to = RETIRED[st.type];
+    if (!to) continue;
+    st.type = to.replace(/\+$/, '');
+    if (to.endsWith('+')) { st.plus = true; st.once = true; }
+  }
   run.pouch = run.pouch.filter((st) => STONES[st.type]);
   // Energy in place of slots, and no Pebbles in the pouch: a slot past four
   // becomes energy, and each act already climbed one more.
@@ -514,7 +521,7 @@ function preDuel() {
   const fight = h('button.btn.primary.wide.big', { onclick: begin }, t('Fight!'));
   const draw = () => {
     const fill = Math.max(0, R.HAND - chosen.length);
-    grid.replaceChildren(...run.pouch.map((s) => {
+    grid.replaceChildren(...run.pouch.map((p) => R.asBrought(run, p)).map((s) => {
       const on = chosen.includes(s.uid);
       return pressable(h('button.stone-pick' + (on ? '.on' : ''), { 'aria-label': stoneName(s) }, stoneEl(s, 'X', { cost: true })), {
         tap: () => {
@@ -632,7 +639,7 @@ function takeStone(s, done) { R.gainStone(run, s); sfx('coin'); done(true); }
 function pickFromPouch(prompt, cb, { filter = () => true, cancel = t('Cancel') } = {}) {
   const list = run.pouch.filter(filter);
   const body = h('div.pouch-view', {}, h('h2', {}, prompt),
-    list.length ? h('div.stone-grid', {}, list.map((s) => h('button.pouch-slot', { onclick: () => { close(); cb(s); } }, stoneEl(s, 'X', { cost: true }), h('span', {}, stoneName(s)))))
+    list.length ? h('div.stone-grid', {}, list.map((s) => h('button.pouch-slot', { onclick: () => { close(); cb(s); } }, stoneEl(R.asBrought(run, s), 'X', { cost: true }), h('span', {}, stoneName(R.asBrought(run, s))))))
       : h('p.dim', {}, t('Nothing to choose.')),
     h('button.btn.wide.ghost', { onclick: () => { close(); cb(null); } }, cancel));
   const close = modal(body, { dismissable: false, cls: 'tall' });
@@ -777,7 +784,7 @@ function craftFlow(done) {
           picked = picked.includes(x.uid) ? picked.filter((u) => u !== x.uid) : picked.length < 2 ? [...picked, x.uid] : [picked[1], x.uid];
           sfx('click'); drawPick();
         },
-      }, stoneEl(x, 'X', { cost: true }), infoName(x, 'X')))),
+      }, stoneEl(R.asBrought(run, x), 'X', { cost: true }), infoName(R.asBrought(run, x), 'X')))),
       h('p.dim', {}, b ? t('→ one {tier} stone', { tier: t(R.craftTier(a, b)) }) : t('Two stones → one better.')),
       h('button.btn.primary.wide', {
         disabled: !b || undefined,
@@ -819,7 +826,7 @@ function eventScreen() {
     rng: () => R.rand(run),
     // `pay` is charged on the first pick, so backing out costs nothing.
     craft: () => new Promise((resolve) => craftFlow((text) => resolve(text ?? t('You change your mind.')))),
-    pickOnce: (text) => new Promise((resolve) => pickFromPouch(text, resolve, { filter: (x) => STONES[x.type].once, cancel: t('Never mind') })),
+    pickOnce: (text) => new Promise((resolve) => pickFromPouch(text, resolve, { filter: (x) => R.isOnce(x), cancel: t('Never mind') })),
     chooseStone: (rarity, pay = null) => new Promise((resolve) => {
       const opts = R.stoneChoices(run, 'elite', rarity);
       const body = h('div.pouch-view', {}, h('h2', {}, t('Choose a stone')),
@@ -922,7 +929,7 @@ function endScreen(victory) {
       h('div', {}, h('b', {}, st.gold), t(' gold earned', { n: st.gold })),
       h('div', {}, h('b', {}, mins), tp(mins, ' minute', ' minutes'))),
     h('div.section-label', {}, t('Final pouch')),
-    h('div.hand.show', {}, run.pouch.map((s) => stoneEl(s, 'X', { mini: true }))),
+    h('div.hand.show', {}, run.pouch.map((s) => stoneEl(R.asBrought(run, s), 'X', { mini: true }))),
     relicStrip(),
     victory && meta.maxHeat > run.heat ? h('p.good', {}, t('Heat {n} unlocked!', { n: run.heat + 1 })) : null,
     h('button.btn.wide', { onclick: () => shareResult(victory) }, t('Copy result to share')),

@@ -1,7 +1,7 @@
 // Everything a run is made of that is not the duel itself: relics, enemies,
 // acts, events. Numbers here are the balance; tools/balance.mjs measures them.
 
-import { STONES, BASE_STONES, ONCE_STONES } from './engine.js';
+import { STONES, BASE_STONES, ONCE_STONES, PLUS_STONES } from './engine.js';
 import { t } from './i18n.js';
 
 // ── Relics ──────────────────────────────────────────────────────────────────
@@ -39,6 +39,16 @@ export const RELICS = {
   'war-chest': { name: 'War Chest', emoji: '💰', rarity: 'rare',
     text: 'Gain 150 gold now.' },
 };
+// A talisman for each stone with a + tier: every stone of that kind you bring
+// is its + form. Offered only for stones in your pouch. Name and text are read
+// when shown, so they come in the language in use.
+for (const type of PLUS_STONES) {
+  RELICS[`plus-${type}`] = {
+    upgrades: type, rarity: 'uncommon', emoji: '✨',
+    get name() { return `${STONES[type].name}+`; },
+    get text() { return t('Your {stone} stones are always {stone}+: {plus}', { stone: STONES[type].name, plus: STONES[type].plusText }); },
+  };
+}
 export const BOSS_RELICS = ['deep-pockets', 'echo', 'phoenix', 'war-chest'];
 export const RELIC_TYPES = Object.keys(RELICS);
 
@@ -51,7 +61,7 @@ export const RELIC_PRICE = { common: 110, uncommon: 140, rare: 170 };
 // Stones you can find as rewards: everything but the Pebble and the one-shot
 // stones, which come on their own.
 export const REWARD_STONES = BASE_STONES.filter((t) => !STONES[t].once);
-export { ONCE_STONES };
+export { ONCE_STONES, PLUS_STONES };
 
 // ── Enemies ─────────────────────────────────────────────────────────────────
 //
@@ -116,13 +126,13 @@ export const ENEMIES = {
     core: ['frog', 'stinky'], pool: ['frog', 'stinky', 'rotate'], iters: 130, blunder: 0.05,
     quote: 'Ribbit. Hop. Ribbit.' },
   keeper: { name: 'Lighthouse Keeper', emoji: '🗼', act: 2, tier: 'normal',
-    core: ['beacon', 'beacon'], pool: ['beacon', 'shift', 'mountain', 'bumper'], iters: 130, blunder: 0.15,
+    core: ['magnet+', 'magnet'], pool: ['magnet', 'shift', 'mountain', 'bumper'], iters: 130, blunder: 0.15,
     quote: 'Stay in the light.' },
   dolphin: { name: 'Flip Flop', emoji: '🐬', act: 2, tier: 'normal',
     core: ['bonfire', 'bonfire'], pool: ['bonfire', 'swap', 'magnet'], iters: 130, blunder: 0.15,
     quote: 'Round and round it goes!' },
   miner: { name: 'Quarry Miner', emoji: '⛏️', act: 2, tier: 'normal',
-    core: ['2048', 'mountain', 'magnet'], pool: ['2048', 'mountain', 'shift', 'stinky'], iters: 130, blunder: 0.05,
+    core: ['gravity+', 'mountain', 'magnet'], pool: ['gravity', 'mountain', 'shift', 'stinky'], iters: 130, blunder: 0.05,
     quote: 'Dig, slide, dig.' },
   magpie: { name: 'Magpie Meg', emoji: '🐦', act: 2, tier: 'normal',
     core: ['magpie', 'shift'], pool: ['shift', 'rotate', 'magnet'], iters: 90, blunder: 0.28,
@@ -132,8 +142,8 @@ export const ENEMIES = {
     core: ['magnet', 'stinky', 'swap'], pool: ['magnet', 'shift', 'rotate'], iters: 350, blunder: 0.08,
     once: ['muffle'], quote: 'Nobody sits in the middle, dear.' },
   golem: { name: 'Stone Golem', emoji: '🗿', act: 2, tier: 'elite',
-    core: ['mountain', 'mountain', 'magnet'], pool: ['2048', 'shift', 'magnet'], iters: 350, blunder: 0.08,
-    once: ['nudge'], quote: 'I. DO. NOT. MOVE.' },
+    core: ['mountain', 'mountain', 'magnet'], pool: ['gravity', 'shift', 'magnet'], iters: 350, blunder: 0.08,
+    once: ['lasso+'], quote: 'I. DO. NOT. MOVE.' },
   // bosses
   colossus: { name: 'Clockwork Colossus', emoji: '⚙️', act: 2, tier: 'boss',
     rules: ['column'], rules2: ['column', 'spy'], iters: 60, blunder: 0.2,
@@ -153,23 +163,23 @@ export const ENEMIES = {
     core: ['swap', 'lasso'], pool: ['magnet', 'stinky', 'shift', 'mountain'], iters: 400, blunder: 0.08,
     quote: 'Loyalty is for pebbles.' },
   parrot: { name: 'Captain Polly', emoji: '🦜', act: 3, tier: 'normal', cond: 'shared',
-    core: ['parrot', 'parrot'], pool: ['magnet', 'shift', '2048', 'swap'], iters: 400, blunder: 0.18,
+    core: ['parrot', 'parrot'], pool: ['magnet', 'shift', 'gravity', 'swap'], iters: 400, blunder: 0.18,
     quote: 'Squawk! What\'s yours is mine!' },
   jester: { name: 'The Jester', emoji: '🃏', act: 3, tier: 'normal',
     core: ['swap', 'bonfire'], pool: ['shift', 'swap', 'magnet', 'bonfire'], iters: 220, blunder: 0.14,
     quote: 'Now you see it, now you don\'t!' },
   robot: { name: 'Tile Bot 2048', emoji: '🤖', act: 3, tier: 'normal',
-    core: ['2048', '2048'], pool: ['mountain', 'magnet', 'stinky'], iters: 450, blunder: 0.05,
+    core: ['gravity+', 'gravity+'], pool: ['mountain', 'magnet', 'stinky'], iters: 450, blunder: 0.05,
     quote: 'CALCULATING OPTIMAL SLIDE.' },
   yeti: { name: 'Summit Yeti', emoji: '🦍', act: 3, tier: 'normal', cond: 'gravity',
     core: ['mountain', 'magnet', 'stinky'], pool: ['lasso', 'frog', 'bonfire', 'mountain'], iters: 450, blunder: 0.02,
     once: ['muffle'], quote: 'ROAR. Everything falls down mountain.' },
   // elites
   owl: { name: 'Grand Tactician', emoji: '🦉', act: 3, tier: 'elite',
-    core: ['magnet', 'shift', 'swap'], pool: ['rotate', 'swap', 'beacon', 'firecracker'], iters: 300, blunder: 0.06,
-    once: ['mirror'], quote: 'I have seen this position before.' },
+    core: ['magnet', 'shift', 'swap'], pool: ['rotate', 'swap', 'magnet+', 'firecracker'], iters: 300, blunder: 0.06,
+    once: ['swap+'], quote: 'I have seen this position before.' },
   storm: { name: 'Storm Caller', emoji: '⛈️', act: 3, tier: 'elite',
-    core: ['bonfire', 'bonfire', 'magnet'], pool: ['2048', 'bumper', 'shift'], iters: 450, blunder: 0.03,
+    core: ['bonfire', 'bonfire', 'magnet'], pool: ['gravity', 'bumper', 'shift'], iters: 450, blunder: 0.03,
     quote: 'The wind takes everything.' },
   // bosses
   grandmaster: { name: 'The Grandmaster', emoji: '👑', act: 3, tier: 'boss',
@@ -369,7 +379,7 @@ ENEMIES.hermit = { name: 'The Hermit', emoji: '🧙', act: 0, tier: 'event',
   core: ['swap', 'frog', 'mountain'], pool: ['shift', 'rotate', 'magnet', 'stinky'], iters: 300, blunder: 0.1,
   quote: 'Show me what you have learned.' };
 ENEMIES.nightowl = { name: 'The Night Owl', emoji: '🦉', act: 0, tier: 'event',
-  core: ['magnet', 'stinky', 'swap'], pool: ['shift', 'rotate', 'beacon', 'bumper'], iters: 700, blunder: 0,
+  core: ['magnet', 'stinky', 'swap'], pool: ['shift', 'rotate', 'magnet+', 'bumper'], iters: 700, blunder: 0,
   quote: 'Hoo. Your move.' };
 ENEMIES.thief = { name: 'The Pickpocket', emoji: '🥷', act: 0, tier: 'event',
   core: ['firecracker', 'swap'], pool: ['shift', 'pebble', 'stinky'], iters: 150, blunder: 0.2,

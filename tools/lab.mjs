@@ -107,7 +107,6 @@ const PATCHES = {
     }
   } },
   // Rehearse: a copy of the last special stone you placed.
-  'rehearse:copy': { copies: 'self', options: undefined, apply: undefined },
   // Lasso: fetches any enemy stone to an empty square beside it.
   'lasso:fetch': {
     options: (s, pos, cell) => { const out = []; for (let i = 0; i < 9; i++) { const c = s.board[i]; if (!c || c.player === cell.player || STONES[c.type].immovable || ORTHO4(pos).includes(i)) continue; for (const to of ORTHO4(pos)) if (!s.board[to]) out.push({ from: i, to }); } return out; },
@@ -185,11 +184,11 @@ const BUILDS = {
   'movers (Shift, Rotate)': ['shift', 'rotate'],
   'restrictions (Magnet, Stinky)': ['magnet', 'stinky'],
   'Magnet + Shift': ['magnet', 'shift'],
-  'Beacon + Stinky': ['beacon', 'stinky'],
+  'Magnet+ + Stinky': ['magnet+', 'stinky'],
   'two Mountains': ['mountain', 'mountain'],
   'Swap + Lasso': ['swap', 'lasso'],
-  '2048 + Bonfire': ['2048', 'bonfire'],
-  'one-shots (Relocate, Nudge)': ['relocate', 'nudge'],
+  'Gravity+ + Bonfire': ['gravity+', 'bonfire'],
+  'one-shots (Relocate, Lasso+)': ['relocate', 'lasso+'],
   'Magnet, Stinky, Shift, Rotate': ['magnet', 'stinky', 'shift', 'rotate'],
 };
 
@@ -214,7 +213,7 @@ const EXPERIMENTS = {
     const cast = Object.keys(ENEMIES).filter((k) => ENEMIES[k].act === 1 && ENEMIES[k].tier === 'normal');
     for (const type of STONE_TYPES) for (const id of cast) for (let i = 0; i < g; i++) {
       const d = enemyDuel(1, id, i * 31 + 7);
-      out.push({ key: `${type}|${id}`, handX: [type, ...P(3)], handO: d.handO.map((x) => x.type), conds: d.conds, rules: d.rules, modsO: d.modsO, itersO: d.iters, blunderO: d.blunder, seed: i + 1 });
+      out.push({ key: `${type}|${id}`, handX: [type, ...P(3)], handO: d.handO.map((x) => x.type + (x.plus ? '+' : '')), conds: d.conds, rules: d.rules, modsO: d.modsO, itersO: d.iters, blunderO: d.blunder, seed: i + 1 });
     }
     return out;
   },
@@ -232,7 +231,7 @@ const EXPERIMENTS = {
       for (const [fk, handO] of Object.entries(foes)) for (let i = 0; i < g; i++) out.push({ key: `${version === 'now' ? type + ' now' : version}|${fk}`, patch: p, handX: [type, ...withX, ...P(3 - withX.length)], handO, seed: i + 1 });
       for (const id of cast) for (let i = 0; i < g / 4; i++) {
         const d = enemyDuel(1, id, i * 31 + 7, { tier: ENEMIES[id].tier });
-        out.push({ key: `${version === 'now' ? type + ' now' : version}|act 1`, patch: p, handX: [type, ...withX, ...P(3 - withX.length)], handO: d.handO.map((x) => x.type), conds: d.conds, rules: d.rules, modsO: d.modsO, itersO: d.iters, blunderO: d.blunder, seed: i + 1 });
+        out.push({ key: `${version === 'now' ? type + ' now' : version}|act 1`, patch: p, handX: [type, ...withX, ...P(3 - withX.length)], handO: d.handO.map((x) => x.type + (x.plus ? '+' : '')), conds: d.conds, rules: d.rules, modsO: d.modsO, itersO: d.iters, blunderO: d.blunder, seed: i + 1 });
       }
     }
     return out;
@@ -247,7 +246,7 @@ const EXPERIMENTS = {
       const label = v.label ?? `${v.id}${v.undead ? '+undead' : ''} ${JSON.stringify(v.set ?? {})}`;
       for (let i = 0; i < g; i++) {
         const d = enemyDuel(e.act, v.id, i * 17 + 3, ctx);
-        out.push({ key: label, handX: typicalHand(e.act, i), handO: d.handO.map((x) => x.type), conds: d.conds, rules: d.rules, modsO: d.modsO, itersO: d.iters, blunderO: d.blunder, seed: i + 1 });
+        out.push({ key: label, handX: typicalHand(e.act, i), handO: d.handO.map((x) => x.type + (x.plus ? '+' : '')), conds: d.conds, rules: d.rules, modsO: d.modsO, itersO: d.iters, blunderO: d.blunder, seed: i + 1 });
       }
       for (const k of Object.keys(e)) if (!(k in saved)) delete e[k];
       Object.assign(e, saved);
@@ -269,7 +268,7 @@ const EXPERIMENTS = {
       if (!e.act || e.tier === 'boss') continue;
       for (const type of arg('stones', null)?.split(',') ?? STONE_TYPES) for (let i = 0; i < g; i++) {
         const d = enemyDuel(e.act, id, i * 31 + 7, { tier: e.tier });
-        out.push({ key: `${type}|${id}`, handX: [type, ...P(SLOTS[e.act] - 1)], handO: d.handO.map((x) => x.type), conds: d.conds, rules: d.rules, modsO: d.modsO, itersO: d.iters, blunderO: d.blunder, seed: i + 1 });
+        out.push({ key: `${type}|${id}`, handX: [type, ...P(SLOTS[e.act] - 1)], handO: d.handO.map((x) => x.type + (x.plus ? '+' : '')), conds: d.conds, rules: d.rules, modsO: d.modsO, itersO: d.iters, blunderO: d.blunder, seed: i + 1 });
       }
     }
     return out;
@@ -281,13 +280,13 @@ const EXPERIMENTS = {
       const phases = e.tier === 'boss' ? [0, 1] : [null];
       for (const ph of phases) for (let i = 0; i < g; i++) {
         const d = enemyDuel(e.act, id, i * 17 + 3, e.tier === 'boss' ? { bossWins: ph } : { tier: e.tier });
-        out.push({ key: `${id}${ph ? '+undead' : ''}`, handX: typicalHand(e.act, i), handO: d.handO.map((x) => x.type), conds: d.conds, rules: d.rules, modsO: d.modsO, itersO: d.iters, blunderO: d.blunder, seed: i + 1 });
+        out.push({ key: `${id}${ph ? '+undead' : ''}`, handX: typicalHand(e.act, i), handO: d.handO.map((x) => x.type + (x.plus ? '+' : '')), conds: d.conds, rules: d.rules, modsO: d.modsO, itersO: d.iters, blunderO: d.blunder, seed: i + 1 });
       }
     }
     // The events' duels too.
     for (const id of ['hermit', 'nightowl', 'thief']) for (let i = 0; i < g; i++) {
       const d = enemyDuel(2, id, i * 17 + 3, { tier: 'event', event: id });
-      out.push({ key: id, handX: typicalHand(2, i), handO: d.handO.map((x) => x.type), conds: d.conds, rules: d.rules, itersO: d.iters, blunderO: d.blunder, seed: i + 1 });
+      out.push({ key: id, handX: typicalHand(2, i), handO: d.handO.map((x) => x.type + (x.plus ? '+' : '')), conds: d.conds, rules: d.rules, itersO: d.iters, blunderO: d.blunder, seed: i + 1 });
     }
     return out;
   },
@@ -298,13 +297,13 @@ const EXPERIMENTS = {
       for (const ph of [0, 1]) for (const [bk, build] of Object.entries(BUILDS)) for (let i = 0; i < g; i++) {
         const d = enemyDuel(e.act, id, i * 17 + 3, { bossWins: ph });
         const slots = SLOTS[e.act];
-        out.push({ key: `${id}${ph ? '+undead' : ''}|${bk}`, handX: [...build.slice(0, slots), ...P(slots - build.length)], handO: d.handO.map((x) => x.type), rules: d.rules, itersO: d.iters, blunderO: d.blunder, seed: i + 1 });
+        out.push({ key: `${id}${ph ? '+undead' : ''}|${bk}`, handX: [...build.slice(0, slots), ...P(slots - build.length)], handO: d.handO.map((x) => x.type + (x.plus ? '+' : '')), rules: d.rules, itersO: d.iters, blunderO: d.blunder, seed: i + 1 });
       }
     }
     return out;
   },
   pairs(g) {
-    const top = (arg('top', 'magnet,stinky,beacon,shift,swap,twin,magpie,2048,bonfire,rotate,mountain,relocate,nudge')).split(',');
+    const top = (arg('top', 'magnet,stinky,shift,swap,twin,magpie,gravity,bonfire,rotate,mountain,relocate,lasso')).split(',');
     const out = [];
     for (let a = 0; a < top.length; a++) for (let b = a; b < top.length; b++) for (let i = 0; i < g; i++) {
       out.push({ key: `${top[a]}+${top[b]}`, handX: [top[a], top[b], ...P(2)], handO: ['magnet', 'shift', 'rotate', ...P(2)], seed: i + 1 });

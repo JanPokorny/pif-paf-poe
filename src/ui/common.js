@@ -1,6 +1,6 @@
 // Small DOM helpers shared by every screen.
 
-import { STONES, CONDS, RULES, BLOCKS, createGame, legalActions, applyAction, cloneState, allowedSquares, touching, adjacent } from '../engine.js';
+import { STONES, CONDS, RULES, BLOCKS, createGame, legalActions, applyAction, cloneState, allowedSquares, adjacent, specOf } from '../engine.js';
 import { RELICS } from '../content.js';
 import { costOf } from '../run.js';
 import { icon, ICONS } from '../icons.js';
@@ -43,7 +43,10 @@ export function art(kind, id, emoji) {
   const name = kind === 'x' ? id : `${kind}-${id}`;
   return ICONS[name] ? h('span.art', { html: icon(name) }) : h('span.art.stamp', {}, emoji);
 }
-export const relicArt = (id) => art('relic', id, RELICS[id]?.emoji ?? '?');
+// A + talisman shows the stone it upgrades, starred.
+export const relicArt = (id) => (RELICS[id]?.upgrades
+  ? h('span.art.upgrade', { html: icon(RELICS[id].upgrades) + STAR })
+  : art('relic', id, RELICS[id]?.emoji ?? '?'));
 
 export const iconEl = (name, cls = '') => h('span.icon-wrap', { html: icon(name, cls) });
 
@@ -51,7 +54,7 @@ export const iconEl = (name, cls = '') => h('span.icon-wrap', { html: icon(name,
 export function stoneEl(s, player = 'X', opts = {}) {
   const el = h(`div.stone.${player}`, {
     dataset: { type: s.type },
-    title: STONES[s.type]?.name,
+    title: stoneName(s),
   });
   updateStone(el, s, player, opts);
   // `cost`: its energy, as dots in the corner.
@@ -75,7 +78,8 @@ export function updateStone(el, s, player, opts = {}) {
   el.classList.toggle('stuck', !!opts.stuck);
   el.classList.toggle('dead', !!opts.dead);
   el.classList.toggle('mini', !!opts.mini);
-  el.classList.toggle('once', !!STONES[s.type]?.once);
+  el.classList.toggle('once', !!(s.once || STONES[s.type]?.once));
+  el.classList.toggle('plus', !!(s.plus && STONES[s.type]?.plus));
   if (el.dataset.type !== s.type || !el.firstChild) {
     el.dataset.type = s.type;
     el.innerHTML = icon(s.type, 'glyph') + STAR + '<span class="tape"></span>';
@@ -100,8 +104,9 @@ export function pressable(el, { tap, long }) {
   return el;
 }
 
-export function stoneName(s) { return STONES[s.type]?.name ?? s.type; }
-export function stoneText(s) { return STONES[s.type]?.text ?? ''; }
+// A stone's name and text: its + form's for a + stone.
+export function stoneName(s) { return specOf(s)?.name ?? s.type; }
+export function stoneText(s) { return specOf(s)?.text ?? ''; }
 
 let toastTimer = null;
 let toastAt = 0;
@@ -225,19 +230,22 @@ function demoBoard(board, marks = {}) {
 function areaOf(st, pos, o) {
   const ring = (near) => [...Array(9).keys()].filter((i) => near(pos, i));
   if (st.reach === 'beside') return { cells: ring(adjacent), cap: t('Beside: the four squares that share a side.') };
-  if (st.reach === 'around') return { cells: ring(touching), cap: t('Around: all eight squares, corners too.') };
+  const inLine = (a, b) => a !== b && (((a / 3) | 0) === ((b / 3) | 0) || a % 3 === b % 3);
+  if (st.reach === 'line') return { cells: ring(inLine), cap: t('Its whole row and column.') };
   if (st.id === 'rotate' && o?.block) return { cells: BLOCKS[o.block], cap: t('One of the 2×2 blocks it is in.') };
   if (st.id === 'shift' && o?.dir) {
     const r = (pos / 3) | 0, c = pos % 3;
+    if (st !== STONES[st.id]) return { cells: o.dir === 'left' || o.dir === 'right' ? [o.index * 3, o.index * 3 + 1, o.index * 3 + 2] : [o.index, o.index + 3, o.index + 6], cap: t('Any row or column.') };
     return { cells: o.dir === 'left' || o.dir === 'right' ? [r * 3, r * 3 + 1, r * 3 + 2] : [c, c + 3, c + 6], cap: t('Its row or its column.') };
   }
   return null;
 }
 
 function stoneDemo(s) {
-  const st = STONES[s.type];
+  const st = specOf(s);
+  const plus = s.plus && STONES[s.type].plus ? { plus: true } : {};
   const fresh = () => {
-    const g = createGame({ handX: [s.type], first: 'X', log: false });
+    const g = createGame({ handX: [{ type: s.type, ...plus }], first: 'X', log: false });
     let id = 50;
     for (const [i, p] of Object.entries(DEMO_BOARD)) g.board[+i] = { player: p, type: 'pebble', id: id++ };
     g.nextId = 100;
@@ -248,8 +256,8 @@ function stoneDemo(s) {
       // Landed in the centre: the squares the enemy may and may not use.
       const g = fresh();
       const before = cloneState(g).board;
-      before[4] = { player: 'X', type: s.type, id: g.nextId };
-      applyAction(g, { type: 'select', stone: s.type });
+      before[4] = { player: 'X', type: s.type, id: g.nextId, ...plus };
+      applyAction(g, { type: 'select', stone: s.type, ...plus });
       applyAction(g, { type: 'place', pos: 4 });
       if (g.phase === 'effect') applyAction(g, legalActions(g)[0]);
       g.phase = 'place';
@@ -264,10 +272,10 @@ function stoneDemo(s) {
     for (const pos of [4, 0, 5, 7, 1]) {
       const g = fresh();
       if (g.board[pos]) continue;
-      applyAction(g, { type: 'select', stone: s.type });
+      applyAction(g, { type: 'select', stone: s.type, ...plus });
       // Before: the stone drawn where it lands, nothing done yet.
       const before = cloneState(g).board;
-      before[pos] = { player: 'X', type: s.type, id: g.nextId };
+      before[pos] = { player: 'X', type: s.type, id: g.nextId, ...plus };
       applyAction(g, { type: 'place', pos });
       const opts = g.phase === 'effect' ? legalActions(g) : [null];
       for (const o of opts) {
@@ -362,13 +370,18 @@ function infoButtons(close, action) {
 
 export function infoStone(s, player = 'X', extra = '', action = null) {
   const st = STONES[s.type];
+  const once = s.once || st.once;
+  const plus = s.plus && st.plus;
   const body = h('div.info-stone', {},
     h('div.info-head', {}, stoneEl(s, player), h('div', {},
       h('div.info-name', {}, stoneName(s)),
-      h('div.info-rarity.' + st.rarity, {}, [st.once ? t('one-shot') : null, t(st.rarity), costOf(s.type) ? t('{n} energy', { n: costOf(s.type) }) : null].filter(Boolean).join(' · ')))),
+      h('div.info-rarity.' + st.rarity, {}, [once ? t('one-shot') : null, t(st.rarity), costOf(s.type) ? t('{n} energy', { n: costOf(s.type) }) : null].filter(Boolean).join(' · ')))),
     h('p', {}, stoneText(s)),
     stoneDemo(s),
-    st.once ? h('p.info-plus', {}, t('One use: once played, it is gone from your pouch.')) : null,
+    // A plain stone that has a + tier says what its + form does.
+    st.plus && !plus ? h('p.info-plus', {}, h('b', {}, `${st.name}+: `), st.plusText) : null,
+    plus ? h('p.info-plus', {}, t('Without the +: {text}', { text: st.text })) : null,
+    once ? h('p.info-plus', {}, t('One use: once played, it is gone from your pouch.')) : null,
     extra ? h('p.info-extra', {}, extra) : null,
     infoButtons(() => close(), action));
   const close = modal(body);

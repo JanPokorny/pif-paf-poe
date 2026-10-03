@@ -33,12 +33,13 @@ function test(name, fn) {
 const PEBBLES = Array(9).fill('pebble');
 function G(o = {}) { return createGame({ first: 'X', log: false, ...o, handX: [...(o.handX ?? []), ...(o.pebblesX ?? PEBBLES)], handO: [...(o.handO ?? []), ...(o.pebblesO ?? PEBBLES)] }); }
 
-// 'O shift' / 'X pebble!' (! = stuck) -> parts
+// 'O shift' / 'X pebble!' (! = stuck) / 'O magnet+' (its + form) -> parts
 function parse(str) {
   let [player, t] = str.split(' ');
   const stuck = t.endsWith('!'); if (stuck) t = t.slice(0, -1);
+  const plus = t.endsWith('+'); if (plus) t = t.slice(0, -1);
   assert.ok(STONES[t], `unknown stone ${t}`);
-  return { player, type: t, stuck };
+  return { player, type: t, stuck, plus };
 }
 // Lay stones by hand. A stone laid on square k gets id 100 + k.
 function lay(s, spec) {
@@ -46,6 +47,7 @@ function lay(s, spec) {
     const c = parse(str);
     const cell = { player: c.player, type: c.type, id: 100 + Number(k) };
     if (c.stuck) cell.stuck = true;
+    if (c.plus) cell.plus = true;
     s.board[Number(k)] = cell;
   }
   return s;
@@ -59,11 +61,13 @@ function expectAt(s, map, msg = '') {
 }
 // Select + place a stone for the player to move (adding it to their hand if
 // missing). Returns the id the placed stone gets.
-function play(s, type, pos) {
+// 'shift+' plays the + form.
+function play(s, name, pos) {
+  const plus = name.endsWith('+'), type = name.replace(/\+$/, '');
   const hand = s.hands[s.player];
-  if (!hand.some((h) => h.type === type)) hand.push({ type });
+  if (!hand.some((h) => h.type === type && !!h.plus === plus)) hand.push({ type, ...(plus && { plus: true }) });
   const id = s.nextId;
-  applyAction(s, { type: 'select', stone: type });
+  applyAction(s, { type: 'select', stone: type, ...(plus && { plus: true }) });
   applyAction(s, { type: 'place', pos });
   return id;
 }
@@ -271,16 +275,15 @@ test('Rotate steps over a Mountain in the block', () => {
   // tl -> tr -> (br held) -> bl -> tl
   expectAt(s, { 1: id, 4: 104, 3: 101, 0: 0 });
 });
-test('2048 slides everything one way as far as it goes, stepping over Mountains', () => {
+test('Gravity: everything falls down, stepping over Mountains; Gravity+ picks the way', () => {
   const s = G();
-  lay(s, { 0: 'O pebble', 1: 'O mountain', 6: 'O pebble' });
-  const id = play(s, '2048', 2);
-  eff(s, { dir: 'left' });
-  // row 0: the Mountain holds 1; 0 already packed left; the 2048 at 2 cannot pass... it packs to the nearest free square beyond
-  expectAt(s, { 0: 100, 1: 101, 2: id, 6: 106 });
+  lay(s, { 0: 'O pebble', 3: 'O mountain', 1: 'O pebble' });
+  const id = play(s, 'gravity', 2);   // one way only: it falls at once
+  // column 0: the Mountain holds 3, the Pebble above it falls past to 6; column 1 to 7; the Gravity to 8.
+  expectAt(s, { 6: 100, 3: 103, 7: 101, 8: id });
   const t = G();
   lay(t, { 0: 'O mountain', 2: 'O pebble' });
-  play(t, '2048', 5);
+  play(t, 'gravity+', 5);
   eff(t, { dir: 'left' });
   expectAt(t, { 0: 100, 1: 102 });
 });
@@ -302,21 +305,31 @@ test('Bumper does not push a Mountain', () => {
   play(s, 'bumper', 4);
   expectAt(s, { 1: 101 });
 });
-test('Lasso pulls any enemy stone onto an empty square beside it', () => {
+test('Lasso pulls an enemy stone in its row or column next to it; Lasso+ any stone, from anywhere', () => {
   const s = G();
-  lay(s, { 6: 'O pebble', 5: 'O pebble', 0: 'X pebble' });
-  play(s, 'lasso', 2);   // beside 2: 1 (empty) and 5 (already beside, stays); one choice, made on its own
-  expectAt(s, { 1: 106, 5: 105, 0: 100 });
-});
-test('Swap trades with a stone around it, corners included — not further', () => {
-  const s = G();
-  lay(s, { 7: 'O pebble' });
-  play(s, 'swap', 1);
-  turnPassedTo(s, 'O');   // nothing around it: no effect
+  lay(s, { 0: 'O pebble', 8: 'O pebble', 6: 'X pebble' });
+  play(s, 'lasso', 2);   // in line: 0 (row) and 8 (column); 6 is not in line
+  sameSet(effectOpts(s).map((o) => o.from), [0, 8]);
+  eff(s, { from: 0, to: 1 });
+  expectAt(s, { 1: 100, 8: 108, 6: 106 });
   const t = G();
-  lay(t, { 0: 'O pebble' });
+  lay(t, { 6: 'X pebble' });
+  play(t, 'lasso+', 2);
+  sameSet(effectOpts(t).map((o) => `${o.from}>${o.to}`), ['6>1', '6>5']);
+});
+test('Swap trades with a stone beside it, not a corner; Swap+ with any stone', () => {
+  const s = G();
+  lay(s, { 0: 'O pebble' });
+  play(s, 'swap', 4);
+  turnPassedTo(s, 'O');   // 0 is a corner of 4, not beside it: no effect
+  const t = G();
+  lay(t, { 1: 'O pebble' });
   const id = play(t, 'swap', 4);
-  expectAt(t, { 4: 100, 0: id });
+  expectAt(t, { 4: 101, 1: id });
+  const u = G();
+  lay(u, { 8: 'O pebble', 7: 'O pebble' });
+  play(u, 'swap+', 0);
+  sameSet(effectOpts(u).map((o) => o.target), [7, 8]);
 });
 test('Frog leaps over a stone; an enemy stone leapt over is knocked off the board', () => {
   const s = G();
@@ -331,34 +344,60 @@ test('Frog does not leap diagonally', () => {
   play(s, 'frog', 0);
   turnPassedTo(s, 'O');
 });
-test('Bonfire turns the stones around it one step; a stuck stone holds', () => {
+test('Bonfire turns the stones beside it one step clockwise; a stuck stone holds', () => {
   const s = G();
-  lay(s, { 0: 'O pebble', 1: 'O mountain', 5: 'O pebble' });
-  play(s, 'bonfire', 4);
-  eff(s, { spin: 1 });
-  // Clockwise round the centre: 0 → (1 holds) → 2, 5 → 8.
-  expectAt(s, { 2: 100, 1: 101, 8: 105, 0: 0, 5: 0 });
+  lay(s, { 1: 'O pebble', 5: 'O mountain', 7: 'O pebble', 0: 'O pebble' });
+  play(s, 'bonfire', 4);   // one way only: at once
+  // Clockwise from above: 1 → (5 holds) → 7 → 3 → 1. The corner 0 is not beside it.
+  expectAt(s, { 7: 101, 5: 105, 3: 107, 1: 0, 0: 100 });
 });
-test('Bonfire in a corner turns its arc of three', () => {
+test('Bonfire+ turns either way; from a corner its two neighbours just trade', () => {
   const s = G();
-  lay(s, { 1: 'O pebble', 4: 'O pebble' });
-  play(s, 'bonfire', 0);
-  eff(s, { spin: -1 });
-  // The arc runs 1, 4, 3 clockwise; anticlockwise each stone steps back along it, and 1 wraps round to 3.
-  expectAt(s, { 3: 101, 1: 104, 4: 0 });
+  lay(s, { 1: 'O pebble', 3: 'O shift' });
+  play(s, 'bonfire+', 4);
+  eff(s, { spin: -1 });   // anticlockwise round 1, 5, 7, 3: 3 → 7, 1 → 3
+  expectAt(s, { 7: 103, 3: 101, 1: 0, 5: 0 });
+  const t = G();
+  lay(t, { 1: 'O pebble' });
+  play(t, 'bonfire+', 0);   // beside the corner: 1 and 3, one way only
+  expectAt(t, { 3: 101, 1: 0 });
 });
 test('Magnet: the enemy must place next to it', () => sameSet(allowedFor({ 0: 'O magnet' }), [1, 3]));
 test('Stinky: must not place next to it', () => sameSet(allowedFor({ 4: 'O stinky' }), [0, 2, 6, 8]));
-test('Beacon: pick its row or its column', () => {
+test('Shift+ slides any row or column; Waltz+ turns either way', () => {
   const s = G();
-  play(s, 'beacon', 1);
-  sameSet(effectOpts(s).map((o) => o.line), ['row', 'col']);
-  eff(s, { line: 'col' });
-  applyAction(s, { type: 'select', stone: 'pebble' });
-  sameSet(allowedSquares(s), [4, 7]);
+  play(s, 'shift+', 0);
+  assert.equal(effectOpts(s).length, 12);
+  const t = G();
+  play(t, 'rotate+', 0);
+  sameSet(effectOpts(t).map((o) => o.cw), [true, false]);
+});
+test('Bumper+ pushes every enemy stone in its row and column', () => {
+  const s = G();
+  lay(s, { 1: 'O pebble', 3: 'O pebble', 5: 'X pebble', 0: 'O pebble' });
+  play(s, 'bumper+', 4);
+  // 1 is pushed off the top edge; 3 off the left; 5 is yours and stays; 0 is a corner, not in line.
+  expectAt(s, { 1: 0, 3: 0, 5: 105, 0: 100 });
+  const t = G();
+  lay(t, { 1: 'O pebble', 2: 'O pebble' });
+  play(t, 'bumper+', 0);
+  // Along the row: 2 goes off the edge first, then 1 steps into 2.
+  expectAt(t, { 2: 101, 1: 0 });
+});
+test('Frog+ sends the enemy stone it leaps back to their hand, and leaves your Pebble in its place', () => {
+  const s = G();
+  lay(s, { 1: 'O shift' });
+  play(s, 'frog+', 0);   // one leap to make: at once
+  assert.equal(s.board[2].type, 'frog');
+  assert.deepEqual([s.board[1].player, s.board[1].type], ['X', 'pebble']);
+  assert.equal(count(s, 'O', 'shift'), 1);
+});
+test('Magnet+ and Stinky+ reach their whole row and column', () => {
+  sameSet(allowedFor({ 0: 'O magnet+' }), [1, 2, 3, 6]);
+  sameSet(allowedFor({ 4: 'O stinky+' }), [0, 2, 6, 8]);
 });
 test('Restrictions compose: satisfy as many as any square can', () => {
-  sameSet(allowedFor({ 0: 'O magnet', 2: 'O beacon' }), [1]);
+  sameSet(allowedFor({ 0: 'O magnet', 2: 'O magnet+' }), [1]);
   sameSet(allowedFor({ 0: 'O magnet', 8: 'O magnet' }), [1, 3, 5, 7]);
   sameSet(allowedFor({ 4: 'O magnet', 2: 'O stinky' }), [3, 7]);
 });
@@ -370,14 +409,17 @@ test('Mountain is never moved by stone effects', () => {
   eff(s, { dir: 'left', index: 0 });
   expectAt(s, { 0: 100 });
 });
-test('Firecracker blows a stone back into its owner\'s hand and stays', () => {
+test('Firecracker blows a stone beside it back into its owner\'s hand and stays; Firecracker+ any in its row or column', () => {
   const s = G();
-  lay(s, { 0: 'O shift', 8: 'O pebble' });
-  const id = play(s, 'firecracker', 4);
-  eff(s, { target: 0 });
-  expectAt(s, { 0: 0, 4: id, 8: 108 });
+  lay(s, { 1: 'O shift', 0: 'O pebble' });
+  const id = play(s, 'firecracker', 4);   // only 1 is beside it; the corner 0 is not
+  expectAt(s, { 1: 0, 4: id, 0: 100 });
   assert.equal(s.board[4].type, 'firecracker');
   assert.equal(count(s, 'O', 'shift'), 1);
+  const t = G();
+  lay(t, { 0: 'O pebble', 8: 'O pebble', 6: 'O pebble' });
+  play(t, 'firecracker+', 2);
+  sameSet(effectOpts(t).map((o) => o.target), [0, 8]);
 });
 test('Parrot becomes the enemy\'s last special stone', () => {
   const s = G();
@@ -426,19 +468,26 @@ test('A Pebble sent back goes back into its owner\'s hand', () => {
 group('one-shot stones');
 
 test('one-shot stones are marked once and counted as spent when played from your hand', () => {
-  assert.ok(ONCE_STONES.length >= 6);
+  assert.ok(ONCE_STONES.length >= 3);
   for (const t of ONCE_STONES) assert.ok(STONES[t].once && STONES[t].text, t);
-  const s = G({ handX: ['nudge', 'nudge'] });
-  lay(s, { 8: 'O pebble' });
-  play(s, 'nudge', 0);
+  const s = G({ handX: ['relocate', 'relocate'] });
+  lay(s, { 8: 'X pebble' });
+  play(s, 'relocate', 0);
   eff(s, { from: 8, to: 7 });
-  assert.deepEqual(s.spent.X, ['nudge']);
-  assert.equal(count(s, 'X', 'nudge'), 1);
+  assert.deepEqual(s.spent.X, ['relocate']);
+  assert.equal(count(s, 'X', 'relocate'), 1);
+});
+test('a + one-shot is spent as itself, the plain stone of its kind stays', () => {
+  const s = G({ handX: [{ type: 'shift', plus: true, once: true }, 'shift'] });
+  play(s, 'shift+', 0);
+  eff(s, { dir: 'right', index: 2 });
+  assert.deepEqual(s.spent.X, ['shift+']);
+  assert.equal(count(s, 'X', 'shift'), 1);
 });
 test('a one-shot stone that makes your line wins', () => {
-  const s = G({ handX: ['nudge'] });
+  const s = G({ handX: ['relocate'] });
   lay(s, { 0: 'X pebble', 1: 'X pebble', 5: 'X pebble' });
-  play(s, 'nudge', 8);
+  play(s, 'relocate', 8);
   eff(s, { from: 5, to: 2 });
   assert.equal(s.winner, 'X');
 });
@@ -478,38 +527,41 @@ test('Muffle: the enemy\'s next stone does nothing', () => {
   expectAt(s, { 1: 101 });
   assert.ok(s.board[4].hushed);
 });
-test('Rehearse becomes a copy of your last special stone', () => {
-  const s = G({ handX: ['rehearse', 'firecracker'] });
-  lay(s, { 0: 'O pebble', 8: 'O shift' });
-  play(s, 'firecracker', 1);   // one target: 0 goes back
-  play(s, 'pebble', 3);   // the enemy's turn
-  play(s, 'rehearse', 7);   // a Firecracker again
-  eff(s, { target: 8 });
-  assert.equal(s.board[8], null);
-  assert.equal(s.board[7].type, 'firecracker');
-  const t = G({ handX: ['rehearse'] });
-  play(t, 'rehearse', 4);   // nothing placed yet: it stays itself
-  assert.equal(t.board[4].type, 'rehearse');
+test('Parrot becomes the enemy\'s last stone; Parrot+ copies any stone on the board, and it acts', () => {
+  const s = G({ handX: ['parrot'] });
+  lay(s, { 0: 'O pebble', 8: 'X shift' });
+  play(s, 'pebble', 3);
+  play(s, 'pebble', 6);   // the enemy's last stone: a Pebble
+  play(s, 'parrot', 7);
+  assert.equal(s.board[7].type, 'pebble');
+  const t = G({ handX: ['parrot+'] });
+  lay(t, { 0: 'O firecracker', 8: 'X shift', 2: 'O pebble' });
+  play(t, 'parrot+', 1);
+  sameSet(effectOpts(t).map((o) => o.target), [0, 8]);   // one per kind, Pebbles left out
+  eff(t, { target: 0 });   // a Firecracker now, next to 0 and 2
+  assert.equal(t.board[1].type, 'firecracker');
+  eff(t, { target: 2 });
+  assert.equal(t.board[2], null);
 });
-test('Mind Control: the stone named does nothing', () => {
+test('Mind Control: the stone named is played, and works', () => {
   const s = G({ handX: ['mind-control'], handO: ['bumper'] });
   lay(s, { 1: 'X pebble' });
   play(s, 'mind-control', 8);
   eff(s, { stone: 'bumper' });
   play(s, 'bumper', 4);
-  expectAt(s, { 1: 101 });
-  assert.ok(s.board[4].hushed);
+  expectAt(s, { 1: 0 });   // pushed off the top edge
+  assert.ok(!s.board[4].hushed);
 });
-test('Mountain goes anywhere, whatever the restrictions; Mirror and Relocate cannot move it', () => {
+test('Mountain goes anywhere, whatever the restrictions; Relocate cannot move it', () => {
   const s = G({ handX: ['mountain'] });
   lay(s, { 0: 'O magnet' });
   applyAction(s, { type: 'select', stone: 'mountain' });
   assert.equal(allowedSquares(s).length, 8);
   applyAction(s, { type: 'place', pos: 8 });
-  const t = G({ handX: ['mirror'] });
-  lay(t, { 0: 'X mountain', 1: 'O pebble' });
-  play(t, 'mirror', 4);
-  assert.ok(!legalActions(t).some((a) => a.a === 0 || a.b === 0));
+  const t = G({ handX: ['relocate'] });
+  lay(t, { 0: 'X mountain', 1: 'X pebble' });
+  play(t, 'relocate', 4);
+  assert.ok(!legalActions(t).some((a) => a.from === 0));
 });
 
 // ── Conditions ──────────────────────────────────────────────────────────────
@@ -633,7 +685,7 @@ test('Double Time: the boss\'s word lasts both of your stones', () => {
   assert.ok(allowedSquares(s).every((i) => i % 3 !== 0));
 });
 test('Clinch: you must place next to a boss stone', () => {
-  sameSet(allowedFor({ 0: 'O pebble' }, { rules: ['clinch'] }), [1, 3, 4]);
+  sameSet(allowedFor({ 0: 'O pebble' }, { rules: ['clinch'] }), [1, 3]);
   sameSet(allowedFor({}, { rules: ['clinch'] }), [0, 1, 2, 3, 4, 5, 6, 7, 8], 'no boss stone: anywhere');
 });
 test('Clinch does not bind the boss', () => {
@@ -653,10 +705,10 @@ test('Column: the boss closes a column for your next turn', () => {
   assert.equal(s.dictate, null, 'the word lasts one turn');
 });
 test('Spy: the boss names the direction your stone moves', () => {
-  const s = B(['spy'], { handX: ['2048'] });
+  const s = B(['spy'], { handX: ['gravity+'] });
   play(s, 'pebble', 4);
   act(s, { type: 'dictate', value: 'up' });
-  const id = play(s, '2048', 6);   // one way left to go: it slides at once
+  const id = play(s, 'gravity+', 6);   // one way left to go: it slides at once
   expectAt(s, { 0: id, 1: s.board[1]?.id });
   assert.equal(s.board[1]?.player, 'O');
   turnPassedTo(s, 'O');
@@ -694,10 +746,10 @@ test('stones cost energy; a stone found joins the last hand if the energy pays f
   RUN.gainStone(run, { type: 'rotate' });   // no energy left for it
   assert.deepEqual(hand(), ['shift']);
   run.energy = 4;
-  RUN.gainStone(run, { type: 'beacon' });   // rare: 3, and 3 are left
-  assert.deepEqual(hand(), ['beacon', 'shift']);
+  RUN.gainStone(run, { type: 'firecracker' });   // rare: 3, and 3 are left
+  assert.deepEqual(hand(), ['firecracker', 'shift']);
   assert.equal(RUN.handCost(run, RUN.defaultHand(run)), 4);
-  assert.deepEqual(RUN.playerHand(run, RUN.defaultHand(run)).map((x) => x.type).sort(), ['beacon', 'pebble', 'pebble', 'shift']);
+  assert.deepEqual(RUN.playerHand(run, RUN.defaultHand(run)).map((x) => x.type).sort(), ['firecracker', 'pebble', 'pebble', 'shift']);
 });
 
 // ── cloneState ──────────────────────────────────────────────────────────────
@@ -726,13 +778,13 @@ test('cloneState shares no mutable object with the original', () => {
   assert.deepEqual(sharedRefs(c, s), []);
 });
 test('mutating a clone leaves the original alone', () => {
-  const s = G({ handX: ['shift', 'nudge'] });
+  const s = G({ handX: ['shift', 'relocate'] });
   lay(s, { 0: 'X pebble!', 1: 'O shift' });
   play(s, 'pebble', 8);
   const before = snap(s);
   const c = cloneState(s);
   c.board[0].player = 'O'; c.board[0].stuck = false; c.board[1] = null;
-  c.hands.X.pop(); c.spent.X.push('nudge');
+  c.hands.X.pop(); c.spent.X.push('relocate');
   c.silenced.X = 3; c.placements.O = 7; c.echo.X = true; c.lastSpecial.O = 'rotate';
   applyAction(c, legalActions(c)[0]);
   assert.equal(snap(s), before);
@@ -806,7 +858,7 @@ for (let g = 0; g < GAMES; g++) {
       }
       c.board.forEach((x) => { if (x) { x.player = 'X'; x.stuck = true; } });
       c.hands.X.push({ type: 'shift' }); c.hands.O.length = 0;
-      c.spent.X.push('nudge'); c.silenced.O = 5;
+      c.spent.X.push('relocate'); c.silenced.O = 5;
       if (snap(s) !== before) fuzzFail('mutating a clone leaves the original alone', where());
     }
     const a = legal[(r() * legal.length) | 0];

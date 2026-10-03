@@ -6,7 +6,7 @@
 
 import { STONES, CONDS } from './engine.js';
 import {
-  RELICS, RELIC_TYPES, BOSS_RELICS, ENEMIES, ACTS, EVENTS, enemiesOf, EASY_OPENERS,
+  RELICS, RELIC_TYPES, BOSS_RELICS, PLUS_STONES, ENEMIES, ACTS, EVENTS, enemiesOf, EASY_OPENERS,
   STONE_PRICE, ONCE_PRICE, RELIC_PRICE, REWARD_STONES, ONCE_STONES,
 } from './content.js';
 
@@ -56,7 +56,8 @@ export const costOf = (type) => COST[STONES[type]?.rarity] ?? 0;
 export const energyOf = (run) => (run.energy ?? START.energy) + (has(run, 'deep-pockets') ? 1 : 0);
 export const handCost = (run, uids) => uids.reduce((n, u) => n + costOf(run.pouch.find((x) => x.uid === u)?.type), 0);
 
-const stone = (run, type) => ({ type, uid: run.nextUid++ });
+// A stone in the pouch: {uid, type}, and for a + one-shot `plus` and `once`.
+const stone = (run, s) => ({ type: s.type ?? s, uid: run.nextUid++, ...(s.plus && { plus: true }), ...(s.once && { once: true }) });
 
 export function newRun({ seed = (Math.random() * 2 ** 31) | 0, heat = 0 } = {}) {
   const hearts = START.hearts - (heat >= 3 ? 1 : 0);
@@ -78,7 +79,10 @@ export function newRun({ seed = (Math.random() * 2 ** 31) | 0, heat = 0 } = {}) 
 
 export const has = (run, relic) => run.relics.includes(relic);
 export const stoneName = (s) => STONES[s.type].name;
-export const isOnce = (s) => !!STONES[s.type]?.once;
+export const isOnce = (s) => !!(s.once || STONES[s.type]?.once);
+// A stone as you bring it: its + form if it is a + one-shot or a talisman upgrades its kind.
+export const upgraded = (run, s) => !!(s.plus || has(run, `plus-${s.type}`));
+export const asBrought = (run, s) => (upgraded(run, s) ? { ...s, plus: true } : s);
 
 // ── Crafting ────────────────────────────────────────────────────────────────
 //
@@ -607,6 +611,9 @@ export function hurt(run, n) {
 const CLASH = { shared: ['magpie'] };
 const clashes = (cond, hand) => (CLASH[cond] ?? []).some((type) => hand.some((s) => s.type === type));
 
+// 'magnet' or 'magnet+' (its + form) as a stone for a hand.
+const stoneOf = (name) => (name.endsWith('+') ? { type: name.slice(0, -1), plus: true } : { type: name });
+
 function rollEnemyHand(run, enemy, tier, context) {
   if (tier === 'boss') return [];
   const act = ACTS[Math.max(0, (enemy.act || run.act) - 1)];
@@ -617,7 +624,7 @@ function rollEnemyHand(run, enemy, tier, context) {
   if (context.easy) size = Math.min(size, 1);
   const hand = enemy.core.slice(0, size);
   while (hand.length < size) hand.push(pick(run, enemy.pool));
-  return hand.map((type) => ({ type }));
+  return hand.map(stoneOf);
 }
 
 
@@ -629,7 +636,7 @@ export function prepareDuel(run, enemyId, context = {}) {
   // Heat makes everyone think harder. Later acts' rank and file already think
   // hard by nature; they are eased a little, as an act is several pages of them.
   let heatIters = (tier === 'boss' ? 1 : [1, 0.8, 0.6][Math.max(0, run.act - 1)]) * (run.heat >= 1 ? 1.5 : 1);
-  for (const type of enemy.once ?? []) handO.push({ type });
+  for (const name of enemy.once ?? []) handO.push(stoneOf(name));
   // Pebbles to fill its hand: enough for a full board, and one to spare.
   for (let k = ENEMY_STONES - handO.length; k > 0; k--) handO.push({ type: 'pebble' });
   const modsO = { ...(enemy.mods ?? {}) };
@@ -652,7 +659,7 @@ export function prepareDuel(run, enemyId, context = {}) {
   if (tier === 'elite' && run.act >= 2) {
     quirk = pick(run, Object.keys(QUIRKS));
     if (quirk === 'tricky') handO.push(randomOnce(run));
-    if (quirk === 'stocked') handO.unshift({ type: pick(run, enemy.pool) });
+    if (quirk === 'stocked') handO.unshift(stoneOf(pick(run, enemy.pool)));
     if (quirk === 'keen') heatIters *= 1.5;
     conds = conds.filter((c) => !clashes(c, handO));
   }
@@ -676,7 +683,8 @@ export const QUIRKS = {
 // What the player brings: the chosen stones (by uid) as a duel hand.
 // The chosen stones, and Pebbles up to a hand of four.
 export function playerHand(run, uids) {
-  const hand = uids.map((u) => run.pouch.find((s) => s.uid === u)).filter(Boolean).map((s) => ({ type: s.type }));
+  const hand = uids.map((u) => run.pouch.find((s) => s.uid === u)).filter(Boolean)
+    .map((s) => ({ type: s.type, ...(upgraded(run, s) && { plus: true }), ...(s.once && { once: true }) }));
   while (hand.length < HAND) hand.push({ type: 'pebble' });
   return hand;
 }
@@ -888,10 +896,13 @@ export function stoneChoices(run, tier = 'normal', rarity = null, count = 3) {
   return out;
 }
 
+// A one-shot: one of the one-shot stones, or the + form of a stone that has one.
 export function randomOnce(run, rarity = null) {
   const r = rarity ?? weighted(run, { common: 60, uncommon: 28, rare: 12 });
-  const pool = ONCE_STONES.filter((t) => STONES[t].rarity === r);
-  return { type: pick(run, pool.length ? pool : ONCE_STONES) };
+  const all = [...ONCE_STONES, ...PLUS_STONES.map((t) => `${t}+`)];
+  const pool = all.filter((n) => STONES[n.replace(/\+$/, '')].rarity === r);
+  const name = pick(run, pool.length ? pool : all);
+  return name.endsWith('+') ? { type: name.slice(0, -1), plus: true, once: true } : { type: name };
 }
 
 // After a duel: the one-shot stones you played are gone from the pouch.
@@ -899,17 +910,19 @@ export function spendOnce(run, uids, spent) {
   const left = [...spent];
   for (const u of uids ?? []) {
     const st = run.pouch.find((x) => x.uid === u);
-    const k = st ? left.indexOf(st.type) : -1;
+    const k = st ? left.indexOf(st.type + (st.plus ? '+' : '')) : -1;
     if (k < 0) continue;
     left.splice(k, 1);
     run.pouch = run.pouch.filter((x) => x !== st);
   }
 }
 
+// A + talisman only for a kind of stone you keep in your pouch.
+const relicFits = (run, r) => !RELICS[r].upgrades || run.pouch.some((x) => x.type === RELICS[r].upgrades && !isOnce(x));
 export function randomRelic(run, rarity = null) {
-  let pool = RELIC_TYPES.filter((r) => !has(run, r) && !BOSS_RELICS.includes(r));
+  let pool = RELIC_TYPES.filter((r) => !has(run, r) && !BOSS_RELICS.includes(r) && relicFits(run, r));
   if (rarity) pool = pool.filter((r) => RELICS[r].rarity === rarity);
-  if (!pool.length) pool = RELIC_TYPES.filter((r) => !has(run, r));
+  if (!pool.length) pool = RELIC_TYPES.filter((r) => !has(run, r) && relicFits(run, r));
   if (!pool.length) return null;
   const table = { common: 55, uncommon: 32, rare: 13 };
   const byR = weighted(run, table);
@@ -927,7 +940,7 @@ export function gainRelic(run, id) {
 }
 
 export function gainStone(run, s) {
-  const st = stone(run, s.type);
+  const st = stone(run, s);
   run.pouch.push(st);
   // A new stone goes into the hand you last took into a duel, if the energy
   // left over pays for it.

@@ -7,7 +7,7 @@
 
 import {
   STONES, CONDS, RULES, legalActions, applyAction, cloneState, allowedSquares,
-  winningLine, active, row, col, LINES, ELS, touching, adjacent,
+  winningLine, active, row, col, LINES, ELS, adjacent, specOf,
 } from '../engine.js';
 import { h, stoneEl, updateStone, toast, pressable, infoStone, ruleChip, stoneName, stoneText, sleep, statusLine } from './common.js';
 import { icon } from '../icons.js';
@@ -16,7 +16,7 @@ import { think } from '../brain.js';
 import { sfx } from '../sound.js';
 import { musicEvent } from '../music.js';
 
-const FIELD_ORDER = ['pos', 'from', 'a', 'to', 'target', 'dir', 'block', 'turn', 'spin', 'line', 'ring', 'stone', 'hold', 'only'];
+const FIELD_ORDER = ['pos', 'from', 'a', 'to', 'target', 'dir', 'block', 'turn', 'spin', 'ring', 'stone', 'hold', 'only'];
 const DIR_ARROW = { up: 'arrow-up', down: 'arrow-down', left: 'arrow-left', right: 'arrow-right' };
 
 // The next choice that tells these candidates apart.
@@ -38,11 +38,14 @@ function stageOf(cands) {
   return { kind: 'single' };
 }
 
-// A hand as one entry per kind of stone: {st, k (its first index), n}.
+// A hand as one entry per kind of stone (a + form a kind of its own): {st, k (its first index), n}.
+const sameKind = (a, b) => a.type === b.type && !!a.plus === !!b.plus;
+// The key of a stone in the enemy's hand, as a hand slot: 'O:shift' or 'O:shift+'.
+const enemyKey = (st) => `O:${st.type}${st.plus ? '+' : ''}`;
 function groupHand(hand) {
   const out = [];
   hand.forEach((st, k) => {
-    const g = out.find((x) => x.st.type === st.type);
+    const g = out.find((x) => sameKind(x.st, st));
     if (g) g.n++; else out.push({ st, k, n: 1 });
   });
   return out;
@@ -157,13 +160,16 @@ export function mountDuel(root, opts) {
     }
   }
 
+  const slotStone = (key) => (typeof key === 'string'
+    ? { type: key.slice(2).replace(/\+$/, ''), ...(key.endsWith('+') && { plus: true }) }
+    : (snapshot ?? state).hands.X[key]);
   // Which select action a hand slot stands for: a hand index, or 'O:type'
   // for a stone taken from the enemy's hand (Open Hands).
   const slotAction = (s, key) => {
     const acts = legalActions(s);
-    if (typeof key === 'string' && key.startsWith('O:')) return acts.find((a) => a.from === 'O' && a.stone === key.slice(2));
-    const st = s.hands.X[key];
-    return st && acts.find((a) => a.stone === st.type && !a.from);
+    const st = typeof key === 'string' ? slotStone(key) : s.hands.X[key];
+    const from = typeof key === 'string' ? 'O' : undefined;
+    return st && acts.find((a) => a.from === from && sameKind({ type: a.stone, plus: a.plus }, st));
   };
 
   function renderHands(s, shown = s) {
@@ -177,7 +183,7 @@ export function mountDuel(root, opts) {
     const kinds = groupHand(theirs);
     enemyHand.replaceChildren(...kinds.map(({ st, n }) => {
       const e = stoneEl(st, 'O');
-      const key = `O:${st.type}`;
+      const key = enemyKey(st);
       if (shared && selecting) { if (slotAction(s, key)) e.classList.add('borrow'); else e.classList.add('forbidden'); }
       if (shared && inTurn && selKey === key && s.phase === 'place') e.classList.add('selected');
       e.addEventListener('click', () => { if (!e.classList.contains('target')) tapEnemyStone(st); });
@@ -191,7 +197,7 @@ export function mountDuel(root, opts) {
     // progress, show the hand as it was. A long press reads a stone.
     const slot = (key, st, n = 1) => {
       const e = stoneEl(st, 'X');
-      const b = pressable(h('button.hand-slot', { 'aria-label': STONES[st.type].name }, e,
+      const b = pressable(h('button.hand-slot', { 'aria-label': stoneName(st) }, e,
         n > 1 ? h('span.hand-count', {}, `×${n}`) : null), { tap: () => tapHand(key), long: () => infoStone(st, 'X') });
       if (inTurn && key === selKey) b.classList.add(s.phase === 'place' ? 'selected' : 'placed');
       if (selecting && !slotAction(s, key)) b.classList.add('forbidden');
@@ -323,17 +329,6 @@ export function mountDuel(root, opts) {
           h('span', { html: icon(x > 0 ? 'rotate-cw' : 'rotate-ccw') }), Math.abs(x) > 1 ? h('span.times', {}, '×2') : null);
         place(...spot[x], b);
       }
-    } else if (stage.kind === 'line') {
-      // A Beacon's line: a note at the end of its row, its column, its diagonal.
-      const at = state.placedAt;
-      const spot = { row: [3.3, row(at) + 0.5], col: [col(at) + 0.5, 3.3], d: [3.25, 3.25], a: [-0.25, 3.25] };
-      const label = { row: '↔', col: '↕', d: '⤡', a: '⤢' };
-      for (const [k, group] of stage.groups) {
-        place(...spot[k], h('button.rot.axis' + (isChosen(group) ? '.chosen' : ''), { onclick: pickGroup(group), 'aria-label': k }, label[k]));
-      }
-      if (chosen?.line) {
-        for (let i = 0; i < 9; i++) if (STONES.beacon.restrict(i, at, false, chosen.line) && i !== at) cells[i].classList.add('chosen');
-      }
     } else if (stage.kind === 'hold' || stage.kind === 'only') {
       const label = stage.kind === 'hold'
         ? { true: t('It holds its square'), false: t('It slides too') }
@@ -404,10 +399,10 @@ export function mountDuel(root, opts) {
       const dud = preview.logs?.includes('silenced');
       setStatus(dud ? t('{why} — it will do nothing. Confirm?', { why: t('Hushed') }) : t('This is what happens. Confirm?'), dud ? 'lose-note' : 'you');
       cells[preview.action.pos].classList.add('chosen');
-      // The squares it acts on from there, white: beside it (four) or around it (eight).
+      // The squares it acts on from there, white: beside it, or its whole row and column.
       // The other places it could go stay lit yellow.
-      const reach = STONES[state.selected?.type]?.reach, at = preview.action.pos;
-      const acts = (i) => reach && (reach === 'around' ? touching : adjacent)(at, i);
+      const reach = state.selected && specOf(state.selected).reach, at = preview.action.pos;
+      const acts = (i) => i !== at && (reach === 'beside' ? adjacent(at, i) : reach === 'line' && (row(i) === row(at) || col(i) === col(at)));
       for (let i = 0; i < 9; i++) if (acts(i)) glows[i].classList.add('on');
       for (const i of allowedSquares(state)) if (!acts(i)) cells[i].classList.add('allowed');
       renderActions([undo, h('button.btn.primary', { onclick: confirm }, h('span', { html: icon('check') }), t('Confirm'))]);
@@ -474,7 +469,7 @@ export function mountDuel(root, opts) {
   // ── Player input ──────────────────────────────────────────────────────────
   function myMove() { return !busy && !ended && !state.over && state.player === 'X'; }
 
-  const slotStone = (key) => (typeof key === 'string' ? { type: key.slice(2) } : (snapshot ?? state).hands.X[key]);
+
 
   function tapHand(key) {
     if (!myMove()) return;
@@ -523,7 +518,7 @@ export function mountDuel(root, opts) {
       const action = { type: 'place', pos: i };
       const test = cloneState(state); test.log = [];
       applyAction(test, action);
-      const st = STONES[state.selected.type];
+      const st = specOf(state.selected);
       if (test.player === 'X' && test.phase === 'effect') {
         // Several ways to resolve: commit the placement and offer them.
         commitState(test, action);
@@ -540,7 +535,7 @@ export function mountDuel(root, opts) {
 
   // Under Open Hands, their stones are yours to play too.
   function tapEnemyStone(st) {
-    const key = `O:${st.type}`;
+    const key = enemyKey(st);
     if (state.conds.includes('shared') && myMove() && (state.phase === 'select' || state.phase === 'place') && slotAction(snapshot && state.phase === 'place' ? snapshot : state, key)) {
       tapHand(key);
       return;

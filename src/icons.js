@@ -157,7 +157,6 @@ const RAW = {
   'empty-3': P('M -6.4 3.6 L -5.6 1 M -5.2 3.6 L -5.2 0.6 M -4 3.6 L -4.6 1.2 M 3.4 -1 L 4 -3.4 M 4.6 -1 L 4.8 -3.8 M 5.8 -1 L 5.4 -3.2', SW(1)),
   rock: P('M -7.6 5.4 L -2.4 -5.2 L 1.2 1.2 L 3.6 -2.2 L 7.6 5.4 Z', ' fill="var(--rock-fill, #c9c6c0)"') + P('M -4.6 -0.7 L -2.4 -5.2 L -0.15 -0.8 L -1.4 0.3 L -2.4 -0.9 L -3.4 0.3 Z', ' fill="var(--paper, #fff)"' + SW(1.1)),
 
-  '2048': '<text x="0" y="2.3" font-family="Caveat Brush, system-ui, sans-serif" font-size="6.2" text-anchor="middle" fill="currentColor" stroke="none" letter-spacing="-0.1">2048</text>',
 
   '4096': '<text x="0" y="2.3" font-family="Caveat Brush, system-ui, sans-serif" font-size="6.2" text-anchor="middle" fill="currentColor" stroke="none" letter-spacing="-0.1">4096</text>',
 
@@ -178,9 +177,6 @@ const RAW = {
     P('M -6.4 4.6 Q -3.5 -9 4.6 1.8') + head(6, 4.6, 63) +
     P('M -7 7 H -4.5 M 4.5 7 H 7', SW(1.1)),
 
-  beacon:
-    DOT(0, 0, 1.8) + C(0, 0, 3.6, SW(1.2)) +
-    P('M 0 -7.3 V -5 M 0 5 V 7.3 M -7.3 0 H -5 M 5 0 H 7.3'),
 
   // A small fire with the stones going round it.
   bonfire:
@@ -218,23 +214,24 @@ const RAW = {
     P('M -5.6 3 h 11.2 v 3 h -11.2 Z') +
     DOT(-6.5, -5.4, 1.2) + DOT(0, -6.3, 1.2) + DOT(6.5, -5.4, 1.2),
 
+  // An apple: what falls.
+  gravity:
+    P('M 0 -3 C -2 -4.8 -6.6 -4.4 -6.6 0.6 C -6.6 4.8 -3.8 7.4 -1.8 7 C -0.9 6.8 -0.6 6.4 0 6.4 C 0.6 6.4 0.9 6.8 1.8 7 C 3.8 7.4 6.6 4.8 6.6 0.6 C 6.6 -4.4 2 -4.8 0 -3 Z') +
+    P('M 0 -3 C 0 -5 0.5 -6.4 1.4 -7.4', SW(1.3)) +
+    P('M 1 -5.4 C 2.8 -7.4 5.2 -6.9 5.6 -6.1 C 4.2 -4.6 2.2 -4.6 1 -5.4 Z', SW(1.1)),
+
   // ---------- TRICKS ----------
   relocate:
     GRID + DOT(-4.67, 4.67, 2.5) + C(4.67, -4.67, 2.2, SW(1.1)) +
     P('M -4.67 1.4 C -6 -3.4 -2 -7.4 0.8 -7.2', SW(1.3)) + head(2.8, -7, 5, 2.4, 1.4),
 
-  mirror:
-    GRID + DOT(-4.67, -4.67, 2.5) + C(4.67, 4.67, 2.2, SW(1.3)) +
-    P('M -0.9 -0.9 L 0.9 0.9', SW(1.3)) + head(-2.4, -2.4, 225, 2, 1.3) + head(2.4, 2.4, 45, 2, 1.3),
 
   'mind-control':
     P('M -7.2 2.4 h 4 v 4 h -4 Z M 3.2 2.4 h 4 v 4 h -4 Z', FAINT.replace('0.7', '1')) +
     P('M -2 2.4 h 4 v 4 h -4 Z') +
     arrow(0, -7.4, 0, 0.6),
 
-  rehearse: GRID + DOT(0, 0, 2.3) + arcArrow(0, 0, 4.8, 245, 485, 2.4, 1.4),
 
-  nudge: arrow(-7, 0, -0.6, 0) + DOT(3.8, 0, 2.8) + P('M -6 -3.6 H -3 M -6 3.6 H -3', SW(1.1)),
 
   muffle:
     P('M -4.6 3.4 V -0.6 A 4.6 4.6 0 0 1 4.6 -0.6 V 3.4 L 6 4.8 H -6 L -4.6 3.4 Z') +
