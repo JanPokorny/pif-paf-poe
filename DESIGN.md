@@ -181,3 +181,20 @@ bigger elite hands, no blunders.
 - `node tools/runbot.mjs` — whole runs, including the save format's JSON round trip.
 - `node tools/smoke.mjs` — random duels with everything switched on, and the AI's timing.
 - `eslint -c eslint.config.mjs src/` — undefined names (a renamed variable once froze the Whirl).
+
+## Music
+
+The music is rendered ahead of time, not synthesised while playing:
+`tools/music/compose.js` is the composer (each act's key, mode, tempo and instruments; each
+scene's layers), and `node tools/render-music.cjs` renders it in a headless browser to
+`music/*.mp3` with `music/tracks.json` (run `npm install --prefix tools/music` once, with the dev
+server up). Each act has four loops (map, calm for shops, rests and events, duel for duels and
+elites, boss), plus title, victory and defeat, and a stinger per music event (win, lose, door,
+stronger, heal) in each act's key. The game (`src/music.js`) loops a track, crossfades on a change
+of scene and plays a stinger on the track's next beat, ducking the band under it. Live scheduling
+used to drift and crackle whenever the page was busy.
+
+Each loop is rendered twice with the same notes and the second pass kept, so the echoes of its
+end ring into its start and the loop is seamless; the player skips the MP3 encoder's lead-in
+(1105 samples) recorded in the manifest.
+
