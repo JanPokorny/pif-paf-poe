@@ -683,7 +683,9 @@ h1, h2, .btn.primary, .enemy-name, .card-name, .section-label { letter-spacing: 
 .pebble-mini { display: inline-flex; align-items: center; background: none; border: 0; padding: 0 4px 0 0; }
 .pebble-mini .inf { right: -4px; bottom: -4px; font-size: 0.9rem; }
 .enemy-hand .pebble-mini { margin-right: 4px; }
-.enemy-hand .stone.borrow { outline: 2px dashed var(--ink); outline-offset: 2px; border-radius: 50%; cursor: pointer; }
+.enemy-hand .stone.borrow { cursor: pointer; }
+.pick-note { flex: none; max-width: 92px; margin-left: 4px; padding: 5px 8px 6px; background: var(--sticky); font-family: var(--hand); font-size: 0.85rem; line-height: 1.1; color: var(--ink); text-align: center;
+  transform: rotate(4deg); box-shadow: 1px 2px 4px rgba(0, 0, 0, 0.16); border-radius: 1px 1px 2px 8px; animation: fade 0.3s; }
 .enemy-hand .stone.forbidden { opacity: 0.35; }
 .enemy-hand .stone.selected { transform: translateY(4px) scale(1.12); outline: 3px solid var(--hi); outline-offset: 2px; border-radius: 50%; }
 .rule-chip { display: inline-flex; align-items: center; gap: 4px; font: inherit; font-size: 0.95rem; line-height: 1; padding: 3px 8px 3px 5px; border: 1.5px solid currentColor; border-radius: 12px 14px 11px 15px; background: var(--paper, #fbf7ec); color: var(--ink); cursor: pointer; white-space: nowrap; }

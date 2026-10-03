@@ -210,6 +210,7 @@ export default {
   'and': 'a',
   'Pebbles fill your hand up to {n} stones.': 'Oblázky ti doplní ruku do {n} kamenů.',
   'Pebbles fill their hand up to {n} stones.': 'Oblázky soupeři doplní ruku do {n} kamenů.',
+  'You can pick these!': 'Tyhle si můžeš vzít!',
   'You found a pebble!': 'Našel se ti oblázek!',
   '{enemy} finds a pebble!': 'Soupeři se našel oblázek!',
   'Hushed: next special stone': 'Pst: další speciální kámen',

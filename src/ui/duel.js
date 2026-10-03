@@ -184,6 +184,8 @@ export function mountDuel(root, opts) {
       return h('div.hand-slot.enemy-slot', {}, e, n > 1 ? h('span.hand-count', {}, `×${n}`) : null);
     }));
     if (!theirs.length) enemyHand.append(h('span.dim.small', {}, t('Empty: a pebble turns up on their turn.')));
+    // Under Open Hands, a sticky note says which of theirs you may take.
+    if (enemyHand.querySelector('.stone.borrow')) enemyHand.append(h('span.pick-note', {}, t('You can pick these!')));
 
     // Player hand, one stone per kind with a count. During a turn in
     // progress, show the hand as it was. A long press reads a stone.
