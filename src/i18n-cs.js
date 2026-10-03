@@ -346,7 +346,6 @@ export default {
   'Choose which stones to take into the duel. Long press for info.': 'Vyber, které kameny si vezmeš do boje. Podržením zobrazíš popis.',
   'Long press stone for info.': 'Podržením kamene zobrazíš popis.',
   'Empty: a pebble turns up on their turn.': 'Prázdno: na tahu se soupeři najde oblázek.',
-  'Open Hands: their stones are yours too.': 'Otevřené ruce: hraj i jeho kameny.',
   'One-shot stones': 'Jednorázové kameny',
   'You gain a {stone}.': 'Získáváš kámen {stone}.',
   'swapped {a} and {b}': 'prohozeno {a} a {b}',
@@ -394,7 +393,7 @@ export const CS_DATA = {
   conds: {
     gravity: { name: 'Gravitace', text: 'Po každém tahu kameny spadnou co nejníž. Hory drží.' },
     nocentre: { name: 'Dutý střed', text: 'Na prostřední pole nesmí hrát nikdo.' },
-    shared: { name: 'Otevřené karty', text: 'Každý smí hrát i soupeřovy speciální kameny.' },
+    shared: { name: 'Otevřené ruce', text: 'Každý smí hrát i soupeřovy speciální kameny.' },
   },
 
   rules: {

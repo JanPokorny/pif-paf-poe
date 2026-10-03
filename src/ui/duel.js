@@ -396,8 +396,7 @@ export function mountDuel(root, opts) {
     if (state.phase === 'select') {
       markDangers();
       setStatus(state.half ? t('Your second stone — pick one') : t('Your turn — pick a stone'), 'you');
-      const hint = state.conds.includes('shared') && state.hands.O.length ? t('Open Hands: their stones are yours too.') : '';
-      info.textContent = hint;
+      info.textContent = '';
       if (state.turns >= 2 && state.board.some(Boolean) && cells.some((c) => c.classList.contains('threat'))) coach('enemy'); else coach('select');
       renderActions([]);
     } else if (state.phase === 'place' && !preview) {
