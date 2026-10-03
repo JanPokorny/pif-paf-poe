@@ -7,12 +7,11 @@ numbers. The camp game's own reasoning is in `old/adr/`.
 
 - **The duel.** 3×3, one stone a turn, most stones move stones already on the board. Three in a
   row wins; a line only your opponent has wins for them.
-- **Restrictions compose.** Every enemy Magnet, Stinky and Beacon pulls at once and you place
+- **Restrictions compose.** Every enemy Magnet and Stinky pulls at once and you place
   where you satisfy as many as any square can (`old/adr/2026-08-18-…`).
 - **Counterattacks → one-shot stones.** The camp game's counterattacks became tricks, spent
   at the end of a turn; now they are stones like any other, brought along like any other and placed on the
-  board, that then do their one thing (Relocate, Mirror, Mind Control, Rehearse, Nudge,
-  Muffle). Once played in a duel, won or lost, one is gone from the pouch. They
+  board, that then do their one thing (Relocate, Mind Control, Muffle, and + stones). Once played in a duel, won or lost, one is gone from the pouch. They
   have a dashed outline, come as their own reward and shop shelf, and are cheaper than stones.
   Encore, which handed back your last special stone, did not survive the change.
 - **Boss rules** come from an older iteration's sheet of special rules (Taktika, Náskok, Elko,
@@ -135,52 +134,20 @@ Balance was measured and retuned in `docs/STONES-REPORT.md`; the run bots (see D
 
 ## The stones
 
-22 special types and the Pebble. Whirl, Undo, Pluck, Bribe and Turncoat were removed as near
-duplicates (of Bonfire, of each other and Firecracker, of Swap); see `docs/STONE-FAMILIES.md`. Every stone's card shows an example computed by the engine.
+18 special stones and the Pebble, three of them one-shots (Relocate, Muffle, Mind Control). Every
+stone's card shows an example computed by the engine.
 
-One stone, the rest of the act's hand Pebbles (four, five, six stones), against every enemy of the
-act as the game rolls them, 60 games each (`node tools/lab.mjs matrix`). Rarity follows power:
-the stronger and the more skill a stone wants, the rarer.
+- **"Beside" always means the four squares that share a side**, for every stone and boss rule
+  (Clinch included). The map is the one place where "next to" counts corners.
+- **The + tier.** Twelve stones have a + form, the same stone with a wider effect (usually from
+  beside to its whole row and column). A + stone comes as a one-shot (in one-shot rewards and
+  shop shelves) or through a talisman that makes every stone of that kind you bring its + form,
+  offered only for kinds in your pouch. A + stone wears a star.
+- **Rarity follows power** (`node tools/lab.mjs matrix`, `power`, `effects`), and power decides
+  the energy cost.
 
-| stone | rarity | act 1 | act 2 | act 3 |
-|---|---|---:|---:|---:|
-| Magpie | rare | 69% | 30% | 29% |
-| Bumper | uncommon | 53% | 16% | 25% |
-| Firecracker | rare | 48% | 22% | 22% |
-| Beacon | rare | 54% | 17% | 17% |
-| Relocate | uncommon, one-shot | 43% | 17% | 17% |
-| Stinky | common | 46% | 13% | 16% |
-| Nudge | common, one-shot | 41% | 16% | 16% |
-| Magnet | uncommon | 49% | 12% | 11% |
-| Swap | uncommon | 42% | 15% | 15% |
-| Shift | common | 44% | 14% | 14% |
-| Muffle | common, one-shot | 45% | 10% | 11% |
-| 2048 | uncommon | 41% | 12% | 11% |
-| Lasso | common | 39% | 12% | 13% |
-| Waltz (was Rotate) | common | 36% | 15% | 10% |
-| Frog | common | 35% | 11% | 15% |
-| Twin | uncommon | 39% | 15% | 7% |
-| Parrot | uncommon | 37% | 11% | 12% |
-| Mind Control | common, one-shot | 37% | 11% | 10% |
-| Mountain | common | 37% | 10% | 10% |
-| Bonfire | uncommon | see below | | |
-| Mirror | common, one-shot | 33% | 9% | 11% |
-| Rehearse | common, one-shot | 26% | 7% | 10% |
-| Pebble | starter | 23% | 7% | 10% |
-
-Bonfire replaced Flip (mirroring the whole board never makes or breaks a line, so Flip only ever
-swapped its own pair). It turns the 3, 5 or 8 squares around it one step, either way. Measured
-later than the table, in a run of its own (same setup, 60 games per enemy) where a Pebble scored
-44 / 12 / 13%, Whirl 55 / 12 / 13%, Waltz 59 / 21 / 11%, Swap 62 / 20 / 14% and Bonfire
-61 / 17 / 11%: about as strong as Swap, so uncommon. It does nothing in 8% of plays (Whirl 23%,
-Waltz 25%) and offers about two choices.
-
-`docs/STONES-REPORT.md` has the rest: duds, choices, skill, pairs, boss builds, and what changed
-(Bribe takes only a Pebble beside it, Firecracker stays on its square, Bumper knocks stones off the
-edge, Lasso fetches any enemy stone, Mountain ignores restrictions, Mind Control's stone does
-nothing, Rehearse copies your last special, Twin needs no empty centre,
-Lasso pulls all at once, Frog knocks the stone it leaps off the board, Muffle hushes the next
-*special* stone, and Overtake became Rewind, later Undo).
+`docs/STONE-FAMILIES.md` has every stone, its + form and their measurements. `docs/STONES-REPORT.md`
+is the older, longer report (duds, choices, skill, pairs, boss builds) from before the + tier.
 
 ## Difficulty
 
