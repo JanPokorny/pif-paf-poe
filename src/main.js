@@ -168,7 +168,7 @@ function settingsRow() {
 
 // Saves from before the evolved stones were retired: back to their plain forms.
 const RETIRED = { rail: 'shift', pivot: 'rotate', electromagnet: 'magnet', stench: 'stinky', 4096: '2048', blast: 'bumper',
-  teleport: 'swap', cyclone: 'whirl', kangaroo: 'frog', lighthouse: 'beacon', kaleidoscope: 'flip', bomb: 'firecracker' };
+  teleport: 'swap', cyclone: 'whirl', kangaroo: 'frog', lighthouse: 'beacon', kaleidoscope: 'bonfire', flip: 'bonfire', bomb: 'firecracker' };
 function migrate() {
   for (const st of run.pouch) st.type = RETIRED[st.type] ?? st.type;
   run.pouch = run.pouch.filter((st) => STONES[st.type]);

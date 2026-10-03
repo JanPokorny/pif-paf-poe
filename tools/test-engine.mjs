@@ -338,12 +338,21 @@ test('Frog does not leap diagonally', () => {
   play(s, 'frog', 0);
   turnPassedTo(s, 'O');
 });
-test('Flip mirrors the board; it holds its own square', () => {
+test('Bonfire turns the stones around it one step; a stuck stone holds', () => {
   const s = G();
-  lay(s, { 0: 'O pebble', 3: 'O mountain', 5: 'O pebble' });
-  const id = play(s, 'flip', 4);
-  eff(s, { axis: 'h' });
-  expectAt(s, { 2: 100, 3: 103, 5: 105, 4: id });
+  lay(s, { 0: 'O pebble', 1: 'O mountain', 5: 'O pebble' });
+  play(s, 'bonfire', 4);
+  eff(s, { spin: 1 });
+  // Clockwise round the centre: 0 → (1 holds) → 2, 5 → 8.
+  expectAt(s, { 2: 100, 1: 101, 8: 105, 0: 0, 5: 0 });
+});
+test('Bonfire in a corner turns its arc of three', () => {
+  const s = G();
+  lay(s, { 1: 'O pebble', 4: 'O pebble' });
+  play(s, 'bonfire', 0);
+  eff(s, { spin: -1 });
+  // The arc runs 1, 4, 3 clockwise; anticlockwise each stone steps back along it, and 1 wraps round to 3.
+  expectAt(s, { 3: 101, 1: 104, 4: 0 });
 });
 test('Magnet: the enemy must place next to it', () => sameSet(allowedFor({ 0: 'O magnet' }), [1, 3]));
 test('Stinky: must not place next to it', () => sameSet(allowedFor({ 4: 'O stinky' }), [0, 2, 6, 8]));

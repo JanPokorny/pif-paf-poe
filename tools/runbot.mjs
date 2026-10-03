@@ -13,7 +13,7 @@ import * as R from '../src/run.js';
 const arg = (k, d) => { const i = process.argv.indexOf('--' + k); return i > 0 ? process.argv[i + 1] : d; };
 // Roughly how much each stone wins: its mean over every enemy of every act,
 // as `node tools/lab.mjs matrix` measures it.
-const STRENGTH = { magpie: 42, bumper: 31, overtake: 31, firecracker: 30, pluck: 30, beacon: 29, bribe: 28, relocate: 26, turncoat: 25, stinky: 25, nudge: 24, magnet: 24, swap: 24, shift: 24, muffle: 22, '2048': 21, lasso: 21, rotate: 20, frog: 20, twin: 20, parrot: 20, 'mind-control': 19, mountain: 19, flip: 18, whirl: 18, mirror: 17, rehearse: 14, pebble: 14 };
+const STRENGTH = { magpie: 42, bumper: 31, overtake: 31, firecracker: 30, pluck: 30, beacon: 29, bribe: 28, relocate: 26, turncoat: 25, stinky: 25, nudge: 24, magnet: 24, swap: 24, shift: 24, muffle: 22, '2048': 21, lasso: 21, rotate: 20, frog: 20, twin: 20, parrot: 20, 'mind-control': 19, mountain: 19, bonfire: 18, whirl: 18, mirror: 17, rehearse: 14, pebble: 14 };
 const value = (s) => (STRENGTH[s.type] ?? 22) / 25;
 
 function playDuel(run, cfg, piters, pblunder, rng) {

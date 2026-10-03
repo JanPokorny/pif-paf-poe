@@ -15,6 +15,7 @@
 //   tune      enemy variants given as --spec JSON, against the act's typical pouch
 //   slots     each stone in a hand of four and of five: what the fifth slot changes
 //   effects   how often each stone does nothing, and how many choices it asks for
+//   matrix    each stone (the rest Pebbles) against every enemy as rolled; --stones a,b to pick some
 //
 // The player's brain is `--iters` (250) with a 5% blunder: a fair, careful player.
 
@@ -277,7 +278,7 @@ const EXPERIMENTS = {
     const out = [];
     for (const [id, e] of Object.entries(ENEMIES)) {
       if (!e.act || e.tier === 'boss') continue;
-      for (const type of STONE_TYPES) for (let i = 0; i < g; i++) {
+      for (const type of arg('stones', null)?.split(',') ?? STONE_TYPES) for (let i = 0; i < g; i++) {
         const d = enemyDuel(e.act, id, i * 31 + 7, { tier: e.tier });
         out.push({ key: `${type}|${id}`, handX: [type, ...P(SLOTS[e.act] - 1)], handO: d.handO.map((x) => x.type), conds: d.conds, rules: d.rules, modsO: d.modsO, itersO: d.iters, blunderO: d.blunder, seed: i + 1 });
       }
@@ -314,7 +315,7 @@ const EXPERIMENTS = {
     return out;
   },
   pairs(g) {
-    const top = (arg('top', 'magnet,stinky,beacon,shift,swap,twin,turncoat,magpie,2048,flip,rotate,mountain,bribe,pluck')).split(',');
+    const top = (arg('top', 'magnet,stinky,beacon,shift,swap,twin,turncoat,magpie,2048,bonfire,rotate,mountain,bribe,pluck')).split(',');
     const out = [];
     for (let a = 0; a < top.length; a++) for (let b = a; b < top.length; b++) for (let i = 0; i < g; i++) {
       out.push({ key: `${top[a]}+${top[b]}`, handX: [top[a], top[b], ...P(2)], handO: ['magnet', 'shift', 'rotate', ...P(2)], seed: i + 1 });

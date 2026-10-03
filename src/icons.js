@@ -197,10 +197,10 @@ const RAW = {
     DOT(0, 0, 1.8) + C(0, 0, 3.6, SW(1.2)) +
     P('M 0 -7.3 V -5 M 0 5 V 7.3 M -7.3 0 H -5 M 5 0 H 7.3'),
 
-  flip:
-    P('M 0 -7.4 V 7.4', SW(1.1) + ' stroke-dasharray="1.4 1.6"') +
-    P('M -2 -4.6 V 4.6 L -7 0 Z', ' fill="currentColor"') +
-    P('M 2 -4.6 V 4.6 L 7 0 Z'),
+  // A small fire with the stones going round it.
+  bonfire:
+    P('M 0 -3.4 C 1.6 -2 2.4 -0.8 2.4 0.8 C 2.4 2.2 1.3 3 0 3 C -1.3 3 -2.4 2.2 -2.4 0.8 C -2.4 -0.2 -2 -0.9 -1.4 -1.5 C -1.2 -0.6 -0.8 -0.1 -0.4 0 C -0.8 -1.4 -0.6 -2.5 0 -3.4 Z', SW(1.3)) +
+    arcArrow(0, 0, 6.6, 200, 340, 2.6, 1.6) + arcArrow(0, 0, 6.6, 20, 160, 2.6, 1.6),
 
   snare: snare(),
 

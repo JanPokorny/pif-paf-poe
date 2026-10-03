@@ -199,25 +199,24 @@ def('beacon', {
   },
 });
 
-def('flip', {
-  name: 'Flip', rarity: 'uncommon', kind: 'move',
-  text: 'Mirror the board across an axis or diagonal. This stone holds its square.',
-  options: () => ['h', 'v', 'd', 'a'].map((axis) => ({ axis })),
-  apply(s, pos, a) { mirror(s, a.axis, (i) => isStuck(s, i) || i === pos); },
-});
-
-function mirror(s, axis, holds) {
-  const pairs = {
-    h: [[0, 2], [3, 5], [6, 8]], v: [[0, 6], [1, 7], [2, 8]],
-    d: [[1, 3], [2, 6], [5, 7]], a: [[0, 8], [1, 5], [3, 7]],
-  }[axis];
-  for (const [x, y] of pairs) {
-    if (holds(x) || holds(y)) continue;
-    const held = s.board[x];
-    s.board[x] = s.board[y];
-    s.board[y] = held;
-  }
+// The squares round square i, clockwise: all eight round the centre, an arc
+// of five from an edge, of three from a corner (starting past the board's edge).
+const ROUND = [[-1, -1], [-1, 0], [-1, 1], [0, 1], [1, 1], [1, 0], [1, -1], [0, -1]];
+function around(i) {
+  const ring = ROUND.map(([dr, dc]) => at(row(i) + dr, col(i) + dc));
+  const k = ring.findIndex((c) => c < 0);
+  return (k < 0 ? ring : [...ring.slice(k), ...ring.slice(0, k)]).filter((c) => c >= 0);
 }
+
+def('bonfire', {
+  name: 'Bonfire', rarity: 'uncommon', kind: 'move', reach: 'around',
+  text: 'The stones around it trade places, one step round it, either way.',
+  options(s, pos) {
+    const free = around(pos).filter((j) => !isStuck(s, j));
+    return free.filter((j) => s.board[j]).length && free.length > 1 ? [{ spin: 1 }, { spin: -1 }] : [];
+  },
+  apply(s, pos, a) { const ring = around(pos); stepAlong(s, a.spin > 0 ? ring : ring.reverse()); },
+});
 
 def('firecracker', {
   name: 'Firecracker', rarity: 'rare', kind: 'move', reach: 'around',

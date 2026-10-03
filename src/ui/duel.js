@@ -16,7 +16,7 @@ import { think } from '../brain.js';
 import { sfx } from '../sound.js';
 import { musicEvent } from '../music.js';
 
-const FIELD_ORDER = ['pos', 'from', 'a', 'to', 'target', 'dir', 'block', 'turn', 'axis', 'line', 'ring', 'stone', 'hold', 'only'];
+const FIELD_ORDER = ['pos', 'from', 'a', 'to', 'target', 'dir', 'block', 'turn', 'spin', 'line', 'ring', 'stone', 'hold', 'only'];
 const DIR_ARROW = { up: 'arrow-up', down: 'arrow-down', left: 'arrow-left', right: 'arrow-right' };
 
 // The next choice that tells these candidates apart.
@@ -71,7 +71,7 @@ function describe(a) {
   }
   if (a.block) return t('turned the {block} block {turn}', { block: t(BLOCK[a.block]), turn: turning(a.cw) });
   if (a.turn) return t('turned the ring {n} {turn}', { n: Math.abs(a.turn), turn: turning(a.turn > 0) });
-  if (a.axis) return t('mirrored the board {axis}', { axis: t({ h: 'left–right', v: 'top–bottom', d: 'diagonally', a: 'diagonally' }[a.axis]) });
+  if (a.spin) return t('turned the stones around it {turn}', { turn: turning(a.spin > 0) });
   if (a.target !== undefined) return t('targeting the {square}', { square: sq(a.target) });
   return '';
 }
@@ -314,7 +314,7 @@ export function mountDuel(root, opts) {
       }
       // Show the block the chosen option turns.
       if (chosen?.block) for (const i of { TL: [0, 1, 3, 4], TR: [1, 2, 4, 5], BL: [3, 4, 6, 7], BR: [4, 5, 7, 8] }[chosen.block]) cells[i].classList.add('chosen');
-    } else if (stage.kind === 'turn') {
+    } else if (stage.kind === 'turn' || stage.kind === 'spin') {
       // Around the board's corners: clockwise on the right, anticlockwise on the left.
       const spot = { 1: [3.25, -0.25], [-1]: [-0.25, -0.25], 2: [3.25, 3.25], [-2]: [-0.25, 3.25] };
       for (const [k, group] of stage.groups) {
@@ -322,13 +322,6 @@ export function mountDuel(root, opts) {
         const b = h('button.rot.turn' + (isChosen(group) ? '.chosen' : ''), { onclick: pickGroup(group), 'aria-label': `turn ${x}` },
           h('span', { html: icon(x > 0 ? 'rotate-cw' : 'rotate-ccw') }), Math.abs(x) > 1 ? h('span.times', {}, '×2') : null);
         place(...spot[x], b);
-      }
-    } else if (stage.kind === 'axis') {
-      // Each mirror is a note beside the board, pointing along its axis.
-      const spot = { h: [1.5, 3.3], v: [3.3, 1.5], d: [-0.25, -0.25], a: [3.25, -0.25] };
-      const label = { h: '↔', v: '↕', d: '⤡', a: '⤢' };
-      for (const [k, group] of stage.groups) {
-        place(...spot[k], h('button.rot.axis' + (isChosen(group) ? '.chosen' : ''), { onclick: pickGroup(group), 'aria-label': `mirror ${k}` }, label[k]));
       }
     } else if (stage.kind === 'line') {
       // A Beacon's line: a note at the end of its row, its column, its diagonal.
