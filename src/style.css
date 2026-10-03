@@ -886,7 +886,6 @@ body:has(.duel) #toast.show { transform: translate(-50%, 0) rotate(-1deg); }
 .energy-bar i { width: 14px; height: 14px; border-radius: 50%; border: 2px solid var(--blue); opacity: 0.35; background: transparent; transition: background 0.2s, transform 0.2s, opacity 0.2s; }
 .energy-bar i.on { background: var(--blue-wash); opacity: 1; transform: scale(1.08); }
 .energy-bar i.over { border-color: var(--red); background: var(--red); }
-.stone-row .pebble-pick { margin-left: 6px; }
 .stone-row.pick .pebble-pick { opacity: 1; }
 .stone-row.pick .pebble-pick.none { opacity: 0.35; }
 
