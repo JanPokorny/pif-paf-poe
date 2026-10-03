@@ -562,11 +562,12 @@ function selectActions(s) {
   const p = s.player;
   const out = [];
   const seen = new Set();
+  // A + form, and a one-shot, are kinds of their own in hand.
   for (const h of s.hands[p]) {
-    const key = h.type + (h.plus ? '+' : '');
+    const key = h.type + (h.plus ? '+' : '') + (h.once ? '!' : '');
     if (seen.has(key)) continue;
     seen.add(key);
-    out.push({ type: 'select', stone: h.type, ...(h.plus && { plus: true }) });
+    out.push({ type: 'select', stone: h.type, ...(h.plus && { plus: true }), ...(h.once && { once: true }) });
   }
   // Open Hands: the other side's stones, Pebbles too, are yours to play.
   if (s.conds.includes('shared')) {
@@ -726,7 +727,7 @@ export function applyAction(s, a) {
     case 'select': {
       const owner = a.from ?? p;
       const hand = s.hands[owner];
-      const k = hand.findIndex((h) => h.type === a.stone && !!h.plus === !!a.plus);
+      const k = hand.findIndex((h) => h.type === a.stone && !!h.plus === !!a.plus && !!h.once === !!a.once);
       if (k < 0) throw new Error(`${owner} holds no ${a.stone}${a.plus ? '+' : ''}`);
       s.selected = hand.splice(k, 1)[0];
       s.from = a.from ?? null;

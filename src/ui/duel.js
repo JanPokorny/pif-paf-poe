@@ -39,7 +39,7 @@ function stageOf(cands) {
 }
 
 // A hand as one entry per kind of stone (a + form a kind of its own): {st, k (its first index), n}.
-const sameKind = (a, b) => a.type === b.type && !!a.plus === !!b.plus;
+const sameKind = (a, b) => a.type === b.type && !!a.plus === !!b.plus && !!a.once === !!b.once;
 // The key of a stone in the enemy's hand, as a hand slot: 'O:shift' or 'O:shift+'.
 const enemyKey = (st) => `O:${st.type}${st.plus ? '+' : ''}`;
 function groupHand(hand) {
@@ -169,7 +169,7 @@ export function mountDuel(root, opts) {
     const acts = legalActions(s);
     const st = typeof key === 'string' ? slotStone(key) : s.hands.X[key];
     const from = typeof key === 'string' ? 'O' : undefined;
-    return st && acts.find((a) => a.from === from && sameKind({ type: a.stone, plus: a.plus }, st));
+    return st && acts.find((a) => a.from === from && sameKind({ type: a.stone, plus: a.plus, once: a.once }, st));
   };
 
   function renderHands(s, shown = s) {

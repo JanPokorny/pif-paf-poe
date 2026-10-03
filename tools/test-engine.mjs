@@ -66,8 +66,9 @@ function play(s, name, pos) {
   const plus = name.endsWith('+'), type = name.replace(/\+$/, '');
   const hand = s.hands[s.player];
   if (!hand.some((h) => h.type === type && !!h.plus === plus)) hand.push({ type, ...(plus && { plus: true }) });
+  const held = hand.find((h) => h.type === type && !!h.plus === plus);
   const id = s.nextId;
-  applyAction(s, { type: 'select', stone: type, ...(plus && { plus: true }) });
+  applyAction(s, { type: 'select', stone: type, ...(plus && { plus: true }), ...(held.once && { once: true }) });
   applyAction(s, { type: 'place', pos });
   return id;
 }
@@ -474,6 +475,14 @@ test('one-shot stones are marked once and counted as spent when played from your
   eff(s, { from: 8, to: 7 });
   assert.deepEqual(s.spent.X, ['relocate']);
   assert.equal(count(s, 'X', 'relocate'), 1);
+});
+test('a one-shot is a kind of its own in hand, even beside the same stone made + by a talisman', () => {
+  const s = G({ handX: [{ type: 'shift', plus: true }, { type: 'shift', plus: true, once: true }] });
+  const shifts = legalActions(s).filter((x) => x.stone === 'shift');
+  assert.equal(shifts.length, 2);
+  applyAction(s, shifts.find((x) => x.once));
+  applyAction(s, { type: 'place', pos: 0 });
+  assert.deepEqual(s.spent.X, ['shift+']);
 });
 test('a + one-shot is spent as itself, the plain stone of its kind stays', () => {
   const s = G({ handX: [{ type: 'shift', plus: true, once: true }, 'shift'] });
