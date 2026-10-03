@@ -397,7 +397,7 @@ function mapScreen() {
   const say = (e) => {
     const node = (NODE_NAME[e.node] ?? '').toLowerCase();
     return e.m === 'x' ? [t('You mark the {node} square.', { node }), 'you']
-      : e.m === 's' ? [t('You lost there: the {node} square burns.', { node }), 'bad']
+      : e.m === 's' ? [t('You lost there: the {node} square burns.', { node }), 'you']
         : e.m === 'o' ? [t('{boss} marks the {node} square.', { boss: boss.name, node }), 'bad']
           : e.m === 'oline' ? [t('{boss}: three in a row — −{n} ❤', { boss: boss.name, n: e.n }), 'bad']
             : e.m === 'open' ? [t('Three in a row: the lair opens!'), 'good']
