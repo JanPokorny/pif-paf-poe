@@ -166,11 +166,18 @@ the stronger and the more skill a stone wants, the rarer.
 | Parrot | uncommon | 37% | 11% | 12% |
 | Mind Control | common, one-shot | 37% | 11% | 10% |
 | Mountain | common | 37% | 10% | 10% |
-| Flip | uncommon | 35% | 8% | 10% |
+| Bonfire | uncommon | see below | | |
 | Whirl | uncommon | 33% | 9% | 10% |
 | Mirror | common, one-shot | 33% | 9% | 11% |
 | Rehearse | common, one-shot | 26% | 7% | 10% |
 | Pebble | starter | 23% | 7% | 10% |
+
+Bonfire replaced Flip (mirroring the whole board never makes or breaks a line, so Flip only ever
+swapped its own pair). It turns the 3, 5 or 8 squares around it one step, either way. Measured
+later than the table, in a run of its own (same setup, 60 games per enemy) where a Pebble scored
+44 / 12 / 13%, Whirl 55 / 12 / 13%, Rotate 59 / 21 / 11%, Swap 62 / 20 / 14% and Bonfire
+61 / 17 / 11%: about as strong as Swap, so uncommon. It does nothing in 8% of plays (Whirl 23%,
+Rotate 25%) and offers about two choices.
 
 `docs/STONES-REPORT.md` has the rest: duds, choices, skill, pairs, boss builds, and what changed
 (Bribe takes only a Pebble beside it, Firecracker stays on its square, Bumper knocks stones off the
