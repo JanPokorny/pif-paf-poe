@@ -56,3 +56,25 @@ which clicked; it now compensates). The title track starts on the first tap.
   Hat, Frog and Parrot) is the one common one for that reason.
 - The run bot wins 35–39 of 96 runs; act 1 is where most runs end, mostly to the boss's lines on
   the map and to the Old Oak.
+
+## Second pass
+
+Fixed:
+
+- The end screen's Title and New run sat small in the middle of the page; they span the bottom
+  bar now, as on every other screen.
+- The pouch's Close floated mid-sheet with empty paper below it; the buttons of every tall sheet
+  (pouch, workshop, choosing a stone or a one-shot) sit at its foot, as in the log.
+- Card animations pulse the acted-on stones in opacity, not size.
+
+To decide (larger, or a matter of taste):
+
+- **Result note**: its Continue is white on the pink/green note, the one action that is not
+  yellow. Deliberate (yellow on pink clashes), but an exception to the rule.
+- **Gift and treasure screens**: two small cards at the top, an empty page, and a disabled
+  "Choose first" in the bottom bar. The cards could be larger and centred, and the bar could hold
+  a "Skip" (dashed) instead of a disabled button: now a talisman you do not want must be taken.
+- **Events**: the choices are cards in the page, and Move on is one of them, not the dashed
+  button in the bottom bar used everywhere else.
+- **Workshop pick**: stones show an ⓘ beside their name (a tap picks, so the card is behind the
+  ⓘ); elsewhere a tap opens the card. Consistent within itself, but a second idiom.
