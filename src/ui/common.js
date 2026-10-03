@@ -145,6 +145,56 @@ export function modal(content, { onClose, dismissable = true, cls = '' } = {}) {
   return close;
 }
 
+// The status line, on the map and in duels: what just happened, each entry for
+// a moment, then back to what to do next. The ⌄ beside it opens the whole log.
+//   log(text, kind)   an entry: shown for a moment, kept in the history
+//   instruct(text, kind)   what to do next: shown whenever nothing new is
+//   history    [{text, kind}], oldest first (pass one in to carry it on)
+export function statusLine({ history = [], title = '' } = {}) {
+  const text = h('span.status-text');
+  const btn = h('button.log-btn', { 'aria-label': t('What happened'), html: icon('chevron-down'), onclick: (e) => { e.stopPropagation(); showLog(); } });
+  const el = h('div.status-line', {}, text, btn);
+  let instruction = { text: '', kind: '' };
+  const queue = [];
+  let timer = null;
+  const render = (item, isLog) => {
+    text.textContent = item.text;
+    el.className = 'status-line ' + (item.kind ?? '') + (isLog ? ' is-log' : '');
+    btn.hidden = !history.length;
+  };
+  const next = () => {
+    if (!el.isConnected && timer) { timer = null; return; }
+    const item = queue.shift();
+    if (!item) { timer = null; render(instruction); return; }
+    render(item, true);
+    // More waiting: hurry through them.
+    timer = setTimeout(next, queue.length ? 900 : 1600);
+  };
+  function showLog() {
+    const list = h('ol.log-list', {}, history.map((x) => h('li.' + (x.kind || 'plain'), {}, x.text)));
+    const close = modal(h('div.log-view', {}, h('h2', {}, title || t('What happened')),
+      history.length ? list : h('p.dim', {}, t('Nothing yet.')),
+      h('button.btn.wide', { onclick: () => close() }, t('Close'))), { cls: 'tall' });
+    requestAnimationFrame(() => { list.scrollTop = list.scrollHeight; });
+  }
+  render(instruction);
+  return {
+    el, history,
+    log(entry, kind = '') {
+      if (!entry) return;
+      const item = { text: entry, kind };
+      history.push(item);
+      queue.push(item);
+      if (queue.length > 3) queue.splice(0, queue.length - 3);   // never far behind
+      if (!timer) next();
+    },
+    instruct(entry, kind = '') {
+      instruction = { text: entry, kind };
+      if (!timer) render(instruction);
+    },
+  };
+}
+
 // Our own yes-or-no, in place of the browser's confirm(), which drops fullscreen.
 export function ask(question, yes, no = t('Back')) {
   return new Promise((done) => {

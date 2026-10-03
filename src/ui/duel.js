@@ -9,7 +9,7 @@ import {
   STONES, CONDS, RULES, legalActions, applyAction, cloneState, allowedSquares,
   winningLine, active, row, col, LINES, ELS, touching, adjacent,
 } from '../engine.js';
-import { h, stoneEl, updateStone, toast, pressable, infoStone, ruleChip, stoneName, stoneText, sleep } from './common.js';
+import { h, stoneEl, updateStone, toast, pressable, infoStone, ruleChip, stoneName, stoneText, sleep, statusLine } from './common.js';
 import { icon } from '../icons.js';
 import { t } from '../i18n.js';
 import { think } from '../brain.js';
@@ -52,7 +52,7 @@ const SPEED = { enemyPause: 380, move: 360 };
 const SQUARE = ['top-left', 'top', 'top-right', 'left', 'centre', 'right', 'bottom-left', 'bottom', 'bottom-right'];
 const BLOCK = { TL: 'top-left', TR: 'top-right', BL: 'bottom-left', BR: 'bottom-right' };
 
-// A few words on what an effect choice did, for the move caption.
+// A few words on what a move did, for the status line and its log.
 const sq = (i) => t(SQUARE[i]);
 const turning = (cw) => t(cw ? 'clockwise' : 'anticlockwise');
 function describe(a) {
@@ -86,12 +86,11 @@ export function mountDuel(root, opts) {
   let preview = null;           // {state, action} awaiting ✓
   let busy = false;             // the enemy is moving, or an animation runs
   let ended = false;
-  let caption = [];             // what the enemy just did
   let lastEnemyId = null;
 
   // ── Layout ────────────────────────────────────────────────────────────────
   const enemyHand = h('div.hand.enemy-hand');
-  const status = h('div.turn-status');
+  const status = statusLine();     // what to do now, and each move as it happens (with the log behind ⌄)
   const chips = h('div.chips');
   const cells = Array.from({ length: 9 }, (_, i) => h('div.cell', { dataset: { i } }));
   const stonesLayer = h('div.stones');
@@ -111,7 +110,7 @@ export function mountDuel(root, opts) {
       enemy.tier && enemy.tier !== 'normal' ? h('span.tier.' + enemy.tier, {}, t(enemy.tier === 'event' ? 'challenge' : enemy.tier)) : null),
     ), extra);
 
-  const el = h('div.duel', {}, header, chips, status, enemyHand, h('div.board-wrap', {}, board), actions, hand,
+  const el = h('div.duel', {}, header, chips, status.el, enemyHand, h('div.board-wrap', {}, board), actions, hand,
     h('div.press-hint', {}, t('Long press stone for info.')), info);
   root.replaceChildren(el);
 
@@ -233,7 +232,8 @@ export function mountDuel(root, opts) {
     else setStatus(t('✗ This hands them the duel!'), 'lose-note');
   }
 
-  function setStatus(text, cls = '') { status.textContent = text; status.className = 'turn-status ' + cls; }
+  const setStatus = (text, cls = '') => status.instruct(text, cls);
+  const said = (who, what) => what && status.log(t(who === 'X' ? 'You: {what}' : '{enemy}: {what}', { enemy: enemy.name, what }), who === 'X' ? 'you' : 'bad');
 
   function renderActions(buttons) { actions.replaceChildren(...buttons.filter(Boolean)); }
 
@@ -383,7 +383,7 @@ export function mountDuel(root, opts) {
     if (busy || state.player !== 'X') {
       setStatus(t('{enemy} is thinking', { enemy: enemy.name }), 'enemy');   // the dots blink in after it (CSS)
       renderActions([]);
-      info.textContent = caption.filter(Boolean).join(', ');
+      info.textContent = '';
       return;
     }
     const undo = snapshot && state.turns === snapshot.turns && state.phase !== 'select'
@@ -393,8 +393,7 @@ export function mountDuel(root, opts) {
       markDangers();
       setStatus(state.half ? t('Your second stone — pick one') : t('Your turn — pick a stone'), 'you');
       const hint = state.conds.includes('shared') && state.hands.O.length ? t('Open Hands: their stones are yours too.') : '';
-      info.textContent = caption.length ? `${enemy.name}: ${caption.filter(Boolean).join(', ')}.${hint ? ' ' + hint : ''}`
-        : hint || t('Pick a stone.');
+      info.textContent = hint;
       if (state.turns >= 2 && state.board.some(Boolean) && cells.some((c) => c.classList.contains('threat'))) coach('enemy'); else coach('select');
       renderActions([]);
     } else if (state.phase === 'place' && !preview) {
@@ -527,10 +526,10 @@ export function mountDuel(root, opts) {
       const st = STONES[state.selected.type];
       if (test.player === 'X' && test.phase === 'effect') {
         // Several ways to resolve: commit the placement and offer them.
-        commitState(test);
+        commitState(test, action);
         return;
       }
-      if (!st.apply && state.selected.type !== 'parrot') { sfx('place'); commitState(test); return; }
+      if (!st.apply && state.selected.type !== 'parrot') { sfx('place'); commitState(test, action); return; }
       preview = { state: test, action, logs: test.log };
       sfx('place');
       show();
@@ -570,9 +569,9 @@ export function mountDuel(root, opts) {
 
   function confirm() {
     if (!preview) return;
-    const next = preview.state;
+    const { state: next, action } = preview;
     preview = null;
-    commitState(next);
+    commitState(next, action);
   }
 
   function undoTurn() {
@@ -584,8 +583,9 @@ export function mountDuel(root, opts) {
   }
 
   // A committed step: announce what happened, then carry on.
-  function commitState(next) {
+  function commitState(next, action) {
     const logs = next.log ?? [];
+    if (action) said('X', action.type === 'place' ? t('played {stone} on the {square}', { stone: stoneName(state.selected), square: sq(action.pos) }) : describe(action));
     state = next;
     state.log = [];
     preview = null;
@@ -614,14 +614,13 @@ export function mountDuel(root, opts) {
     const me = who === 'X';
     const v = { enemy: enemy.name };
     for (const l of logs) {
-      if (l === 'silenced') toast(t(me ? 'Hushed! Your stone does nothing.' : 'Hushed! {enemy}\'s stone does nothing.', v), me ? 'bad' : 'good');
-      else if (l === 'echo') toast(t('Echo! It goes again.'), 'good');
-      else if (l.startsWith('copy:')) { const [, by, what] = l.split(':'); toast(t('The {parrot} copies {stone}!', { parrot: STONES[by].name, stone: STONES[what].name })); }
-      else if (l === 'found:X') toast(t('You found a pebble!'), 'good');
-      else if (l === 'found:O') toast(t('{enemy} finds a pebble!', v), 'bad');
+      if (l === 'silenced') status.log(t(me ? 'Hushed! Your stone does nothing.' : 'Hushed! {enemy}\'s stone does nothing.', v), me ? 'bad' : 'good');
+      else if (l === 'echo') status.log(t('Echo! It goes again.'), 'good');
+      else if (l.startsWith('copy:')) { const [, by, what] = l.split(':'); status.log(t('The {parrot} copies {stone}!', { parrot: STONES[by].name, stone: STONES[what].name })); }
+      else if (l === 'found:X') status.log(t('You found a pebble!'), 'good');
+      else if (l === 'found:O') status.log(t('{enemy} finds a pebble!', v), 'bad');
       else if (l === 'cond:gravity') { /* shown as a step of its own */ }
-      else if (l === 'rule:double' && !me) { /* the caption says it */ }
-      else if (l === 'rule:headstart') toast(t('{rule}: {enemy} goes again!', { ...v, rule: RULES.headstart.name }), 'bad');
+      else if (l === 'rule:headstart') status.log(t('{rule}: {enemy} goes again!', { ...v, rule: RULES.headstart.name }), 'bad');
     }
   }
 
@@ -632,7 +631,6 @@ export function mountDuel(root, opts) {
     busy = true;
     show();
     await sleep(SPEED.enemyPause);
-    let stones = 0;   // placed so far this time round
     while (!ended && !state.over && state.player === 'O') {
       const acts = legalActions(state);
       const t0 = performance.now();
@@ -642,10 +640,7 @@ export function mountDuel(root, opts) {
       if (action.type === 'select') {
         state.log = [];
         applyAction(state, action);
-        // A second stone in one go (Head Start, Double Time) keeps the first in the caption.
-        if (!stones) caption = [];
-        if (action.from === 'X') caption.push(t('took your {stone}', { stone: stoneName(state.selected) }));
-        info.textContent = caption.filter(Boolean).join(', ');
+        if (action.from === 'X') said('O', t('took your {stone}', { stone: stoneName(state.selected) }));
         // Show which stone it took.
         renderHands(state);
         const lifted = stoneEl(state.selected, 'O');
@@ -656,7 +651,6 @@ export function mountDuel(root, opts) {
         continue;
       }
       state.log = [];
-      const second = stones > 0 && action.type === 'place';
       // The board before Gravity pulls, so the fall can be shown as a step.
       let beforeFall = null;
       if (state.conds.includes('gravity')) {
@@ -675,9 +669,7 @@ export function mountDuel(root, opts) {
         sfx('thud');
       }
       if (action.type === 'dictate') {
-        caption.push(describe(action));
-        info.textContent = caption.filter(Boolean).join(', ');
-        toast(`${enemy.name}: ${describe(action)}`, 'bad');
+        said('O', describe(action));
         renderChips(state);
         await sleep(700);
         continue;
@@ -687,11 +679,8 @@ export function mountDuel(root, opts) {
       renderChips(state);
       if (action.type === 'place') {
         lastEnemyId = state.placedId;
-        const said = t('played {stone} on the {square}', { stone: stoneName(state.lastPlaced.O), square: sq(action.pos) });
-        caption = second ? [...caption, t('then {what}', { what: said })] : [...caption, said];
-        stones++;
-      } else caption.push(describe(action));
-      info.textContent = caption.filter(Boolean).join(', ');
+        said('O', t('played {stone} on the {square}', { stone: stoneName(state.lastPlaced.O), square: sq(action.pos) }));
+      } else said('O', describe(action));
       if (action.type === 'place') {
         sfx('place');
         const e = [...stoneEls.values()].find((x) => +x.dataset.at === action.pos);
@@ -754,7 +743,7 @@ export function mountDuel(root, opts) {
     stageCands = cands = effectCands;
   }
   show();
-  if (state.turns <= 1 && state.phase === 'select' && enemy.quote && !caption.length) info.textContent = t('{enemy}: “{quote}”', { enemy: enemy.name, quote: enemy.quote });
+  if (state.turns <= 1 && enemy.quote) status.log(t('{enemy}: “{quote}”', { enemy: enemy.name, quote: enemy.quote }));
   if (state.over) finish();
   else if (state.player === 'O') enemyTurn();
 

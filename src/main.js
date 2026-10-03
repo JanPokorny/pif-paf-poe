@@ -4,7 +4,7 @@
 import { STONES, CONDS, RULES, createGame } from './engine.js';
 import { RELICS, ENEMIES, ACTS, EVENTS } from './content.js';
 import * as R from './run.js';
-import { h, hideToast, tapeUp, art, relicArt, scribbleX, scribbleO, stoneEl, iconEl, toast, modal, ask, pressable, infoStone, infoRelic, infoRule, stoneCard, relicCard, stoneName, langToggle, energyBar } from './ui/common.js';
+import { h, hideToast, tapeUp, art, relicArt, scribbleX, scribbleO, stoneEl, iconEl, toast, modal, ask, pressable, infoStone, infoRelic, infoRule, stoneCard, relicCard, stoneName, langToggle, energyBar, statusLine } from './ui/common.js';
 import { icon } from './icons.js';
 import { mountDuel } from './ui/duel.js';
 import { sfx, soundOn, setSound } from './sound.js';
@@ -382,18 +382,37 @@ function mapScreen() {
   map.freshS = null; map.revealX = null; map.revealO = null;
   if (map.news === 'oline') musicEvent('stronger');
   if (map.open) map.doorHeard = true;
-  // A line of the boss's Os costs you hearts: news of its own, once the O is drawn.
-  if (map.news === 'oline') setTimeout(() => toast(t('{boss}: three in a row — −{n} ❤', { boss: boss.name, n: R.MAPCFG.lineDamage }), 'bad'), 2200);
-  const news = lastO && map.cells[lastO] && map.cells[lastO].kind !== 'boss-mark' ? t('{boss} marks the {node} square.', { boss: boss.name, node: NODE_NAME[map.cells[lastO].kind].toLowerCase() }) : '';
-  const bonus = map.bonus;
+  // What happened on the page, oldest first: kept with the map, worded as it is shown.
+  map.log ??= [];
+  const news = [];   // [delay ms, entry]: this turn's news, in the order it is drawn
+  if (freshX) news.push([0, { m: 'x', node: map.cells[freshX].kind }]);
+  if (freshS) news.push([0, { m: 's', node: map.cells[freshS].kind }]);
+  if (lastO && map.cells[lastO]?.kind !== 'boss-mark') news.push([oAt * 1000, { m: 'o', node: map.cells[lastO].kind }]);
+  if (map.news === 'oline') news.push([2200, { m: 'oline', n: R.MAPCFG.lineDamage }]);
+  if (opening) news.push([3600, { m: 'open' }]);
+  if (map.bonus) news.push([300, { m: 'bonus', n: map.bonus }]);
+  news.sort((a, b) => a[0] - b[0]);
+  const risen = (map.bossWins ?? 0) > 0;
+  const bossName = risen ? undeadName(boss) : boss.name;
+  const say = (e) => {
+    const node = (NODE_NAME[e.node] ?? '').toLowerCase();
+    return e.m === 'x' ? [t('You mark the {node} square.', { node }), 'you']
+      : e.m === 's' ? [t('You lost there: the {node} square burns.', { node }), 'bad']
+        : e.m === 'o' ? [t('{boss} marks the {node} square.', { boss: boss.name, node }), 'bad']
+          : e.m === 'oline' ? [t('{boss}: three in a row — −{n} ❤', { boss: boss.name, n: e.n }), 'bad']
+            : e.m === 'open' ? [t('Three in a row: the lair opens!'), 'good']
+              : e.m === 'bonus' ? [t('Past the open lair: +{n} 🪙', { n: e.n }), 'good'] : ['', ''];
+  };
+  const line = statusLine({ history: map.log.map((e) => { const [text, kind] = say(e); return { text, kind }; }) });
+  map.log.push(...news.map(([, e]) => e));
+  if (map.log.length > 60) map.log.splice(0, map.log.length - 60);
+  for (const [ms, e] of news) setTimeout(() => { if (line.el.isConnected) line.log(...say(e)); }, ms);
   map.bonus = 0;
   map.news = null;
-  if (bonus) setTimeout(() => toast(`+${bonus} 🪙`, 'good'), 50);
-  // The boss's lair, on the page: a hint while it is shut, another once it glows.
-  const risen = (map.bossWins ?? 0) > 0;
-  const openHint = () => h('div.door-hint.open', {}, h('span', { html: icon('crown') }), t('The lair is open: tap it to face {boss}.', { boss: risen ? undeadName(boss) : boss.name }));
-  const door = map.open && !opening ? openHint()
-    : h('div.door-hint', {}, h('span', { html: icon('crown') }), t('Three Xs in a row open the boss\'s lair.'));
+  // What to do next: the lair, once it glows; until then, the way to open it.
+  const instruct = (open) => line.instruct(open ? t('The lair is open: tap it to face {boss}.', { boss: bossName })
+    : !R.xCount(run) ? t('Pick any square next to an X or an O.') : t('Three Xs in a row open the boss\'s lair.'), open ? 'you' : '');
+  instruct(map.open && !opening);
   // Lines of pencil between the squares on view, each a little crooked.
   const W = cols * 100, H = rows * 100;
   let paths = '';
@@ -414,12 +433,10 @@ function mapScreen() {
     h('div.map-cells', {}, grid),
     strikes ? h('div.map-strikes', { html: `<svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" aria-hidden="true">${strikes}</svg>` }) : null);
   const scroller = h('div.map-scroll', {}, sheet);
-  screen(topBar(), relicStrip(),
+  screen(topBar(),
     h('div.map-page', {},
-      door,
+      line.el,
       scroller,
-      h('div.map-news', {}, news),
-      h('div.map-help', {}, !R.xCount(run) ? t('Pick any square next to an X or an O.') : ''),
       threats.size ? h('div.map-help.red', {}, t('Dashed circle: the boss wins a line there.')) : null));
   // Keep the newest marks in view, scrolling the sheet only, never the page.
   const centre = (el) => ({ left: el.offsetLeft - scroller.clientWidth / 2 + el.offsetWidth / 2, top: el.offsetTop - scroller.clientHeight / 2 + el.offsetHeight / 2 });
@@ -441,7 +458,7 @@ function mapScreen() {
       lair.classList.add('open', 'burst');
       musicEvent('door');
       sfx('win');
-      document.querySelector('.door-hint')?.replaceWith(openHint());
+      instruct(true);
     });
   }
 }
