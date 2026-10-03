@@ -1,5 +1,0 @@
-{
-  "private": true,
-  "description": "Renders the game's music: npm install here once, then node tools/render-music.cjs from the repository root.",
-  "devDependencies": { "@breezystack/lamejs": "1.2.7" }
-}

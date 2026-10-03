@@ -44,9 +44,10 @@ How it was checked:
 
 ## Music
 
-Rendered ahead of time (see DESIGN.md, Music): every loop's seam was checked for a jump (all
-within an ordinary sample step), the encoder's lead-in is skipped, and the title track starts on
-the first tap.
+Composed themes rendered with FluidSynth and a General MIDI SoundFont (see DESIGN.md, Music),
+replacing the first, oscillator-built tracks. Every loop's wrap was checked on the decoded MP3:
+all are within an ordinary sample step (the limiter had delayed the audio against the loop points,
+which clicked; it now compensates). The title track starts on the first tap.
 
 ## Notes, not changed
 

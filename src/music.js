@@ -1,5 +1,5 @@
-// The music: recordings rendered ahead of time from tools/music/compose.js (by
-// tools/render-music.cjs), looped and crossfaded here. Nothing is synthesised
+// The music: recordings rendered ahead of time from tools/music/score.py (by
+// tools/music/build.py), looped and crossfaded here. Nothing is synthesised
 // while the game runs, so a busy page can neither push the music out of time
 // nor make it crackle.
 //
@@ -66,7 +66,7 @@ async function play() {
   const src = ctx.createBufferSource();
   src.buffer = buf;
   src.loop = true;
-  // Past the encoder's lead-in, and exactly one loop long.
+  // Past the padding before the loop, and exactly one loop long.
   src.loopStart = info.offset;
   src.loopEnd = info.offset + info.seconds;
   const gain = ctx.createGain();

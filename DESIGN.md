@@ -184,17 +184,30 @@ bigger elite hands, no blunders.
 
 ## Music
 
-The music is rendered ahead of time, not synthesised while playing:
-`tools/music/compose.js` is the composer (each act's key, mode, tempo and instruments; each
-scene's layers), and `node tools/render-music.cjs` renders it in a headless browser to
-`music/*.mp3` with `music/tracks.json` (run `npm install --prefix tools/music` once, with the dev
-server up). Each act has four loops (map, calm for shops, rests and events, duel for duels and
-elites, boss), plus title, victory and defeat, and a stinger per music event (win, lose, door,
-stronger, heal) in each act's key. The game (`src/music.js`) loops a track, crossfades on a change
-of scene and plays a stinger on the track's next beat, ducking the band under it. Live scheduling
-used to drift and crackle whenever the page was busy.
+The music is composed by hand and rendered ahead of time with off-the-shelf tools: the
+FluidSynth synthesiser playing the FluidR3 General MIDI SoundFont (MIT licence), ffmpeg for
+cutting, levels and MP3. `tools/music/score.py` is the score: each act's theme (a 16-bar melody
+and chord progression written in scale degrees), key, mode, tempo and instruments, and how each
+scene arranges it. `python3 tools/music/build.py` renders it to `music/*.mp3` with
+`music/tracks.json`, then `node tools/music/measure.cjs` (with the dev server up) records where a
+browser's decode starts. Needs `apt-get install fluidsynth fluid-soundfont-gm ffmpeg` and
+`pip install mido`.
 
-Each loop is rendered twice with the same notes and the second pass kept, so the echoes of its
-end ring into its start and the loop is seamless; the player skips the MP3 encoder's lead-in
-(1105 samples) recorded in the manifest.
+| act | key | tempo | instruments | boss |
+|---|---|---|---|---|
+| 1 | C major | 100 | flute, harp, strings, bass | in minor |
+| 2 | D dorian | 96 | clarinet, marimba, strings, bassoon | in phrygian |
+| 3 | A minor | 104 | oboe, horn, harp, tremolo strings, contrabass | in phrygian, timpani |
+
+Each act has four loops on its theme: map (the full arrangement), calm for shops, rests and
+events (slower, sparse), duel for duels and elites (faster, driven) and boss (faster still, in the
+boss's mode). Title is a music box, victory brass, defeat piano. Each act has a stinger per music
+event (win, lose, door, stronger, heal) in its key. The game (`src/music.js`) loops a track,
+crossfades on a change of scene and plays a stinger on the track's next beat, ducking the band
+under it. Live scheduling used to drift and crackle whenever the page was busy.
+
+Each loop is rendered three times with the same notes and the second pass kept, so the echoes of
+its end ring into its start; its first 50 ms are blended from what follows its end, so the wrap
+is seamless. Half a second either side is kept in the file and never played (an MP3 is inexact at
+its edges): the manifest's `offset` and `seconds` say where the loop is.
 

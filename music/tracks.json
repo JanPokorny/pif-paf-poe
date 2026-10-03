@@ -1,141 +1,156 @@
 {
  "tracks": {
   "title": {
-   "bpm": 75.6,
-   "beat": 0.79365,
-   "seconds": 50.79365,
-   "offset": 0.02506
+   "bpm": 80,
+   "beat": 0.75,
+   "seconds": 48,
+   "pad": 0.5,
+   "offset": 0.5
   },
   "victory": {
-   "bpm": 91.2,
-   "beat": 0.65789,
-   "seconds": 42.10526,
-   "offset": 0.02506
+   "bpm": 92,
+   "beat": 0.65217,
+   "seconds": 41.73912,
+   "pad": 0.5,
+   "offset": 0.5
   },
   "defeat": {
-   "bpm": 72,
-   "beat": 0.83333,
-   "seconds": 53.33333,
-   "offset": 0.02506
+   "bpm": 64,
+   "beat": 0.9375,
+   "seconds": 60,
+   "pad": 0.5,
+   "offset": 0.5
   },
   "map-1": {
-   "bpm": 96,
-   "beat": 0.625,
-   "seconds": 40,
-   "offset": 0.02506
-  },
-  "calm-1": {
-   "bpm": 81.6,
-   "beat": 0.73529,
-   "seconds": 47.05882,
-   "offset": 0.02506
-  },
-  "duel-1": {
-   "bpm": 100.8,
-   "beat": 0.59524,
-   "seconds": 38.09524,
-   "offset": 0.02506
-  },
-  "boss-1": {
-   "bpm": 110.4,
-   "beat": 0.54348,
-   "seconds": 34.78261,
-   "offset": 0.02506
-  },
-  "map-2": {
    "bpm": 100,
    "beat": 0.6,
    "seconds": 38.4,
-   "offset": 0.02506
+   "pad": 0.5,
+   "offset": 0.5
+  },
+  "calm-1": {
+   "bpm": 82,
+   "beat": 0.73171,
+   "seconds": 46.82925,
+   "pad": 0.5,
+   "offset": 0.5
+  },
+  "duel-1": {
+   "bpm": 114,
+   "beat": 0.52632,
+   "seconds": 33.6842,
+   "pad": 0.5,
+   "offset": 0.5
+  },
+  "boss-1": {
+   "bpm": 120,
+   "beat": 0.5,
+   "seconds": 32,
+   "pad": 0.5,
+   "offset": 0.5
+  },
+  "map-2": {
+   "bpm": 96,
+   "beat": 0.625,
+   "seconds": 40,
+   "pad": 0.5,
+   "offset": 0.5
   },
   "calm-2": {
-   "bpm": 85,
-   "beat": 0.70588,
-   "seconds": 45.17647,
-   "offset": 0.02506
+   "bpm": 79,
+   "beat": 0.75949,
+   "seconds": 48.6076,
+   "pad": 0.5,
+   "offset": 0.5
   },
   "duel-2": {
-   "bpm": 105,
-   "beat": 0.57143,
-   "seconds": 36.57143,
-   "offset": 0.02506
+   "bpm": 109,
+   "beat": 0.55046,
+   "seconds": 35.22934,
+   "pad": 0.5,
+   "offset": 0.5
   },
   "boss-2": {
    "bpm": 115,
    "beat": 0.52174,
-   "seconds": 33.3913,
-   "offset": 0.02506
+   "seconds": 33.39129,
+   "pad": 0.5,
+   "offset": 0.5
   },
   "map-3": {
-   "bpm": 108,
-   "beat": 0.55556,
-   "seconds": 35.55556,
-   "offset": 0.02506
+   "bpm": 104,
+   "beat": 0.57692,
+   "seconds": 36.92306,
+   "pad": 0.5,
+   "offset": 0.5
   },
   "calm-3": {
-   "bpm": 91.8,
-   "beat": 0.65359,
-   "seconds": 41.83007,
-   "offset": 0.02506
+   "bpm": 85,
+   "beat": 0.70588,
+   "seconds": 45.17649,
+   "pad": 0.5,
+   "offset": 0.5
   },
   "duel-3": {
-   "bpm": 113.4,
-   "beat": 0.5291,
-   "seconds": 33.86243,
-   "offset": 0.02506
+   "bpm": 119,
+   "beat": 0.5042,
+   "seconds": 32.26891,
+   "pad": 0.5,
+   "offset": 0.5
   },
   "boss-3": {
-   "bpm": 124.2,
-   "beat": 0.48309,
-   "seconds": 30.91787,
-   "offset": 0.02506
+   "bpm": 125,
+   "beat": 0.48,
+   "seconds": 30.72,
+   "pad": 0.5,
+   "offset": 0.5
   }
  },
  "stingers": {
   "win-1": {
-   "offset": 0.02506
+   "offset": 0
   },
   "lose-1": {
-   "offset": 0.02506
+   "offset": 0
   },
   "door-1": {
-   "offset": 0.02506
+   "offset": 0
   },
   "stronger-1": {
-   "offset": 0.02506
+   "offset": 0
   },
   "heal-1": {
-   "offset": 0.02506
+   "offset": 0
   },
   "win-2": {
-   "offset": 0.02506
+   "offset": 0
   },
   "lose-2": {
-   "offset": 0.02506
+   "offset": 0
   },
   "door-2": {
-   "offset": 0.02506
+   "offset": 0
   },
   "stronger-2": {
-   "offset": 0.02506
+   "offset": 0
   },
   "heal-2": {
-   "offset": 0.02506
+   "offset": 0
   },
   "win-3": {
-   "offset": 0.02506
+   "offset": 0
   },
   "lose-3": {
-   "offset": 0.02506
+   "offset": 0
   },
   "door-3": {
-   "offset": 0.02506
+   "offset": 0
   },
   "stronger-3": {
-   "offset": 0.02506
+   "offset": 0
   },
   "heal-3": {
-   "offset": 0.01741
+   "offset": 0
   }
  }
 }
