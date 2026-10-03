@@ -174,7 +174,7 @@ export function statusLine({ history = [], title = '' } = {}) {
     const list = h('ol.log-list', {}, history.map((x) => h('li.' + (x.kind || 'plain'), {}, x.text)));
     const close = modal(h('div.log-view', {}, h('h2', {}, title || t('What happened')),
       history.length ? list : h('p.dim', {}, t('Nothing yet.')),
-      h('button.btn.wide', { onclick: () => close() }, t('Close'))), { cls: 'tall' });
+      h('button.btn.wide.ghost.big.log-close', { onclick: () => close() }, t('Close'))), { cls: 'tall' });
     requestAnimationFrame(() => { list.scrollTop = list.scrollHeight; });
   }
   render(instruction);
