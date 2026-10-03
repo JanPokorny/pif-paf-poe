@@ -55,7 +55,7 @@ duel, and a rule for who wins when someone runs out. The second version slows it
   are a phase of their own after the boss's turn, searched by the same AI as every other choice.
   They are the bosses at the end of each act (below).
   Double Time is the hard one, and it wants a particular loadout. Bot duels, 20 each: Pebbles
-  only or two Mountains win 0%, movers (Shift and Rotate, Rail/Pivot/Teleport, 2048/4096)
+  only or two Mountains win 0%, movers (Shift and Waltz, Rail/Pivot/Teleport, 2048/4096)
   20–40%, restrictions (Magnet and Stinky, and their evolved forms of the time)
   95–100%. A boss's undead phase adds Reserved, and then restrictions alone drop to
   0–15%: it takes a restriction *and* a mover (Magnet and Shift: 95%).
@@ -160,7 +160,7 @@ the stronger and the more skill a stone wants, the rarer.
 | Muffle | common, one-shot | 45% | 10% | 11% |
 | 2048 | uncommon | 41% | 12% | 11% |
 | Lasso | common | 39% | 12% | 13% |
-| Rotate | common | 36% | 15% | 10% |
+| Waltz (was Rotate) | common | 36% | 15% | 10% |
 | Frog | common | 35% | 11% | 15% |
 | Twin | uncommon | 39% | 15% | 7% |
 | Parrot | uncommon | 37% | 11% | 12% |
@@ -175,9 +175,9 @@ the stronger and the more skill a stone wants, the rarer.
 Bonfire replaced Flip (mirroring the whole board never makes or breaks a line, so Flip only ever
 swapped its own pair). It turns the 3, 5 or 8 squares around it one step, either way. Measured
 later than the table, in a run of its own (same setup, 60 games per enemy) where a Pebble scored
-44 / 12 / 13%, Whirl 55 / 12 / 13%, Rotate 59 / 21 / 11%, Swap 62 / 20 / 14% and Bonfire
+44 / 12 / 13%, Whirl 55 / 12 / 13%, Waltz 59 / 21 / 11%, Swap 62 / 20 / 14% and Bonfire
 61 / 17 / 11%: about as strong as Swap, so uncommon. It does nothing in 8% of plays (Whirl 23%,
-Rotate 25%) and offers about two choices.
+Waltz 25%) and offers about two choices.
 
 `docs/STONES-REPORT.md` has the rest: duds, choices, skill, pairs, boss builds, and what changed
 (Bribe takes only a Pebble beside it, Firecracker stays on its square, Bumper knocks stones off the

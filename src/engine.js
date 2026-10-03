@@ -77,7 +77,7 @@ def('shift', {
 });
 
 def('rotate', {
-  name: 'Rotate', rarity: 'common', kind: 'move',
+  name: 'Waltz', rarity: 'common', kind: 'move',
   text: 'Turn a 2x2 block this stone is in one step clockwise.',
   options: (s, pos) => Object.keys(BLOCKS).filter((block) => BLOCKS[block].includes(pos)).map((block) => ({ block, cw: true })),
   apply(s, pos, a) {

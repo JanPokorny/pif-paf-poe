@@ -360,7 +360,7 @@ export const CS_DATA = {
   stones: {
     pebble: { name: 'Oblázek', text: 'Nedělá nic: je to jen značka na desce.' },
     shift: { name: 'Šoup', text: 'Posune svůj řádek nebo sloupec o krok. Co vypadne na konci, vjede zpátky z druhé strany.' },
-    rotate: { name: 'Rotát', text: 'Otočí čtverec 2×2, ve kterém leží, o krok po směru hodin.' },
+    rotate: { name: 'Valčík', text: 'Otočí čtverec 2×2, ve kterém leží, o krok po směru hodin.' },
     magnet: { name: 'Magnet', text: 'Soupeř musí hrát vedle něj.' },
     stinky: { name: 'Smraďoch', text: 'Soupeř nesmí hrát vedle něj.' },
     mountain: { name: 'Hora', text: 'Smí kamkoli, ať soupeř omezuje jakkoli, a nic s ní nepohne.' },
