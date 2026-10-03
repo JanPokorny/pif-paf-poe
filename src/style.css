@@ -610,7 +610,7 @@ b { font-weight: 400; background: linear-gradient(transparent 55%, var(--hi) 55%
 @keyframes hop-shadow { 50% { filter: drop-shadow(0 8px 6px rgba(0,0,0,0.25)); } }
 .share { white-space: pre-wrap; font-family: var(--hand); background: var(--card); padding: 8px; user-select: all; }
 /* Czech needs háčky and čárky: a marker face that has them, a size up. */
-h1, h2, .status-line:not(.is-log), .btn.primary, .enemy-name, .card-name, .section-label { letter-spacing: 0.01em; font-size-adjust: 0.52; }
+h1, h2, .btn.primary, .enemy-name, .card-name, .section-label { letter-spacing: 0.01em; font-size-adjust: 0.52; }
 .slot-plain .stone { --size: 38px; }
 
 .demo { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin: 4px 0; }
@@ -920,9 +920,9 @@ body:has(.duel) #toast.show { transform: translate(-50%, 0) rotate(-1deg); }
 
 /* The status line: what just happened, then what to do; ⌄ opens the log. */
 .status-line { display: flex; align-items: center; justify-content: center; gap: 6px; min-height: 1.9em; text-align: center;
-  font-family: var(--marker); font-size: 1.05rem; color: var(--ink); align-self: stretch; padding: 0 2px; }
+  font-family: var(--hand); font-size: 1.05rem; color: var(--ink); align-self: stretch; padding: 0 2px; }
 .status-line .status-text { flex: 0 1 auto; line-height: 1.2; }
-.status-line.is-log .status-text { animation: log-in 0.25s ease-out; font-family: var(--hand); }
+.status-line.is-log .status-text { animation: log-in 0.25s ease-out; }
 @keyframes log-in { from { opacity: 0; transform: translateY(-4px); } }
 .status-line.you { color: var(--blue); }
 .status-line.enemy, .status-line.enemy-done, .status-line.bad { color: var(--red); }
