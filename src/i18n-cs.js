@@ -227,6 +227,7 @@ export default {
   'One of the 2×2 blocks it is in.': 'Jeden ze čtverců 2×2, ve kterých leží.',
   'Its row or its column.': 'Jeho řádek, nebo sloupec.',
   'Its whole row and column.': 'Celý jeho řádek a sloupec.',
+  'Your hearts are full.': 'Srdce máš plná.',
   'Here it copies a Shift, and slides like one.': 'Tady kopíruje Šoup a posouvá jako on.',
   'Any stone on the board.': 'Libovolný kámen na desce.',
   'Your {stones} stones play as their + form.': 'Tvoje kameny {stones} hrají jako svoje + forma.',

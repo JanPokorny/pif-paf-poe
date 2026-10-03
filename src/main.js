@@ -760,14 +760,18 @@ function shopScreen(redraw = false) {
 function restScreen() {
   const heal = Math.max(2, Math.ceil(run.maxHearts * 0.4));
   const leave = () => { R.leaveNode(run); route(); };
+  // Like every screen: what to do in the bar at the bottom, the main choice in yellow.
+  const full = run.hearts >= run.maxHearts;
   screen(topBar(), h('div.page.rest', {},
     h('div.campfire', { html: icon('fire') }),
     h('h2', {}, t('Campfire')),
-    h('button.btn.wide.big', {
-      disabled: run.hearts >= run.maxHearts || undefined,
-      onclick: () => { run.hearts = Math.min(run.maxHearts, run.hearts + heal); sfx('heal'); musicEvent('heal'); toast(`+${heal} ❤`, 'good'); flash = 'heal'; leave(); },
-    }, t('Rest: heal {n} ❤', { n: heal })),
-    h('button.btn.wide.ghost', { onclick: leave }, t('Move on'))));
+    full ? h('p.dim', {}, t('Your hearts are full.')) : null,
+    h('div.sticky-bottom.pair', {},
+      h('button.btn.ghost.big.wide', { onclick: leave }, t('Move on')),
+      h('button.btn.primary.big.wide', {
+        disabled: full || undefined,
+        onclick: () => { run.hearts = Math.min(run.maxHearts, run.hearts + heal); sfx('heal'); musicEvent('heal'); toast(`+${heal} ❤`, 'good'); flash = 'heal'; leave(); },
+      }, t('Rest: heal {n} ❤', { n: heal })))));
 }
 
 // ── Workshop: two stones for one of a higher tier ──────────────────────────
@@ -831,7 +835,8 @@ function eventScreen() {
     chooseStone: (rarity, pay = null) => new Promise((resolve) => {
       const opts = R.stoneChoices(run, 'elite', rarity);
       const body = h('div.pouch-view', {}, h('h2', {}, t('Choose a stone')),
-        h('div.cards', {}, opts.map((s) => stoneCard(s, { onclick: () => { close(); takeStone(s, (ok) => { if (ok) pay?.(); resolve(ok ? t('You take the {stone}.', { stone: stoneName(s) }) : t('You leave it be.')); }); } }))),
+        // As everywhere: a tap opens the stone's card, whose button takes it.
+        h('div.cards', {}, opts.map((s) => stoneCard(s, { onclick: () => infoStone(s, 'X', '', { label: t('Pick'), run: () => { close(); takeStone(s, (ok) => { if (ok) pay?.(); resolve(ok ? t('You take the {stone}.', { stone: stoneName(s) }) : t('You leave it be.')); }); } }) }))),
         h('button.btn.wide.ghost', { onclick: () => { close(); resolve(t('You take nothing.')); } }, t('None')));
       const close = modal(body, { dismissable: false, cls: 'tall' });
     }),

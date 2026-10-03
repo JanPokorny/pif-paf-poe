@@ -433,6 +433,7 @@ b { font-weight: 400; background: linear-gradient(transparent 55%, var(--hi) 55%
 .service:disabled { opacity: 0.4; }
 
 .rest { align-items: center; text-align: center; }
+.rest > .sticky-bottom { align-self: stretch; }
 .campfire, .event-emoji, .end-emoji { font-size: 4.2rem; }
 .campfire { animation: flicker 1.6s ease-in-out infinite; margin-top: 16px; }
 @keyframes flicker { 0%, 100% { transform: scale(1) rotate(-2deg); } 50% { transform: scale(1.05) rotate(2deg); } }
@@ -537,6 +538,7 @@ b { font-weight: 400; background: linear-gradient(transparent 55%, var(--hi) 55%
 .map-cell .cell-space .icon { width: 16px; height: 16px; }
 .sticky-bottom.pair { display: flex; gap: 8px; align-items: stretch; }
 .sticky-bottom.pair > .btn.wide { flex: 1; width: auto; min-width: 0; }
+.sticky-bottom.pair > .btn.primary { flex: 1.6; white-space: nowrap; }
 .back-map { flex: none; display: inline-flex; align-items: center; gap: 4px; }
 
 /* Critique pass */
@@ -701,6 +703,8 @@ h1, h2, .btn.primary, .enemy-name, .card-name, .section-label { letter-spacing: 
 /* In a duel the notes go up top, clear of the hand and the info line. */
 /* Toasts keep clear of the button bar at the bottom, and in a duel of the top bar. */
 body:has(.sticky-bottom) #toast { bottom: calc(90px + var(--button-b)); }
+/* Above an open card, never over its text or buttons. */
+body:has(.modal-back) #toast { bottom: auto; top: calc(14px + var(--safe-t)); }
 body:has(.duel) #toast { bottom: auto; top: calc(62px + var(--safe-t)); transform: translate(-50%, -30px) rotate(-2deg); }
 body:has(.duel) #toast.show { transform: translate(-50%, 0) rotate(-1deg); }
 /* The 3x3 page: bigger squares, and the line that ended it. */
