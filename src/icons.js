@@ -137,14 +137,12 @@ const RAW = {
   // ---------- STONES ----------
   pebble: P(PEBBLE) + P('M -2.6 -1.4 C -1.8 -2.3 -0.6 -2.6 0.6 -2.5', SW(1.1)),
 
-  shift:
-    P('M -7 -1.7 h 3.4 v 3.4 h -3.4 Z M -1.7 -1.7 h 3.4 v 3.4 h -3.4 Z M 3.6 -1.7 h 3.4 v 3.4 h -3.4 Z', SW(1.3)) +
-    arrow(-3.6, -5, 3.6, -5) +
-    P('M 6.6 3 C 7.4 6.2 5.6 6.4 3.4 6.4 H -3.4') + head(-5.8, 6.4, 180),
+  // >>>: a row pushed along.
+  shift: P('M -7 -4.6 L -3.4 0 L -7 4.6 M -2 -4.6 L 1.6 0 L -2 4.6 M 3 -4.6 L 6.6 0 L 3 4.6', SW(1.8)),
 
+  // A refresh sign drawn square: two arrows chasing each other round.
   rotate:
-    P('M -3.3 -3.3 h 6.6 v 6.6 h -6.6 Z M 0 -3.3 V 3.3 M -3.3 0 H 3.3', SW(1.3)) +
-    arcArrow(0, 0, 6.2, 215, 480),
+    P('M -3.4 -5.6 H 5.6 V 0.8 M 3.4 5.6 H -5.6 V -0.8', SW(1.6)) + head(5.6, 3.8, 90, 3, 1.8) + head(-5.6, -3.8, 270, 3, 1.8),
 
   magnet:
     P('M -5 -5.8 V 1 A 5 5 0 0 0 5 1 V -5.8 H 2 V 1 A 2 2 0 0 1 -2 1 V -5.8 Z', SW(1.4)) +
