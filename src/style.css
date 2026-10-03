@@ -434,6 +434,8 @@ b { font-weight: 400; background: linear-gradient(transparent 55%, var(--hi) 55%
 
 .rest { align-items: center; text-align: center; }
 .rest > .sticky-bottom { align-self: stretch; }
+.rest > .sticky-bottom:not(.pair) { display: flex; }
+.rest > .sticky-bottom:not(.pair) > .btn { flex: 1; }
 .campfire, .event-emoji, .end-emoji { font-size: 4.2rem; }
 .campfire { animation: flicker 1.6s ease-in-out infinite; margin-top: 16px; }
 @keyframes flicker { 0%, 100% { transform: scale(1) rotate(-2deg); } 50% { transform: scale(1.05) rotate(2deg); } }

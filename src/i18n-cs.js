@@ -308,7 +308,6 @@ export default {
   'Choose what to make': 'Vyber, co vyrobit',
   'Your {a} and {b} become a {c}.': 'Z kamenů {a} a {b} je teď {c}.',
   'Trade': 'Vyměnit',
-  'Trade two stones for one': 'Vyměnit dva kameny za jeden',
   "{boss} marks the {node} square.": "Boss ({boss}) zabral políčko: {node}.",
   "Boss defeated!": "Boss poražen!",
   'Rock': 'Skála',

@@ -817,10 +817,12 @@ function craftScreen() {
     h('div.campfire', { html: icon('relic-anvil') }),
     h('h2', {}, t('Workshop')),
     h('p.dim', {}, made ?? (R.craftable(run).length >= 2 ? t('Two stones → one better.') : t('Needs two special stones.'))),
-    !made && R.craftable(run).length >= 2 ? h('button.btn.wide.big', {
-      onclick: () => craftFlow((text) => { if (text) { run.pending.made = text; save(); craftScreen(); } }),
-    }, t('Trade two stones for one')) : null,
-    h('button.btn.wide' + (made ? '.primary.big' : '.ghost'), { onclick: leave }, t('Move on'))));
+    // As at the campfire: leaving dashed, the trade in yellow; once traded, leaving is the way on.
+    !made && R.craftable(run).length >= 2
+      ? h('div.sticky-bottom.pair', {},
+        h('button.btn.ghost.big.wide', { onclick: leave }, t('Move on')),
+        h('button.btn.primary.big.wide', { onclick: () => craftFlow((text) => { if (text) { run.pending.made = text; save(); craftScreen(); } }) }, t('Trade')))
+      : h('div.sticky-bottom', {}, h('button.btn.primary.big.wide', { onclick: leave }, t('Move on')))));
 }
 
 // ── Events ──────────────────────────────────────────────────────────────────
