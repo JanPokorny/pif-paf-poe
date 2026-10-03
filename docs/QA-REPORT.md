@@ -1,58 +1,57 @@
 # QA report
 
-An overnight playtest of the whole game:
+A night of playing and fixing, after the + tier, the grouped talismans and the pre-rendered
+music went in.
 
-- **Headless runs.** `node tools/runbot.mjs` over every heat level, 96 runs each: 576 runs in
-  all, with no exception.
-- **A bot playing the real UI.** `tools/playtest.cjs` drives the browser as a player taps:
-  - English and Czech;
-  - an iPhone-sized screen (390×664) and a small one (360×640);
-  - runs started fresh, and from saved act-2 and act-3 starts with the energy and stones a
-    player has by then.
+How it was checked:
 
-  It records console errors, native dialogs, screens it gets stuck on, and a screenshot of
-  every kind of screen. Its duels are random taps, so it loses most of them, but it walks
-  every screen.
-- **Scripted checks** for what a random player never reaches: boss victories, the moonrise,
-  the change of act, the victory screen, the menus.
+- **The UI bot** (`tools/playtest.cjs`) through every act, in Czech and English, on a phone
+  (390×664) and a small screen (360×640): no console errors, no page errors, no screen it got
+  stuck on.
+- **By hand**, with a harness that drops into a duel with a chosen board and hand: every + stone
+  (Parrot+, Magnet+, Gravity+, Lasso+, Frog+, Bumper+, Firecracker+, Bonfire+) and Mind Control;
+  every stone's card and its animation; talisman cards; the pouch; the shop; the campfire; the
+  workshop; the end screen; both menus.
+- **The run bot** (`node tools/runbot.mjs --runs 96`) and the engine tests (89).
 
 ## Fixed
 
 | What | Where |
 |---|---|
-| Under Open Hands, an empty hand never found a Pebble while the enemy held a special to borrow, though the hand said it would. The bot was stuck there. | engine `settle` |
-| Board stones grew and shrank about the top-left square: the win pulse, the pop-in of a new stone (it slid in from the corner), its removal and its hop. | style: board stone animations |
-| A toast sat on top of the bottom button ("Fight!", "Continue"), hiding its label. In duels it now sits below the top bar. | style `#toast` |
-| On small screens the top bar cut "Act 1 · The Meadow" (and the longer Czech "Dějství 3 · Vrchol") into an ellipsis once energy joined it. Below 420px only the act's number shows. | top bar |
-| The first page's gift could offer a stone the starting energy (1) cannot bring along (a 2048, a rare). | `enterNode('gift')` |
-| Second Wind (formerly Deep Pockets) still showed the trousers. | icon |
-| The victory line "The Twin Kings bows." | end screen |
-| A reward taken half under the old screens could be offered again by the new reward form (from an old save). | reward screen |
-| The workshop and pouch pickers had no energy dots, unlike every other list of stones. | workshop, pickers |
+| The run bot crashed on borrowing a one-shot + stone under Open Hands. | engine `selectActions` |
+| A one-shot Shift+ and a Shift made + by a talisman merged into one "×2" slot: the one-shot could not be chosen. | engine, duel hand |
+| Copying with a Parrot+ was logged as "You: target top left". | duel log |
+| Twin, Parrot and Parrot+ had no animation on their card (the sample board gave them nothing to do). | stone cards |
+| Swap+ and Parrot had no caption under their animation; Shift+'s said "its row or column". | stone cards |
+| A notification sat on top of an open card, over its text. It now sits above it. | style `#toast` |
+| The title's yellow button disappeared when the save held a finished run. | title |
+| The UI bot looped on rewards (a tap now opens the card) and on the pre-duel screen (it pressed "Back to the map"). | `tools/playtest.cjs` |
 
-Asked for during the night and done:
+## Unified
 
-- Duel modifiers as paper notes above the enemy's stones.
-- Rewards read "~ and ~" and "or", without headings; then the reward form itself (radio
-  choices, a grey Continue until every choice is made, nothing skippable).
-- No pouch limit.
-- Treasure chests choose the same way.
+- **Buttons**: dismissing is always the dashed button ("Close", "Back", "None", "Never mind");
+  an action is yellow; other actions are plain. Info cards, the pouch and the share card used a
+  plain "OK" or "Close".
+- **The bottom bar**: every screen's way out and main action sit in it, the way out dashed on the
+  left, the main action yellow on the right — pre-duel, campfire, workshop, end screen, event
+  results. The campfire, workshop and end screen had their buttons in the middle of the page.
+- **Picking**: a tap opens a stone's card, whose button takes or buys it — rewards, shop, and
+  now the events that offer a stone too (they took it at once).
+- **Menus**: neither the map's menu nor the duel's has a heading.
+- **Words**: English says "talismans", as the Czech does ("relics" before).
+- **Labels that wrapped** in the bottom bar ("Na začátek", the workshop's trade) are kept to one
+  line.
 
-## Checked and fine
+## Music
 
-- **No console errors, page errors or native dialogs** in any browser run.
-- **Every screen renders in both languages and both sizes:** title, act intro, map, pre-duel,
-  duel, result, rewards (normal, elite, boss, gift), shop, campfire, workshop, treasure,
-  events and their pickers, end screen, victory.
-- **Act changes and the final victory** work end to end: boss beaten twice → reward → act intro
-  → map; and on the last act, the victory screen with heat unlocked.
-- **Engine tests** (83) pass. Map generation keeps the gift in reach on 2,000 seeds.
+Rendered ahead of time (see DESIGN.md, Music): every loop's seam was checked for a jump (all
+within an ordinary sample step), the encoder's lead-in is skipped, and the title track starts on
+the first tap.
 
 ## Notes, not changed
 
-- Toasts still briefly cover what is under them, now above the button bar: the enemy's name in a
-  duel, a row of stones before one. They fade in two seconds.
-- The shop's rows scroll sideways on a 360px screen. That is by design, but only the cut-off
-  card hints at it.
-- The headless bot wins about a third of its runs at heat 0, 9% at heat 5. Heats 1 to 4 are
-  close together (23–38%): the heat steps may want spacing out.
+- Rarity stays as it was set after the + tier measurements (`docs/STONE-FAMILIES.md`).
+- Bonfire+, Frog+ and Parrot+ add little over their regular forms; their talisman (Trickster's
+  Hat, Frog and Parrot) is the one common one for that reason.
+- The run bot wins 35–39 of 96 runs; act 1 is where most runs end, mostly to the boss's lines on
+  the map and to the Old Oak.
