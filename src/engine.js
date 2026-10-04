@@ -373,7 +373,7 @@ export const RULES = {
   headstart: { name: 'Head Start', text: 'The boss plays twice on its first turn.' },
   double: { name: 'Double Time', text: 'Every turn is two stones in a row, for both sides. The boss starts.' },
   elko: { name: 'Elbow', text: 'Rows do not count: an L of three wins.' },
-  clinch: { name: 'Clinch', text: 'You must place beside one of the boss\'s stones, or where you block its line.' },
+  clinch: { name: 'Clinch', text: 'You must place beside one of the boss\'s stones.' },
   column: { name: 'Column', text: 'Each turn the boss closes a column to you.', dictate: true },
   spy: { name: 'Spy', text: 'Each turn the boss picks which way your stones move.', dictate: true },
   patient: { name: 'Patience', text: 'A full board goes to the boss.' },
@@ -405,8 +405,6 @@ export function winningLine(s, player) {
   return shapesOf(s).find((l) => l.every(mine)) ?? null;
 }
 
-// Would `player` complete a winning shape on square i?
-const blocksLine = (s, i, player) => shapesOf(s).some((l) => l.includes(i) && l.every((j) => j === i || s.board[j]?.player === player));
 const freeSquares = (b) => { const o = []; for (let i = 0; i < 9; i++) if (!b[i]) o.push(i); return o; };
 
 // Every restriction the opponent has on the board pulls at once, and you must
@@ -429,8 +427,8 @@ export function allowedSquares(s) {
   if (s.conds.includes('nocentre')) narrow((i) => i !== 4);
   if (p === 'X') {
     if (s.rules.includes('reserved')) narrow((i) => i !== 4);
-    // Beside one of its stones -- or blocking one of its lines, so a diagonal can always be stopped.
-    if (s.rules.includes('clinch')) narrow((i) => s.board.some((c, j) => c && c.player === 'O' && adjacent(i, j)) || blocksLine(s, i, 'O'));
+    // Beside one of its stones: to block a diagonal, move or restrict to get there.
+    if (s.rules.includes('clinch')) narrow((i) => s.board.some((c, j) => c && c.player === 'O' && adjacent(i, j)));
     if (s.dictate?.kind === 'column') narrow((i) => col(i) !== s.dictate.value);
   }
   if (s.mods[p].freeFirst && s.placements[p] === 0) return pool;

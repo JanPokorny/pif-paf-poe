@@ -718,7 +718,8 @@ test('Double Time: the boss\'s word lasts both of your stones', () => {
 });
 test('Clinch: you must place next to a boss stone', () => {
   sameSet(allowedFor({ 0: 'O pebble' }, { rules: ['clinch'] }), [1, 3]);
-  sameSet(allowedFor({ 0: 'O pebble', 4: 'O pebble' }, { rules: ['clinch'] }), [1, 3, 5, 7, 8], 'the diagonal 0-4-8 can be blocked');
+  sameSet(allowedFor({ 0: 'O pebble', 4: 'O pebble' }, { rules: ['clinch'] }), [1, 3, 5, 7], 'the diagonal 0-4-8 cannot be blocked by placing');
+  sameSet(allowedFor({ 0: 'O pebble', 1: 'X pebble', 3: 'X pebble' }, { rules: ['clinch'] }), [2, 4, 5, 6, 7, 8], 'nowhere beside it: anywhere');
   sameSet(allowedFor({}, { rules: ['clinch'] }), [0, 1, 2, 3, 4, 5, 6, 7, 8], 'no boss stone: anywhere');
 });
 test('Clinch does not bind the boss', () => {

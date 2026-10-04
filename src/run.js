@@ -770,9 +770,11 @@ export function enterNode(run, key) {
     case 'rest': run.pending = { kind: 'rest' }; run.screen = 'rest'; break;
     case 'craft': run.pending = { kind: 'craft' }; run.screen = 'craft'; break;
     case 'gift': {
-      // A special stone, free: one of two, both of them stones the energy you
-      // have can bring along.
-      const stones = stoneChoices(run, 'normal', energyOf(run) >= 3 ? null : energyOf(run) >= 2 ? 'uncommon' : 'common', 2);
+      // The first page's treasure: a special stone, free, one of two. Plain
+      // commons (1 energy, all a first duel has), and not the Mountain, which
+      // does nothing on its own.
+      const pool = shuffle(run, REWARD_STONES.filter((x) => STONES[x].rarity === 'common' && x !== 'mountain'));
+      const stones = pool.slice(0, 2).map((type) => ({ type }));
       run.pending = { kind: 'reward', gift: true, gold: 0, stones, once: null, relic: null, relicChoice: null, tier: 'gift', taken: {} };
       run.screen = 'reward';
       break;

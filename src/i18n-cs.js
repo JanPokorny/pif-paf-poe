@@ -257,8 +257,6 @@ export default {
   'Stones moving past it step over it.': 'Kameny, které se posouvají, ji přeskočí.',
   'Dashed circle: their winning square.': 'Čárkovaný kruh: tam soupeř vyhraje.',
   // ── The slower game: slots, evolving, conditions, boss rules ────────────
-  'Gift': 'Dárek',
-  'A gift!': 'Dárek!',
   'Conquered the Summit 🏆': 'Dobyl(a) jsem Vrchol 🏆',
   'You beat {boss}. You are the champion at heat {n}.': 'Porazil(a) jsi: {boss}. Jsi šampion na žáru {n}.',
   'You beat {boss}. You are the champion.': 'Porazil(a) jsi: {boss}. Jsi šampion.',
@@ -415,7 +413,7 @@ export const CS_DATA = {
     double: { name: 'Dvojtah', text: 'Každý tah jsou dva kameny za sebou, pro obě strany. Boss začíná.' },
     headstart: { name: 'Náskok', text: 'Boss hraje svůj první tah dvakrát.' },
     elko: { name: 'Elko', text: 'Řady neplatí: vyhrává elko ze tří.' },
-    clinch: { name: 'Lep', text: 'Musíš hrát vedle některého bossova kamene, nebo tam, kde mu blokuješ řadu.' },
+    clinch: { name: 'Lep', text: 'Musíš hrát vedle některého bossova kamene.' },
     column: { name: 'Sloup', text: 'Každý tah ti boss zavře jeden sloupec.' },
     spy: { name: 'Špion', text: 'Každý tah boss určí, kam se tvoje kameny pohnou.' },
     patient: { name: 'Trpělivost', text: 'Plná deska patří bossovi.' },

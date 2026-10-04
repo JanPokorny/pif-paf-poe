@@ -48,7 +48,7 @@ duel, and a rule for who wins when someone runs out. The second version slows it
   rule; others roll one (25% in act 1, 35% in act 2, 40% in act 3, more for elites).
 - **Bosses bring no stones.** Only Pebbles, and rules in their favour: **Tactics** (it names the
   stone you play), **Head Start** (it plays twice on its first turn), **Elbow** (rows do not
-  count: an L of three wins), **Clinch** (you must place next to one of its stones, corners included — so a threat can always be blocked), **Column**
+  count: an L of three wins), **Clinch** (you must place beside one of its stones; a diagonal threat is stopped with a mover or a restriction, not by placing), **Column**
   (it closes a column to you each turn), **Spy** (it names the direction your stones move),
   **Reserved** (the centre is its alone), **Patience** (a full board is its), **Double Time**
   (every turn is two stones in a row, for both sides, the boss first). The dictating rules
@@ -138,6 +138,8 @@ Balance was measured and retuned with `tools/lab.mjs`; the run bots (see Difficu
 18 special stones and the Pebble, three of them glass by nature (Relocate, Muffle, Mind Control).
 Every stone's card shows an example computed by the engine.
 
+- **No restriction ever leaves you without a square.** Every rule and stone narrows where you
+  may place only as far as some square is left ("if you can" is implied, never written).
 - **"Beside" always means the four squares that share a side**, for every stone and boss rule
   (Clinch included). The map is the one place where "next to" counts corners.
 - **The + tier.** Eleven stones have a + form, the same stone with a wider effect (usually from

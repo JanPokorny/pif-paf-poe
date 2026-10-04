@@ -300,8 +300,8 @@ function route() {
 
 // ── Map ─────────────────────────────────────────────────────────────────────
 
-const NODE_ICON = { fight: 'sword', elite: 'skull', rock: 'mountain', shop: 'shop', rest: 'fire', event: 'question', treasure: 'chest', boss: 'crown', gift: 'star', craft: 'relic-anvil' };
-const NODE_NAME = { 'boss-mark': t('Boss'), fight: t('Duel'), elite: t('Elite'), shop: t('Shop'), rest: t('Campfire'), event: t('Unknown'), treasure: t('Treasure'), boss: t('Boss'), rock: t('Rock'), gift: t('Gift'), craft: t('Workshop'), empty: t('Empty'), lair: t('Lair') };
+const NODE_ICON = { fight: 'sword', elite: 'skull', rock: 'mountain', shop: 'shop', rest: 'fire', event: 'question', treasure: 'chest', boss: 'crown', gift: 'chest', craft: 'relic-anvil' };
+const NODE_NAME = { 'boss-mark': t('Boss'), fight: t('Duel'), elite: t('Elite'), shop: t('Shop'), rest: t('Campfire'), event: t('Unknown'), treasure: t('Treasure'), boss: t('Boss'), rock: t('Rock'), gift: t('Treasure'), craft: t('Workshop'), empty: t('Empty'), lair: t('Lair') };
 
 // Each act's ground: what blocks the way (trees, boulders, crags), and empty ground.
 const terrain = () => Math.min(3, Math.max(1, run?.act ?? 1));
@@ -676,7 +676,7 @@ function radioRow(chosen, items) {
 
 function rewardScreen() {
   const rw = run.pending;
-  const parts = [h('h1.reward-title', {}, rw.gift ? t('A gift!') : rw.tier === 'boss' ? t('Boss defeated!') : t('Victory!'))];
+  const parts = [h('h1.reward-title', {}, rw.gift ? t('Treasure!') : rw.tier === 'boss' ? t('Boss defeated!') : t('Victory!'))];
   if (rw.gold) parts.push(h('div.reward-gold', {}, h('span', { html: icon('coin') }), t('+{n} gold', { n: rw.gold })));
   if (rw.goldStones) parts.push(h('p.dim.reward-note', {}, t('{n} of it from your gold stones.', { n: rw.goldStones })));
   if (rw.energy) parts.push(h('div.reward-gold.reward-energy', {}, h('span', { html: icon('energy') }), t('+{n} energy', { n: rw.energy })));

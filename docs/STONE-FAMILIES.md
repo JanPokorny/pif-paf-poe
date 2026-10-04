@@ -64,9 +64,8 @@ Pebble).
   filled the common pool with weak stones. So only Bumper moved (to rare).
 - **Lasso** first pulled only from its row or column, and did nothing in 88% of plays; it pulls
   any enemy stone again (25% duds).
-- **Clinch** now counts only squares beside the boss's stones, and squares that block its line
-  (or a diagonal could not be stopped). It is stricter than before, so the Old Oak thinks a
-  little less (100 iterations, was 150) and blunders a little more (0.22, was 0.15).
+- **Clinch** counts only squares beside the boss's stones: a diagonal is blocked with a mover or a
+  restriction, not by placing. (For a while a square blocking its line counted too; dropped.)
 - **Run bot** (`node tools/runbot.mjs --runs 96`): 35 victories in 96, as before the + tier
   (29–34).
 
