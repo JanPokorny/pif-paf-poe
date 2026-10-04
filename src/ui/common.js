@@ -91,11 +91,10 @@ export function updateStone(el, s, player, opts = {}) {
   }
 }
 
-// A stone to choose: the box in its corner ticks it at once; a tap on the stone
+// A stone to choose: the box in its corner crosses it at once; a tap on the stone
 // opens its card, whose button selects or deselects it.
-const TICK = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4.5 12.5 C 6.5 14, 8 16, 9.5 19 C 12 12.5, 15.5 7.5, 20.5 3.5"/></svg>';
 export function tickStone(s, { on, toggle, name = false, face = '' }) {
-  const box = h('button.tick-box', { role: 'checkbox', 'aria-checked': String(!!on), 'aria-label': stoneName(s), html: TICK,
+  const box = h('button.tick-box', { role: 'checkbox', 'aria-checked': String(!!on), 'aria-label': stoneName(s), html: scribbleX(),
     onclick: (e) => { e.stopPropagation(); toggle(); } });
   const btn = h('button.tick-face' + face, { 'aria-label': stoneName(s),
     onclick: () => infoStone(s, 'X', '', { label: on ? t('Deselect') : t('Select'), run: toggle }) },

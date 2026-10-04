@@ -655,7 +655,7 @@ body:has(.duel) #toast.show { transform: translate(-50%, 0) rotate(-1deg); }
 .stone-pick { position: relative; background: none; border: 0; padding: 5px; -webkit-touch-callout: none; user-select: none; }
 .stone-pick .stone { --size: min(54px, calc((100vw - 64px) / 7.3)); }
 .stone-pick:nth-child(odd) .stone { --tilt: -3deg; } .stone-pick:nth-child(even) .stone { --tilt: 2deg; }
-/* A stone to choose: a pencilled box in its corner, ticked in ballpoint; the
+/* A stone to choose: a pencilled box in its corner, crossed in ballpoint, the X of the map; the
    stone itself opens its card. One not chosen is faint. */
 .tick-stone { position: relative; display: flex; }
 .tick-stone > .tick-face { flex: 1; width: 100%; transition: opacity 0.15s; }
@@ -668,7 +668,8 @@ body:has(.duel) #toast.show { transform: translate(-50%, 0) rotate(-1deg); }
 }
 /* A bigger target than it looks. */
 .tick-box::before { content: ''; position: absolute; inset: -3px -3px -10px -10px; }
-.tick-box svg { position: absolute; left: -2px; top: -7px; width: 27px; height: 27px; overflow: visible; fill: none; stroke: var(--blue); stroke-width: 3.2; stroke-linecap: round; stroke-linejoin: round; opacity: 0; }
+.tick-box svg { position: absolute; inset: 2px; width: calc(100% - 4px); height: calc(100% - 4px); overflow: visible; opacity: 0; }
+.tick-box .scribble path { stroke-width: 13; }
 .tick-box[aria-checked="true"] svg { opacity: 1; }
 .stone-grid .tick-box { bottom: auto; top: 30px; left: 2px; }
 .tick-name { display: block; }
