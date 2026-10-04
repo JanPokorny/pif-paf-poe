@@ -229,7 +229,6 @@ export default {
   'Hushed': 'Pst',
   'This is what happens. Confirm?': 'Tohle se stane. Potvrdit?',
   'Confirm': 'Potvrdit',
-  '✓ to confirm, tap again to take it back': '✓ potvrdí, ťuknutím znovu to vrátíš',
   'talisman': 'talisman',
   'Choose how your {what} works': 'Jak má {what} zapůsobit?',
   ' — but you are hushed: it will do nothing.': ' — jenže máš pst: nic neudělá.',

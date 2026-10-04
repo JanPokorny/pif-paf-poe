@@ -950,8 +950,6 @@ body:has(.duel) #toast.show { transform: translate(-50%, 0) rotate(-1deg); }
 .ruled .heat-label { line-height: 26px; }
 .ruled .share { margin: 0; padding: 0 8px; line-height: 26px; background: none; }
 .ruled .settings-row { margin-top: 0; }
-/* Where the stone in a preview was placed: a dotted blue square, as yours are drawn. */
-.cell.placed-at::after { opacity: 1; inset: 8%; background: none; border: 2.5px dotted var(--blue); border-radius: 14% 18% 12% 16%; animation: none; filter: none; }
 /* A chosen target is shown by its stone pulsing faint, not by a ring. */
 .cell.chosen::after, .cell.target.chosen::after { opacity: 0; animation: none; }
 .enemy-hand .stone.chosen { outline: none; background: none; animation: preview-pulse 1.1s ease-in-out infinite; }
@@ -1019,3 +1017,5 @@ body:has(.duel) #toast.show { transform: translate(-50%, 0) rotate(-1deg); }
 /* A stone's energy cost: the same little blue note as a count. */
 /* Top right, where a count sits: a stone has one or the other, never both. */
 .stone .cost { background: var(--note); border-radius: 1px; box-shadow: 1px 2px 3px rgba(60, 40, 0, 0.22); padding: 1px 3px; transform: rotate(5deg); left: auto; right: -5px; }
+/* Room between the arrows under the board and the buttons below them. */
+.duel .actions { margin-top: 14px; }

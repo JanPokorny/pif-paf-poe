@@ -153,9 +153,12 @@ export function mountDuel(root, opts) {
         e.classList.add('hop');
         setTimeout(() => e.classList.remove('hop'), 450);
       }
-      // In a preview, the stones it moves or changes pulse, faint.
+      // In a preview, the stone just placed pulses, faint, and every other stone
+      // it moves or changes.
+      const placedId = state.phase === 'effect' ? state.board[state.placedAt]?.id : s.placedId;
       const before = s !== state && state.board.findIndex((x) => x?.id === c.id);
-      e.classList.toggle('moving', s !== state && (before < 0 ? c.id !== s.placedId : before !== i || state.board[before].player !== c.player || state.board[before].type !== c.type));
+      e.classList.toggle('moving', s !== state && (c.id === placedId
+        || (before >= 0 && (before !== i || state.board[before].player !== c.player || state.board[before].type !== c.type))));
       e.dataset.at = i;
       // Their latest stone, ringed on your turn only: not while they play, nor once it is over.
       e.classList.toggle('last', c.id === lastEnemyId && !busy && !state.over && state.player === 'X');
@@ -262,7 +265,7 @@ export function mountDuel(root, opts) {
 
   function clearOverlay() {
     overlay.replaceChildren();
-    cells.forEach((c) => c.classList.remove('allowed', 'target', 'chosen', 'from', 'placed-at'));
+    cells.forEach((c) => c.classList.remove('allowed', 'target', 'chosen', 'from'));
   }
 
   // Squares, arrows and buttons for the choice at hand.
@@ -408,20 +411,12 @@ export function mountDuel(root, opts) {
     } else if (state.phase === 'place' && preview) {
       const dud = preview.logs?.includes('silenced');
       setStatus(dud ? t('{why} — it will do nothing. Confirm?', { why: t('Hushed') }) : t('This is what happens. Confirm?'), dud ? 'lose-note' : 'you');
-      // Where it was placed, outlined: it may have moved on from there.
-      cells[preview.action.pos].classList.add('placed-at');
       renderActions([undo, h('button.btn.primary', { onclick: confirm }, h('span', { html: icon('check') }), t('Confirm'))]);
       verdict();
     } else if (state.phase === 'effect') {
       const btns = renderStage();
-      if (preview) cells[state.placedAt].classList.add('placed-at');
-      // The chosen square's stone pulses faint, as every stone a preview moves does.
-      cells.forEach((c, i) => {
-        if (!c.classList.contains('chosen')) return;
-        for (const e of stoneEls.values()) if (e.isConnected && +e.dataset.at === i) e.classList.add('moving');
-      });
       const what = stoneName(state.board[state.placedAt]);
-      setStatus(preview ? t('✓ to confirm, tap again to take it back') : t('Choose how your {what} works', { what }), 'you');
+      setStatus(t('Choose how your {what} works', { what }), 'you');
       describeSelected(); if (!preview) coach('effect');
       const back = stageCands !== allEffect() ? h('button.btn.ghost', { onclick: () => { stageCands = cands = allEffect(); preview = null; show(); } }, h('span', { html: icon('back') }), t('Back')) : null;
       renderActions([undo, back, ...btns, preview ? h('button.btn.primary', { onclick: confirm }, h('span', { html: icon('check') }), t('Confirm')) : null]
