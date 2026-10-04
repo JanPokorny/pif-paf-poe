@@ -50,9 +50,8 @@ export const HEAT = [
 // full board takes five of its stones).
 export const HAND = 4;
 const ENEMY_STONES = 5;
-// Every run starts with a Shift and a Waltz (only one of them fits the first
-// duels' energy): the first duels are never plain tic-tac-toe.
-export const START = { pouch: ['shift', 'rotate'], hearts: 6, gold: 30, energy: 1 };
+// Every run starts with a Shift: the first duels are never plain tic-tac-toe.
+export const START = { pouch: ['shift'], hearts: 6, gold: 30, energy: 1 };
 export const COST = { starter: 0, common: 1, uncommon: 2, rare: 3 };
 // What a stone costs to bring: by its rarity. Glass costs 1 whatever it is;
 // marble and gold one more than the plain stone.
@@ -483,17 +482,6 @@ export function mapBounds(map) {
     x0 = Math.min(x0, x); y0 = Math.min(y0, y); x1 = Math.max(x1, x); y1 = Math.max(y1, y);
   }
   return { x0, y0, x1, y1 };
-}
-
-// Where the boss would finish a line with its next mark.
-export function bossThreats(map) {
-  const out = [];
-  for (const [k, c] of Object.entries(map.cells)) {
-    if ((c.mark && c.mark !== 'S') || !inReach(map, k)) continue;
-    const [x, y] = coords(k);
-    if (reach(map, x, y, 'O') >= LINE - 1) out.push(k);
-  }
-  return out;
 }
 
 export const lineReach = (map, k, mark = 'X') => reach(map, ...coords(k), mark);

@@ -804,9 +804,9 @@ test('a + talisman is offered only for stones in the pouch', () => {
     if (r?.startsWith('plus-')) assert.equal(r, 'plus-fence');
   }
 });
-test('a run starts with a Shift and a Waltz, and 1 energy', () => {
+test('a run starts with a Shift, and 1 energy', () => {
   const run = RUN.newRun({ seed: 1 });
-  assert.deepEqual(run.pouch.map((x) => x.type), ['shift', 'rotate']);
+  assert.deepEqual(run.pouch.map((x) => x.type), ['shift']);
   assert.equal(RUN.energyOf(run), 1);
   assert.equal(RUN.defaultHand(run).length, 1);
   assert.ok(!Object.values(RUN.makeMap(run).cells).some((c) => c.kind === 'gift'));

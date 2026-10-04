@@ -7,7 +7,7 @@
 
 import {
   STONES, CONDS, RULES, legalActions, applyAction, cloneState, allowedSquares,
-  winningLine, active, row, col, handKey, LINES, ELS, specOf,
+  winningLine, active, row, col, handKey, specOf,
 } from '../engine.js';
 import { h, stoneEl, updateStone, toast, infoStone, hasExample, ruleChip, stoneName, stoneText, sleep, statusLine } from './common.js';
 import { icon } from '../icons.js';
@@ -377,7 +377,7 @@ export function mountDuel(root, opts) {
     cells.forEach((c, i) => { c.onclick = () => tapSquare(i); });
     clearOverlay();
     if (!state.over) lineLayer.innerHTML = '';
-    cells.forEach((c) => c.classList.remove('nogo', 'threat'));
+    cells.forEach((c) => c.classList.remove('nogo'));
 
     if (state.over) {
       setStatus(state.winner === 'X' ? (state.reason === 'full' ? t('Draw') : t('You win!')) : t('{enemy} wins', { enemy: enemy.name }), state.winner === 'X' ? 'you' : 'enemy-done');
@@ -398,7 +398,7 @@ export function mountDuel(root, opts) {
       markDangers();
       setStatus(state.half ? t('Your second stone — pick one') : t('Your turn — pick a stone'), 'you');
       info.textContent = '';
-      if (state.turns >= 2 && state.board.some(Boolean) && cells.some((c) => c.classList.contains('threat'))) coach('enemy'); else coach('select');
+      coach('select');
       renderActions([]);
     } else if (state.phase === 'place' && !preview) {
       setStatus(t('Place it on a glowing square'), 'you');
@@ -431,20 +431,11 @@ export function mountDuel(root, opts) {
     }
   }
 
-  // Where the enemy's restrictions keep you out, and where one plain stone
-  // of theirs would finish a line: shown before you pick anything.
+  // Where the enemy's restrictions keep you out: shown before you pick anything.
+  // (Where they would finish a line is for you to see.)
   function markDangers() {
     const ok = new Set(allowedSquares(state));
     state.board.forEach((c, i) => { if (!c && !ok.has(i)) cells[i].classList.add('nogo'); });
-    // Only where they could actually put a stone, restrictions and all.
-    const theirTurn = cloneState(state);
-    theirTurn.player = 'O';
-    const theyMay = new Set(allowedSquares(theirTurn));
-    for (const line of state.rules.includes('elko') ? ELS : LINES) {
-      const os = line.filter((i) => state.board[i]?.player === 'O').length;
-      const empty = line.filter((i) => !state.board[i]);
-      if (os === 2 && empty.length === 1 && theyMay.has(empty[0])) cells[empty[0]].classList.add('threat');
-    }
   }
 
   // First-time tips, one per kind of moment, shown once ever.
@@ -452,7 +443,6 @@ export function mountDuel(root, opts) {
     select: 'Three in a row wins.',
     place: 'Striped: blocked by their stones.',
     effect: 'Tap an option to preview it, ✓ to confirm.',
-    enemy: 'Dashed circle: their winning square.',
   };
   function coach(kind) {
     let seen;

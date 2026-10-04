@@ -38,6 +38,8 @@
 
 * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
 html, body { margin: 0; min-height: 100%; }
+/* Nothing on the page is text to select: taps and drags only. */
+html { -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }
 body {
   font: 19px/1.3 var(--hand);
   color: var(--ink);
@@ -338,7 +340,6 @@ b { font-weight: 400; background: linear-gradient(transparent 55%, var(--hi) 55%
 .map-cell.appear { animation: pop 0.35s ease-out var(--d, 0s) backwards; }
 .map-cell.fresh-burn::after { animation: burn-in 0.7s ease-out backwards; }
 @keyframes burn-in { from { opacity: 0; scale: 0.3; } 60% { opacity: 1; } to { scale: 1; } }
-.map-help { text-align: center; color: var(--pencil); font-size: 1rem; line-height: 1.2; }
 
 .act-intro { min-height: 100dvh; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; padding: 24px; gap: 12px; }
 .act-intro h1 { font-size: 2.6rem; transform: rotate(-2deg); }
@@ -497,7 +498,6 @@ b { font-weight: 400; background: linear-gradient(transparent 55%, var(--hi) 55%
 @keyframes shake { 20% { transform: translate(-3px, 2px) rotate(-0.6deg); } 50% { transform: translate(3px, -1px) rotate(0.5deg); } 80% { transform: translate(-1px, 1px); } }
 .cell.nogo::before { content: ''; position: absolute; inset: 18%; background: repeating-linear-gradient(-45deg, transparent 0 6px, rgba(200, 55, 45, 0.28) 6px 8px); border-radius: 30%; pointer-events: none; }
 /* A square where the enemy would win: the same dashed red ring as on the map. */
-.cell.threat::before { content: ''; position: absolute; inset: 14%; border: 2.5px dashed rgba(200, 55, 45, 0.6); border-radius: 50%; pointer-events: none; }
 
 /* Emoji are stamped onto the page in ink, like the enemy photos. */
 .relic-mini, .relic-token, .event-emoji, .end-emoji {
@@ -510,7 +510,6 @@ b { font-weight: 400; background: linear-gradient(transparent 55%, var(--hi) 55%
 .map-cell .label { max-width: 96%; text-align: center; font-size: 0.8rem; line-height: 0.95; }
 .stone-grid.upgrades { grid-template-columns: repeat(2, 1fr); }
 .coach { color: var(--ink); background: var(--sky); padding: 2px 6px; box-shadow: 1px 3px 5px -3px rgba(80,60,0,.5); display: inline-block; transform: rotate(-0.5deg); }
-.map-cell.boss-threat::after { content: ''; position: absolute; inset: 14%; border: 2.5px dashed rgba(200, 55, 45, 0.6); border-radius: 50%; pointer-events: none; }
 
 /* Ink art replaces the stamped emoji where it exists. */
 .art { display: inline-flex; align-items: center; justify-content: center; line-height: 1; }
@@ -893,7 +892,6 @@ body:has(.duel) #toast.show { transform: translate(-50%, 0) rotate(-1deg); }
   background-size: 24px 24px;
 }
 .screen:has(> .map-page) .topbar, .map-page > .status-line { position: relative; z-index: 2; }
-.map-page > .map-help { position: fixed; left: 0; right: 0; bottom: calc(14px + var(--safe-b)); z-index: 2; }
 /* What scrolls up under the top bar fades into the paper there. */
 .screen:has(> .map-page)::before {
   content: ''; position: fixed; top: 0; left: 0; right: 0; height: var(--map-top, 120px); z-index: 1; pointer-events: none;
@@ -988,3 +986,6 @@ body:has(.duel) #toast.show { transform: translate(-50%, 0) rotate(-1deg); }
 .energy-bar { background: var(--sky); transform: rotate(-1deg); padding: 4px 10px; }
 .energy-bar.over { background: var(--pink); }
 .hand-count { background: var(--sky); transform: rotate(5deg); padding: 0 5px; }
+.map-scroll { cursor: grab; }
+.map-scroll.dragging { cursor: grabbing; }
+.map-scroll.dragging .map-cell { cursor: grabbing; }

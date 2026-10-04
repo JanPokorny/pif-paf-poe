@@ -250,7 +250,6 @@ export default {
   'Striped: blocked by their stones.': 'Pruhované: tam tě nepustí.',
   'Tap an option to preview it, ✓ to confirm.': 'Ťukni na možnost a uvidíš, co udělá; ✓ potvrdí.',
   'Stones moving past it step over it.': 'Kameny, které se posouvají, ji přeskočí.',
-  'Dashed circle: their winning square.': 'Čárkovaný kruh: tam soupeř vyhraje.',
   // ── The slower game: slots, evolving, conditions, boss rules ────────────
   'Conquered the Summit 🏆': 'Dobyl(a) jsem Vrchol 🏆',
   'You beat {boss}. You are the champion at heat {n}.': 'Porazil(a) jsi: {boss}. Jsi šampion na žáru {n}.',
@@ -312,7 +311,6 @@ export default {
   "{boss}'s lair. Three Xs in a row open it.": 'Bossovo doupě. Otevřou ho tři X v řadě.',
   'Lair': 'Doupě',
   'Pick any square next to an X or an O.': 'Vyber kterékoli políčko vedle X nebo O.',
-  'Dashed circle: the boss wins a line there.': 'Čárkovaný kruh: tady boss dokončí řadu.',
   "You mark the {node} square.": 'Políčko {node} je tvoje.',
   "You lost there: the {node} square burns.": 'Prohra: políčko {node} shořelo.',
   'Three in a row: the lair opens!': 'Tři v řadě: doupě se otevírá!',

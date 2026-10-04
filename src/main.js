@@ -281,7 +281,6 @@ function mapScreen() {
   const bounds = R.mapBounds(map);
   const x0 = bounds.x0 - 1, y0 = bounds.y0 - 1, x1 = bounds.x1 + 1, y1 = bounds.y1 + 1;
   const cols = x1 - x0 + 1, rows = y1 - y0 + 1;
-  const threats = new Set(R.bossThreats(map));
   const freshX = map.freshX, lastO = map.lastO, freshS = map.freshS;
   // The turn plays out in order: your X (or the burn), what it reveals, the
   // boss's O, what that reveals. Delays in seconds.
@@ -328,7 +327,6 @@ function mapScreen() {
         ? h('span.doodle.foe', {}, h('span.photo', {}, ENEMIES[c.duel.enemyId].emoji))
         : h('span.doodle', { html: icon(NODE_ICON[kind]) }),
       kind === 'boss-mark' || kind === 'rock' || kind === 'empty' || kind === 'lair' ? null : h('span.label', {}, c.duel ? shortName(ENEMIES[c.duel.enemyId]) : NODE_NAME[kind]));
-      if ((!c.mark || c.mark === 'S') && threats.has(k)) el.classList.add('boss-threat');
       if (c.mark === 'X') el.insertAdjacentHTML('beforeend', scribbleX(freshX === k));
       if (c.mark === 'O') el.insertAdjacentHTML('beforeend', scribbleO(lastO === k).replace('<svg ', `<svg style="--o-at: ${oAt}s" `));
       if (c.mark === 'S') el.classList.add('scorched');
@@ -403,6 +401,33 @@ function mapScreen() {
     strikes ? h('div.map-strikes', { html: `<svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" aria-hidden="true">${strikes}</svg>` }) : null);
   const paper = h('div.map-paper', {}, sheet);
   const scroller = h('div.map-scroll', {}, paper);
+  // A mouse drags the page about, as a finger does; a drag is not a tap on a square.
+  let drag = null;
+  scroller.addEventListener('pointerdown', (e) => {
+    if (e.pointerType !== 'mouse' || e.button !== 0) return;
+    drag = { id: e.pointerId, x: e.clientX, y: e.clientY, left: scroller.scrollLeft, top: scroller.scrollTop, moved: false };
+  });
+  scroller.addEventListener('pointermove', (e) => {
+    if (!drag || e.pointerId !== drag.id) return;
+    const dx = e.clientX - drag.x, dy = e.clientY - drag.y;
+    if (!drag.moved && Math.hypot(dx, dy) < 5) return;
+    if (!drag.moved) { drag.moved = true; scroller.setPointerCapture(e.pointerId); scroller.classList.add('dragging'); }
+    scroller.scrollLeft = drag.left - dx;
+    scroller.scrollTop = drag.top - dy;
+  });
+  const endDrag = () => {
+    if (!drag) return;
+    const moved = drag.moved;
+    drag = null;
+    scroller.classList.remove('dragging');
+    // The click that ends a drag is swallowed.
+    if (!moved) return;
+    const swallow = (e) => { e.stopPropagation(); e.preventDefault(); };
+    scroller.addEventListener('click', swallow, { capture: true, once: true });
+    setTimeout(() => scroller.removeEventListener('click', swallow, { capture: true }), 0);
+  };
+  scroller.addEventListener('pointerup', endDrag);
+  scroller.addEventListener('pointercancel', endDrag);
   // The paper starts under the status line, and lines up with the sheet's cells.
   requestAnimationFrame(() => {
     document.querySelector('.screen')?.style.setProperty('--map-top', `${Math.ceil(line.el.getBoundingClientRect().bottom) + 6}px`);
@@ -411,8 +436,7 @@ function mapScreen() {
   screen(topBar(),
     h('div.map-page', {},
       line.el,
-      scroller,
-      threats.size ? h('div.map-help.red', {}, t('Dashed circle: the boss wins a line there.')) : null));
+      scroller));
   // Keep the newest marks in view, scrolling the sheet only, never the page.
   // The middle of what shows below the status line.
   const centre = (el) => {
