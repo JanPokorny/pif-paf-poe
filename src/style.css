@@ -987,6 +987,8 @@ body:has(.duel) #toast.show { transform: translate(-50%, 0) rotate(-1deg); }
 /* A page that does not fill the screen sits in its middle, the bottom bar at the foot. */
 .screen > .page { flex: 1; }
 .screen > .page > :first-child { margin-top: auto; }
+/* With no bottom bar to sit above, the space below matches the space above. */
+.screen > .page:not(:has(> .sticky-bottom)) > :last-child { margin-bottom: auto; }
 /* Room under a page's heading. */
 .reward-title { margin-bottom: 14px; }
 .page.rest > h2, .page.event > h2 { margin-bottom: 8px; }

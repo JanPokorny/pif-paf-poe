@@ -583,8 +583,8 @@ export const CS_DATA = {
         { label: 'Přejít', detail: 'Přijdeš o 1 srdce, získáš 50 zlaťáků.' },
         { label: 'Obejít to' },
       ] },
-    mason: { title: 'Kameník',
-      text: 'Zaprášený kameník oťukává kvádr mramoru. „Jeden z tvých kamenů ti upravím. Za úplatu.“',
+    sculptor: { title: 'Sochař',
+      text: 'Sochař oprašuje kvádr mramoru. „Jeden z tvých kamenů ti upravím. Za úplatu.“',
       choices: [
         { label: 'Mramor', detail: 'Zaplatíš 20 zlaťáků: tvůj kámen smí kamkoli, ať ho soupeřovy kameny omezují jakkoli.' },
         { label: 'Pozlatit', detail: 'Zaplatíš 30 zlaťáků: tvůj kámen vynese 10 zlaťáků ve vítězné trojici.' },

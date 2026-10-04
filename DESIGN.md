@@ -158,7 +158,7 @@ Every stone's card shows an example computed by the engine.
     One energy more. Only yours.
 
   Marble and gold turn up now and then among rewards and in the shop (dearer there), at the
-  workshop (made from a stone of yours, for gold, in place of a trade) and from the Stonemason
+  workshop (made from a stone of yours, for gold, in place of a trade) and from the Sculptor
   event. A trade at the workshop keeps the material of what went in. + talismans upgrade them
   as any stone.
 - **Mountain is only a wall**: nothing moves it, but it obeys restrictions like any stone.

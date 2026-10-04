@@ -367,14 +367,14 @@ export const EVENTS = [
     ],
   },
   {
-    id: 'mason', title: 'The Stonemason', emoji: '🏛️',
-    text: 'A dusty mason taps at a block of marble. "I can dress one of your stones. For a price."',
+    id: 'sculptor', title: 'The Sculptor', emoji: '🏛️',
+    text: 'A sculptor dusts off a block of marble. "I can dress one of your stones. For a price."',
     choices: [
       { label: 'Marble', detail: 'Pay 20 gold: a stone of yours goes anywhere, whatever their stones restrict.', can: (r, api) => r.gold >= 20 && api.canPolish(),
         act: (r, api) => api.polish('marble', 20) },
       { label: 'Gild', detail: 'Pay 30 gold: a stone of yours pays 10 gold in your winning line.', can: (r, api) => r.gold >= 30 && api.canPolish(),
         act: (r, api) => api.polish('gold', 30) },
-      { leave: true, label: 'Walk on', act: () => t('The mason goes back to tapping.') },
+      { leave: true, label: 'Walk on', act: () => t('The sculptor goes back to the marble.') },
     ],
   },
   {
