@@ -847,8 +847,9 @@ export function duelWon(run, bonus = 0) {
   return reward;
 }
 
-export function heartsLost(duel) {
-  return duel.tier === 'elite' ? 2 : 1;
+// A lost duel costs a heart, whoever it is against.
+export function heartsLost() {
+  return 1;
 }
 
 

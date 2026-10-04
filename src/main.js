@@ -571,8 +571,6 @@ function preDuel() {
   screen(topBar(),
     h('div.page', {},
       h('div.enemy-card.' + duel.tier + (isUndead(duel) ? '.undead' : ''), {},
-        h('button.stake', { onclick: () => toast(t('Will cost you {n} ❤ on loss.', { n: R.heartsLost(duel) })), 'aria-label': t('Will cost you {n} ❤ on loss.', { n: R.heartsLost(duel) }) },
-          h('span', { html: icon('sword') }), String(R.heartsLost(duel))),
         h('div.portrait.big', {}, h('div.photo', {}, enemy.emoji)),
         h('div', {},
           tierLabel ? h('div.tier.' + duel.tier, {}, tierLabel) : null,

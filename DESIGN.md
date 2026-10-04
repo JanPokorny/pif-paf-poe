@@ -115,7 +115,7 @@ its own, with its boss.
 - **Bosses** bring no stones, only their rule (above), and are beaten twice: once beaten, the moon
   rises and the boss climbs back out of the earth as its undead self ("Undead Old Oak"), with its
   harder rule. A boss won is a boss relic, three hearts and 60 gold. **Elites** are just
-  stronger regular enemies: bigger hands, two hearts if lost, a red star in the corner.
+  stronger regular enemies: bigger hands, a red star in the corner. A lost duel costs one heart, elite and boss alike.
 - **No map aids.** Duels used to offer a *Double Step* (the boss skipped a reply) or a *Pickaxe*
   (broke a rock) instead of a stone; they are gone. A duel's reward is stones, gold and relics.
 - **The page by distance** (`node tools/mapgen.mjs`, measured over whole explored pages):

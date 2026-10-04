@@ -381,8 +381,6 @@ b { font-weight: 400; background: linear-gradient(transparent 55%, var(--hi) 55%
 
 /* ── Before a duel ───────────────────────────────────────────────────────── */
 .enemy-card { display: flex; gap: 14px; align-items: center; padding: 10px 12px; position: relative; }
-.enemy-card .stake { position: absolute; top: 6px; right: 8px; display: flex; align-items: center; gap: 3px; padding: 4px 6px; background: none; border: 0; font-family: var(--marker); font-size: 1.3rem; color: var(--red); }
-.enemy-card .stake .icon { width: 20px; height: 20px; }
 .quote { color: var(--pencil); font-size: 1.05rem; }
 .enemy-hand.show .stone { --size: 42px; }
 .slot-plain { background: none; border: 0; padding: 3px; }

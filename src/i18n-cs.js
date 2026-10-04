@@ -319,7 +319,6 @@ export default {
   'Lair': 'Doupě',
   'Pick any square next to an X or an O.': 'Vyber kterékoli políčko vedle X nebo O.',
   'Dashed circle: the boss wins a line there.': 'Čárkovaný kruh: tady boss dokončí řadu.',
-  'Will cost you {n} ❤ on loss.': 'Prohra tě bude stát {n} ❤.',
   "You mark the {node} square.": 'Políčko {node} je tvoje.',
   "You lost there: the {node} square burns.": 'Prohra: políčko {node} shořelo.',
   'Three in a row: the lair opens!': 'Tři v řadě: doupě se otevírá!',
