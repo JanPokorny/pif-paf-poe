@@ -123,6 +123,8 @@ const craftTier = (a, b) => {
   const low = Math.min(TIERS.indexOf(STONES[a.type].rarity), TIERS.indexOf(STONES[b.type].rarity));
   return TIERS[Math.min(TIERS.length - 1, low + 1)];
 };
+// What the new stone will cost: its tier's energy, one more in marble or gold.
+export const craftCost = (a, b) => COST[craftTier(a, b)] + (a.mat || b.mat ? 1 : 0);
 export function craftChoices(run, a, b) {
   const tier = craftTier(a, b);
   const out = [];
@@ -900,7 +902,8 @@ export function stoneChoices(run, tier = 'normal', rarity = null, count = 3) {
   const out = [];
   for (let guard = 0; out.length < n && guard < 50; guard++) {
     const s = randomStone(run, rarity, tier);
-    if (!out.some((o) => o.type === s.type)) out.push(withMat(run, s));
+    // A choice promised at a given energy (a rarity asked for) stays plain.
+    if (!out.some((o) => o.type === s.type)) out.push(rarity ? s : withMat(run, s));
   }
   return out;
 }
