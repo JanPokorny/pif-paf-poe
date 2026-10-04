@@ -201,10 +201,6 @@ b { font-weight: 400; background: linear-gradient(transparent 55%, var(--hi) 55%
 .enemy-hand .stone { cursor: pointer; }
 .enemy-hand .stone.lifted { transform: translateY(-6px) rotate(8deg) scale(1.15); }
 .player-hand .stone.lifted { transform: translateY(-8px) rotate(-6deg) scale(1.15); }
-.tier { display: inline-block; font-family: var(--hand); font-size: 0.9rem; padding: 0 8px; color: var(--ink); background: var(--hi); transform: rotate(-2deg); }
-.tier.elite { background: var(--pink); }
-.tier.boss { background: var(--pink); outline: 1.5px solid var(--ink); }
-.tier.event { background: var(--sky); }
 
 .chips { display: flex; gap: 4px 12px; flex-wrap: wrap; justify-content: center; min-height: 24px; }
 .chip { display: inline-flex; align-items: center; gap: 5px; font-size: 1rem; padding: 0 6px; background: none; border: 0; color: var(--pencil); }
@@ -1008,3 +1004,12 @@ body:has(.duel) #toast.show { transform: translate(-50%, 0) rotate(-1deg); }
 .energy-bar i.over .icon { color: var(--red); }
 .energy-bar i.over .icon path { fill: var(--red); }
 .energy-label { font-size: 0.9rem; margin-right: 5px; color: var(--ink); }
+/* Elite, boss or challenge, written in red marker on the photo's white strip. */
+.portrait-tag { position: absolute; left: 0; right: 0; bottom: 0; text-align: center; font-family: var(--marker); color: var(--red);
+  font-size: 0.7rem; line-height: 1; transform: rotate(-3deg); white-space: nowrap; pointer-events: none; }
+.portrait:has(.portrait-tag) { padding-bottom: 14px; }
+.portrait.big .portrait-tag { font-size: 1rem; bottom: 1px; }
+.portrait.big:has(.portrait-tag) { padding-bottom: 20px; }
+/* Room between stones with checkboxes, so no two boxes touch. */
+.stone-row.pick { gap: 2px 12px; }
+.stone-grid:has(.tick-stone) { column-gap: 14px; }

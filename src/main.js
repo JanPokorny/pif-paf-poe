@@ -556,9 +556,9 @@ function preDuel() {
   screen(topBar(),
     h('div.page', {},
       h('div.enemy-card.' + duel.tier + (isUndead(duel) ? '.undead' : ''), {},
-        h('div.portrait.big', {}, h('div.photo', {}, enemy.emoji)),
+        // Elite, boss or challenge: written in red on the photo's white strip.
+        h('div.portrait.big', {}, h('div.photo', {}, enemy.emoji), tierLabel ? h('span.portrait-tag', {}, tierLabel) : null),
         h('div', {},
-          tierLabel ? h('div.tier.' + duel.tier, {}, tierLabel) : null,
           h('div.enemy-name.big', {}, isUndead(duel) ? undeadName(enemy) : enemy.name),
           h('div.quote', {}, t('“{quote}”', { quote: enemy.quote })))),
       facts.length ? h('div.mod-notes', {}, facts) : null,

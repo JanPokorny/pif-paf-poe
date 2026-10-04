@@ -109,10 +109,9 @@ export function mountDuel(root, opts) {
   const info = h('div.info-line');
 
   const header = h('div.enemy-bar' + (enemy.undead ? '.undead' : ''), {},
-    h('div.portrait', { onclick: () => toast(t('“{quote}”', { quote: enemy.quote ?? '…' })) }, h('div.photo', {}, enemy.emoji)),
-    h('div.enemy-meta', {}, h('div.enemy-name', {}, enemy.name,
-      enemy.tier && enemy.tier !== 'normal' ? h('span.tier.' + enemy.tier, {}, t(enemy.tier === 'event' ? 'challenge' : enemy.tier)) : null),
-    ), extra);
+    h('div.portrait', { onclick: () => toast(t('“{quote}”', { quote: enemy.quote ?? '…' })) }, h('div.photo', {}, enemy.emoji),
+      enemy.tier && enemy.tier !== 'normal' ? h('span.portrait-tag', {}, t({ event: 'Challenge', elite: 'Elite', boss: 'Boss' }[enemy.tier])) : null),
+    h('div.enemy-meta', {}, h('div.enemy-name', {}, enemy.name)), extra);
 
   const el = h('div.duel', {}, header, chips, status.el, enemyHand, h('div.board-wrap', {}, board), actions, hand, info);
   root.replaceChildren(el);
