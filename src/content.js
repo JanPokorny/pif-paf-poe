@@ -164,7 +164,7 @@ export const ENEMIES = {
   mirrorknight: { name: 'The Mirror Knight', emoji: '🛡️', act: 2, tier: 'boss',
     rules: ['spy'], rules2: ['spy', 'reserved'], iters: 500, blunder: 0.04,
     quote: 'Your left is my right.' },
-  carpenter: { name: 'The Carpenter', emoji: '🪚', act: 2, tier: 'boss',
+  carpenter: { name: 'The Carpenter', emoji: '🔨', act: 2, tier: 'boss',
     rules: ['elko'], rules2: ['elko', 'spy'], iters: 300, blunder: 0.1,
     quote: 'Straight lines are for amateurs.' },
 
@@ -191,11 +191,11 @@ export const ENEMIES = {
   owl: { name: 'Grand Tactician', emoji: '🦉', act: 3, tier: 'elite',
     core: ['magnet', 'shift', 'swap'], pool: ['rotate', 'swap', 'magnet+', 'firecracker'], iters: 300, blunder: 0.06,
     once: ['swap+'], quote: 'I have seen this position before.' },
-  storm: { name: 'Storm Caller', emoji: '⛈️', act: 3, tier: 'elite',
+  storm: { name: 'Storm Caller', emoji: '🦅', act: 3, tier: 'elite',
     core: ['bonfire', 'bonfire', 'magnet'], pool: ['gravity', 'bumper', 'shift'], iters: 450, blunder: 0.03,
     quote: 'The wind takes everything.' },
   // bosses
-  grandmaster: { name: 'The Grandmaster', emoji: '👑', act: 3, tier: 'boss',
+  grandmaster: { name: 'The Grandmaster', emoji: '♚', act: 3, tier: 'boss',
     rules: ['tactics'], rules2: ['tactics', 'spy'], iters: 300, iters2: 450, blunder: 0.05,
     quote: 'You will play what I tell you to play.' },
   // Double Time: plain stones cannot hold out. It wants restrictions and

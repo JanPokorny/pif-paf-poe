@@ -66,6 +66,8 @@ Fixed:
 - The pouch's Close floated mid-sheet with empty paper below it; the buttons of every tall sheet
   (pouch, workshop, choosing a stone or a one-shot) sit at its foot, as in the log.
 - Card animations pulse the acted-on stones in opacity, not size.
+- Portraits that the sketch filter washed out: the Storm Caller (⛈️, a white cloud on white) is
+  an eagle, the Grandmaster's crown a black chess king, the Carpenter's saw a hammer.
 
 To decide (larger, or a matter of taste):
 
@@ -78,3 +80,8 @@ To decide (larger, or a matter of taste):
   button in the bottom bar used everywhere else.
 - **Workshop pick**: stones show an ⓘ beside their name (a tap picks, so the card is behind the
   ⓘ); elsewhere a tap opens the card. Consistent within itself, but a second idiom.
+- **Names from removed stones**: Turncoat Fox (Turncoat) and Tile Bot 2048 (2048, now Gravity+)
+  are named after stones that are gone. They still read as names, but a rename would fit the
+  stones they play now.
+- **Two owls**: the Grand Tactician and the Night Owl event share 🦉.
+- **Pip's portrait** (a yellow chick) is pale after the sketch filter; readable, the faintest left.
