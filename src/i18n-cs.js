@@ -248,7 +248,6 @@ export default {
   // First-time tips.
   'Three in a row wins.': 'Tři v řadě vyhrávají.',
   'Striped: blocked by their stones.': 'Pruhované: tam tě nepustí.',
-  'Tap an option to preview it, ✓ to confirm.': 'Ťukni na možnost a uvidíš, co udělá; ✓ potvrdí.',
   'Stones moving past it step over it.': 'Kameny, které se posouvají, ji přeskočí.',
   // ── The slower game: slots, evolving, conditions, boss rules ────────────
   'Conquered the Summit 🏆': 'Dobyl(a) jsem Vrchol 🏆',

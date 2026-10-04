@@ -17,7 +17,7 @@
   --sticky: #fff27d;
   --pink: #ffc9d9;
   --mint: #cdf1c2;
-  --note: #e4e2dc;   /* a plain note: neither good nor bad news */
+  --note: #ffffff;   /* a plain note: neither good nor bad news */
   --hi: rgba(255, 228, 0, 0.45);
   --hi-orange: rgba(255, 160, 40, 0.45);
   --tape: rgba(222, 205, 160, 0.72);
@@ -72,7 +72,7 @@ b { font-weight: 400; background: linear-gradient(transparent 55%, var(--hi) 55%
 /* ── Things to press ─────────────────────────────────────────────────────── */
 /* Sticky notes come in four colours: yellow is only ever something to press
    (a button, an arrow, a "More →"); light green is good news, light red bad
-   news, light gray plain information. */
+   news, white plain information. */
 /* A scrap of paper with a pencil outline; the important one is a sticky note. */
 .btn {
   display: inline-flex; align-items: center; justify-content: center; gap: 0.4em;
@@ -965,7 +965,7 @@ body:has(.duel) #toast.show { transform: translate(-50%, 0) rotate(-1deg); }
 /* ── Small notes ─────────────────────────────────────────────────────────────
    Rule and condition chips, a duel's status chips, the energy counter and the
    counts on stones: rectangular post-its, a little askew, in the colours of
-   every note (light red bad, light green good, light gray plain information). */
+   every note (light red bad, light green good, white plain information). */
 .rule-chip, .chips .chip, .energy-bar, .hand-count {
   border: 0; border-radius: 1px; box-shadow: 1px 2px 3px rgba(60, 40, 0, 0.22); color: var(--ink);
 }

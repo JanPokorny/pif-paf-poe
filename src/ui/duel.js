@@ -417,7 +417,7 @@ export function mountDuel(root, opts) {
       const btns = renderStage();
       const what = stoneName(state.board[state.placedAt]);
       setStatus(t('Choose how your {what} works', { what }), 'you');
-      describeSelected(); if (!preview) coach('effect');
+      describeSelected();
       const back = stageCands !== allEffect() ? h('button.btn.ghost', { onclick: () => { stageCands = cands = allEffect(); preview = null; show(); } }, h('span', { html: icon('back') }), t('Back')) : null;
       renderActions([undo, back, ...btns, preview ? h('button.btn.primary', { onclick: confirm }, h('span', { html: icon('check') }), t('Confirm')) : null]
         .filter((b, k, arr) => b && arr.indexOf(b) === k));
@@ -436,7 +436,6 @@ export function mountDuel(root, opts) {
   const COACH = {
     select: 'Three in a row wins.',
     place: 'Striped: blocked by their stones.',
-    effect: 'Tap an option to preview it, ✓ to confirm.',
   };
   function coach(kind) {
     let seen;
