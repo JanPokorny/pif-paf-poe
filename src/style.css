@@ -1093,3 +1093,21 @@ body:has(.duel) #toast.show { transform: translate(-50%, 0) rotate(-1deg); }
 @keyframes mark-in { from { opacity: 0; transform: scale(0.6); } }
 .event-result.good { background: var(--mint); }
 .event-result.bad { background: var(--pink); }
+
+/* ── Small notes ─────────────────────────────────────────────────────────────
+   Rule and condition chips, a duel's status chips, the energy counter and the
+   counts on stones: rectangular post-its, a little askew, in the colours of
+   every note (light red bad, light green good, light blue plain information). */
+.rule-chip, .chips .chip, .energy-bar, .hand-count {
+  border: 0; border-radius: 1px; box-shadow: 1px 2px 3px rgba(60, 40, 0, 0.22); color: var(--ink);
+}
+.rule-chip { background: var(--sky); padding: 4px 8px 4px 6px; transform: rotate(-1.5deg); }
+.rule-chip.rule { background: var(--pink); color: var(--ink); }
+.rule-chip.rule .chip-ico { color: var(--red); }
+.chips .chip { padding: 3px 8px; background: var(--sky); transform: rotate(-1.5deg); }
+.chips .chip.bad { background: var(--pink); color: var(--ink); }
+.chips .chip.good { background: var(--mint); color: var(--ink); }
+.chips > :nth-child(even) { transform: rotate(1.5deg); }
+.energy-bar { background: var(--sky); transform: rotate(-1deg); padding: 4px 10px; }
+.energy-bar.over { background: var(--pink); }
+.hand-count { background: var(--sky); transform: rotate(5deg); padding: 0 5px; }
