@@ -227,7 +227,6 @@ export default {
   'Your {stones} stones play as their + form.': 'Tvoje kameny {stones} hrají jako svoje + forma.',
   ' and ': ' a ',
   'Without the +: {text}': 'Bez plusu: {text}',
-  'Placed in the centre: the enemy may only use the marked squares.': 'Položený doprostřed: soupeř smí jen na zvýrazněná políčka.',
   'Place it on a glowing square': 'Polož ho na svítící políčko',
   '{why} — it will do nothing. Confirm?': '{why} — nic neudělá. Potvrdit?',
   'Hushed': 'Pst',

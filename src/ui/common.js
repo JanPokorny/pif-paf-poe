@@ -269,18 +269,21 @@ function stoneDemo(s) {
   };
   try {
     if (st.restrict) {
-      // Landed in the centre: the squares the enemy may and may not use.
-      const g = fresh();
+      // On an empty board, the squares it closes to the enemy, struck through one
+      // after another: in the centre, so the corners show untouched; a + one,
+      // reaching its row and column, in a corner, where that differs.
+      const at = plus.plus ? 0 : 4;
+      const g = fresh(true);
       const before = cloneState(g).board;
-      before[4] = { player: 'X', type: s.type, id: g.nextId, ...plus };
+      before[at] = { player: 'X', type: s.type, id: g.nextId, ...plus };
       applyAction(g, { type: 'select', stone: s.type, ...plus });
-      applyAction(g, { type: 'place', pos: 4 });
+      applyAction(g, { type: 'place', pos: at });
       if (g.phase === 'effect') applyAction(g, legalActions(g)[0]);
       g.phase = 'place';
       const ok = new Set(allowedSquares(g));
       const marks = {};
-      for (let i = 0; i < 9; i++) if (!g.board[i]) marks[i] = ok.has(i) ? 'ok' : 'no';
-      return h('div.demo', {}, animatedDemo(before, g.board, 4, { marks }), h('div.demo-cap', {}, t('Placed in the centre: the enemy may only use the marked squares.')));
+      for (let i = 0; i < 9; i++) if (!g.board[i] && !ok.has(i)) marks[i] = 'no';
+      return h('div.demo', {}, animatedDemo(before, g.board, at, { marks }));
     }
     if (!st.apply && !st.copies) return null;
     // The placement and choice that change the board the most.
@@ -391,7 +394,7 @@ function animatedDemo(before, after, pos, { marks = null } = {}) {
   });
   const light = () => { for (const id of acted) els.get(id).classList.add('flash'); };
   const play = () => {
-    for (const [i, m] of Object.entries(marks ?? {})) cellAt(+i).classList.add(m);
+    Object.entries(marks ?? {}).forEach(([i, m], k) => { cellAt(+i).style.setProperty('--d', `${k * 0.18}s`); cellAt(+i).classList.add(m); });
     for (const [id, el] of els) {
       const i = where(after, id);
       if (i < 0) { el.style.opacity = 0; el.style.scale = 0.4; continue; }
