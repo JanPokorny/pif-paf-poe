@@ -455,7 +455,7 @@ function mapScreen() {
   // Keep the newest marks in view, scrolling the sheet only, never the page.
   // The middle of what shows below the status line.
   const centre = (el) => {
-    const top = parseFloat(getComputedStyle(paper).paddingTop) || 0;
+    const top = parseFloat(window.getComputedStyle(paper).paddingTop) || 0;
     const r = el.getBoundingClientRect(), sr = scroller.getBoundingClientRect();
     return {
       left: scroller.scrollLeft + r.left - sr.left - scroller.clientWidth / 2 + r.width / 2,
