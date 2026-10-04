@@ -72,6 +72,7 @@ export function costDots(s) {
 // The energy you have, as bolts: `used` of them filled.
 export function energyBar(used, total) {
   return h('div.energy-bar' + (used > total ? '.over' : ''), { 'aria-label': t('Energy {used}/{n}', { used, n: total }) },
+    h('span.energy-label', {}, t('Available:')),
     ...Array.from({ length: Math.max(total, used) }, (_, i) => h('i' + (i < used ? '.on' : '') + (i >= total ? '.over' : ''), { html: icon('energy') })));
 }
 

@@ -104,7 +104,7 @@ function showPouch() {
   const body = h('div.pouch-view', {},
     h('h2', {}, t('Pouch · {n}', { n: run.pouch.length })),
     run.pouch.length ? h('div.stone-grid', {}, run.pouch.map((p) => R.asBrought(run, p)).map((s) => h('button.pouch-slot', { onclick: () => infoStone(s, 'X') }, stoneEl(s, 'X', { cost: true }), h('span', {}, stoneName(s)))))
-      : h('p.dim', {}, t('No special stones yet. Pebbles you always have.')),
+      : h('p.dim', {}, t('No stones yet. You will use pebbles you find.')),
     h('h2', {}, t('Talismans')),
     run.relics.length ? h('div.relic-list', {}, run.relics.map((r) => h('button.relic-row', { onclick: () => infoRelic(r) }, h('span.relic-token.small', {}, relicArt(r)), h('span', {}, h('b', {}, RELICS[r].name), h('br'), RELICS[r].text)))) : h('p.dim', {}, t('No talismans yet.')),
     h('button.btn.wide.ghost', { onclick: () => close() }, t('Close')));

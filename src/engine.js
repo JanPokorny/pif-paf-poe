@@ -313,9 +313,9 @@ def('twin', {
 
 def('magpie', {
   name: 'Magpie', rarity: 'rare', kind: 'curse',
-  text: 'Steals a special stone of your choice from the enemy\'s hand into yours.',
+  text: 'Steals a stone of your choice from the enemy\'s hand into yours.',
   options(s, pos, cell) {
-    return [...new Set(s.hands[other(cell.player)].filter((h) => h.type !== 'pebble').map((h) => h.type))].map((stone) => ({ stone }));
+    return [...new Set(s.hands[other(cell.player)].map((h) => h.type))].map((stone) => ({ stone }));
   },
   apply(s, pos, a, cell) {
     const hand = s.hands[other(cell.player)];
@@ -345,7 +345,7 @@ def('mind-control', {
 
 def('muffle', {
   name: 'Muffle', rarity: 'common', kind: 'once', once: true,
-  text: 'The enemy\'s next special stone does nothing.',
+  text: 'The enemy\'s next stone does nothing.',
   options: (s, pos, cell) => (s.silenced[other(cell.player)] ? [] : [{}]),
   apply(s, pos, a, cell) { s.silenced[other(cell.player)] = 1; },
 });
@@ -706,8 +706,9 @@ function afterPlacement(s, again = false) {
   const p = s.player, pos = s.placedAt;
   const c = s.board[pos];
   let dud = false;
-  // Muffled, a special stone does nothing at all for as long as it stands.
-  if (!again && s.silenced[p] > 0 && c.type !== 'pebble') {
+  // Muffled, the next stone does nothing at all for as long as it stands (a
+  // Pebble too, which does nothing anyway: that uses the Muffle up).
+  if (!again && s.silenced[p] > 0) {
     s.silenced[p]--;
     dud = true;
     c.hushed = true;

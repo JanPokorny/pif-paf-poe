@@ -445,14 +445,17 @@ test('Twin drops a Pebble on the square facing it, whatever holds the centre', (
   play(t, 'twin', 0);
   assert.equal(t.board[8].player, 'O');
 });
-test('Magpie steals a special stone from the enemy\'s hand', () => {
+test('Magpie steals a stone from the enemy\'s hand, a Pebble too', () => {
   const s = G({ handO: ['shift', 'rotate'] });
   play(s, 'magpie', 4);
   eff(s, { stone: 'rotate' });
   assert.equal(count(s, 'X', 'rotate'), 1);
   assert.equal(count(s, 'O', 'rotate'), 0);
   assert.equal(count(s, 'O', 'shift'), 1);
-  assert.ok(!legalActions(G({ handX: ['magpie'] })).some((a) => a.stone === 'pebble' && a.type === 'effect'));
+  const p = G({ handO: ['pebble', 'pebble'] });
+  const pebbles = count(p, 'O', 'pebble');
+  play(p, 'magpie', 4);   // only Pebbles to take: taken at once
+  assert.equal(count(p, 'O', 'pebble'), pebbles - 1);
 });
 test('A Pebble sent back goes back into its owner\'s hand', () => {
   const s = G();
@@ -540,11 +543,11 @@ test('Mind Control: the enemy AI plays the stone it was named', () => {
     assert.equal(chooseAction(s, { iters: 200, seed: 7 }).stone, name);
   }
 });
-test('Muffle: a Pebble does not use it up', () => {
+test('Muffle: a Pebble uses it up too', () => {
   const s = G({ handX: ['muffle'] });
   play(s, 'muffle', 8);
   play(s, 'pebble', 0);
-  assert.equal(s.silenced.O, 1);
+  assert.equal(s.silenced.O, 0);
 });
 test('Muffle: the enemy\'s next stone does nothing', () => {
   const s = G({ handX: ['muffle'] });
