@@ -424,8 +424,10 @@ function mapScreen() {
   // Lines of pencil between the squares on view, each a little crooked.
   const W = cols * 100, H = rows * 100;
   let paths = '';
-  for (let i = 1; i < cols; i++) { const x = i * 100, w = ((i * 37) % 7) - 3; paths += `<path d="M${x + w} 4 C ${x - w} ${H * 0.33}, ${x + w} ${H * 0.66}, ${x - w / 2} ${H - 4}"/>`; }
-  for (let j = 1; j < rows; j++) { const y = j * 100, w = ((j * 53) % 7) - 3; paths += `<path d="M4 ${y + w} C ${W * 0.33} ${y - w}, ${W * 0.66} ${y + w}, ${W - 4} ${y - w / 2}"/>`; }
+  // Never quite straight: a dead-straight line has a box with no width (or height),
+  // and the pencil filter on it draws nothing.
+  for (let i = 1; i < cols; i++) { const x = i * 100, w = ((i * 37) % 7) - 3 || 2; paths += `<path d="M${x + w} 4 C ${x - w} ${H * 0.33}, ${x + w} ${H * 0.66}, ${x - w / 2} ${H - 4}"/>`; }
+  for (let j = 1; j < rows; j++) { const y = j * 100, w = ((j * 53) % 7) - 3 || 2; paths += `<path d="M4 ${y + w} C ${W * 0.33} ${y - w}, ${W * 0.66} ${y + w}, ${W - 4} ${y - w / 2}"/>`; }
   // Lines of three, crossed through: their marks are spent.
   let strikes = '';
   for (const { mark, cells } of map.lines ?? []) {
