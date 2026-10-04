@@ -836,7 +836,7 @@ function craftScreen() {
   const jobs = [
     { label: t('Trade two stones'), detail: t('Two stones → one better.'), ok: R.craftable(run).length >= 2, go: () => craftFlow(did) },
     ...R.MATERIALS.map((mat) => ({
-      label: mat === 'marble' ? t('Marble') : t('Gold'),
+      label: mat === 'marble' ? t('Make a stone marble') : t('Gild a stone'),
       detail: t(mat === 'marble' ? 'Pay {n} gold: a stone of yours goes anywhere, whatever their stones restrict.' : 'Pay {n} gold: a stone of yours pays 10 gold in your winning line.', { n: price(mat) }),
       ok: run.gold >= price(mat) && R.polishable(run).length > 0,
       go: () => polishFlow(mat, price(mat), did),

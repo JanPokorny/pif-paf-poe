@@ -492,7 +492,9 @@ b { font-weight: 400; background: linear-gradient(transparent 55%, var(--hi) 55%
 .winline path.dashed { stroke-dasharray: 6 5; animation: none; stroke-dashoffset: 0; opacity: 0.7; }
 .board.shake { animation: shake 0.35s; }
 @keyframes shake { 20% { transform: translate(-3px, 2px) rotate(-0.6deg); } 50% { transform: translate(3px, -1px) rotate(0.5deg); } 80% { transform: translate(-1px, 1px); } }
-.cell.nogo::before { content: ''; position: absolute; inset: 18%; background: repeating-linear-gradient(-45deg, transparent 0 6px, rgba(200, 55, 45, 0.28) 6px 8px); border-radius: 30%; pointer-events: none; }
+/* A square closed to you: red stripes, no outline -- the same on the board and in a card's example. */
+:root { --closed: repeating-linear-gradient(-45deg, transparent 0 5px, rgba(200, 55, 45, 0.32) 5px 7px); }
+.cell.nogo::before { content: ''; position: absolute; inset: 18%; background: var(--closed); border-radius: 30%; pointer-events: none; }
 /* A square where the enemy would win: the same dashed red ring as on the map. */
 
 /* Emoji are stamped onto the page in ink, like the enemy photos. */
@@ -544,7 +546,7 @@ h1, h2, .btn.primary, .enemy-name, .card-name, .section-label { letter-spacing: 
   linear-gradient(transparent 35px, var(--pencil) 35px, var(--pencil) 37px, transparent 37px, transparent 71px, var(--pencil) 71px, var(--pencil) 73px, transparent 73px); }
 .demo-cell { display: flex; align-items: center; justify-content: center; }
 .demo-cell.ok { box-shadow: inset 0 0 0 2px rgba(31, 79, 176, 0.35); border-radius: 30%; }
-.demo-cell.no { background: repeating-linear-gradient(-45deg, transparent 0 5px, rgba(200, 55, 45, 0.45) 5px 7.5px); border-radius: 22%; box-shadow: inset 0 0 0 1.5px rgba(200, 55, 45, 0.35); }
+.demo-cell.no { background: var(--closed); border-radius: 30%; }
 .demo-board.anim { position: relative; }
 .demo-board.anim .demo-cell { transition: background 0.25s; }
 .demo-stone.flash { animation: demo-flash 0.7s ease-in-out; }

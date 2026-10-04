@@ -446,9 +446,9 @@ export function infoStone(s, player = 'X', extra = '', action = null) {
       h('div.info-rarity.' + st.rarity, {}, [once ? t('glass') : s.mat ? t(s.mat) : null, t(st.rarity)].filter(Boolean).join(' · ')))),
     h('p', {}, stoneText(s)),
     stoneDemo(s),
-    once ? h('p.info-plus', {}, t('Glass: once played, it is gone from your pouch.')) : null,
-    s.mat === 'marble' ? h('p.info-plus', {}, t('Marble: it goes anywhere, whatever the other side\'s stones restrict.')) : null,
-    s.mat === 'gold' ? h('p.info-plus', {}, t('Gold: +{n} gold when it is in your winning three in a row.', { n: R_GOLD })) : null,
+    once ? h('p.info-plus', {}, t('It is glass: once played, it is gone from your pouch.')) : null,
+    s.mat === 'marble' ? h('p.info-plus', {}, t('It is marble: it goes anywhere, whatever the other side\'s stones restrict.')) : null,
+    s.mat === 'gold' ? h('p.info-plus', {}, t('It is gold: +{n} gold when it is in your winning three in a row.', { n: R_GOLD })) : null,
     extra ? h('p.info-extra', {}, extra) : null,
     infoButtons(() => close(), action));
   const close = modal(body);
