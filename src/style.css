@@ -318,8 +318,8 @@ b { font-weight: 400; background: linear-gradient(transparent 55%, var(--hi) 55%
   display: flex; flex-direction: column; gap: 10px; animation: slap 0.35s cubic-bezier(.3,1.4,.5,1);
 }
 .result-banner::before { content: ''; position: absolute; top: -11px; left: calc(50% + var(--tape-x, 0px)); width: 90px; height: 24px; margin-left: -45px; background: var(--tape); transform: rotate(calc(2deg + var(--tape-r, 0deg))); }
+.result-banner.won { background: var(--mint); }
 .result-banner.lost { background: var(--pink); }
-.result-banner .btn.primary { background: #fff; border: 2px solid var(--ink); transform: none; box-shadow: 2px 3px 0 rgba(43,42,51,.18); }
 .result-banner.peek { top: auto; bottom: 8px; padding: 12px; }
 .result-banner.peek .result-why { display: none; }
 .result-title { font-family: var(--marker); font-size: 2.3rem; }
@@ -383,10 +383,6 @@ b { font-weight: 400; background: linear-gradient(transparent 55%, var(--hi) 55%
 .stone-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
 .pouch-slot { position: relative; display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 10px 2px 6px; font-size: 0.92rem; line-height: 1.05; }
 .pouch-slot .stone { --size: 42px; }
-.pick .pouch-slot { opacity: 0.4; transition: opacity 0.15s; }
-.pick .pouch-slot.on { opacity: 1; }
-.info-name-link { cursor: pointer; padding: 2px 0; }
-.info-name-link .i { color: var(--blue); font-size: 0.9em; }
 .slot-info { position: absolute; top: 0; right: 4px; color: var(--blue); font-size: 1rem; padding: 2px; }
 .sticky-bottom { position: sticky; bottom: 0; padding: 12px 0 var(--button-b); z-index: 3; align-self: stretch; }
 .sticky-bottom { pointer-events: none; }
@@ -543,7 +539,9 @@ b { font-weight: 400; background: linear-gradient(transparent 55%, var(--hi) 55%
 .back-map { flex: none; display: inline-flex; align-items: center; gap: 4px; }
 
 /* Critique pass */
-.result-banner { top: auto; bottom: var(--button-b); left: 14px; right: 14px; padding: 16px 16px 12px; }
+.result-banner { top: auto; bottom: calc(var(--button-b) + 72px); left: 14px; right: 14px; padding: 16px 16px 12px; }
+/* Under the note, the way on: the bottom bar's yellow button. */
+.result-bar { position: absolute; left: 12px; right: 12px; bottom: var(--button-b); z-index: 21; animation: slap 0.35s 0.1s cubic-bezier(.3,1.4,.5,1) backwards; }
 .result-title { font-size: 2rem; }
 .cell.chosen::after { background: none; border: 3px solid var(--red); border-radius: 48% 52% 45% 55%; filter: url(#pencil); inset: 5%; }
 .arrow.chosen, .rot.chosen { background: var(--pink); }
@@ -776,8 +774,23 @@ body:has(.duel) #toast.show { transform: translate(-50%, 0) rotate(-1deg); }
 .stone-pick { position: relative; background: none; border: 0; padding: 5px; -webkit-touch-callout: none; user-select: none; }
 .stone-pick .stone { --size: min(54px, calc((100vw - 64px) / 7.3)); }
 .stone-pick:nth-child(odd) .stone { --tilt: -3deg; } .stone-pick:nth-child(even) .stone { --tilt: 2deg; }
-.stone-row.pick .stone-pick { opacity: 0.35; transition: opacity 0.15s, transform 0.15s; }
-.stone-row.pick .stone-pick.on { opacity: 1; }
+/* A stone to choose: a pencilled box in its corner, ticked in ballpoint; the
+   stone itself opens its card. One not chosen is faint. */
+.tick-stone { position: relative; display: flex; }
+.tick-stone > .tick-face { flex: 1; width: 100%; transition: opacity 0.15s; }
+.tick-stone:not(.on) > .tick-face { opacity: 0.4; }
+.tick-stone:nth-child(even) .stone { --tilt: 2deg; }
+.tick-box {
+  position: absolute; top: -1px; left: -1px; z-index: 2; width: 23px; height: 23px; padding: 0;
+  background: var(--card); border: 2px solid var(--pencil); border-radius: 3px 5px 2px 4px; transform: rotate(-4deg);
+  box-shadow: 1px 1px 0 rgba(43, 42, 51, 0.15);
+}
+/* A bigger target than it looks. */
+.tick-box::before { content: ''; position: absolute; inset: -10px -3px -3px -10px; }
+.tick-box svg { position: absolute; left: -2px; top: -7px; width: 27px; height: 27px; overflow: visible; fill: none; stroke: var(--blue); stroke-width: 3.2; stroke-linecap: round; stroke-linejoin: round; opacity: 0; }
+.tick-box[aria-checked="true"] svg { opacity: 1; }
+.stone-grid .tick-box { top: 2px; left: 2px; }
+.tick-name { display: block; }
 .stone-pick .hand-count, .hand-slot .hand-count { top: -2px; right: -4px; }
 .press-hint { text-align: center; font-size: 0.82rem; color: var(--faint); margin-top: 2px; }
 .hand-slot { -webkit-touch-callout: none; user-select: none; }

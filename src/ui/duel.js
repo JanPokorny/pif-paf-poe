@@ -9,7 +9,7 @@ import {
   STONES, CONDS, RULES, legalActions, applyAction, cloneState, allowedSquares,
   winningLine, active, row, col, LINES, ELS, adjacent, specOf,
 } from '../engine.js';
-import { h, stoneEl, updateStone, toast, pressable, infoStone, ruleChip, stoneName, stoneText, sleep, statusLine } from './common.js';
+import { h, stoneEl, updateStone, toast, infoStone, ruleChip, stoneName, stoneText, sleep, statusLine } from './common.js';
 import { icon } from '../icons.js';
 import { t } from '../i18n.js';
 import { think } from '../brain.js';
@@ -116,7 +116,7 @@ export function mountDuel(root, opts) {
     ), extra);
 
   const el = h('div.duel', {}, header, chips, status.el, enemyHand, h('div.board-wrap', {}, board), actions, hand,
-    h('div.press-hint', {}, t('Long press stone for info.')), info);
+    h('div.press-hint', {}, t('Tap a stone to pick it up, ⓘ for its card.')), info);
   root.replaceChildren(el);
 
   // ── Rendering ─────────────────────────────────────────────────────────────
@@ -196,11 +196,11 @@ export function mountDuel(root, opts) {
     if (enemyHand.querySelector('.stone.borrow')) enemyHand.append(h('span.pick-note', {}, t('You can play these!')));
 
     // Player hand, one stone per kind with a count. During a turn in
-    // progress, show the hand as it was. A long press reads a stone.
+    // progress, show the hand as it was. Out of your turn, a tap reads a stone.
     const slot = (key, st, n = 1) => {
       const e = stoneEl(st, 'X');
-      const b = pressable(h('button.hand-slot', { 'aria-label': stoneName(st) }, e,
-        n > 1 ? h('span.hand-count', {}, `×${n}`) : null), { tap: () => tapHand(key), long: () => infoStone(st, 'X') });
+      const b = h('button.hand-slot', { 'aria-label': stoneName(st), onclick: () => tapHand(key) }, e,
+        n > 1 ? h('span.hand-count', {}, `×${n}`) : null);
       if (inTurn && key === selKey) b.classList.add(s.phase === 'place' ? 'selected' : 'placed');
       if (selecting && !slotAction(s, key)) b.classList.add('forbidden');
       if (!selecting && !(inTurn && s.phase === 'place')) b.classList.add('idle');
@@ -474,8 +474,8 @@ export function mountDuel(root, opts) {
 
 
   function tapHand(key) {
-    if (!myMove()) return;
-    if (state.phase !== 'select' && state.phase !== 'place') {
+    if (ended) return;
+    if (!myMove() || (state.phase !== 'select' && state.phase !== 'place')) {
       const st = slotStone(key);
       if (st) infoStone(st, typeof key === 'string' && key.startsWith('O:') ? 'O' : 'X');
       return;
@@ -722,9 +722,10 @@ export function mountDuel(root, opts) {
         : t(won ? 'The board is full — it goes to you, who moved second.' : 'The board is full — it goes to {enemy}, who moved second.', v);
     const banner = h('div.result-banner.' + (won ? 'won' : 'lost'), {},
       h('div.result-title', {}, won ? t('Victory!') : t('Defeat')),
-      h('div.result-why', {}, why),
-      h('button.btn.primary.wide', { onclick: () => { banner.remove(); onEnd(state.winner); } }, t('Continue')));
-    el.append(banner);
+      h('div.result-why', {}, why));
+    // The way on in the bottom bar, yellow, as on every screen.
+    const bar = h('div.result-bar', {}, h('button.btn.primary.wide.big', { onclick: () => { banner.remove(); bar.remove(); onEnd(state.winner); } }, t('Continue')));
+    el.append(banner, bar);
   }
 
   // ── Go ────────────────────────────────────────────────────────────────────

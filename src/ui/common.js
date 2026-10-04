@@ -87,22 +87,16 @@ export function updateStone(el, s, player, opts = {}) {
   }
 }
 
-// Tap for one thing, hold for another: long press reads a stone without
-// picking it up. The click that ends a long press is swallowed.
-export function pressable(el, { tap, long }) {
-  let timer = null, fired = false;
-  const cancel = () => { clearTimeout(timer); timer = null; };
-  el.addEventListener('pointerdown', () => {
-    fired = false; cancel();
-    timer = setTimeout(() => { fired = true; timer = null; try { navigator.vibrate?.(12); } catch { /* no haptics */ } long(); }, 450);
-  });
-  for (const ev of ['pointerup', 'pointerleave', 'pointercancel']) el.addEventListener(ev, cancel);
-  el.addEventListener('click', (e) => {
-    if (fired) { fired = false; e.preventDefault(); e.stopPropagation(); return; }
-    tap?.(e);
-  });
-  el.addEventListener('contextmenu', (e) => { e.preventDefault(); if (!fired) { cancel(); fired = true; long(); } });
-  return el;
+// A stone to choose: the box in its corner ticks it at once; a tap on the stone
+// opens its card, whose button selects or deselects it.
+const TICK = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4.5 12.5 C 6.5 14, 8 16, 9.5 19 C 12 12.5, 15.5 7.5, 20.5 3.5"/></svg>';
+export function tickStone(s, { on, toggle, name = false, face = '' }) {
+  const box = h('button.tick-box', { role: 'checkbox', 'aria-checked': String(!!on), 'aria-label': stoneName(s), html: TICK,
+    onclick: (e) => { e.stopPropagation(); toggle(); } });
+  const btn = h('button.tick-face' + face, { 'aria-label': stoneName(s),
+    onclick: () => infoStone(s, 'X', '', { label: on ? t('Deselect') : t('Select'), run: toggle }) },
+  stoneEl(s, 'X', { cost: true }), name ? h('span.tick-name', {}, stoneName(s)) : null);
+  return h('div.tick-stone' + (on ? '.on' : ''), {}, btn, box);
 }
 
 // A stone's name and text: its + form's for a + stone.
@@ -438,22 +432,22 @@ export function ruleChip(kind, id, cls = '') {
 
 // A card for reward and shop screens.
 // Cards are small: picture, name, price. A tap opens the card (where to take or
-// buy it); so does a long press, as on stones everywhere else.
+// buy it).
 export function stoneCard(s, { onclick, price, sold, dear, footer } = {}) {
   const st = STONES[s.type];
-  return pressable(h(`button.card.stone-card.${st.rarity}${sold ? '.sold' : dear ? '.dear' : ''}`, { disabled: sold || undefined, 'aria-label': stoneName(s) },
+  return h(`button.card.stone-card.${st.rarity}${sold ? '.sold' : dear ? '.dear' : ''}`, { disabled: sold || undefined, 'aria-label': stoneName(s), onclick: onclick ?? (() => infoStone(s, 'X')) },
     stoneEl(s, 'X', { cost: true }),
     h('div.card-name', {}, stoneName(s)),
     price !== undefined ? h('div.price', {}, iconEl('coin'), price) : null,
-    footer ?? null), { tap: onclick, long: onclick ?? (() => infoStone(s, 'X')) });
+    footer ?? null);
 }
 
 export function relicCard(id, { onclick, price, sold, dear } = {}) {
   const r = RELICS[id];
-  return pressable(h(`button.card.relic-card.${r.rarity}${sold ? '.sold' : dear ? '.dear' : ''}`, { disabled: sold || undefined, 'aria-label': r.name },
+  return h(`button.card.relic-card.${r.rarity}${sold ? '.sold' : dear ? '.dear' : ''}`, { disabled: sold || undefined, 'aria-label': r.name, onclick: onclick ?? (() => infoRelic(id)) },
     h('div.relic-token', {}, relicArt(id)),
     h('div.card-name', {}, r.name),
-    price !== undefined ? h('div.price', {}, iconEl('coin'), price) : null), { tap: onclick, long: onclick ?? (() => infoRelic(id)) });
+    price !== undefined ? h('div.price', {}, iconEl('coin'), price) : null);
 }
 
 // The EN · CS switch. Changing it reloads the page.

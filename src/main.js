@@ -4,7 +4,7 @@
 import { STONES, CONDS, RULES, createGame } from './engine.js';
 import { RELICS, OLD_PLUS_RELICS, ENEMIES, ACTS, EVENTS } from './content.js';
 import * as R from './run.js';
-import { h, hideToast, tapeUp, art, relicArt, scribbleX, scribbleO, stoneEl, iconEl, toast, modal, ask, pressable, infoStone, infoRelic, infoRule, infoThing, stoneCard, relicCard, stoneName, langToggle, energyBar, statusLine } from './ui/common.js';
+import { h, hideToast, tapeUp, art, relicArt, scribbleX, scribbleO, stoneEl, iconEl, toast, modal, ask, tickStone, infoStone, infoRelic, infoRule, infoThing, stoneCard, relicCard, stoneName, langToggle, energyBar, statusLine } from './ui/common.js';
 import { icon } from './icons.js';
 import { mountDuel } from './ui/duel.js';
 import { sfx, soundOn, setSound } from './sound.js';
@@ -497,11 +497,6 @@ function moonrise(boss, done) {
   setTimeout(go, 4800);
 }
 
-// A stone's name with an (i): tapping the name reads the stone.
-function infoName(s, player) {
-  return h('span.info-name-link', { onclick: (e) => { e.stopPropagation(); infoStone(s, player); } }, stoneName(s), h('span.i', {}, ' ⓘ'));
-}
-
 // ── Before a duel: see the enemy, choose your stones ────────────────────────
 
 function preDuel() {
@@ -525,8 +520,9 @@ function preDuel() {
     const fill = Math.max(0, R.HAND - chosen.length);
     grid.replaceChildren(...run.pouch.map((p) => R.asBrought(run, p)).map((s) => {
       const on = chosen.includes(s.uid);
-      return pressable(h('button.stone-pick' + (on ? '.on' : ''), { 'aria-label': stoneName(s) }, stoneEl(s, 'X', { cost: true })), {
-        tap: () => {
+      return tickStone(s, {
+        on, face: '.stone-pick',
+        toggle: () => {
           if (on) chosen = chosen.filter((u) => u !== s.uid);
           else if (R.handCost(run, [...chosen, s.uid]) <= energy) chosen.push(s.uid);
           else {
@@ -540,7 +536,6 @@ function preDuel() {
           sfx('click');
           draw();
         },
-        long: () => infoStone(s, 'X'),
       });
     }), pebbles('X', fill, R.HAND));
     bar.replaceChildren(energyBar(R.handCost(run, chosen), energy));
@@ -577,7 +572,7 @@ function preDuel() {
       }), duel.handO.some((s) => s.type === 'pebble') ? pebbles('O', duel.handO.filter((s) => s.type === 'pebble').length, duel.handO.length) : null),
       h('div.section-label.with-bar', {}, h('span', {}, t('Your stones')), bar),
       grid,
-      run.pouch.length ? h('div.press-hint', {}, t('Choose which stones to take into the duel. Long press for info.')) : null,
+      run.pouch.length ? h('div.press-hint', {}, t('Tick the stones to take into the duel. Tap a stone for its card.')) : null,
       h('div.sticky-bottom.pair', {},
         canBack ? h('button.btn.ghost.big.back-map', { onclick: () => { R.retreat(run); route(); } }, h('span', { html: icon('back') }), t('Back to the map')) : null,
         fight)));
@@ -785,12 +780,14 @@ function craftFlow(done) {
     const [a, b] = picked.map((u) => run.pouch.find((x) => x.uid === u));
     pickBody.replaceChildren(
       h('h2', {}, t('Trade which two stones?')),
-      h('div.stone-grid.pick', {}, R.craftable(run).map((x) => h('button.pouch-slot' + (picked.includes(x.uid) ? '.on' : ''), {
-        onclick: () => {
+      // As before a duel: the box ticks a stone, a tap on it opens its card.
+      h('div.stone-grid', {}, R.craftable(run).map((x) => tickStone(R.asBrought(run, x), {
+        on: picked.includes(x.uid), name: true, face: '.pouch-slot',
+        toggle: () => {
           picked = picked.includes(x.uid) ? picked.filter((u) => u !== x.uid) : picked.length < 2 ? [...picked, x.uid] : [picked[1], x.uid];
           sfx('click'); drawPick();
         },
-      }, stoneEl(R.asBrought(run, x), 'X', { cost: true }), infoName(R.asBrought(run, x), 'X')))),
+      }))),
       h('p.dim', {}, b ? t('→ one {tier} stone', { tier: t(R.craftTier(a, b)) }) : t('Two stones → one better.')),
       h('button.btn.primary.wide', {
         disabled: !b || undefined,
@@ -875,22 +872,24 @@ function eventScreen() {
       return null;
     },
   };
+  const choose = (c) => async () => {
+    // A reload in the middle of a choice must not offer the event again.
+    run.pending.result = t('You move on.');
+    save();
+    const out = await c.act(run, api);
+    if (out === null) return;   // it started a duel
+    run.pending.result = out;
+    save();
+    eventScreen();
+  };
+  const leave = result ? null : ev.choices.find((c) => c.leave);
   const choices = result
     ? [h('p.event-result', {}, result)]
-    : ev.choices.map((c) => {
+    : ev.choices.filter((c) => !c.leave).map((c) => {
       const ok = !c.can || c.can(run, api);
       return h('button.choice' + (ok ? '' : '.disabled'), {
         disabled: !ok || undefined,
-        onclick: async () => {
-          // A reload in the middle of a choice must not offer the event again.
-          run.pending.result = t('You move on.');
-          save();
-          const out = await c.act(run, api);
-          if (out === null) return;   // it started a duel
-          run.pending.result = out;
-          save();
-          eventScreen();
-        },
+        onclick: choose(c),
       }, h('b', {}, c.label), c.detail ? h('span.dim', {}, ' — ' + c.detail) : null);
     });
   screen(topBar(), h('div.page.event', {},
@@ -898,8 +897,10 @@ function eventScreen() {
     h('h2', {}, ev.title),
     h('p', {}, ev.text),
     h('div.choices', {}, choices),
-    // The way on, in the bottom bar like every Continue.
-    result ? h('div.sticky-bottom', {}, h('button.btn.primary.wide.big', { onclick: () => { R.leaveNode(run); route(); } }, t('Continue'))) : null));
+    // The way on, in the bottom bar like every Continue; before a choice, the way past it,
+    // dashed, as every way out: it leaves at once.
+    result ? h('div.sticky-bottom', {}, h('button.btn.primary.wide.big', { onclick: () => { R.leaveNode(run); route(); } }, t('Continue')))
+      : leave ? h('div.sticky-bottom', {}, h('button.btn.ghost.wide.big', { onclick: () => { R.leaveNode(run); route(); } }, leave.label)) : null));
 }
 
 // ── The end ─────────────────────────────────────────────────────────────────

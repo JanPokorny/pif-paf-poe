@@ -89,7 +89,7 @@ export { ONCE_STONES, PLUS_STONES };
 
 export const ENEMIES = {
   // Act 1 — the Meadow
-  pip: { name: 'Pip the Novice', emoji: '🐣', act: 1, tier: 'normal',
+  pip: { name: 'Pip the Novice', emoji: '🐧', act: 1, tier: 'normal',
     core: ['shift'], pool: ['shift', 'rotate'], size: 1, iters: 40, blunder: 0.45,
     quote: 'I just learned the rules!' },
   otter: { name: 'Slidey Otter', emoji: '🦦', act: 1, tier: 'normal',
@@ -172,23 +172,23 @@ export const ENEMIES = {
   fay: { name: 'Firecracker Fay', emoji: '🎆', act: 3, tier: 'normal',
     core: ['firecracker', 'firecracker'], pool: ['magnet', 'shift', 'rotate', 'bumper'], iters: 450, blunder: 0.06,
     quote: 'Boom! Back you go!' },
-  fox: { name: 'Turncoat Fox', emoji: '🦊', act: 3, tier: 'normal',
+  fox: { name: 'Swindler Fox', emoji: '🦊', act: 3, tier: 'normal',
     core: ['swap', 'lasso'], pool: ['magnet', 'stinky', 'shift', 'mountain'], iters: 400, blunder: 0.08,
-    quote: 'Loyalty is for pebbles.' },
+    quote: 'Let\'s trade places. Trust me.' },
   parrot: { name: 'Captain Polly', emoji: '🦜', act: 3, tier: 'normal', cond: 'shared',
     core: ['parrot', 'parrot'], pool: ['magnet', 'shift', 'gravity', 'swap'], iters: 400, blunder: 0.18,
     quote: 'Squawk! What\'s yours is mine!' },
   jester: { name: 'The Jester', emoji: '🃏', act: 3, tier: 'normal',
     core: ['swap', 'bonfire'], pool: ['shift', 'swap', 'magnet', 'bonfire'], iters: 220, blunder: 0.14,
     quote: 'Now you see it, now you don\'t!' },
-  robot: { name: 'Tile Bot 2048', emoji: '🤖', act: 3, tier: 'normal',
+  robot: { name: 'Tilt Bot', emoji: '🤖', act: 3, tier: 'normal',
     core: ['gravity+', 'gravity+'], pool: ['mountain', 'magnet', 'stinky'], iters: 450, blunder: 0.05,
     quote: 'CALCULATING OPTIMAL SLIDE.' },
   yeti: { name: 'Summit Yeti', emoji: '🦍', act: 3, tier: 'normal', cond: 'gravity',
     core: ['mountain', 'magnet', 'stinky'], pool: ['lasso', 'frog', 'bonfire', 'mountain'], iters: 450, blunder: 0.02,
     once: ['muffle'], quote: 'ROAR. Everything falls down mountain.' },
   // elites
-  owl: { name: 'Grand Tactician', emoji: '🦉', act: 3, tier: 'elite',
+  owl: { name: 'Grand Tactician', emoji: '🐙', act: 3, tier: 'elite',
     core: ['magnet', 'shift', 'swap'], pool: ['rotate', 'swap', 'magnet+', 'firecracker'], iters: 300, blunder: 0.06,
     once: ['swap+'], quote: 'I have seen this position before.' },
   storm: { name: 'Storm Caller', emoji: '🦅', act: 3, tier: 'elite',
@@ -219,7 +219,8 @@ export const EASY_OPENERS = ['pip', 'otter', 'rock'];
 
 // ── Events ──────────────────────────────────────────────────────────────────
 //
-// Each choice is { label, detail?, can?(run), run(run, api) -> text }. The api
+// Each choice is { label, detail?, can?(run), run(run, api) -> text, leave? }; `leave` is
+// the way past it, shown as the dashed button in the bottom bar. The api
 // (from run.js) offers the helpers a choice needs: gain stone, pick a stone, etc.
 
 
@@ -230,7 +231,7 @@ export const EVENTS = [
     choices: [
       { label: 'Trade two stones', detail: 'Two stones for one of a higher tier.', can: (r) => r.pouch.length >= 2,
         act: (r, api) => api.craft() },
-      { label: 'Leave', act: () => t('You nod politely and move on.') },
+      { leave: true, label: 'Leave', act: () => t('You nod politely and move on.') },
     ],
   },
   {
@@ -250,7 +251,7 @@ export const EVENTS = [
         act: (r, api) => { if (api.rng() < 0.5) { r.gold += 30; return t('The pebble is under your cup! +30 gold.'); } r.gold -= 30; return t('Empty. The fox chuckles. −30 gold.'); } },
       { label: 'Bet everything', detail: '50%: double your gold.', can: (r) => r.gold > 0,
         act: (r, api) => { if (api.rng() < 0.5) { r.gold *= 2; return t('Fortune smiles! You now have {n} gold.', { n: r.gold }); } r.gold = 0; return t('Gone. All of it.'); } },
-      { label: 'Walk away', act: () => t('The fox shrugs and pockets the cups.') },
+      { leave: true, label: 'Walk away', act: () => t('The fox shrugs and pockets the cups.') },
     ],
   },
   {
@@ -268,7 +269,7 @@ export const EVENTS = [
     text: '"A duel, traveller? Beat me and take my trinket. Lose, and it costs you a heart."',
     choices: [
       { label: 'Accept the duel', detail: 'Win: a talisman. Lose: −1 heart.', act: (r, api) => api.fight('hermit') },
-      { label: 'Decline', act: () => t('The hermit returns to his tea.') },
+      { leave: true, label: 'Decline', act: () => t('The hermit returns to his tea.') },
     ],
   },
   {
@@ -277,7 +278,7 @@ export const EVENTS = [
     choices: [
       { label: 'Transmute a stone', detail: 'Replace a stone with a random one of higher rarity.', can: (r) => r.pouch.length > 0,
         act: (r, api) => api.transmute() },
-      { label: 'Leave', act: () => t('The flasks keep bubbling.') },
+      { leave: true, label: 'Leave', act: () => t('The flasks keep bubbling.') },
     ],
   },
   {
@@ -286,7 +287,7 @@ export const EVENTS = [
     choices: [
       { label: 'Open it', detail: 'Gain a talisman. Lose 1 heart.', can: (r) => r.hearts > 1,
         act: (r, api) => { r.hearts--; return api.gainRandomRelic(t('A needle pricks your thumb, but inside…')); } },
-      { label: 'Leave it', act: () => t('Wise, probably.') },
+      { leave: true, label: 'Leave it', act: () => t('Wise, probably.') },
     ],
   },
   {
@@ -314,7 +315,7 @@ export const EVENTS = [
         act: (r, api) => api.chooseStone(null, () => { r.hearts--; }) },
       { label: 'Wish for health', detail: 'Pay 20 gold, heal 2 hearts.', can: (r) => r.gold >= 20,
         act: (r) => { r.gold -= 20; r.hearts = Math.min(r.maxHearts, r.hearts + 2); return t('You feel much better.'); } },
-      { label: 'Move on', act: () => t('You keep your coins.') },
+      { leave: true, label: 'Move on', act: () => t('You keep your coins.') },
     ],
   },
   {
@@ -330,7 +331,7 @@ export const EVENTS = [
         } },
       { label: 'Buy one', detail: 'Pay 25 gold for a random one-shot stone.', can: (r) => r.gold >= 25,
         act: (r, api) => { r.gold -= 25; return api.gainRandomOnce(); } },
-      { label: 'No thanks', act: () => t('He vanishes in a puff of smoke.') },
+      { leave: true, label: 'No thanks', act: () => t('He vanishes in a puff of smoke.') },
     ],
   },
   {
@@ -341,7 +342,7 @@ export const EVENTS = [
         act: (r, api) => api.chooseStone('uncommon', () => { r.gold -= 30; }) },
       { label: 'Borrow a book', detail: 'Gain a random uncommon one-shot stone.',
         act: (r, api) => api.gainRandomOnce('uncommon') },
-      { label: 'Leave', act: () => t('You put the books back.') },
+      { leave: true, label: 'Leave', act: () => t('You put the books back.') },
     ],
   },
   {
@@ -352,7 +353,7 @@ export const EVENTS = [
         act: (r) => { r.energy = (r.energy ?? 1) + 1; r.maxHearts--; r.hearts = Math.min(r.hearts, r.maxHearts); return t('Your mind clears. +1 energy.'); } },
       { label: 'Donate 40 gold', detail: '+1 energy.', can: (r) => r.gold >= 40,
         act: (r) => { r.gold -= 40; r.energy = (r.energy ?? 1) + 1; return t('The monk bows. +1 energy.'); } },
-      { label: 'Tiptoe past', act: () => t('You leave the monk to the quiet.') },
+      { leave: true, label: 'Tiptoe past', act: () => t('You leave the monk to the quiet.') },
     ],
   },
   {
@@ -361,7 +362,7 @@ export const EVENTS = [
     choices: [
       { label: 'Cross it', detail: 'Lose 1 heart, gain 50 gold.', can: (r) => r.hearts > 1,
         act: (r) => { r.hearts--; r.gold += 50; return t('A plank snaps under you — but you make it, and pocket 50 gold.'); } },
-      { label: 'Go around', act: () => t('The long way round. Nothing lost, nothing found.') },
+      { leave: true, label: 'Go around', act: () => t('The long way round. Nothing lost, nothing found.') },
     ],
   },
   {

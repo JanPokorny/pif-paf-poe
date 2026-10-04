@@ -55,6 +55,8 @@ const pick = (a) => a[Math.floor(rand() * a.length)];
       if (await page.locator('.modal .ask').count()) { await click(page.locator('.modal .ask button').first()); continue; }
       if (await page.locator('.modal .info-actions button.primary:not([disabled])').count() && rand() < 0.75) { await click(page.locator('.modal .info-actions button.primary')); continue; }
       if (await page.locator('.modal .cards .card').count() && rand() < 0.8) { await any('.modal .cards .card'); continue; }
+      // The workshop: tick two, then Trade.
+      if (await page.locator('.modal .stone-grid .tick-box').count() && rand() < 0.7) { await any('.modal .stone-grid .tick-box'); await page.waitForTimeout(100); await any('.modal .stone-grid .tick-box'); await page.waitForTimeout(100); await click(page.locator('.modal button.primary').first()); continue; }
       if (await page.locator('.modal .stone-grid .pouch-slot').count() && rand() < 0.7) { await any('.modal .stone-grid .pouch-slot'); await page.waitForTimeout(100); await click(page.locator('.modal button.primary').first()); continue; }
       await click(page.locator('.modal button.btn').last()); continue;
     }
@@ -95,10 +97,10 @@ const pick = (a) => a[Math.floor(rand() * a.length)];
         if (!(await any('.map-cell.reach'))) await any('.map-cell');
         break;
       }
-      case 'predual': await snap('predual-' + (st.tier ?? 'x')); if (rand() < 0.15) await any('.stone-row.pick .stone-pick'); await click(page.locator('.sticky-bottom .btn.primary').first()); break;   // Fight, not Back to the map
+      case 'predual': await snap('predual-' + (st.tier ?? 'x')); if (rand() < 0.15) await any('.stone-row.pick .tick-box'); await click(page.locator('.sticky-bottom .btn.primary').first()); break;   // Fight, not Back to the map
       case 'duel': {
         await snap('duel-' + (st.tier ?? 'x'));
-        const banner = page.locator('.result-banner button, .result button');
+        const banner = page.locator('.result-bar button');
         if (await banner.count()) { await snap('duel-result'); await click(banner.last()); break; }
         const conf = page.locator('button', { hasText: /^\s*(Confirm|Potvrdit)/ });
         if (await conf.count()) { await click(conf.first()); break; }
@@ -135,8 +137,9 @@ const pick = (a) => a[Math.floor(rand() * a.length)];
       }
       case 'event': {
         await snap('event');
-        if (await page.locator('.choice:not(.disabled)').count()) { await any('.choice:not(.disabled)'); break; }
-        await click(page.locator('.btn.primary').first()); break;
+        // A choice, or now and then the way past it (dashed, in the bottom bar).
+        if (await page.locator('.choice:not(.disabled)').count() && rand() < 0.85) { await any('.choice:not(.disabled)'); break; }
+        await click(page.locator('.sticky-bottom .btn').first()); break;
       }
       default: {
         await snap(st.screen);

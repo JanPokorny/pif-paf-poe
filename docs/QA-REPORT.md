@@ -85,3 +85,26 @@ To decide (larger, or a matter of taste):
   stones they play now.
 - **Two owls**: the Grand Tactician and the Night Owl event share 🦉.
 - **Pip's portrait** (a yellow chick) is pale after the sketch filter; readable, the faintest left.
+
+## Third pass: the open questions, decided
+
+- **Result note**: Continue left the note for the bottom bar, a big yellow button like every
+  screen's main action. The note keeps the title and the reason; a win is a mint note now, so
+  the yellow button stands out (a loss stays pink).
+- **Gift and treasure screens**: left as they are.
+- **Events**: the way past an event ("Leave", "Tiptoe past", "No thanks"…, marked `leave` in
+  `content.js`) is the dashed button in the bottom bar, and it leaves at once. The page holds
+  only the real choices.
+- **Choosing stones**: before a duel and in the workshop, each stone has a pencilled box in its
+  corner. Ticking the box chooses it at once; a tap on the stone opens its card, whose button
+  says Select or Deselect. The workshop's ⓘ beside a name is gone.
+- **No more long press**, anywhere. Cards on the reward and shop screens opened on a tap
+  already. In a duel, a tap picks a stone up and the line under the hand shows ⓘ for its card;
+  out of your turn, or while its effect is chosen, a tap opens the card.
+- **Names**: Turncoat Fox is the Swindler Fox (Prohnaná liška), "Let's trade places. Trust
+  me."; Tile Bot 2048 is the Tilt Bot (Sklápěcí robot): its Gravity+ tilts the board.
+- **Two owls**: the Grand Tactician is an octopus (🐙); the Night Owl keeps 🦉.
+- **Pip**: every chick emoji washes out under the sketch filter, so Pip is a penguin (🐧).
+
+The UI bot (`tools/playtest.cjs`) ticks boxes, uses the event's bottom bar and the result's bar:
+five runs, Czech and English, phone and small screen, no errors and no stuck screens.
