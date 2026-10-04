@@ -441,15 +441,23 @@ function mapScreen() {
     h('div.map-cells', {}, grid),
     strikes ? h('div.map-strikes', { html: `<svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" aria-hidden="true">${strikes}</svg>` }) : null);
   const scroller = h('div.map-scroll', {}, sheet);
-  // The scroller's paper lines up with the sheet's cells.
-  requestAnimationFrame(() => { scroller.style.backgroundPosition = `${sheet.offsetLeft % 24}px ${sheet.offsetTop % 24}px`; });
+  // The paper starts under the status line, and lines up with the sheet's cells.
+  requestAnimationFrame(() => {
+    scroller.style.setProperty('--map-top', `${Math.ceil(line.el.getBoundingClientRect().bottom) + 6}px`);
+    document.querySelector('.screen')?.style.setProperty('--map-top', scroller.style.getPropertyValue('--map-top'));
+    scroller.style.backgroundPosition = `${sheet.offsetLeft % 24}px ${sheet.offsetTop % 24}px`;
+  });
   screen(topBar(),
     h('div.map-page', {},
       line.el,
       scroller,
       threats.size ? h('div.map-help.red', {}, t('Dashed circle: the boss wins a line there.')) : null));
   // Keep the newest marks in view, scrolling the sheet only, never the page.
-  const centre = (el) => ({ left: el.offsetLeft - scroller.clientWidth / 2 + el.offsetWidth / 2, top: el.offsetTop - scroller.clientHeight / 2 + el.offsetHeight / 2 });
+  // The middle of what shows below the status line.
+  const centre = (el) => {
+    const top = parseFloat(getComputedStyle(scroller).paddingTop) || 0;
+    return { left: el.offsetLeft - scroller.clientWidth / 2 + el.offsetWidth / 2, top: el.offsetTop - top - (scroller.clientHeight - top) / 2 + el.offsetHeight / 2 };
+  };
   requestAnimationFrame(() => {
     const target = (freshX && scroller.querySelector(`[data-k="${freshX}"]`)) || scroller.querySelector('.map-cell.reach');
     if (!target) return;
