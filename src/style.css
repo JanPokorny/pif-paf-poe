@@ -1021,3 +1021,19 @@ body:has(.duel) #toast.show { transform: translate(-50%, 0) rotate(-1deg); }
 .stone .cost { background: var(--note); border-radius: 1px; box-shadow: 1px 2px 3px rgba(60, 40, 0, 0.22); padding: 1px 3px; transform: rotate(5deg); left: auto; right: -5px; }
 /* Room between the arrows under the board and the buttons below them. */
 .duel .actions { margin-top: 14px; }
+/* The boss's new line on the map: the heart it costs, slapped over the middle of
+   it as the pencil finishes, then rising off the page. */
+.line-hurt {
+  position: absolute; z-index: 4; display: flex; align-items: center; gap: 2px; pointer-events: none;
+  font-family: var(--marker); font-size: 2.6rem; line-height: 1; color: var(--red);
+  text-shadow: 0 0 4px var(--paper), 0 0 8px var(--paper);
+  translate: -50% -50%; opacity: 0; animation: line-hurt 2.2s ease-out 2.4s forwards;
+}
+.line-hurt .icon { width: 0.9em; height: 0.9em; filter: url(#ink); }
+.line-hurt .icon path { fill: rgba(200, 55, 45, 0.35); }
+@keyframes line-hurt {
+  0% { opacity: 0; transform: scale(2.2) rotate(-12deg); }
+  12% { opacity: 1; transform: scale(1) rotate(-6deg); }
+  65% { opacity: 1; transform: translateY(-10px) rotate(-6deg); }
+  100% { opacity: 0; transform: translateY(-46px) rotate(-6deg); }
+}

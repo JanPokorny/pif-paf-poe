@@ -272,7 +272,8 @@ const blockName = () => t(['Thicket', 'Boulders', 'Crag'][terrain() - 1]);
 // a mark at a time.
 function mapScreen() {
   const map = run.map;
-  if (map.news === 'oline') flash = 'hurt';   // the hearts in the top bar take the hit
+  const bossLine = map.news === 'oline';
+  if (bossLine) flash = 'hurt';   // the hearts in the top bar take the hit
   // Your line has just opened the lair: it opens on the page once the marks are drawn.
   const opening = map.open && !map.doorHeard;
   const reach = new Set(R.reachable(run));
@@ -387,6 +388,7 @@ function mapScreen() {
   for (let j = 1; j < rows; j++) { const y = j * 100, w = ((j * 53) % 7) - 3 || 2; paths += `<path d="M4 ${y + w} C ${W * 0.33} ${y - w}, ${W * 0.66} ${y + w}, ${W - 4} ${y - w / 2}"/>`; }
   // Lines of three, crossed through: their marks are spent.
   let strikes = '';
+  let hurtAt = null;   // the middle of the boss's new line, where the lost heart shows
   for (const { mark, cells } of map.lines ?? []) {
     const [a, b] = [cells[0], cells[cells.length - 1]].map((k) => { const [x, y] = R.coords(k); return [(x - x0) * 100 + 50, (y - y0) * 100 + 50]; });
     const len = Math.hypot(b[0] - a[0], b[1] - a[1]), ux = (b[0] - a[0]) / len, uy = (b[1] - a[1]) / len;
@@ -394,11 +396,14 @@ function mapScreen() {
     const bend = 5, mx = (p[0] + q[0]) / 2 - uy * bend, my = (p[1] + q[1]) / 2 + ux * bend;
     const fresh = cells.includes(freshX) && mark === 'X' || cells.includes(lastO) && mark === 'O';
     strikes += `<path pathLength="100" class="${mark === 'X' ? 'x' : 'o'}${fresh ? ' fresh' : ''}" d="M${p[0]} ${p[1]} Q ${mx} ${my}, ${q[0]} ${q[1]}"/>`;
+    if (fresh && mark === 'O' && bossLine) hurtAt = [(a[0] + b[0]) / 2 / W * 100, (a[1] + b[1]) / 2 / H * 100];
   }
   const sheet = h('div.map-sheet', { style: `--cols: ${cols}; --rows: ${rows}` },
     h('div.board-lines', { html: `<svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" aria-hidden="true">${paths}</svg>` }),
     h('div.map-cells', {}, grid),
-    strikes ? h('div.map-strikes', { html: `<svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" aria-hidden="true">${strikes}</svg>` }) : null);
+    strikes ? h('div.map-strikes', { html: `<svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" aria-hidden="true">${strikes}</svg>` }) : null,
+    // The heart it costs, struck over the line as the pencil finishes it.
+    hurtAt ? h('div.line-hurt', { style: { left: `${hurtAt[0]}%`, top: `${hurtAt[1]}%` } }, `−${R.MAPCFG.lineDamage}`, h('span', { html: icon('heart') })) : null);
   const paper = h('div.map-paper', {}, sheet);
   const scroller = h('div.map-scroll', {}, paper);
   // A mouse drags the page about, as a finger does; a drag is not a tap on a square.
