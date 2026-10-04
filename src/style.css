@@ -1010,6 +1010,7 @@ body:has(.duel) #toast.show { transform: translate(-50%, 0) rotate(-1deg); }
 }
 .map-paper {
   position: relative; box-sizing: border-box; width: max-content; min-width: 100%; min-height: 100%;
+  display: flex;   /* the sheet's auto margins centre it both ways while it is smaller than the screen */
   padding: var(--map-top, 120px) 24px calc(56px + var(--safe-b));
   background-image: linear-gradient(var(--grid) 1px, transparent 1px), linear-gradient(90deg, var(--grid) 1px, transparent 1px);
   background-size: 24px 24px;
@@ -1084,3 +1085,6 @@ body:has(.duel) #toast.show { transform: translate(-50%, 0) rotate(-1deg); }
 /* A chosen target is shown by its stone pulsing faint, not by a ring. */
 .cell.chosen::after, .cell.target.chosen::after { opacity: 0; animation: none; }
 .enemy-hand .stone.chosen { outline: none; background: none; animation: preview-pulse 1.1s ease-in-out infinite; }
+/* Centred in what shows under the status line; auto margins, so a sheet bigger than the
+   screen still starts at its edge, scrollable to all of it. */
+.map-paper > .map-sheet { margin: auto; flex: none; }
