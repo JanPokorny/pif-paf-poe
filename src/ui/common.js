@@ -67,13 +67,12 @@ export function stoneEl(s, player = 'X', opts = {}) {
 }
 export function costDots(s) {
   const n = costOf(s);
-  return h('span.cost', { 'aria-label': t('{n} energy', { n }) }, ...Array.from({ length: n }, () => h('i')));
+  return h('span.cost', { 'aria-label': t('{n} energy', { n }) }, ...Array.from({ length: n }, () => h('i', { html: icon('energy') })));
 }
-// The energy you have, as dots: `used` of them filled.
+// The energy you have, as bolts: `used` of them filled.
 export function energyBar(used, total) {
   return h('div.energy-bar' + (used > total ? '.over' : ''), { 'aria-label': t('Energy {used}/{n}', { used, n: total }) },
-    h('span.energy-ico', { html: icon('energy') }),
-    ...Array.from({ length: Math.max(total, used) }, (_, i) => h('i' + (i < used ? '.on' : '') + (i >= total ? '.over' : ''))));
+    ...Array.from({ length: Math.max(total, used) }, (_, i) => h('i' + (i < used ? '.on' : '') + (i >= total ? '.over' : ''), { html: icon('energy') })));
 }
 
 export function updateStone(el, s, player, opts = {}) {
