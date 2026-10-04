@@ -245,7 +245,9 @@ export default {
   'The {parrot} copies {stone}!': '{parrot} opakuje: {stone}!',
   'Three in a row!': 'Tři v řadě!',
   '{enemy} made three in a row.': '{enemy} má tři v řadě.',
-  'The board is full — it goes to you, who moved second.': 'Deska je plná — patří tobě, začínal soupeř.',
+  'The board is full. It counts as yours, but costs you a heart.': 'Deska je plná. Počítá se ti, ale stojí tě srdce.',
+  'Draw': 'Remíza',
+  '= This ends in a draw: yours, for a heart.': '= Tohle skončí remízou: tvou, za srdce.',
   'The board is full — it goes to {enemy}, who moved second.': 'Deska je plná — bere ji {enemy}, začátek byl tvůj.',
   'Defeat': 'Prohra',
 

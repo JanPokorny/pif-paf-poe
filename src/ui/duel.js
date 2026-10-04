@@ -253,7 +253,8 @@ export function mountDuel(root, opts) {
     const ps = preview.state;
     if (!ps.over) return;
     if (ps.reason === 'line') lineLayer.innerHTML = lineSvg(winningLine(ps, ps.winner), ps.winner, true);
-    if (ps.winner === 'X') setStatus(t('✓ This wins the duel!'), 'win-note');
+    if (ps.winner === 'X' && ps.reason === 'full') setStatus(t('= This ends in a draw: yours, for a heart.'), 'win-note');
+    else if (ps.winner === 'X') setStatus(t('✓ This wins the duel!'), 'win-note');
     else setStatus(t('✗ This hands them the duel!'), 'lose-note');
   }
 
@@ -381,7 +382,7 @@ export function mountDuel(root, opts) {
     cells.forEach((c) => c.classList.remove('nogo', 'threat'));
 
     if (state.over) {
-      setStatus(state.winner === 'X' ? t('You win!') : t('{enemy} wins', { enemy: enemy.name }), state.winner === 'X' ? 'you' : 'enemy-done');
+      setStatus(state.winner === 'X' ? (state.reason === 'full' ? t('Draw') : t('You win!')) : t('{enemy} wins', { enemy: enemy.name }), state.winner === 'X' ? 'you' : 'enemy-done');
       renderActions([]);
       info.textContent = '';
       return;
@@ -717,6 +718,8 @@ export function mountDuel(root, opts) {
       for (const e of stoneEls.values()) if (line.includes(+e.dataset.at)) e.classList.add('in-line');
     }
     const won = state.winner === 'X';
+    // A full board that goes to you is a draw: it counts as won, for a heart.
+    const draw = won && state.reason === 'full';
     sfx(won ? 'win' : 'lose');
     musicEvent(won ? 'win' : 'lose');
     await sleep(900);
@@ -726,9 +729,10 @@ export function mountDuel(root, opts) {
       ? (won ? t(elko ? 'An L of three!' : 'Three in a row!') : t(elko ? '{enemy} made an L of three.' : '{enemy} made three in a row.', v))
       : state.rules.includes('patient')
         ? t('The board is full — it goes to {enemy} ({rule}).', { ...v, rule: RULES.patient.name })
-        : t(won ? 'The board is full — it goes to you, who moved second.' : 'The board is full — it goes to {enemy}, who moved second.', v);
-    const banner = h('div.result-banner.' + (won ? 'won' : 'lost'), {},
-      h('div.result-title', {}, won ? t('Victory!') : t('Defeat')),
+        : draw ? t('The board is full. It counts as yours, but costs you a heart.')
+          : t('The board is full — it goes to {enemy}, who moved second.', v);
+    const banner = h('div.result-banner.' + (draw ? 'draw' : won ? 'won' : 'lost'), {},
+      h('div.result-title', {}, draw ? t('Draw') : won ? t('Victory!') : t('Defeat')),
       h('div.result-why', {}, why));
     // The way on in the bottom bar, yellow, as on every screen.
     const bar = h('div.result-bar', {}, h('button.btn.primary.wide.big', { onclick: () => { banner.remove(); bar.remove(); onEnd(state.winner); } }, t('Continue')));

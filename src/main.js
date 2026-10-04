@@ -614,7 +614,14 @@ function duelScreen() {
       // One-shot stones played in the duel are gone from the pouch.
       R.spendOnce(run, run.lastHand, duelState.spent.X);
       const bonus = R.goldFromLine(duelState);   // the gold stones in your line pay
+      const draw = winner === 'X' && duelState.reason === 'full';
       duelState = null;
+      // A draw counts as won, but costs a heart first -- the last one ends the run.
+      if (draw) {
+        flash = 'hurt';
+        toast('−1 ❤', 'bad');
+        if (R.hurt(run, 1)) { route(); return; }
+      }
       if (winner === 'X') {
         const res = R.duelWon(run, bonus);
         if (res.kind === 'boss-continue') { if (bonus) toast(t('Gold stones: +{n} gold', { n: bonus }), 'good'); save(); moonrise(ENEMIES[duel.enemyId], route); return; }

@@ -38,8 +38,9 @@ duel, and a rule for who wins when someone runs out. The second version slows it
 - **Enemies grow as you do:** one special stone in act 1, two in act 2, three in act 3; an elite
   brings one more. Measured at the energy a player has by then (1, 4, 8: `node tools/lab.mjs
   enemies --energy 1,4,8`).
-- **The enemy always opens**, so a full board is always yours: hold out and you win. Plain
-  tic-tac-toe is a draw, so the opener's specials are what make a duel winnable for it.
+- **The enemy always opens**, so a full board is always yours, as a **draw**: it counts as a
+  win (the reward, the square), but costs you a heart. Holding out is a way through, not a free
+  one. Plain tic-tac-toe is a draw, so the opener's specials are what make a duel winnable for it.
 - **No spaces, no vetoes.** The spaces that switched a stone type off are gone. Regular enemies
   bring stones and, sometimes, a *condition* for both sides: **Gravity** (after every turn every
   stone falls as far as it can), **Hollow** (nobody plays the centre), **Open Hands** (either side

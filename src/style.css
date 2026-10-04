@@ -325,6 +325,8 @@ b { font-weight: 400; background: linear-gradient(transparent 55%, var(--hi) 55%
 }
 .result-banner::before { content: ''; position: absolute; top: -11px; left: calc(50% + var(--tape-x, 0px)); width: 90px; height: 24px; margin-left: -45px; background: var(--tape); transform: rotate(calc(2deg + var(--tape-r, 0deg))); }
 .result-banner.won { background: var(--mint); }
+.result-banner.draw { background: var(--sky); }
+.draw .result-title { color: var(--ink); }
 .result-banner.lost { background: var(--pink); }
 .result-banner.peek { top: auto; bottom: 8px; padding: 12px; }
 .result-banner.peek .result-why { display: none; }
