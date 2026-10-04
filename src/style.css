@@ -222,6 +222,7 @@ b { font-weight: 400; background: linear-gradient(transparent 55%, var(--hi) 55%
 .enemy-hand { min-height: 32px; }
 .enemy-hand .stone { cursor: pointer; }
 .enemy-hand .stone.lifted { transform: translateY(-6px) rotate(8deg) scale(1.15); }
+.player-hand .stone.lifted { transform: translateY(-8px) rotate(-6deg) scale(1.15); }
 .tier { display: inline-block; font-family: var(--hand); font-size: 0.9rem; padding: 0 8px; color: var(--ink); background: var(--hi); transform: rotate(-2deg); }
 .tier.elite { background: var(--pink); }
 .tier.boss { background: var(--sticky); outline: 1.5px solid var(--ink); }

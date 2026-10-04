@@ -652,8 +652,14 @@ export function mountDuel(root, opts) {
         applyAction(state, action);
         if (action.from === 'X') said('O', t('took your {stone}', { stone: stoneName(state.selected) }));
         // Show which stone it took: its kind lifts in the hand, the stone still counted there.
-        if (action.from === 'X') renderHands(state);
-        else {
+        if (action.from === 'X') {
+          // Taken from your hand (Open Hands): it lifts there, before it goes.
+          state.hands.X.push(state.selected);
+          renderHands(state);
+          const k = groupHand(state.hands.X).findIndex(({ st }) => sameKind(st, state.selected));
+          state.hands.X.pop();
+          hand.children[k]?.querySelector('.stone')?.classList.add('lifted');
+        } else {
           renderHands(state, { ...state, hands: { ...state.hands, O: [...state.hands.O, state.selected] } });
           const k = groupHand([...state.hands.O, state.selected]).findIndex(({ st }) => sameKind(st, state.selected));
           enemyHand.children[k]?.querySelector('.stone')?.classList.add('lifted');
