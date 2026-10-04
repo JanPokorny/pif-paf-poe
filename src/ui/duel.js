@@ -418,6 +418,11 @@ export function mountDuel(root, opts) {
     } else if (state.phase === 'effect') {
       const btns = renderStage();
       if (preview) cells[state.placedAt].classList.add('placed-at');
+      // The chosen square's stone pulses faint, as every stone a preview moves does.
+      cells.forEach((c, i) => {
+        if (!c.classList.contains('chosen')) return;
+        for (const e of stoneEls.values()) if (e.isConnected && +e.dataset.at === i) e.classList.add('moving');
+      });
       const what = stoneName(state.board[state.placedAt]);
       setStatus(preview ? t('✓ to confirm, tap again to take it back') : t('Choose how your {what} works', { what }), 'you');
       describeSelected(); if (!preview) coach('effect');
