@@ -109,7 +109,7 @@ export function mountDuel(root, opts) {
   const info = h('div.info-line');
 
   const header = h('div.enemy-bar' + (enemy.undead ? '.undead' : ''), {},
-    h('div.portrait', { onclick: () => toast(t('“{quote}”', { quote: enemy.quote ?? '…' })) }, h('div.photo', {}, enemy.emoji),
+    h('div.portrait', { onclick: () => toast(t('“{quote}”', { quote: enemy.quote ?? '…' })) }, h('div.photo', {}, enemy.emoji), enemy.undead ? h('span.rip', {}, 'R.I.P.') : null,
       enemy.tier && enemy.tier !== 'normal' ? h('span.portrait-tag', {}, t({ event: 'Challenge', elite: 'Elite', boss: 'Boss' }[enemy.tier])) : null),
     h('div.enemy-meta', {}, h('div.enemy-name', {}, enemy.name)), extra);
 

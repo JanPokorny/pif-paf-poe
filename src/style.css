@@ -1011,3 +1011,7 @@ body:has(.duel) #toast.show { transform: translate(-50%, 0) rotate(-1deg); }
 /* Room between stones with checkboxes, so no two boxes touch. */
 .stone-row.pick { gap: 2px 12px; }
 .stone-grid:has(.tick-stone) { column-gap: 14px; }
+/* A risen boss: R.I.P. scrawled in red across its photo. */
+.portrait .rip { position: absolute; left: 50%; top: 42%; z-index: 2; translate: -50% -50%; rotate: -32deg; pointer-events: none;
+  font-family: var(--marker); font-size: 0.85rem; line-height: 1; color: var(--red); white-space: nowrap; text-shadow: 0 0 2px rgba(255, 253, 246, 0.8); }
+.portrait.big .rip { font-size: 1.45rem; }
