@@ -630,7 +630,7 @@ function duelScreen() {
         }
       } else {
         const res = R.duelLost(run);
-        if (res.kind === 'rematch') toast(t('🎟️ {relic}: try again!', { relic: RELICS.rematch.name }));
+        if (res.kind === 'rematch') toast(t('🎟️ {relic}: try again!', { relic: RELICS.rematch.name }), 'good');
         else if (res.kind === 'dead') { /* recorded by the end screen */ }
         else if (res.kind === 'lost') { toast(`−${R.heartsLost(duel)} ❤`, 'bad'); flash = 'hurt'; }
         else if (res.kind === 'boss-out') flash = 'hurt';
@@ -861,7 +861,7 @@ function craftScreen() {
   screen(topBar(), h('div.page.rest', {},
     h('div.campfire', { html: icon('relic-anvil') }),
     h('h2', {}, t('Workshop')),
-    made ? h('p.event-result', {}, made)
+    made ? h('p.event-result.good', {}, made)
       : h('div.choices', {}, jobs.map((j) => h('button.choice' + (j.ok ? '' : '.disabled'), { disabled: !j.ok || undefined, onclick: j.go },
         h('b', {}, j.label), h('span.dim', {}, ' — ' + j.detail)))),
     // As everywhere: leaving dashed; once a job is done, leaving is the way on, in yellow.

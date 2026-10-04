@@ -71,6 +71,9 @@ b { font-weight: 400; background: linear-gradient(transparent 55%, var(--hi) 55%
 .icon-wrap { display: inline-flex; vertical-align: -0.12em; }
 
 /* ── Things to press ─────────────────────────────────────────────────────── */
+/* Sticky notes come in four colours: yellow is only ever something to press
+   (a button, an arrow, a "More →"); light green is good news, light red bad
+   news, light blue plain information. */
 /* A scrap of paper with a pencil outline; the important one is a sticky note. */
 .btn {
   display: inline-flex; align-items: center; justify-content: center; gap: 0.4em;
@@ -148,10 +151,6 @@ b { font-weight: 400; background: linear-gradient(transparent 55%, var(--hi) 55%
 
 .kits { display: flex; flex-direction: column; gap: 14px; }
 .kit { text-align: left; padding: 12px 12px 10px; display: flex; flex-direction: column; gap: 6px; position: relative; border: 0; border-radius: 2px; box-shadow: 2px 6px 10px -5px rgba(80, 60, 0, 0.45); }
-.kit:nth-child(1) { background: var(--sticky); transform: rotate(-0.6deg); }
-.kit:nth-child(2) { background: var(--sky); transform: rotate(0.5deg); }
-.kit:nth-child(3) { background: var(--mint); transform: rotate(-0.4deg); }
-.kit:nth-child(4) { background: var(--pink); transform: rotate(0.7deg); }
 .kit:active { translate: 1px 2px; }
 .kit.locked { opacity: 0.55; filter: grayscale(0.6); }
 .kit-head { display: flex; gap: 12px; align-items: center; }
@@ -225,7 +224,7 @@ b { font-weight: 400; background: linear-gradient(transparent 55%, var(--hi) 55%
 .player-hand .stone.lifted { transform: translateY(-8px) rotate(-6deg) scale(1.15); }
 .tier { display: inline-block; font-family: var(--hand); font-size: 0.9rem; padding: 0 8px; color: var(--ink); background: var(--hi); transform: rotate(-2deg); }
 .tier.elite { background: var(--pink); }
-.tier.boss { background: var(--sticky); outline: 1.5px solid var(--ink); }
+.tier.boss { background: var(--pink); outline: 1.5px solid var(--ink); }
 .tier.event { background: var(--sky); }
 .duel-side { display: flex; flex-direction: column; align-items: center; gap: 2px; }
 .boss-score { font-family: var(--marker); font-size: 0.85rem; color: var(--red); }
@@ -321,7 +320,7 @@ b { font-weight: 400; background: linear-gradient(transparent 55%, var(--hi) 55%
 
 .result-banner {
   position: absolute; left: 22px; right: 22px; top: 20%; z-index: 20; padding: 26px 18px 18px; text-align: center;
-  background: var(--sticky); box-shadow: 2px 12px 22px -6px rgba(60, 40, 0, 0.5); transform: rotate(-1.5deg);
+  background: var(--sky); box-shadow: 2px 12px 22px -6px rgba(60, 40, 0, 0.5); transform: rotate(-1.5deg);
   display: flex; flex-direction: column; gap: 10px; animation: slap 0.35s cubic-bezier(.3,1.4,.5,1);
 }
 .result-banner::before { content: ''; position: absolute; top: -11px; left: calc(50% + var(--tape-x, 0px)); width: 90px; height: 24px; margin-left: -45px; background: var(--tape); transform: rotate(calc(2deg + var(--tape-r, 0deg))); }
@@ -339,7 +338,6 @@ b { font-weight: 400; background: linear-gradient(transparent 55%, var(--hi) 55%
 /* ── The map: a game of tic-tac-toe with the act's boss ──────────────────── */
 .map-page { padding: 4px 16px calc(18px + var(--safe-b)); display: flex; flex-direction: column; gap: 8px; flex: 1; }
 .boss-door { display: flex; gap: 14px; align-items: center; padding: 12px 12px 12px 10px; position: relative; background: var(--card); border: 1.5px solid #c9c2ae; box-shadow: 1px 2px 0 rgba(0,0,0,0.06); text-align: left; width: 100%; border-radius: 3px; }
-.boss-door.open { background: var(--sticky); border: 0; animation: wiggle 1.4s ease-in-out infinite; box-shadow: 2px 6px 10px -4px rgba(80, 60, 0, 0.45); }
 .boss-door .door-text { flex: 1; font-size: 1rem; line-height: 1.2; }
 .boss-door .door-name { font-family: var(--marker); font-size: 1.15rem; color: var(--red); }
 .power { color: var(--red); font-family: var(--marker); }
@@ -376,7 +374,7 @@ b { font-weight: 400; background: linear-gradient(transparent 55%, var(--hi) 55%
 .act-intro { min-height: 100dvh; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; padding: 24px; gap: 12px; }
 .act-intro h1 { font-size: 2.6rem; transform: rotate(-2deg); }
 .act-n { font-family: var(--marker); color: var(--red); font-size: 1.2rem; }
-.rules-note { background: var(--sticky); padding: 16px 16px 12px; transform: rotate(1deg); box-shadow: 2px 6px 10px -4px rgba(80, 60, 0, 0.45); max-width: 360px; text-align: left; position: relative; font-size: 1.05rem; }
+.rules-note { background: var(--sky); padding: 16px 16px 12px; transform: rotate(1deg); box-shadow: 2px 6px 10px -4px rgba(80, 60, 0, 0.45); max-width: 360px; text-align: left; position: relative; font-size: 1.05rem; }
 .rules-note::before { content: ''; position: absolute; top: -10px; left: calc(50% + var(--tape-x, 0px)); width: 70px; height: 20px; margin-left: -35px; background: var(--tape); transform: rotate(calc(-3deg + var(--tape-r, 0deg))); }
 
 /* ── Before a duel ───────────────────────────────────────────────────────── */
@@ -447,7 +445,7 @@ b { font-weight: 400; background: linear-gradient(transparent 55%, var(--hi) 55%
 .choice { text-align: left; padding: 12px 14px; font-size: 1.05rem; }
 .choice:nth-child(odd) { transform: rotate(-0.4deg); }
 .choice.disabled { opacity: 0.4; }
-.event-result { font-size: 1.15rem; padding: 14px; background: var(--sticky); transform: rotate(-0.6deg); box-shadow: 2px 6px 10px -5px rgba(80, 60, 0, 0.45); }
+.event-result { font-size: 1.15rem; padding: 14px; background: var(--sky); transform: rotate(-0.6deg); box-shadow: 2px 6px 10px -5px rgba(80, 60, 0, 0.45); }
 
 .end { text-align: center; align-items: center; min-height: 100dvh; justify-content: center; }
 .stats { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; width: 100%; }
@@ -505,7 +503,7 @@ b { font-weight: 400; background: linear-gradient(transparent 55%, var(--hi) 55%
 /* A sticky note slapped at the top of the page. */
 #toast {
   position: fixed; left: 50%; bottom: calc(14px + var(--safe-b)); z-index: 100; max-width: 90vw; text-align: center;
-  background: var(--sticky); padding: 10px 16px; font-size: 1.05rem;
+  background: var(--sky); padding: 10px 16px; font-size: 1.05rem;
   box-shadow: 2px 8px 14px -6px rgba(80, 60, 0, 0.55);
   opacity: 0; transform: translate(-50%, 30px) rotate(-2deg); transition: opacity 0.2s, transform 0.2s; pointer-events: none;
 }
@@ -580,7 +578,7 @@ b { font-weight: 400; background: linear-gradient(transparent 55%, var(--hi) 55%
 .facts-card .fact.warn { background: var(--hi); }
 .plus-note { font-size: 0.72rem; color: var(--pencil); line-height: 1.05; }
 .stone-grid.upgrades { grid-template-columns: repeat(2, 1fr); }
-.coach { color: var(--ink); background: var(--sticky); padding: 2px 6px; box-shadow: 1px 3px 5px -3px rgba(80,60,0,.5); display: inline-block; transform: rotate(-0.5deg); }
+.coach { color: var(--ink); background: var(--sky); padding: 2px 6px; box-shadow: 1px 3px 5px -3px rgba(80,60,0,.5); display: inline-block; transform: rotate(-0.5deg); }
 .map-cell.boss-threat::after { content: ''; position: absolute; inset: 14%; border: 2.5px dashed rgba(200, 55, 45, 0.6); border-radius: 50%; pointer-events: none; }
 
 /* Ink art replaces the stamped emoji where it exists. */
@@ -687,7 +685,7 @@ h1, h2, .btn.primary, .enemy-name, .card-name, .section-label { letter-spacing: 
 .pebble-mini .inf { right: -4px; bottom: -4px; font-size: 0.9rem; }
 .enemy-hand .pebble-mini { margin-right: 4px; }
 .enemy-hand .stone.borrow { cursor: pointer; }
-.pick-note { flex: none; max-width: 92px; margin-left: 4px; padding: 5px 8px 6px; background: var(--sticky); font-family: var(--hand); font-size: 0.85rem; line-height: 1.1; color: var(--ink); text-align: center;
+.pick-note { flex: none; max-width: 92px; margin-left: 4px; padding: 5px 8px 6px; background: var(--sky); font-family: var(--hand); font-size: 0.85rem; line-height: 1.1; color: var(--ink); text-align: center;
   transform: rotate(4deg); box-shadow: 1px 2px 4px rgba(0, 0, 0, 0.16); border-radius: 1px 1px 2px 8px; animation: fade 0.3s; }
 .enemy-hand .stone.forbidden { opacity: 0.35; }
 .enemy-hand .stone.selected { transform: translateY(4px) scale(1.12); outline: 3px solid var(--hi); outline-offset: 2px; border-radius: 50%; }
@@ -1091,3 +1089,4 @@ body:has(.duel) #toast.show { transform: translate(-50%, 0) rotate(-1deg); }
 /* A square a restriction closes, in a card's example: struck through in red pencil, one after another. */
 .demo-board.anim .demo-cell.no { animation: mark-in 0.35s ease-out var(--d, 0s) both; }
 @keyframes mark-in { from { opacity: 0; transform: scale(0.6); } }
+.event-result.good { background: var(--mint); }
