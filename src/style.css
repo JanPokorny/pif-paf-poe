@@ -913,7 +913,7 @@ body:has(.duel) #toast.show { transform: translate(-50%, 0) rotate(-1deg); }
 
 /* A duel's rules and conditions: each a slip of paper, its icon on the left. */
 .mod-notes { display: flex; flex-direction: column; gap: 8px; margin: 4px 0 10px; }
-.mod-note { display: flex; align-items: center; gap: 12px; width: 100%; text-align: left; font: inherit; color: var(--ink); border: 0; cursor: pointer;
+.mod-note { display: flex; align-items: center; gap: 12px; width: 100%; text-align: left; font: inherit; color: var(--ink); border: 0;
   padding: 8px 12px; background: var(--card); border-radius: 2px; box-shadow: 1px 3px 6px rgba(0, 0, 0, 0.14);
   background-image: repeating-linear-gradient(transparent 0 23px, var(--grid) 23px 24px); }
 .mod-note:nth-child(odd) { transform: rotate(-0.6deg); } .mod-note:nth-child(even) { transform: rotate(0.5deg); }

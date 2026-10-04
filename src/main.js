@@ -4,7 +4,7 @@
 import { STONES, CONDS, RULES, createGame } from './engine.js';
 import { RELICS, OLD_PLUS_RELICS, ENEMIES, ACTS, EVENTS } from './content.js';
 import * as R from './run.js';
-import { h, hideToast, tapeUp, art, relicArt, scribbleX, scribbleO, stoneEl, iconEl, toast, modal, ask, tickStone, infoStone, infoRelic, infoRule, infoThing, stoneCard, relicCard, stoneName, langToggle, energyBar, statusLine } from './ui/common.js';
+import { h, hideToast, tapeUp, art, relicArt, scribbleX, scribbleO, stoneEl, iconEl, toast, modal, ask, tickStone, infoStone, infoRelic, infoThing, stoneCard, relicCard, stoneName, langToggle, energyBar, statusLine } from './ui/common.js';
 import { icon } from './icons.js';
 import { mountDuel } from './ui/duel.js';
 import { sfx, soundOn, setSound } from './sound.js';
@@ -559,11 +559,12 @@ function preDuel() {
   const tierLabel = { normal: '', elite: t('Elite'), boss: t('Boss'), event: t('Challenge') }[duel.tier];
   // What makes this duel different, each on its own slip of paper: the icon,
   // then its name and what it does. A boss's rules favour it; conditions hold for both.
-  const note = (kind, ico, name, text, onclick) => h(`button.mod-note.${kind}`, { onclick },
+  // They show the whole text, so there is nothing more to open.
+  const note = (kind, ico, name, text) => h(`div.mod-note.${kind}`, {},
     h('span.mod-ico', { html: ico }), h('span.mod-body', {}, h('span.mod-title', {}, name), h('span.mod-text', {}, text)));
   const facts = [
-    ...(duel.rules ?? []).map((r) => note('rule', icon(`rule-${r}`), RULES[r].name, RULES[r].text, () => infoRule('rule', r))),
-    ...(duel.conds ?? []).map((c) => note('cond', icon(`cond-${c}`), CONDS[c].name, CONDS[c].text, () => infoRule('cond', c))),
+    ...(duel.rules ?? []).map((r) => note('rule', icon(`rule-${r}`), RULES[r].name, RULES[r].text)),
+    ...(duel.conds ?? []).map((c) => note('cond', icon(`cond-${c}`), CONDS[c].name, CONDS[c].text)),
     duel.quirk ? note('quirk', icon('star'), R.QUIRKS[duel.quirk].name, R.QUIRKS[duel.quirk].text) : null,
   ].filter(Boolean);
   const canBack = !duel.event;
