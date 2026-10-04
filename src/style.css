@@ -662,7 +662,7 @@ body:has(.duel) #toast.show { transform: translate(-50%, 0) rotate(-1deg); }
 .tick-stone:not(.on) > .tick-face { opacity: 0.4; }
 .tick-stone:nth-child(even) .stone { --tilt: 2deg; }
 .tick-box {
-  position: absolute; bottom: -1px; left: -1px; z-index: 2; width: 23px; height: 23px; padding: 0;
+  position: absolute; bottom: -6px; left: -6px; z-index: 2; width: 23px; height: 23px; padding: 0;
   background: var(--card); border: 2px solid var(--pencil); border-radius: 3px 5px 2px 4px; transform: rotate(-4deg);
   box-shadow: 1px 1px 0 rgba(43, 42, 51, 0.15);
 }
@@ -671,7 +671,7 @@ body:has(.duel) #toast.show { transform: translate(-50%, 0) rotate(-1deg); }
 .tick-box svg { position: absolute; inset: 2px; width: calc(100% - 4px); height: calc(100% - 4px); overflow: visible; opacity: 0; }
 .tick-box .scribble path { stroke-width: 13; }
 .tick-box[aria-checked="true"] svg { opacity: 1; }
-.stone-grid .tick-box { bottom: auto; top: 30px; left: 2px; }
+.stone-grid .tick-box { bottom: auto; top: 34px; left: -3px; }
 .tick-name { display: block; }
 .stone-pick .hand-count, .hand-slot .hand-count { top: -2px; right: -4px; }
 .hand-slot { -webkit-touch-callout: none; user-select: none; }
