@@ -440,12 +440,12 @@ function mapScreen() {
     h('div.board-lines', { html: `<svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" aria-hidden="true">${paths}</svg>` }),
     h('div.map-cells', {}, grid),
     strikes ? h('div.map-strikes', { html: `<svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" aria-hidden="true">${strikes}</svg>` }) : null);
-  const scroller = h('div.map-scroll', {}, sheet);
+  const paper = h('div.map-paper', {}, sheet);
+  const scroller = h('div.map-scroll', {}, paper);
   // The paper starts under the status line, and lines up with the sheet's cells.
   requestAnimationFrame(() => {
-    scroller.style.setProperty('--map-top', `${Math.ceil(line.el.getBoundingClientRect().bottom) + 6}px`);
-    document.querySelector('.screen')?.style.setProperty('--map-top', scroller.style.getPropertyValue('--map-top'));
-    scroller.style.backgroundPosition = `${sheet.offsetLeft % 24}px ${sheet.offsetTop % 24}px`;
+    document.querySelector('.screen')?.style.setProperty('--map-top', `${Math.ceil(line.el.getBoundingClientRect().bottom) + 6}px`);
+    paper.style.backgroundPosition = `${sheet.offsetLeft % 24}px ${sheet.offsetTop % 24}px`;
   });
   screen(topBar(),
     h('div.map-page', {},
@@ -455,8 +455,12 @@ function mapScreen() {
   // Keep the newest marks in view, scrolling the sheet only, never the page.
   // The middle of what shows below the status line.
   const centre = (el) => {
-    const top = parseFloat(getComputedStyle(scroller).paddingTop) || 0;
-    return { left: el.offsetLeft - scroller.clientWidth / 2 + el.offsetWidth / 2, top: el.offsetTop - top - (scroller.clientHeight - top) / 2 + el.offsetHeight / 2 };
+    const top = parseFloat(getComputedStyle(paper).paddingTop) || 0;
+    const r = el.getBoundingClientRect(), sr = scroller.getBoundingClientRect();
+    return {
+      left: scroller.scrollLeft + r.left - sr.left - scroller.clientWidth / 2 + r.width / 2,
+      top: scroller.scrollTop + r.top - sr.top - top - (scroller.clientHeight - top) / 2 + r.height / 2,
+    };
   };
   requestAnimationFrame(() => {
     const target = (freshX && scroller.querySelector(`[data-k="${freshX}"]`)) || scroller.querySelector('.map-cell.reach');

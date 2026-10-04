@@ -996,14 +996,19 @@ body:has(.duel) #toast.show { transform: translate(-50%, 0) rotate(-1deg); }
    is a whole number of them, and the board is nudged (in JS) onto its lines. */
 .duel { --cell: max(48px, round(down, min(calc((100vw - 32px) / 3.9), calc((100dvh - 430px) / 4.04), 96px), 24px)); }
 .map-sheet { --cell: 72px; }
-/* The map is the whole page: the sheet of paper scrolls with it, its squares
-   lined up with the cells, under the top bar and the status line. */
+/* The map is the whole page, under the top bar and the status line. Its paper
+   is drawn on a sheet inside the scroller, not on the scroller (a background
+   attached to scrolled content is repainted every frame, and lags on phones):
+   paper and map are one layer and move as one. */
 .map-scroll {
-  position: fixed; inset: 0; z-index: 0; max-height: none; min-height: 0; margin: 0;
-  padding: var(--map-top, 120px) 24px calc(56px + var(--safe-b));
+  position: fixed; inset: 0; z-index: 0; max-height: none; min-height: 0; margin: 0; padding: 0;
   background-color: var(--paper);
+}
+.map-paper {
+  position: relative; box-sizing: border-box; width: max-content; min-width: 100%; min-height: 100%;
+  padding: var(--map-top, 120px) 24px calc(56px + var(--safe-b));
   background-image: linear-gradient(var(--grid) 1px, transparent 1px), linear-gradient(90deg, var(--grid) 1px, transparent 1px);
-  background-size: 24px 24px; background-attachment: local;
+  background-size: 24px 24px;
 }
 .screen:has(> .map-page) .topbar, .map-page > .status-line { position: relative; z-index: 2; }
 .map-page > .map-help { position: fixed; left: 0; right: 0; bottom: calc(14px + var(--safe-b)); z-index: 2; }
@@ -1029,3 +1034,24 @@ body:has(.duel) #toast.show { transform: translate(-50%, 0) rotate(-1deg); }
 .stone.gold::before { border-color: #c9940f; box-shadow: 0 0 0 1.5px #f2cf5b, 0 0 7px rgba(240, 190, 40, 0.55); animation: gold-glint 3.2s ease-in-out infinite; }
 @keyframes gold-glint { 0%, 70%, 100% { box-shadow: 0 0 0 1.5px #f2cf5b, 0 0 5px rgba(240, 190, 40, 0.45); } 80% { box-shadow: 0 0 0 2px #fff3b8, 0 0 12px rgba(255, 210, 60, 0.9); } }
 .reward-note { text-align: center; margin: -4px 0 0; font-size: 0.95rem; }
+
+/* ── Cards on ruled paper ───────────────────────────────────────────────────
+   An info card's text sits on the sheet's rules: every line is one 26px rule
+   high, and everything above the buttons is a whole number of rules tall. The
+   rules start a little below the content's top so that each baseline sits just
+   on one. */
+.modal:has(> .info-stone) { background-position: 0 0, 0 var(--rule-at, 18px); background-attachment: local; }
+.info-stone { gap: 0; line-height: 26px; }
+.info-stone > p { margin: 0; }
+.info-stone > p + p, .info-stone > .demo + p { margin-top: 0; }
+.info-head { align-items: flex-start; height: 78px; }
+.info-head .stone, .info-head .relic-token, .info-head .trick-token { margin-top: 2px; }
+.info-name { line-height: 26px; }
+.info-rarity { line-height: 26px; }
+.info-stone .demo { margin: 0; gap: 0 12px; }
+.info-stone .demo-board { margin: 11px 0; }   /* 108px of board in 130: five rules */
+.info-stone .demo-cap { line-height: 26px; }
+.plus-list { gap: 0; }
+.plus-row { align-items: flex-start; line-height: 26px; }
+.plus-row .stone.mini { --size: 22px; margin-top: 2px; }
+.info-stone > .info-actions, .info-stone > .btn { margin-top: 14px; }
