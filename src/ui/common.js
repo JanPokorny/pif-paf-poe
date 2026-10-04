@@ -134,10 +134,30 @@ export function tapeUp(root) {
   }
 }
 
+// A sheet is ruled paper, a rule every 26px. Its text is written one line to a
+// rule; every other block (a grid of stones, a button, a board) is topped up
+// with margin to a whole number of rules, so the text below stays on them --
+// also when the sheet redraws.
+const RULE = 26;
+function onRules(el) {
+  el.classList.add('ruled');
+  const snap = () => {
+    for (const c of el.children) {
+      c.style.marginBottom = '';
+      const extra = (RULE - (c.offsetHeight % RULE)) % RULE;
+      if (extra) c.style.marginBottom = `${extra}px`;
+    }
+  };
+  new window.MutationObserver(snap).observe(el, { childList: true });
+  new window.ResizeObserver(snap).observe(el);
+  snap();
+}
+
 // A modal sheet. Returns a close function.
 export function modal(content, { onClose, dismissable = true, cls = '' } = {}) {
   const back = h('div.modal-back');
   const sheet = h(`div.modal.${cls || 'plain'}`, {}, content);
+  if (content.matches?.('.pouch-view, .menu, .ask, .info-stone')) requestAnimationFrame(() => onRules(content));
   tapeUp(sheet);
   back.append(sheet);
   const close = () => {
