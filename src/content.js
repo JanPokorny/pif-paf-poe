@@ -81,7 +81,7 @@ export { ONCE_STONES, PLUS_STONES };
 // An enemy's special stones are its `core` plus draws from its `pool` up to
 // its act's hand size, and Pebbles make up the rest. `iters` and `blunder` are
 // its brain. A `cond` is its home rule, for both sides; others may roll one.
-// Tuned with `node tools/lab.mjs enemies` (see docs/STONES-REPORT.md).
+// Tuned with `node tools/lab.mjs enemies`.
 //
 // A boss brings no special stones at all: it has `rules` that favour it, and
 // once beaten (or grown stronger on the map) it rises with `rules2`, thinking

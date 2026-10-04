@@ -130,7 +130,7 @@ its own, with its boss.
 - **Terrain by act.** The Meadow's obstacles are firs and its empty ground tiny shrubs; the
   Quarry's are boulders and gravel; the Summit's crags and tufts of grass in the snow.
 
-Balance was measured and retuned in `docs/STONES-REPORT.md`; the run bots (see Difficulty) win a third to two thirds of their runs at heat 0.
+Balance was measured and retuned with `tools/lab.mjs`; the run bots (see Difficulty) win a third to two thirds of their runs at heat 0.
 
 ## The stones
 
@@ -146,8 +146,7 @@ stone's card shows an example computed by the engine.
 - **Rarity follows power** (`node tools/lab.mjs matrix`, `power`, `effects`), and power decides
   the energy cost.
 
-`docs/STONE-FAMILIES.md` has every stone, its + form and their measurements. `docs/STONES-REPORT.md`
-is the older, longer report (duds, choices, skill, pairs, boss builds) from before the + tier.
+`docs/STONE-FAMILIES.md` has every stone, its + form and their measurements.
 
 ## Difficulty
 
