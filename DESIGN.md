@@ -134,15 +134,32 @@ Balance was measured and retuned with `tools/lab.mjs`; the run bots (see Difficu
 
 ## The stones
 
-18 special stones and the Pebble, three of them one-shots (Relocate, Muffle, Mind Control). Every
-stone's card shows an example computed by the engine.
+18 special stones and the Pebble, three of them glass by nature (Relocate, Muffle, Mind Control).
+Every stone's card shows an example computed by the engine.
 
 - **"Beside" always means the four squares that share a side**, for every stone and boss rule
   (Clinch included). The map is the one place where "next to" counts corners.
-- **The + tier.** Twelve stones have a + form, the same stone with a wider effect (usually from
-  beside to its whole row and column). A + stone comes as a one-shot (in one-shot rewards and
-  shop shelves) or through a talisman that makes every stone of that kind you bring its + form,
+- **The + tier.** Eleven stones have a + form, the same stone with a wider effect (usually from
+  beside to its whole row and column). A + stone comes in glass (in glass rewards and shop
+  shelves) or through a talisman that makes every stone of that kind you bring its + form,
   offered only for kinds in your pouch. A + stone has a small + in the corner of its face.
+  Magnet has none: a Magnet reaching its whole row and column narrowed the enemy less than one
+  reaching only beside it.
+- **Materials.** A stone is plain, or one of three materials:
+  - **glass** (a dashed outline): played once, then gone from the pouch; always the + form where
+    there is one, always 1 energy. The one-use stones of old are glass.
+  - **marble** (a cut, many-sided outline): goes anywhere, whatever the other side's stones
+    restrict (conditions and boss rules still hold). One energy more. Enemies from act 2 on
+    sometimes bring it.
+  - **gold** (a glinting gold rim): +10 gold for each gold stone in your winning three in a row.
+    One energy more. Only yours.
+
+  Marble and gold turn up now and then among rewards and in the shop (dearer there), at the
+  workshop (made from a stone of yours, for gold, in place of a trade) and from the Stonemason
+  event. A trade at the workshop keeps the material of what went in. + talismans upgrade them
+  as any stone.
+- **Mountain is only a wall**: nothing moves it, but it obeys restrictions like any stone.
+  Going anywhere is marble's now.
 - **Rarity follows power** (`node tools/lab.mjs matrix`, `power`, `effects`), and power decides
   the energy cost.
 

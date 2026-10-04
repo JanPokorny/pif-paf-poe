@@ -5,8 +5,8 @@
 Tic-tac-toe where the pieces move, as a mobile-friendly browser roguelike drawn on a notebook
 page. Duel a cast of enemies on a 3×3 board. Every duel you bring the special stones
 your energy pays for — stones that *do something* when placed — and Pebbles fill the hand up to
-four. Stones can be crafted, two into one of a higher tier, along the way. One-shot stones do one strong
-thing and are gone from the pouch once played. Some duels carry a condition for both sides
+four. Stones can be crafted, two into one of a higher tier, along the way. Glass stones do one strong
+thing and are gone from the pouch once played; marble ones go anywhere, gold ones pay. Some duels carry a condition for both sides
 (gravity, a hollow centre, open hands); bosses bring no stones at all, only a rule in their
 favour.
 
@@ -31,7 +31,7 @@ npx http-server -c-1 .
 
 | path | what |
 |---|---|
-| `src/engine.js` | the duel rules: stones, one-shot stones, conditions, boss rules. Pure, shared by UI and AI |
+| `src/engine.js` | the duel rules: stones, glass stones, conditions, boss rules. Pure, shared by UI and AI |
 | `src/ai.js` | the enemy: Monte Carlo tree search over the engine (runs in a worker via `src/brain.js`) |
 | `src/sound.js`, `src/music.js` | sound effects; the music player: pre-rendered loops (`music/`, composed in `tools/music/score.py`, rendered by FluidSynth with `tools/music/build.py`), crossfaded by scene, with stingers on the beat |
 | `src/content.js` | relics, enemies, acts, events |

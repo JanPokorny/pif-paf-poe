@@ -166,16 +166,18 @@ const RAW = {
     `<ellipse cx="1" cy="-2.6" rx="5.8" ry="3.6"/>` +
     P('M -3.2 -0.2 C -4.6 1.6 -2 3 -3 4.4 C -3.8 5.6 -5.6 5.8 -6.6 7') + DOT(-3.2, -0.2, 1.3),
 
+  // Two stones, one in front on the left and one behind on the right, and an
+  // arrow over them both ways.
   swap:
-    DOT(-5.2, 1.6, 1.9) + C(5.2, 1.6, 1.7, SW(1.3)) +
-    P('M -5.2 -2 C -4 -6.4 2.8 -6.8 4.5 -3.6') + head(5.2, -1.4, 72) +
-    P('M 1.6 5.6 C 0 6.8 -1.8 6.8 -3 6.2') + head(-4.2, 5.2, 205, 2.2, 1.3),
+    C(3.6, 3, 3.9, SW(1.3)) + DOT(-2.9, 3.7, 4.6) +
+    P('M -3.6 -2.4 V -3.8 C -3.6 -9 4.2 -9 4.2 -3.8 V -2.9') + head(-3.6, -1.3, 90, 2.4, 1.6) + head(4.2, -1.8, 90, 2.4, 1.6),
 
 
+  // A frog's head: two eyes on top, a wide grin.
   frog:
-    DOT(0, 4.2, 2.2) +
-    P('M -6.4 4.6 Q -3.5 -9 4.6 1.8') + head(6, 4.6, 63) +
-    P('M -7 7 H -4.5 M 4.5 7 H 7', SW(1.1)),
+    P('M -5.7 -1.2 C -8 0.8 -7.6 6.3 0 6.4 C 7.6 6.3 8 0.8 5.7 -1.2 M -1.3 -1.9 Q 0 -1.3 1.3 -1.9') +
+    C(-3.6, -3, 2.4) + C(3.6, -3, 2.4) + DOT(-3.4, -2.8, 1.05) + DOT(3.8, -2.8, 1.05) +
+    P('M -4 2.6 Q 0 5.2 4 2.6', SW(1.1)),
 
 
   // A small fire with the stones going round it.
@@ -252,7 +254,8 @@ const RAW = {
   // ---------- UI ----------
   heart: P('M 0 6.2 C -4 3.4 -7 0.6 -7 -2.2 C -7 -4.6 -5.2 -6 -3.4 -6 C -1.8 -6 -0.6 -5 0 -3.8 C 0.6 -5 1.8 -6 3.4 -6 C 5.2 -6 7 -4.6 7 -2.2 C 7 0.6 4 3.4 0 6.2 Z'),
 
-  coin: C(0, 0, 6.6) + C(0, 0, 3.6, SW(1.1)),
+  // Filled pale gold, as the heart and the bolt have their washes.
+  coin: C(0, 0, 6.6, ' fill="#f1d98a"') + C(0, 0, 3.6, SW(1.1)),
   'chevron-down': P('M -5 -2 L 0 3.2 L 5 -2', SW(1.8)),
   // Energy: a bolt.
   energy: P('M 2 -7.6 L -4.6 1.2 H -0.4 L -2 7.6 L 4.6 -1.2 H 0.4 Z', ' fill="currentColor"' + SW(1.1)),

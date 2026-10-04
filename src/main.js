@@ -70,8 +70,6 @@ function topBar(menu = showMenu) {
     hearts,
     h('div.gold', {}, h('span', { html: icon('coin') }), run.gold),
     h('div.energy', { onclick: () => toast(t('Energy: what your stones may cost together in a duel.')) }, h('span', { html: icon('energy') }), R.energyOf(run)),
-    // On a narrow screen only the act's number: the place name gives way.
-    h('div.where', {}, t('Act {n}', { n: run.act }), h('span.where-name', {}, ` · ${ACTS[run.act - 1].name.replace(/^The /, '')}`)),
     h('button.icon-btn', { onclick: showPouch, 'aria-label': t('Your pouch') }, h('span', { html: icon('hand') })),
     h('button.icon-btn', { onclick: menu, 'aria-label': t('Menu') }, h('span', { html: icon('gear') })));
 }
@@ -178,6 +176,8 @@ function migrate() {
     if (to.endsWith('+')) { st.plus = true; st.once = true; }
   }
   run.pouch = run.pouch.filter((st) => STONES[st.type]);
+  // A + form since retired (Magnet+): the plain stone.
+  for (const st of run.pouch) if (st.plus && !STONES[st.type].plus) delete st.plus;
   // Energy in place of slots, and no Pebbles in the pouch: a slot past four
   // becomes energy, and each act already climbed one more.
   if ((run.v ?? 2) < 4) {
@@ -353,7 +353,7 @@ function mapScreen() {
           if (!can) {
             const why = kind === 'rock' ? t('{what}: no step, no line through it.', { what: blockName() })
               : c.mark === 'X' ? t('You have been here.')
-                : c.mark === 'O' ? t('{boss} took this square.', { boss: boss.name })
+                : c.mark === 'O' ? t('The boss took this square.')
                   : c.mark === 'S' ? t('Burned: only the boss may take it.')
                     : t('Too far: step next to an X or an O first.');
             toast(why);
@@ -407,10 +407,10 @@ function mapScreen() {
     const node = (NODE_NAME[e.node] ?? '').toLowerCase();
     return e.m === 'x' ? [t('You mark the {node} square.', { node }), 'you']
       : e.m === 's' ? [t('You lost there: the {node} square burns.', { node }), 'you']
-        : e.m === 'o' ? [t('{boss} marks the {node} square.', { boss: boss.name, node }), 'bad']
-          : e.m === 'oline' ? [t('{boss}: three in a row — −{n} ❤', { boss: boss.name, n: e.n }), 'bad']
+        : e.m === 'o' ? [t('The boss marks the {node} square.', { node }), 'bad']
+          : e.m === 'oline' ? [t('The boss made three in a row: −{n} ❤', { n: e.n }), 'bad']
             : e.m === 'open' ? [t('Three in a row: the lair opens!'), 'good']
-              : e.m === 'thrown' ? [t('{boss} throws you out (−{n} ❤). The lair is shut again.', { boss: bossName, n: e.n }), 'bad'] : ['', ''];
+              : e.m === 'thrown' ? [t('The boss throws you out (−{n} ❤). The lair is shut again.', { n: e.n }), 'bad'] : ['', ''];
   };
   const line = statusLine({ history: map.log.map((e) => { const [text, kind] = say(e); return { text, kind }; }) });
   map.log.push(...news.map(([, e]) => e));
@@ -441,6 +441,8 @@ function mapScreen() {
     h('div.map-cells', {}, grid),
     strikes ? h('div.map-strikes', { html: `<svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" aria-hidden="true">${strikes}</svg>` }) : null);
   const scroller = h('div.map-scroll', {}, sheet);
+  // The scroller's paper lines up with the sheet's cells.
+  requestAnimationFrame(() => { scroller.style.backgroundPosition = `${sheet.offsetLeft % 24}px ${sheet.offsetTop % 24}px`; });
   screen(topBar(),
     h('div.map-page', {},
       line.el,
@@ -572,7 +574,6 @@ function preDuel() {
       }), duel.handO.some((s) => s.type === 'pebble') ? pebbles('O', duel.handO.filter((s) => s.type === 'pebble').length, duel.handO.length) : null),
       h('div.section-label.with-bar', {}, h('span', {}, t('Your stones')), bar),
       grid,
-      run.pouch.length ? h('div.press-hint', {}, t('Tick the stones to take into the duel. Tap a stone for its card.')) : null,
       h('div.sticky-bottom.pair', {},
         canBack ? h('button.btn.ghost.big.back-map', { onclick: () => { R.retreat(run); route(); } }, h('span', { html: icon('back') }), t('Back to the map')) : null,
         fight)));
@@ -600,10 +601,11 @@ function duelScreen() {
     onEnd: (winner) => {
       // One-shot stones played in the duel are gone from the pouch.
       R.spendOnce(run, run.lastHand, duelState.spent.X);
+      const bonus = R.goldFromLine(duelState);   // the gold stones in your line pay
       duelState = null;
       if (winner === 'X') {
-        const res = R.duelWon(run);
-        if (res.kind === 'boss-continue') { save(); moonrise(ENEMIES[duel.enemyId], route); return; }
+        const res = R.duelWon(run, bonus);
+        if (res.kind === 'boss-continue') { if (bonus) toast(t('Gold stones: +{n} gold', { n: bonus }), 'good'); save(); moonrise(ENEMIES[duel.enemyId], route); return; }
         if (res.kind === 'reward' && duel.tier === 'boss') {
           meta.beaten = { ...(meta.beaten ?? {}), [duel.enemyId]: true };
           saveMeta();
@@ -657,6 +659,7 @@ function rewardScreen() {
   const rw = run.pending;
   const parts = [h('h1.reward-title', {}, rw.gift ? t('A gift!') : rw.tier === 'boss' ? t('Boss defeated!') : t('Victory!'))];
   if (rw.gold) parts.push(h('div.reward-gold', {}, h('span', { html: icon('coin') }), t('+{n} gold', { n: rw.gold })));
+  if (rw.goldStones) parts.push(h('p.dim.reward-note', {}, t('{n} of it from your gold stones.', { n: rw.goldStones })));
   if (rw.energy) parts.push(h('div.reward-gold.reward-energy', {}, h('span', { html: icon('energy') }), t('+{n} energy', { n: rw.energy })));
   if (rw.relic && !rw.taken.relic) {
     R.gainRelic(run, rw.relic);
@@ -673,22 +676,25 @@ function rewardScreen() {
   const rows = [];
   if (rw.relic) rows.push(h('div.cards.one', {}, relicCard(rw.relic, { onclick: () => infoRelic(rw.relic) })));
   if (want.once) rows.push(h('div.cards.one', {}, stoneCard(rw.once, { onclick: () => infoStone(rw.once, 'X') })));
-  const choose = (key, value) => () => { rw.sel[key] = value; sfx('click'); save(); rewardScreen(); };
+  // With only one choice on the page, making it is taking it all.
+  const single = !!want.boss + !!want.stone === 1;
+  const choose = (key, value) => () => { rw.sel[key] = value; sfx('click'); save(); if (single) take(); else rewardScreen(); };
   const pick = (key, value) => ({ label: t('Pick'), run: choose(key, value) });
   if (want.boss) rows.push(radioRow(rw.sel.boss, rw.relicChoice.map((id) => [id, relicCard(id, { onclick: () => infoRelic(id, pick('boss', id)) })])));
   if (want.stone) rows.push(radioRow(rw.sel.stone, rw.stones.map((st, k) => [k, stoneCard(st, { onclick: () => infoStone(st, 'X', '', pick('stone', k)) })])));
   rows.forEach((r, k) => { if (k) parts.push(h('div.and-sep', {}, h('span.dash'), t('and'), h('span.dash'))); parts.push(r); });
   const ready = (!want.boss || rw.sel.boss !== undefined) && (!want.stone || rw.sel.stone !== undefined);
+  function take() {
+    if (want.once) R.gainStone(run, rw.once);
+    if (want.boss) R.gainRelic(run, rw.sel.boss);
+    if (want.stone) R.gainStone(run, rw.stones[rw.sel.stone]);
+    sfx('coin');
+    R.leaveNode(run);
+    route();
+  }
   parts.push(h('div.sticky-bottom', {}, h('button.btn.wide.big.primary', {
     disabled: !ready || undefined,
-    onclick: () => {
-      if (want.once) R.gainStone(run, rw.once);
-      if (want.boss) R.gainRelic(run, rw.sel.boss);
-      if (want.stone) R.gainStone(run, rw.stones[rw.sel.stone]);
-      sfx('coin');
-      R.leaveNode(run);
-      route();
-    },
+    onclick: take,
   }, ready ? t('Continue') : t('Choose first'))));
   screen(...(Object.keys(rw.sel).length ? [KEEP_SCROLL] : []), topBar(), h('div.page.reward', {}, parts));
 }
@@ -699,7 +705,8 @@ function treasureScreen() {
     h('h1.reward-title', {}, t('Treasure!')),
     h('div.reward-gold', {}, h('span', { html: icon('coin') }), t('+{n} gold', { n: tr.gold })),
     tr.relic ? h('div.cards.one', {}, relicCard(tr.relic, { onclick: () => infoRelic(tr.relic) }))
-      : tr.choices?.length ? radioRow(tr.sel, tr.choices.map((id) => [id, relicCard(id, { onclick: () => infoRelic(id, { label: t('Pick'), run: () => { tr.sel = id; sfx('click'); save(); treasureScreen(); } }) })]))
+      // Its one choice: picking a talisman takes it, and the treasure with it.
+      : tr.choices?.length ? radioRow(tr.sel, tr.choices.map((id) => [id, relicCard(id, { onclick: () => infoRelic(id, { label: t('Pick'), run: () => { R.gainRelic(run, id); sfx('coin'); R.leaveNode(run); route(); } }) })]))
         : null,
     h('div.sticky-bottom', {}, h('button.btn.wide.big.primary', {
       disabled: (!tr.relic && tr.choices?.length && tr.sel === undefined) || undefined,
@@ -730,7 +737,7 @@ function shopScreen(redraw = false) {
       price: s.price, sold: s.sold, dear: run.gold < s.price,
       onclick: () => infoStone(s, 'X', '', offer(s.price, (pay) => takeStone(s, (ok) => { if (ok) { s.sold = true; pay(); } }))),
     }))),
-    h('div.section-label', {}, t('One-shot stones')),
+    h('div.section-label', {}, t('Glass stones')),
     h('div.cards.scroll', {}, (shop.once ?? []).map((x) => stoneCard(x, {
       price: x.price, sold: x.sold, dear: run.gold < x.price,
       onclick: () => infoStone(x, 'X', '', offer(x.price, (pay) => takeStone(x, (ok) => { if (ok) { x.sold = true; pay(); } }))),
@@ -807,19 +814,40 @@ function craftFlow(done) {
   const closePick = modal(pickBody, { dismissable: false, cls: 'tall' });
 }
 
+// Make one stone of the pouch marble or gold, for `cost` gold. Calls done(text), or done(null).
+function polishFlow(mat, cost, done) {
+  pickFromPouch(mat === 'marble' ? t('Which stone in marble?') : t('Which stone in gold?'), (s) => {
+    if (!s) return done(null);
+    run.gold -= cost;
+    R.polish(run, s.uid, mat);
+    sfx('coin'); save();
+    done(t(mat === 'marble' ? 'Your {stone} is marble now.' : 'Your {stone} is gold now.', { stone: stoneName(s) }));
+  }, { filter: (x) => R.polishable(run).includes(x), cancel: t('Never mind') });
+}
+
 function craftScreen() {
   const leave = () => { R.leaveNode(run); route(); };
   const made = run.pending.made;
+  const did = (text) => { if (text) { run.pending.made = text; save(); craftScreen(); } };
+  // One job a visit: a trade, or a stone made marble or gold.
+  const price = (mat) => R.price(run, R.POLISH[mat]);
+  const jobs = [
+    { label: t('Trade two stones'), detail: t('Two stones → one better.'), ok: R.craftable(run).length >= 2, go: () => craftFlow(did) },
+    ...R.MATERIALS.map((mat) => ({
+      label: mat === 'marble' ? t('Marble') : t('Gold'),
+      detail: t(mat === 'marble' ? 'Pay {n} gold: a stone of yours goes anywhere, whatever their stones restrict.' : 'Pay {n} gold: a stone of yours pays 10 gold in your winning line.', { n: price(mat) }),
+      ok: run.gold >= price(mat) && R.polishable(run).length > 0,
+      go: () => polishFlow(mat, price(mat), did),
+    })),
+  ];
   screen(topBar(), h('div.page.rest', {},
     h('div.campfire', { html: icon('relic-anvil') }),
     h('h2', {}, t('Workshop')),
-    h('p.dim', {}, made ?? (R.craftable(run).length >= 2 ? t('Two stones → one better.') : t('Needs two special stones.'))),
-    // As at the campfire: leaving dashed, the trade in yellow; once traded, leaving is the way on.
-    !made && R.craftable(run).length >= 2
-      ? h('div.sticky-bottom.pair', {},
-        h('button.btn.ghost.big.wide', { onclick: leave }, t('Move on')),
-        h('button.btn.primary.big.wide', { onclick: () => craftFlow((text) => { if (text) { run.pending.made = text; save(); craftScreen(); } }) }, t('Trade')))
-      : h('div.sticky-bottom', {}, h('button.btn.primary.big.wide', { onclick: leave }, t('Move on')))));
+    made ? h('p.event-result', {}, made)
+      : h('div.choices', {}, jobs.map((j) => h('button.choice' + (j.ok ? '' : '.disabled'), { disabled: !j.ok || undefined, onclick: j.go },
+        h('b', {}, j.label), h('span.dim', {}, ' — ' + j.detail)))),
+    // As everywhere: leaving dashed; once a job is done, leaving is the way on, in yellow.
+    h('div.sticky-bottom', {}, h(made ? 'button.btn.primary.big.wide' : 'button.btn.ghost.big.wide', { onclick: leave }, t('Move on')))));
 }
 
 // ── Events ──────────────────────────────────────────────────────────────────
@@ -859,6 +887,8 @@ function eventScreen() {
       s.type = n.type;
       resolve(t('It bubbles and hisses… and becomes a {stone}!', { stone: stoneName(s) }));
     })),
+    canPolish: () => R.polishable(run).length > 0,
+    polish: (mat, cost) => new Promise((resolve) => polishFlow(mat, cost, (text) => resolve(text ?? t('You change your mind.')))),
     duplicate: () => new Promise((resolve) => pickFromPouch(t('Duplicate which stone?'), (s) => {
       if (!s) return resolve(t('The reflection fades.'));
       R.gainStone(run, { type: s.type });
@@ -947,7 +977,7 @@ function endScreen(victory) {
     h('button.btn.wide', { onclick: () => shareResult(victory) }, t('Copy result to share')),
     // Leaving is the dashed button, the way on the yellow one at the bottom, as everywhere.
     h('div.sticky-bottom.pair', {},
-      h('button.btn.ghost.big.wide', { onclick: () => { run = null; title(); } }, t('Title')),
+      h('button.btn.ghost.big.wide', { onclick: () => { run = null; title(); } }, t('Main menu')),
       h('button.btn.primary.big.wide', { onclick: () => { run = null; duelState = null; newRunMenu(); } }, t('New run')))));
   try { localStorage.removeItem(SAVE); } catch { /* ignore */ }
 }

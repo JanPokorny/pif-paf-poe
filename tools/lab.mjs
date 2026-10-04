@@ -186,7 +186,7 @@ const BUILDS = {
   'movers (Shift, Rotate)': ['shift', 'rotate'],
   'restrictions (Magnet, Stinky)': ['magnet', 'stinky'],
   'Magnet + Shift': ['magnet', 'shift'],
-  'Magnet+ + Stinky': ['magnet+', 'stinky'],
+  'Magnet + Stinky+': ['magnet', 'stinky+'],
   'two Mountains': ['mountain', 'mountain'],
   'Swap + Lasso': ['swap', 'lasso'],
   'Gravity+ + Bonfire': ['gravity+', 'bonfire'],

@@ -2,9 +2,8 @@
 
 Some stones have a **+ tier**: the same stone with a wider effect. A + stone comes two ways:
 
-- **as a one-shot**: one-shot rewards and shop one-shots include + stones (a dashed outline, a
-  + in the corner). It costs one energy less than its stone (a common one is free). Played once, it is gone
-  from the pouch;
+- **in glass**: glass rewards and the shop's glass shelf include + stones (a dashed outline, a
+  + in the corner). Glass costs 1 energy. Played once, it is gone from the pouch;
 - **as a talisman**: each + talisman covers a group of stones, and every stone of those kinds you
   bring plays as its + form. It is offered only when your pouch holds one of them.
 
@@ -13,7 +12,7 @@ Some stones have a **+ tier**: the same stone with a wider effect. A + stone com
 | Weathervane (Korouhev) | Waltz, Bonfire | uncommon |
 | Sled (Saně) | Shift, Gravity | uncommon |
 | Long Arm (Dlouhá ruka) | Swap, Lasso | uncommon |
-| Boundary Stone (Mezník) | Magnet, Stinky | uncommon |
+| Boundary Stone (Mezník) | Stinky | uncommon |
 | Fuse (Doutnák) | Firecracker, Bumper | rare |
 | Trickster's Hat (Šibalův klobouk) | Frog, Parrot | common |
 
@@ -38,15 +37,15 @@ each enemy of each act) and `effects` (how often a play changes nothing). A Pebb
 | Lasso | common | pulls any enemy stone next to it | 62 / 15 / 15 | yours too | 66 / 25 / 12 |
 | Firecracker | rare | a stone beside it back to its hand | 67 / 31 / 22 | any in its row or column | 73 / 26 / 21 |
 | Bumper | rare | pushes enemy stones beside it away | 71 / 28 / 20 | in its row and column | 79 / 31 / 28 |
-| Magnet | uncommon | the enemy must place beside it | 78 / 19 / 11 | in its row or column | 78 / 26 / 14 |
+| Magnet | uncommon | the enemy must place beside it | 78 / 19 / 11 | (removed: narrowed the enemy less) | 78 / 26 / 14 |
 | Stinky | common | the enemy must not place beside it | 71 / 25 / 19 | nor in its row or column | 82 / 30 / 29 |
 | Frog | common | leaps a stone beside it; an enemy leapt is knocked off | 53 / 14 / 12 | the enemy goes back to hand, your Pebble takes its square | 54 / 19 / 13 |
 | Parrot | uncommon | becomes the enemy's last stone | 56 / 18 / 15 | any stone on the board | 56 / 14 / 16 |
-| Mountain | common | goes anywhere, never moves | 55 / 16 / 11 | | |
+| Mountain | common | never moves (went anywhere when measured; that is marble's now) | 55 / 16 / 11 | | |
 | Twin | uncommon | a Pebble on the square opposite | 58 / 19 / 9 | | |
 | Magpie | rare | steals a special stone from the enemy's hand | 67 / 31 / 22 | | |
 
-One-shots without a + tier: Relocate (uncommon; 67 / 29 / 12), Muffle (common; 58 / 23 / 11),
+Glass stones without a + tier: Relocate (uncommon; 67 / 29 / 12), Muffle (common; 58 / 23 / 11),
 Mind Control (common; 48 / 15 / 11 — the stone named now works as usual, so it is close to a
 Pebble).
 

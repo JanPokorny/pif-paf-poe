@@ -2,12 +2,12 @@
 //
 // The UI drives the same engine the enemy searches. Every choice with more
 // than one outcome is shown as targets on or around the board; tapping one
-// previews the result, tapping it again (or ✓) commits it. Until the turn is
+// previews the result, ✓ commits it and tapping it again takes it back. Until the turn is
 // over, ↩ puts the whole turn back.
 
 import {
   STONES, CONDS, RULES, legalActions, applyAction, cloneState, allowedSquares,
-  winningLine, active, row, col, LINES, ELS, adjacent, specOf,
+  winningLine, active, row, col, handKey, LINES, ELS, adjacent, specOf,
 } from '../engine.js';
 import { h, stoneEl, updateStone, toast, infoStone, ruleChip, stoneName, stoneText, sleep, statusLine } from './common.js';
 import { icon } from '../icons.js';
@@ -39,9 +39,9 @@ function stageOf(cands) {
 }
 
 // A hand as one entry per kind of stone (a + form a kind of its own): {st, k (its first index), n}.
-const sameKind = (a, b) => a.type === b.type && !!a.plus === !!b.plus && !!a.once === !!b.once;
+const sameKind = (a, b) => handKey(a) === handKey(b);
 // The key of a stone in the enemy's hand, as a hand slot: 'O:shift' or 'O:shift+'.
-const enemyKey = (st) => `O:${st.type}${st.plus ? '+' : ''}${st.once ? '!' : ''}`;   // '!': a one-shot
+const enemyKey = (st) => `O:${handKey(st)}`;   // '!': glass, '@marble': its material
 function groupHand(hand) {
   const out = [];
   hand.forEach((st, k) => {
@@ -118,6 +118,17 @@ export function mountDuel(root, opts) {
   const el = h('div.duel', {}, header, chips, status.el, enemyHand, h('div.board-wrap', {}, board), actions, hand,
     h('div.press-hint', {}, t('Tap a stone to pick it up, ⓘ for its card.')), info);
   root.replaceChildren(el);
+  // The board's lines on the paper's: nudged onto the nearest of its 24px squares.
+  const wrap = el.querySelector('.board-wrap');
+  const align = () => {
+    if (!wrap.isConnected) { window.removeEventListener('resize', align); return; }
+    wrap.style.translate = '';
+    const r = board.getBoundingClientRect();
+    const snap = (v) => Math.round(v / 24) * 24 - v;
+    wrap.style.translate = `${snap(r.left)}px ${snap(r.top)}px`;
+  };
+  requestAnimationFrame(align);
+  window.addEventListener('resize', align);
 
   // ── Rendering ─────────────────────────────────────────────────────────────
   const stoneEls = new Map();
@@ -145,6 +156,9 @@ export function mountDuel(root, opts) {
         e.classList.add('hop');
         setTimeout(() => e.classList.remove('hop'), 450);
       }
+      // In a preview, the stones it moves or changes pulse, faint.
+      const before = s !== state && state.board.findIndex((x) => x?.id === c.id);
+      e.classList.toggle('moving', s !== state && (before < 0 ? c.id !== s.placedId : before !== i || state.board[before].player !== c.player || state.board[before].type !== c.type));
       e.dataset.at = i;
       // Their latest stone, ringed on your turn only: not while they play, nor once it is over.
       e.classList.toggle('last', c.id === lastEnemyId && !busy && !state.over && state.player === 'X');
@@ -162,8 +176,8 @@ export function mountDuel(root, opts) {
 
   const slotStone = (key) => {
     if (typeof key !== 'string') return (snapshot ?? state).hands.X[key];
-    const m = key.slice(2).match(/^(.*?)(\+?)(!?)$/);
-    return { type: m[1], ...(m[2] && { plus: true }), ...(m[3] && { once: true }) };
+    const m = key.slice(2).match(/^(.*?)(\+?)(!?)(?:@(\w+))?$/);
+    return { type: m[1], ...(m[2] && { plus: true }), ...(m[3] && { once: true }), ...(m[4] && { mat: m[4] }) };
   };
   // Which select action a hand slot stands for: a hand index, or 'O:type'
   // for a stone taken from the enemy's hand (Open Hands).
@@ -171,7 +185,7 @@ export function mountDuel(root, opts) {
     const acts = legalActions(s);
     const st = typeof key === 'string' ? slotStone(key) : s.hands.X[key];
     const from = typeof key === 'string' ? 'O' : undefined;
-    return st && acts.find((a) => a.from === from && sameKind({ type: a.stone, plus: a.plus, once: a.once }, st));
+    return st && acts.find((a) => a.from === from && sameKind({ type: a.stone, plus: a.plus, once: a.once, mat: a.mat }, st));
   };
 
   function renderHands(s, shown = s) {
@@ -270,7 +284,8 @@ export function mountDuel(root, opts) {
     const pickGroup = (group) => () => {
       cands = group;
       if (cands.length === 1) {
-        if (preview && preview.action === cands[0]) return confirm();
+        // Tapped again: the preview is taken back.
+        if (preview && preview.action === cands[0]) { preview = null; stageCands = cands = allEffect(); show(); return; }
         showPreview(cands[0]);
       } else { stageCands = cands; preview = null; show(); }
     };
@@ -320,8 +335,6 @@ export function mountDuel(root, opts) {
         const b = h('button.rot' + (isChosen(group) ? '.chosen' : ''), { html: icon(cw === 'true' ? 'rotate-cw' : 'rotate-ccw'), onclick: pickGroup(group) });
         place(x + off, y, b);
       }
-      // Show the block the chosen option turns.
-      if (chosen?.block) for (const i of { TL: [0, 1, 3, 4], TR: [1, 2, 4, 5], BL: [3, 4, 6, 7], BR: [4, 5, 7, 8] }[chosen.block]) cells[i].classList.add('chosen');
     } else if (stage.kind === 'turn' || stage.kind === 'spin') {
       // Around the board's corners: clockwise on the right, anticlockwise on the left.
       const spot = { 1: [3.25, -0.25], [-1]: [-0.25, -0.25], 2: [3.25, 3.25], [-2]: [-0.25, 3.25] };
@@ -402,17 +415,16 @@ export function mountDuel(root, opts) {
       setStatus(dud ? t('{why} — it will do nothing. Confirm?', { why: t('Hushed') }) : t('This is what happens. Confirm?'), dud ? 'lose-note' : 'you');
       cells[preview.action.pos].classList.add('chosen');
       // The squares it acts on from there, white: beside it, or its whole row and column.
-      // The other places it could go stay lit yellow.
+      // Once it is placed, the other places it could go are no longer lit.
       const reach = state.selected && specOf(state.selected).reach, at = preview.action.pos;
       const acts = (i) => i !== at && (reach === 'beside' ? adjacent(at, i) : reach === 'line' && (row(i) === row(at) || col(i) === col(at)));
       for (let i = 0; i < 9; i++) if (acts(i)) glows[i].classList.add('on');
-      for (const i of allowedSquares(state)) if (!acts(i)) cells[i].classList.add('allowed');
       renderActions([undo, h('button.btn.primary', { onclick: confirm }, h('span', { html: icon('check') }), t('Confirm'))]);
       verdict();
     } else if (state.phase === 'effect') {
       const btns = renderStage();
       const what = stoneName(state.board[state.placedAt]);
-      setStatus(preview ? t('Tap again or ✓ to confirm') : t('Choose how your {what} works', { what }), 'you');
+      setStatus(preview ? t('✓ to confirm, tap again to take it back') : t('Choose how your {what} works', { what }), 'you');
       describeSelected(); if (!preview) coach('effect');
       const back = stageCands !== allEffect() ? h('button.btn.ghost', { onclick: () => { stageCands = cands = allEffect(); preview = null; show(); } }, h('span', { html: icon('back') }), t('Back')) : null;
       renderActions([undo, back, ...btns, preview ? h('button.btn.primary', { onclick: confirm }, h('span', { html: icon('check') }), t('Confirm')) : null]
@@ -441,7 +453,7 @@ export function mountDuel(root, opts) {
   const COACH = {
     select: 'Three in a row wins.',
     place: 'Striped: blocked by their stones.',
-    effect: 'Tap an option to preview, again to confirm.',
+    effect: 'Tap an option to preview it, ✓ to confirm.',
     enemy: 'Dashed circle: their winning square.',
   };
   function coach(kind) {
@@ -516,7 +528,8 @@ export function mountDuel(root, opts) {
         else if (!s.board[i]) toast(whyNot(i), 'bad');
         return;
       }
-      if (preview && preview.action.pos === i) return confirm();
+      // Tapped again: the stone goes back to hand-held, to be placed elsewhere.
+      if (preview && preview.action.pos === i) { preview = null; show(); return; }
       const action = { type: 'place', pos: i };
       const test = cloneState(state); test.log = [];
       applyAction(test, action);

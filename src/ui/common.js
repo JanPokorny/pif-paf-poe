@@ -2,7 +2,7 @@
 
 import { STONES, CONDS, RULES, createGame, legalActions, applyAction, cloneState, allowedSquares, specOf } from '../engine.js';
 import { RELICS } from '../content.js';
-import { costOf } from '../run.js';
+import { costOf, GOLD_PAY as R_GOLD } from '../run.js';
 import { icon, ICONS } from '../icons.js';
 import { t, lang, setLang, LANGS } from '../i18n.js';
 
@@ -29,6 +29,9 @@ export function h(tag, attrs = {}, ...children) {
 // A hand-drawn star sticker (unused while no stone is special enough).
 // A + stone: a small + drawn in the stone's own ink, in the corner of its face.
 const STAR = '<svg class="badge-plus" viewBox="-10 -10 20 20" aria-hidden="true"><path d="M0 -6.5 V6.5 M-6.5 0 H6.5"/></svg>';
+
+// Marble: a cut, many-sided outline in place of the drawn one (shown by CSS).
+const MARBLE = '<svg class="marble-frame" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true"><path d="M29 3 L71 3 L97 29 L97 71 L71 97 L29 97 L3 71 L3 29 Z"/><path class="vein" d="M14 64 C 30 56, 38 70, 56 58 S 80 46, 90 52"/></svg>';
 
 // Pen marks, as SVG strings in a 0..100 box: an X in two strokes, an O in one
 // loop that overshoots where it closes. `fresh` draws them in.
@@ -81,9 +84,11 @@ export function updateStone(el, s, player, opts = {}) {
   el.classList.toggle('mini', !!opts.mini);
   el.classList.toggle('once', !!(s.once || STONES[s.type]?.once));
   el.classList.toggle('plus', !!(s.plus && STONES[s.type]?.plus));
+  el.classList.toggle('marble', s.mat === 'marble');
+  el.classList.toggle('gold', s.mat === 'gold');
   if (el.dataset.type !== s.type || !el.firstChild) {
     el.dataset.type = s.type;
-    el.innerHTML = icon(s.type, 'glyph') + STAR + '<span class="tape"></span>';
+    el.innerHTML = MARBLE + icon(s.type, 'glyph') + STAR + '<span class="tape"></span>';
   }
 }
 
@@ -231,10 +236,13 @@ function stoneDemo(s) {
   const plus = s.plus && STONES[s.type].plus ? { plus: true } : {};
   // The sample board; a copying stone gets an enemy Shift to copy, one played last.
   const copies = s.type === 'parrot';
+  if (s.type === 'mountain') return mountainDemo();
   const fresh = (empty = false) => {
     const g = createGame({ handX: [{ type: s.type, ...plus }], first: 'X', log: false });
     let id = 50;
-    if (!empty) for (const [i, p] of Object.entries(DEMO_BOARD)) g.board[+i] = { player: p, type: copies && +i === 8 ? 'shift' : 'pebble', id: id++ };
+    // A Waltz gets a full block of four to turn.
+    const sample = s.type === 'rotate' ? { ...DEMO_BOARD, 0: 'X' } : DEMO_BOARD;
+    if (!empty) for (const [i, p] of Object.entries(sample)) g.board[+i] = { player: p, type: copies && +i === 8 ? 'shift' : 'pebble', id: id++ };
     if (copies) g.lastPlaced.O = { type: 'shift' };
     g.nextId = 100;
     return g;
@@ -274,14 +282,41 @@ function stoneDemo(s) {
         // A Parrot+ became another stone: let that one act too.
         for (let k = 0; k < 3 && after.phase === 'effect' && after.player === 'X'; k++) applyAction(after, legalActions(after)[0]);
         const same = (a, b) => (!a && !b) || (a && b && a.player === b.player && a.type === b.type);
-        const moved = after.board.reduce((n, c, i) => n + (same(c, before[i]) ? 0 : 1), 0)
-          + (after.hands.X.length !== g.hands.X.length || after.hands.O.length !== g.hands.O.length ? 2 : 0);
+        // Stones it moves or changes, then squares it changes.
+        const at = (id) => after.board.findIndex((c) => c?.id === id);
+        const stones = before.reduce((n, c, i) => n + (c && (at(c.id) !== i || !same(after.board[at(c.id)], c)) ? 1 : 0), 0);
+        // (A stone sent back to a hand has left the board: counted already.)
+        const moved = stones * 10 + after.board.reduce((n, c, i) => n + (same(c, before[i]) ? 0 : 1), 0);
         if (!best || moved > best.moved) best = { moved, before, after: after.board, pos, o };
       }
     }
     if (!best || !best.moved) return null;
     const cap = demoCaption(st);
     return h('div.demo', {}, animatedDemo(best.before, best.after, best.pos), cap ? h('div.demo-cap', {}, cap) : null);
+  } catch { return null; }
+}
+
+// A Mountain does nothing itself: a Shift and a Waltz step their stones round it.
+function mountainDemo() {
+  const play = (type, pos, others, pick) => {
+    const g = createGame({ handX: [{ type }], first: 'X', log: false });
+    let id = 50;
+    g.board[4] = { player: 'X', type: 'mountain', id: id++ };
+    for (const [i, p] of Object.entries(others)) g.board[+i] = { player: p, type: 'pebble', id: id++ };
+    g.nextId = 100;
+    applyAction(g, { type: 'select', stone: type });
+    const before = cloneState(g).board;
+    before[pos] = { player: 'X', type, id: g.nextId };
+    applyAction(g, { type: 'place', pos });
+    const o = legalActions(g).find(pick);
+    if (o) applyAction(g, o);
+    return animatedDemo(before, g.board, pos);
+  };
+  try {
+    return h('div.demo', {},
+      play('shift', 3, { 5: 'O' }, (a) => a.dir === 'right'),
+      play('rotate', 0, { 1: 'O', 3: 'O' }, (a) => a.block === 'TL'),
+      h('div.demo-cap', {}, t('Stones moving past it step over it.')));
   } catch { return null; }
 }
 
@@ -328,8 +363,8 @@ function animatedDemo(before, after, pos, { marks = null } = {}) {
   // The stones the effect works on -- those that move, change or leave -- flash
   // a moment before it acts.
   const acted = ids.filter((id) => {
-    if (id === placedId) return false;
-    const i = where(before, id), k = where(after, id);
+    const i = id === placedId ? pos : where(before, id), k = where(after, id);
+    if (id === placedId) return k !== pos;   // the new stone, when it moves too
     if (i < 0) return false;
     const a = before[i], b = after[k];
     return k !== i || !b || a.player !== b.player || a.type !== b.type;
@@ -379,13 +414,13 @@ export function infoStone(s, player = 'X', extra = '', action = null) {
   const body = h('div.info-stone', {},
     h('div.info-head', {}, stoneEl(s, player), h('div', {},
       h('div.info-name', {}, stoneName(s)),
-      h('div.info-rarity.' + st.rarity, {}, [once ? t('one-shot') : null, t(st.rarity), costOf(s) ? t('{n} energy', { n: costOf(s) }) : null].filter(Boolean).join(' · ')))),
+      h('div.info-rarity.' + st.rarity, {}, [once ? t('glass') : s.mat ? t(s.mat) : null, t(st.rarity), costOf(s) ? t('{n} energy', { n: costOf(s) }) : null].filter(Boolean).join(' · ')))),
     h('p', {}, stoneText(s)),
     stoneDemo(s),
-    // A plain stone that has a + tier says what its + form does.
-    st.plus && !plus ? h('p.info-plus', {}, h('b', {}, `${st.name}+: `), st.plusText) : null,
     plus ? h('p.info-plus', {}, t('Without the +: {text}', { text: st.text })) : null,
-    once ? h('p.info-plus', {}, t('One use: once played, it is gone from your pouch.')) : null,
+    once ? h('p.info-plus', {}, t('Glass: once played, it is gone from your pouch. It always costs 1 energy.')) : null,
+    s.mat === 'marble' ? h('p.info-plus', {}, t('Marble: it goes anywhere, whatever the other side\'s stones restrict. 1 energy more.')) : null,
+    s.mat === 'gold' ? h('p.info-plus', {}, t('Gold: +{n} gold when it is in your winning three in a row. 1 energy more.', { n: R_GOLD })) : null,
     extra ? h('p.info-extra', {}, extra) : null,
     infoButtons(() => close(), action));
   const close = modal(body);

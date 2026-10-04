@@ -115,7 +115,6 @@ def('magnet', {
   name: 'Magnet', rarity: 'uncommon', kind: 'restrict', reach: 'beside',
   text: 'The enemy must place beside it.',
   restrict: (sq, m) => adjacent(sq, m),
-  plus: { reach: 'line', text: 'The enemy must place in its row or column.', restrict: (sq, m) => inLine(sq, m) },
 });
 
 def('stinky', {
@@ -126,8 +125,8 @@ def('stinky', {
 });
 
 def('mountain', {
-  name: 'Mountain', rarity: 'common', kind: 'static', immovable: true, free: true,
-  text: 'Goes anywhere, whatever the enemy\'s restrictions, and nothing ever moves it.',
+  name: 'Mountain', rarity: 'common', kind: 'static', immovable: true,
+  text: 'Nothing ever moves it.',
 });
 
 def('gravity', {
@@ -321,7 +320,7 @@ def('magpie', {
   apply(s, pos, a, cell) {
     const hand = s.hands[other(cell.player)];
     const [taken] = hand.splice(hand.findIndex((h) => h.type === a.stone), 1);
-    s.hands[cell.player].push({ type: taken.type });
+    s.hands[cell.player].push({ type: taken.type, ...(taken.mat && { mat: taken.mat }) });
   },
 });
 
@@ -364,7 +363,7 @@ export const PLUS_STONES = STONE_TYPES.filter(hasPlus);
 export const CONDS = {
   gravity: { name: 'Permanent Gravity', text: 'After every turn, stones fall as far down as they can. Mountains hold.' },
   nocentre: { name: 'Hollow', text: 'Nobody may place on the centre square.' },
-  shared: { name: 'Open Hands', text: 'Either side may play the other\'s stones. A stone takes the colour of whoever plays it.' },
+  shared: { name: 'Open Hands', text: 'Either side may play the other\'s stones. A stone takes the colour of whoever plays it. After the duel they go back to their owners.' },
 };
 
 // ── Boss rules: a boss plays only Pebbles, but brings one of these ───────────
@@ -435,7 +434,8 @@ export function allowedSquares(s) {
     if (s.dictate?.kind === 'column') narrow((i) => col(i) !== s.dictate.value);
   }
   if (s.mods[p].freeFirst && s.placements[p] === 0) return pool;
-  if (s.selected && STONES[s.selected.type].free) return pool;
+  // Marble goes anywhere the other side's stones would keep it out of.
+  if (s.selected?.mat === 'marble') return pool;
   const rs = restrictionsOn(s, p);
   if (!rs.length) return pool;
   const scores = pool.map((i) => rs.reduce((n, r) => n + (r.st.restrict(i, r.pos) ? 1 : 0), 0));
@@ -453,7 +453,7 @@ function move(s, from, to) {
 // Back into its owner's hand, Pebbles too.
 function returnToHand(s, i) {
   const c = s.board[i];
-  s.hands[c.player].push({ type: c.type });
+  s.hands[c.player].push({ type: c.type, ...(c.mat && { mat: c.mat }) });
   s.board[i] = null;
 }
 
@@ -490,11 +490,16 @@ function slideAll(s, dir, holdId) {
 
 // ── State ───────────────────────────────────────────────────────────────────
 
-// A stone for a hand: 'shift', 'shift+' (its + form), or {type, plus, once}.
+// A stone for a hand: 'shift', 'shift+' (its + form), or {type, plus, once, mat}.
+// `once` is glass: played once, then gone. `mat` is 'marble' (it goes anywhere,
+// whatever the other side's stones restrict) or 'gold' (it pays when in a winning line).
 const norm = (h) => {
   const o = typeof h === 'string' ? { type: h.replace(/\+$/, ''), plus: h.endsWith('+') } : h;
-  return { type: o.type, ...(o.plus && { plus: true }), ...(o.once && { once: true }) };
+  return { type: o.type, ...(o.plus && { plus: true }), ...(o.once && { once: true }), ...(o.mat && { mat: o.mat }) };
 };
+// What a stone in hand is, for telling kinds apart: 'shift+!@marble'.
+export const handKey = (h) => h.type + (h.plus ? '+' : '') + (h.once ? '!' : '') + (h.mat ? '@' + h.mat : '');
+const selectOf = (h) => ({ stone: h.type, ...(h.plus && { plus: true }), ...(h.once && { once: true }), ...(h.mat && { mat: h.mat }) });
 const noMods = () => ({});
 
 export function createGame({
@@ -564,19 +569,19 @@ function selectActions(s) {
   const seen = new Set();
   // A + form, and a one-shot, are kinds of their own in hand.
   for (const h of s.hands[p]) {
-    const key = h.type + (h.plus ? '+' : '') + (h.once ? '!' : '');
+    const key = handKey(h);
     if (seen.has(key)) continue;
     seen.add(key);
-    out.push({ type: 'select', stone: h.type, ...(h.plus && { plus: true }), ...(h.once && { once: true }) });
+    out.push({ type: 'select', ...selectOf(h) });
   }
   // Open Hands: the other side's stones, Pebbles too, are yours to play.
   if (s.conds.includes('shared')) {
     const theirs = new Set();
     for (const h of s.hands[other(p)]) {
-      const key = h.type + (h.plus ? '+' : '') + (h.once ? '!' : '');
+      const key = handKey(h);
       if (theirs.has(key)) continue;
       theirs.add(key);
-      out.push({ type: 'select', stone: h.type, from: other(p), ...(h.plus && { plus: true }), ...(h.once && { once: true }) });
+      out.push({ type: 'select', from: other(p), ...selectOf(h) });
     }
   }
   if (s.forced?.player === p) {
@@ -727,7 +732,7 @@ export function applyAction(s, a) {
     case 'select': {
       const owner = a.from ?? p;
       const hand = s.hands[owner];
-      const k = hand.findIndex((h) => h.type === a.stone && !!h.plus === !!a.plus && !!h.once === !!a.once);
+      const k = hand.findIndex((h) => h.type === a.stone && !!h.plus === !!a.plus && !!h.once === !!a.once && (h.mat ?? null) === (a.mat ?? null));
       if (k < 0) throw new Error(`${owner} holds no ${a.stone}${a.plus ? '+' : ''}`);
       s.selected = hand.splice(k, 1)[0];
       s.from = a.from ?? null;
@@ -746,7 +751,7 @@ export function applyAction(s, a) {
         }
       }
       s.placedId = s.nextId++;
-      s.board[a.pos] = { player: p, type: stone.type, id: s.placedId, ...(stone.plus && { plus: true }) };
+      s.board[a.pos] = { player: p, type: stone.type, id: s.placedId, ...(stone.plus && { plus: true }), ...(s.selected.mat && { mat: s.selected.mat }) };
       s.placedAt = a.pos;
       s.placements[p]++;
       afterPlacement(s);

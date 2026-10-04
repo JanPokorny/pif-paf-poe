@@ -391,12 +391,12 @@ test('Frog+ sends the enemy stone it leaps back to their hand, and leaves your P
   assert.deepEqual([s.board[1].player, s.board[1].type], ['X', 'pebble']);
   assert.equal(count(s, 'O', 'shift'), 1);
 });
-test('Magnet+ and Stinky+ reach their whole row and column', () => {
-  sameSet(allowedFor({ 0: 'O magnet+' }), [1, 2, 3, 6]);
+test('Stinky+ reaches its whole row and column; Magnet has no + form', () => {
   sameSet(allowedFor({ 4: 'O stinky+' }), [0, 2, 6, 8]);
+  assert.ok(!STONES.magnet.plus);
 });
 test('Restrictions compose: satisfy as many as any square can', () => {
-  sameSet(allowedFor({ 0: 'O magnet', 2: 'O magnet+' }), [1]);
+  sameSet(allowedFor({ 0: 'O magnet', 2: 'O magnet' }), [1]);
   sameSet(allowedFor({ 0: 'O magnet', 8: 'O magnet' }), [1, 3, 5, 7]);
   sameSet(allowedFor({ 4: 'O magnet', 2: 'O stinky' }), [3, 7]);
 });
@@ -579,12 +579,17 @@ test('Mind Control: the stone named is played, and works', () => {
   expectAt(s, { 1: 0 });   // pushed off the top edge
   assert.ok(!s.board[4].hushed);
 });
-test('Mountain goes anywhere, whatever the restrictions; Relocate cannot move it', () => {
-  const s = G({ handX: ['mountain'] });
+test('Mountain obeys restrictions, a marble stone does not; Relocate cannot move a Mountain', () => {
+  const s = G({ handX: ['mountain', { type: 'shift', mat: 'marble' }] });
   lay(s, { 0: 'O magnet' });
   applyAction(s, { type: 'select', stone: 'mountain' });
+  sameSet(allowedSquares(s), [1, 3]);
+  s.hands.X.push(s.selected); s.selected = null; s.phase = 'select';
+  assert.ok(legalActions(s).some((a) => a.stone === 'shift' && a.mat === 'marble'));
+  applyAction(s, { type: 'select', stone: 'shift', mat: 'marble' });
   assert.equal(allowedSquares(s).length, 8);
   applyAction(s, { type: 'place', pos: 8 });
+  assert.equal(s.board[8].mat, 'marble');
   const t = G({ handX: ['relocate'] });
   lay(t, { 0: 'X mountain', 1: 'X pebble' });
   play(t, 'relocate', 4);
@@ -764,10 +769,13 @@ test('a rule with nothing to choose leaves the boss\'s turn plain', () => {
 
 group('run');
 const RUN = await import('../src/run.js');
-test('a + one-shot costs one energy less; a + talisman makes a group of stones their + form', () => {
+test('glass costs 1, marble and gold one more; a + talisman makes a group of stones their + form', () => {
   assert.equal(RUN.costOf({ type: 'swap' }), 2);
   assert.equal(RUN.costOf({ type: 'swap', plus: true, once: true }), 1);
-  assert.equal(RUN.costOf({ type: 'shift', plus: true, once: true }), 0);
+  assert.equal(RUN.costOf({ type: 'shift', plus: true, once: true }), 1);
+  assert.equal(RUN.costOf({ type: 'relocate' }), 1);
+  assert.equal(RUN.costOf({ type: 'swap', mat: 'marble' }), 3);
+  assert.equal(RUN.costOf({ type: 'shift', mat: 'gold' }), 2);
   const run = RUN.newRun({ seed: 2 });
   RUN.gainStone(run, { type: 'rotate' });
   RUN.gainStone(run, { type: 'bonfire' });
@@ -775,9 +783,19 @@ test('a + one-shot costs one energy less; a + talisman makes a group of stones t
   const hand = RUN.playerHand(run, run.pouch.map((x) => x.uid));
   assert.deepEqual(hand.filter((x) => x.type !== 'pebble').map((x) => !!x.plus), [true, true]);
 });
+test('gold stones in your winning line pay 10 each; crafting keeps the material', () => {
+  const s = G();
+  lay(s, { 0: 'X pebble', 1: 'X pebble', 2: 'X pebble' });
+  s.board[0].mat = 'gold'; s.board[2].mat = 'gold';
+  s.over = true; s.winner = 'X'; s.reason = 'line';
+  assert.equal(RUN.goldFromLine(s), 20);
+  const run = RUN.newRun({ seed: 4 });
+  const a = RUN.gainStone(run, { type: 'shift', mat: 'marble' }), b = RUN.gainStone(run, { type: 'swap' });
+  assert.equal(RUN.craft(run, a.uid, b.uid, { type: 'frog' }).mat, 'marble');
+});
 test('a + talisman is offered only for stones in the pouch', () => {
   const run = RUN.newRun({ seed: 3 });
-  RUN.gainStone(run, { type: 'magnet' });
+  RUN.gainStone(run, { type: 'stinky' });
   for (let i = 0; i < 200; i++) {
     const r = RUN.randomRelic(run);
     if (r?.startsWith('plus-')) assert.equal(r, 'plus-fence');
