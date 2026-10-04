@@ -366,9 +366,9 @@ function mapScreen() {
     return e.m === 'x' ? [t('You mark the {node} square.', { node }), 'you']
       : e.m === 's' ? [t('You lost there: the {node} square burns.', { node }), 'you']
         : e.m === 'o' ? [t('The boss marks the {node} square.', { node }), 'bad']
-          : e.m === 'oline' ? [t('The boss made three in a row: −{n} ❤', { n: e.n }), 'bad']
+          : e.m === 'oline' ? [t('The boss made three in a row: −❤'), 'bad']
             : e.m === 'open' ? [t('Three in a row: the lair opens!'), 'good']
-              : e.m === 'thrown' ? [t('The boss throws you out (−{n} ❤). The lair is shut again.', { n: e.n }), 'bad'] : ['', ''];
+              : e.m === 'thrown' ? [t('The boss throws you out (−❤). The lair is shut again.'), 'bad'] : ['', ''];
   };
   const line = statusLine({ history: map.log.map((e) => { const [text, kind] = say(e); return { text, kind }; }) });
   map.log.push(...news.map(([, e]) => e));
@@ -403,7 +403,7 @@ function mapScreen() {
     h('div.map-cells', {}, grid),
     strikes ? h('div.map-strikes', { html: `<svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" aria-hidden="true">${strikes}</svg>` }) : null,
     // The heart it costs, struck over the line as the pencil finishes it.
-    hurtAt ? h('div.line-hurt', { style: { left: `${hurtAt[0]}%`, top: `${hurtAt[1]}%` } }, `−${R.MAPCFG.lineDamage}`, h('span', { html: icon('heart') })) : null);
+    hurtAt ? h('div.line-hurt', { style: { left: `${hurtAt[0]}%`, top: `${hurtAt[1]}%` } }, '−', h('span', { html: icon('heart') })) : null);
   const paper = h('div.map-paper', {}, sheet);
   const scroller = h('div.map-scroll', {}, paper);
   // A mouse drags the page about, as a finger does; a drag is not a tap on a square.
@@ -608,7 +608,7 @@ function duelScreen() {
       // A draw counts as won, but costs a heart first -- the last one ends the run.
       if (draw) {
         flash = 'hurt';
-        toast('−1 ❤', 'bad');
+        toast('−❤', 'bad');
         if (R.hurt(run, 1)) { route(); return; }
       }
       if (winner === 'X') {
@@ -622,7 +622,7 @@ function duelScreen() {
         const res = R.duelLost(run);
         if (res.kind === 'rematch') toast(t('🎟️ {relic}: try again!', { relic: RELICS.rematch.name }), 'good');
         else if (res.kind === 'dead') { /* recorded by the end screen */ }
-        else if (res.kind === 'lost') { toast(`−${R.heartsLost(duel)} ❤`, 'bad'); flash = 'hurt'; }
+        else if (res.kind === 'lost') { toast('−❤', 'bad'); flash = 'hurt'; }
         else if (res.kind === 'boss-out') flash = 'hurt';
       }
       route();
