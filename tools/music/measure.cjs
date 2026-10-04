@@ -1,7 +1,7 @@
 // Measures, for each music/*.mp3, where its first sample lands when a browser
 // decodes it (an MP3 encoder pads the start), and writes it into
 // music/tracks.json, so the game loops from exactly there. Run after
-// tools/music/build.py, with the dev server up on :8080. A loop's offset is
+// tools/music/build.py, with the dev server up on :8080 (or $PORT). A loop's offset is
 // that plus the padding build.py keeps before it.
 const { chromium } = require('/opt/node22/lib/node_modules/playwright');
 const { execFileSync } = require('child_process');
@@ -13,7 +13,7 @@ const path = require('path');
   const manifest = JSON.parse(fs.readFileSync(path.join(dir, 'tracks.json'), 'utf8'));
   const browser = await chromium.launch({ executablePath: '/opt/pw-browsers/chromium-1194/chrome-linux/chrome' });
   const page = await browser.newPage();
-  await page.goto('http://localhost:8080/manifest.webmanifest');
+  await page.goto(`http://localhost:${process.env.PORT || 8080}/manifest.webmanifest`);
   for (const [group, entries] of Object.entries(manifest)) {
     for (const id of Object.keys(entries)) {
       const file = path.join(dir, `${id}.mp3`);

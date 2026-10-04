@@ -8,7 +8,9 @@ mido). Run from the repository root:
     node tools/music/measure.cjs     # with the dev server up: the MP3 lead-ins
 
 Each loop is written three times and the second pass kept, so the reverb of its end
-rings into its start; levels are evened out by scene.
+rings into its start; levels are evened out by scene. An act's three
+variations have the same tempo and length, so their loops are the same number
+of samples and the game can switch between them mid-loop.
 """
 
 import json
@@ -28,7 +30,7 @@ OUT = os.path.join(ROOT, 'music')
 SF2 = '/usr/share/sounds/sf2/FluidR3_GM.sf2'
 RATE = 44100
 # How loud each kind of track sits (mean level, dBFS): calmer scenes quieter.
-LEVEL = {'map': -21, 'calm': -24, 'duel': -20, 'boss': -19, 'title': -23, 'victory': -21, 'defeat': -24}
+LEVEL = {'map': -23, 'duel': -20, 'boss': -19, 'title': -23, 'victory': -21, 'defeat': -24}
 
 
 def run(*cmd):
@@ -78,8 +80,9 @@ def loop_wav(wav, out, start, end):
 
 
 def encode(wav, mp3, gain_db):
+    # 80 kbit/s: an act's loops are long, three to an act.
     run('ffmpeg', '-hide_banner', '-y', '-i', wav, '-af', f'volume={gain_db:.2f}dB,alimiter=limit=0.95:latency=1',
-        '-ac', '2', '-c:a', 'libmp3lame', '-b:a', '96k', mp3)
+        '-ac', '2', '-c:a', 'libmp3lame', '-b:a', '80k', mp3)
 
 
 def main():
@@ -89,9 +92,10 @@ def main():
             ('victory', lambda: score.special('victory'), 'victory'),
             ('defeat', lambda: score.special('defeat'), 'defeat')]
     for act in (1, 2, 3):
-        for name in ('map', 'calm', 'duel', 'boss'):
-            jobs.append((f'{name}-{act}', (lambda a=act, n=name: score.scene(a, n)), name))
+        for name in score.VARIATIONS:
+            jobs.append((f'{name}-{act}', (lambda a=act, n=name: score.variation(a, n)), name))
     tmp = tempfile.mkdtemp()
+    lengths = {}   # act -> loop lengths in samples of its variations
     for tid, make, kind in jobs:
         piece, L = make()
         wav = os.path.join(tmp, f'{tid}.wav')
@@ -103,8 +107,11 @@ def main():
         mean, peak = mean_db(cut)
         gain = LEVEL[kind] - mean
         encode(cut, os.path.join(OUT, f'{tid}.mp3'), gain)
+        if kind in score.VARIATIONS:
+            lengths.setdefault(tid.split('-')[1], set()).add(end - start)
         manifest['tracks'][tid] = {'bpm': piece.bpm, 'beat': round(beat, 5), 'seconds': round((end - start) / RATE, 5), 'pad': round(PAD / RATE, 5), 'offset': round(PAD / RATE, 5)}
         print(f'{tid}: {L * beat:.1f}s at {piece.bpm} bpm, level {mean:.1f} → {LEVEL[kind]} dB')
+    assert all(len(v) == 1 for v in lengths.values()), lengths
     for act in (1, 2, 3):
         for kind in ('win', 'lose', 'door', 'stronger', 'heal'):
             piece, _ = score.stinger(act, kind)

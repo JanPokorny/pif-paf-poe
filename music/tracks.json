@@ -22,86 +22,65 @@
    "offset": 0.5
   },
   "map-1": {
-   "bpm": 100,
-   "beat": 0.6,
-   "seconds": 38.4,
-   "pad": 0.5,
-   "offset": 0.5
-  },
-  "calm-1": {
-   "bpm": 82,
-   "beat": 0.73171,
-   "seconds": 46.82925,
+   "bpm": 108,
+   "beat": 0.55556,
+   "seconds": 71.11111,
    "pad": 0.5,
    "offset": 0.5
   },
   "duel-1": {
-   "bpm": 114,
-   "beat": 0.52632,
-   "seconds": 33.6842,
+   "bpm": 108,
+   "beat": 0.55556,
+   "seconds": 71.11111,
    "pad": 0.5,
    "offset": 0.5
   },
   "boss-1": {
-   "bpm": 120,
-   "beat": 0.5,
-   "seconds": 32,
+   "bpm": 108,
+   "beat": 0.55556,
+   "seconds": 71.11111,
    "pad": 0.5,
    "offset": 0.5
   },
   "map-2": {
-   "bpm": 96,
-   "beat": 0.625,
-   "seconds": 40,
-   "pad": 0.5,
-   "offset": 0.5
-  },
-  "calm-2": {
-   "bpm": 79,
-   "beat": 0.75949,
-   "seconds": 48.6076,
+   "bpm": 104,
+   "beat": 0.57692,
+   "seconds": 73.84617,
    "pad": 0.5,
    "offset": 0.5
   },
   "duel-2": {
-   "bpm": 109,
-   "beat": 0.55046,
-   "seconds": 35.22934,
+   "bpm": 104,
+   "beat": 0.57692,
+   "seconds": 73.84617,
    "pad": 0.5,
    "offset": 0.5
   },
   "boss-2": {
-   "bpm": 115,
-   "beat": 0.52174,
-   "seconds": 33.39129,
+   "bpm": 104,
+   "beat": 0.57692,
+   "seconds": 73.84617,
    "pad": 0.5,
    "offset": 0.5
   },
   "map-3": {
-   "bpm": 104,
-   "beat": 0.57692,
-   "seconds": 36.92306,
-   "pad": 0.5,
-   "offset": 0.5
-  },
-  "calm-3": {
-   "bpm": 85,
-   "beat": 0.70588,
-   "seconds": 45.17649,
+   "bpm": 112,
+   "beat": 0.53571,
+   "seconds": 68.57143,
    "pad": 0.5,
    "offset": 0.5
   },
   "duel-3": {
-   "bpm": 119,
-   "beat": 0.5042,
-   "seconds": 32.26891,
+   "bpm": 112,
+   "beat": 0.53571,
+   "seconds": 68.57143,
    "pad": 0.5,
    "offset": 0.5
   },
   "boss-3": {
-   "bpm": 125,
-   "beat": 0.48,
-   "seconds": 30.72,
+   "bpm": 112,
+   "beat": 0.53571,
+   "seconds": 68.57143,
    "pad": 0.5,
    "offset": 0.5
   }

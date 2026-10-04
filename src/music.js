@@ -3,8 +3,13 @@
 // while the game runs, so a busy page can neither push the music out of time
 // nor make it crackle.
 //
+// Each act has one piece in three variations of the same length: map (also
+// shops, rests and events), duel, and boss (also elites). Between them the
+// music crossfades at the same point of the loop, so it plays on as one; a
+// new act, the title, victory and defeat start their own from the top.
+//
 //   setScene(name, act)   name: title, map, duel, elite, boss, calm, event,
-//                         victory, defeat. The tracks crossfade.
+//                         victory, defeat.
 //   musicEvent(kind)      win, lose, door, stronger, heal: a short phrase in
 //                         the act's key, on the next beat of the track.
 
@@ -19,13 +24,18 @@ export function setMusic(on) {
   if (on) start(); else stop();
 }
 
-// Each act has four loops; a scene plays one of them.
-const TRACK = { title: 'title', victory: 'victory', defeat: 'defeat', map: 'map', calm: 'calm', event: 'calm', duel: 'duel', elite: 'duel', boss: 'boss' };
+// A scene plays one of its act's three variations, or a track of its own.
+const TRACK = { title: 'title', victory: 'victory', defeat: 'defeat', map: 'map', calm: 'map', event: 'map', duel: 'duel', elite: 'boss', boss: 'boss' };
+const VARIATIONS = ['map', 'duel', 'boss'];
+const OWN = ['title', 'victory', 'defeat'];
 const trackOf = (scene, act) => {
   const t = TRACK[scene] ?? 'map';
-  return ['title', 'victory', 'defeat'].includes(t) ? t : `${t}-${Math.min(3, Math.max(1, act))}`;
+  return OWN.includes(t) ? t : `${t}-${Math.min(3, Math.max(1, act))}`;
 };
-const FADE = 1.6;      // seconds of crossfade between tracks
+// The piece a track belongs to: its act's, or its own.
+const pieceOf = (id) => id.replace(/^(map|duel|boss)-/, 'act-');
+const FADE = 1.6;      // seconds of crossfade between pieces
+const SHIFT = 1.0;     // seconds of crossfade between variations of a piece
 const DUCK = 0.5;      // the band's level under a stinger
 
 let ctx = null, band = null, stings = null;
@@ -54,12 +64,13 @@ async function build() {
   return !!manifest;
 }
 
-// Fade the current track out and the scene's in.
+// Fade the current track out and the scene's in: from the same point of the
+// loop when both are variations of one piece, else from the top.
 async function play() {
   if (!running || !manifest) return;
   const id = trackOf(scene, act);
+  const mine = ++switching;   // a change still loading is superseded either way
   if (playing?.id === id) return;
-  const mine = ++switching;
   const buf = await load(id);
   if (!buf || mine !== switching || !running) return;
   const info = manifest.tracks[id];
@@ -72,19 +83,34 @@ async function play() {
   const gain = ctx.createGain();
   src.connect(gain).connect(band);
   const now = ctx.currentTime + 0.05;
+  const shift = playing && pieceOf(playing.id) === pieceOf(id) && Math.abs(playing.info.seconds - info.seconds) < 1e-3;
+  const fade = shift ? SHIFT : FADE;
+  // t0: when the loop's first beat sounded (or would have), on the context's clock.
+  let t0 = now, at = 0;
+  if (shift) {
+    at = (((now - playing.t0) % info.seconds) + info.seconds) % info.seconds;
+    t0 = now - at;
+  }
   gain.gain.setValueAtTime(0, now);
-  gain.gain.linearRampToValueAtTime(1, now + FADE);
-  src.start(now, info.offset);
+  gain.gain.linearRampToValueAtTime(1, now + fade);
+  src.start(now, info.offset + at);
   if (playing) {
     const old = playing;
     old.gain.gain.cancelScheduledValues(now);
     old.gain.gain.setValueAtTime(old.gain.gain.value, now);
-    old.gain.gain.linearRampToValueAtTime(0, now + FADE);
-    old.src.stop(now + FADE + 0.1);
+    old.gain.gain.linearRampToValueAtTime(0, now + fade);
+    old.src.stop(now + fade + 0.1);
   }
-  playing = { id, src, gain, t0: now, info };
-  // The rest of the act's tracks, ready for the next change of scene.
-  if (act >= 1) for (const s of ['map', 'calm', 'duel', 'boss']) load(trackOf(s, act));
+  playing = { id, src, gain, t0, info };
+  // The act's other variations, ready for the next change of scene.
+  if (!OWN.includes(TRACK[scene])) for (const v of VARIATIONS) load(trackOf(v, act));
+}
+
+// For checking by hand: what is playing, and where in its loop.
+export function musicState() {
+  if (!ctx || !playing) return { scene, act, running, id: null };
+  const { id, t0, info } = playing;
+  return { scene, act, running, id, position: (((ctx.currentTime - t0) % info.seconds) + info.seconds) % info.seconds };
 }
 
 let building = null;

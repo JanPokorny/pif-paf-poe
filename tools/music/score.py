@@ -1,16 +1,17 @@
-"""The game's music, as MIDI: one hand-written theme per act, arranged for
-each scene, and a short phrase per music event.
+"""The game's music, as MIDI: one hand-written theme per act, arranged once
+in layers and played in three variations, and a short phrase per music event.
 
 tools/music/build.py renders these with FluidSynth and a General MIDI
 SoundFont (FluidR3_GM) into the loops in music/.
 
-Themes are written in scale degrees, so the boss can play its act's theme in a
-darker mode: '3' is the third of the scale in the melody's octave, '6-' a
+Themes are written in scale degrees: '3' is the third of the scale in the melody's octave, '6-' a
 sixth an octave down, '1+' the tonic an octave up, '7#' a raised seventh,
 'r' a rest. Durations are in beats.
 """
 
 import random
+import zlib
+
 import mido
 
 MODES = {
@@ -33,7 +34,7 @@ P = dict(piano=0, celesta=8, glock=9, musicbox=10, vibes=11, marimba=12, xylo=13
 
 ACTS = {
     1: dict(  # The Meadow: C major, a flute over harp and strings.
-        tonic=60, mode='major', bpm=100, boss_mode='minor',
+        tonic=60, mode='major', bpm=108,
         lead='flute', lead2='piccolo', calm='celesta', arp='harp', pad='slowstrings', bass='bass',
         boss_lead='horn', perc='light',
         chords=[[1], [6], [4], [5], [1], [6], [2, 5], [1],
@@ -45,7 +46,7 @@ ACTS = {
             1+:1 7:.5 6:.5 3:1 6:1 | 6:1 5:.5 4:.5 1:2 | 2:1 4:1 7-:1 2:1 | 1:2 r:2
         """),
     2: dict(  # The Quarry: D dorian, clarinet and marimba over bassoon.
-        tonic=62, mode='dorian', bpm=96, boss_mode='phrygian',
+        tonic=62, mode='dorian', bpm=104,
         lead='clarinet', lead2='marimba', calm='vibes', arp='marimba', pad='strings', bass='bassoon',
         boss_lead='trombone', perc='wood',
         chords=[[1], [7], [4], [1], [1], [7], [4], [1],
@@ -57,7 +58,7 @@ ACTS = {
             3:1 5:1 6:.5 5:.5 3:1 | 4:1 3:.5 2:.5 1:2 | 2:1 4:1 5:.5 4:.5 2:1 | 1:2 r:2
         """),
     3: dict(  # The Summit: A minor, an oboe and a horn over strings and timpani.
-        tonic=57, mode='minor', bpm=104, boss_mode='phrygian',
+        tonic=57, mode='minor', bpm=112,
         lead='oboe', lead2='horn', calm='harp', arp='harp', pad='tremolo', bass='contrabass',
         boss_lead='brass', perc='timpani',
         chords=[[1], [6], [3], [7], [1], [4], [5], [1],
@@ -107,6 +108,11 @@ class Piece:
         self.notes = []       # (start, dur, ch, pitch, vel)
         self.channels = {}    # ch -> (program, volume, pan, reverb)
         self.rng = random.Random(seed)
+
+    def layer(self, name):
+        """Each layer draws its human touch from its own seed, so a layer
+        sounds the same, note for note, in every variation that plays it."""
+        self.rng = random.Random(zlib.crc32(name.encode()))
 
     def channel(self, ch, program, volume=100, pan=64, reverb=50):
         self.channels[ch] = (P[program] if isinstance(program, str) else program, volume, pan, reverb)
@@ -259,71 +265,90 @@ def timpani(pc, spec, mode, ch, t0, bars, vel=80, roll_end=True):
                 pc.note(t0 + b * 4 + 3 + k / 6, 1 / 6, ch, root, vel - 20 + k * 4)
 
 
-# ── Scenes ──────────────────────────────────────────────────────────────────
-# Each scene writes its loop three times: the second pass is the loop kept
+# ── The act's piece ─────────────────────────────────────────────────────────
+# One arrangement per act, 32 bars: the theme, then the theme again by another
+# voice. Its three variations pick which layers sound and how hard: map
+# (sparse), duel (fuller) and boss (everything, heavier drums). All three
+# share tempo, key and length, so the game can switch between them at the
+# same point of the loop.
+#
+# Each piece writes its loop three times: the second pass is the loop kept
 # (with the first pass's echoes ringing into it), and the third's start is
 # blended into it, so the loop's end flows on without a click.
 # Returns (piece, beats per loop).
 
-LOOP_BARS = 16
+LOOP_BARS = 16          # the theme; an act's piece plays it twice
+VARIATIONS = ('map', 'duel', 'boss')
 
 
-def scene(act, name):
+def variation(act, name):
     spec = ACTS[act]
-    bars = LOOP_BARS
-    tempo = {'map': 1, 'calm': 0.82, 'duel': 1.14, 'boss': 1.2}.get(name, 1)
-    mode = spec['boss_mode'] if name == 'boss' else spec['mode']
-    pc = Piece(round(spec['bpm'] * tempo), seed=act * 101 + len(name))
+    mode = spec['mode']
+    half = LOOP_BARS
+    bars = 2 * half
     L = bars * 4
+    pc = Piece(spec['bpm'], seed=act)
+
+    def lay(layer, ch, program, volume, pan, reverb):
+        pc.channel(ch, program, volume, pan, reverb)
+        pc.layer(f'{act}-{layer}')
+
     for t0 in (0, L, 2 * L):
+        B = t0 + half * 4
         if name == 'map':
-            pc.channel(0, spec['lead'], 105, 64, 55)
-            pc.channel(1, spec['arp'], 88, 38, 60)
-            pc.channel(2, spec['pad'], 70, 92, 75)
-            pc.channel(3, spec['bass'], 92, 60, 30)
-            pc.channel(9, 0, 80, 70, 25)
-            melody(pc, spec, mode, 0, t0)
-            arpeggio(pc, spec, mode, 1, t0, bars)
-            pad(pc, spec, mode, 2, t0, bars)
-            bassline(pc, spec, mode, 3, t0, bars, 'half')
-            if spec['perc'] == 'timpani':
-                pc.channel(4, 'timpani', 80, 64, 40)
-                timpani(pc, spec, mode, 4, t0, bars, vel=62)
-            else:
-                drums(pc, t0, bars, spec['perc'], 52)
-        elif name == 'calm':
-            pc.channel(0, spec['calm'], 92, 64, 70)
-            pc.channel(1, 'harp', 80, 40, 70)
-            pc.channel(2, 'warmpad', 62, 88, 80)
-            pc.channel(3, spec['bass'], 70, 60, 40)
-            # The theme only in its second half, as if remembered.
-            melody(pc, spec, mode, 0, t0, octave=1 if spec['calm'] != 'harp' else 0, vel=70, only=set(range(8, 16)))
+            lay('lead', 0, spec['lead'], 96, 64, 60)
+            melody(pc, spec, mode, 0, t0, vel=78)
+            lay('echo', 5, spec['calm'], 88, 70, 70)   # the theme again, as if remembered
+            melody(pc, spec, mode, 5, B, octave=1 if spec['calm'] != 'harp' else 0, vel=70)
+            lay('arp-slow', 1, spec['arp'], 80, 40, 70)
             arpeggio(pc, spec, mode, 1, t0, bars, step=1, shape=(0, 1, 2, 3), vel=50)
+            lay('pad', 2, 'warmpad', 62, 88, 80)
             pad(pc, spec, mode, 2, t0, bars, vel=40)
-            bassline(pc, spec, mode, 3, t0, bars, 'whole', vel=60)
+            lay('bass-whole', 3, spec['bass'], 74, 60, 40)
+            bassline(pc, spec, mode, 3, t0, bars, 'whole', vel=62)
+            if spec['perc'] == 'timpani':
+                lay('perc', 4, 'timpani', 70, 64, 40)
+                timpani(pc, spec, mode, 4, B, half, vel=50, roll_end=False)
+            else:
+                lay('perc', 9, 0, 70, 70, 25)
+                drums(pc, B, half, spec['perc'], 44)
         elif name == 'duel':
-            pc.channel(0, spec['lead2'], 100, 64, 45)
-            pc.channel(1, 'pizz', 96, 40, 45)
-            pc.channel(2, 'strings', 72, 90, 60)
-            pc.channel(3, spec['bass'], 96, 60, 25)
-            pc.channel(9, 0, 92, 64, 25)
-            melody(pc, spec, mode, 0, t0, staccato=0.8)
-            ostinato(pc, spec, mode, 1, t0, bars)
+            lay('lead', 0, spec['lead'], 104, 64, 50)
+            melody(pc, spec, mode, 0, t0, vel=88)
+            lay('lead2', 5, spec['lead2'], 100, 70, 45)
+            melody(pc, spec, mode, 5, B, staccato=0.8)
+            lay('arp', 1, spec['arp'], 84, 38, 55)
+            arpeggio(pc, spec, mode, 1, t0, bars, vel=54)
+            lay('ostinato', 6, 'pizz', 90, 44, 45)
+            ostinato(pc, spec, mode, 6, t0, bars, vel=58)
+            lay('pad', 2, 'strings', 70, 90, 60)
             pad(pc, spec, mode, 2, t0, bars, vel=42)
+            lay('bass', 3, spec['bass'], 96, 60, 25)
             bassline(pc, spec, mode, 3, t0, bars, 'drive', vel=80)
-            drums(pc, t0, bars, 'drive', 58)
-        elif name == 'boss':
-            pc.channel(0, spec['boss_lead'], 110, 64, 50)
-            pc.channel(1, 'cello', 100, 44, 40)
-            pc.channel(2, 'tremolo', 78, 88, 60)
-            pc.channel(3, 'contrabass', 100, 60, 25)
-            pc.channel(4, 'timpani', 96, 64, 40)
-            pc.channel(9, 0, 90, 64, 25)
-            melody(pc, spec, mode, 0, t0, octave=-1, vel=96)
-            ostinato(pc, spec, mode, 1, t0, bars, octave=-1, vel=72)
+            lay('drums', 9, 0, 92, 64, 25)
+            drums(pc, t0, bars, 'drive', 56)
+            if spec['perc'] == 'timpani':
+                lay('perc', 4, 'timpani', 80, 64, 40)
+                timpani(pc, spec, mode, 4, t0, bars, vel=60)
+        else:  # boss
+            lay('boss-lead', 7, spec['boss_lead'], 108, 58, 50)
+            melody(pc, spec, mode, 7, t0, octave=-1, vel=94)
+            melody(pc, spec, mode, 7, B, octave=-1, vel=86)
+            lay('lead', 0, spec['lead'], 96, 64, 50)
+            melody(pc, spec, mode, 0, t0, vel=82)
+            lay('lead2', 5, spec['lead2'], 100, 70, 45)
+            melody(pc, spec, mode, 5, B, staccato=0.8, vel=90)
+            lay('arp', 1, spec['arp'], 80, 38, 55)
+            arpeggio(pc, spec, mode, 1, t0, bars, vel=52)
+            lay('ostinato-low', 6, 'cello', 100, 44, 40)
+            ostinato(pc, spec, mode, 6, t0, bars, octave=-1, vel=72)
+            lay('pad-boss', 2, 'tremolo', 78, 88, 60)
             pad(pc, spec, mode, 2, t0, bars, vel=48)
+            lay('bass-boss', 3, 'contrabass', 100, 60, 25)
             bassline(pc, spec, mode, 3, t0, bars, 'drive', vel=86)
+            lay('timpani', 4, 'timpani', 96, 64, 40)
             timpani(pc, spec, mode, 4, t0, bars, vel=84)
+            lay('drums-boss', 9, 0, 90, 64, 25)
             drums(pc, t0, bars, 'boss', 60)
     return pc, L
 
