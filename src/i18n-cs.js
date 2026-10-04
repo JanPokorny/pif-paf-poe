@@ -490,7 +490,7 @@ export const CS_DATA = {
         { label: 'Vyměnit dva kameny', detail: 'Dva kameny za jeden nový.' },
         { label: 'Odejít' },
       ] },
-    shrine: { title: 'Svatyně vzácností',
+    shrine: { title: 'Kaplička u cesty',
       text: 'Stará svatyně tiše bzučí. U jejích nohou leží obětiny: kameny ve tvaru srdce.',
       choices: [
         { label: 'Obětovat srdce', detail: 'Přijdeš o 1 srdce navždy. Vybereš si kámen.' },

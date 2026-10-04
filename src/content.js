@@ -234,7 +234,7 @@ export const EVENTS = [
     ],
   },
   {
-    id: 'shrine', title: 'Shrine of Rarities', emoji: '⛩️',
+    id: 'shrine', title: 'The Wayside Shrine', emoji: '⛩️',
     text: 'An old shrine hums quietly. Offerings of heart-shaped stones lie at its foot.',
     choices: [
       { label: 'Offer a max heart', detail: 'Lose 1 max heart. Choose a stone.', can: (r) => r.maxHearts > 2,
