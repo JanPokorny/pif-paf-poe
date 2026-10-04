@@ -440,17 +440,15 @@ function infoButtons(close, action) {
 export function infoStone(s, player = 'X', extra = '', action = null) {
   const st = STONES[s.type];
   const once = s.once || st.once;
-  const plus = s.plus && st.plus;
   const body = h('div.info-stone', {},
     h('div.info-head', {}, stoneEl(s, player), h('div', {},
       h('div.info-name', {}, stoneName(s)),
-      h('div.info-rarity.' + st.rarity, {}, [once ? t('glass') : s.mat ? t(s.mat) : null, t(st.rarity), costOf(s) ? t('{n} energy', { n: costOf(s) }) : null].filter(Boolean).join(' · ')))),
+      h('div.info-rarity.' + st.rarity, {}, [once ? t('glass') : s.mat ? t(s.mat) : null, t(st.rarity)].filter(Boolean).join(' · ')))),
     h('p', {}, stoneText(s)),
     stoneDemo(s),
-    plus ? h('p.info-plus', {}, t('Without the +: {text}', { text: st.text })) : null,
-    once ? h('p.info-plus', {}, t('Glass: once played, it is gone from your pouch. It always costs 1 energy.')) : null,
-    s.mat === 'marble' ? h('p.info-plus', {}, t('Marble: it goes anywhere, whatever the other side\'s stones restrict. 1 energy more.')) : null,
-    s.mat === 'gold' ? h('p.info-plus', {}, t('Gold: +{n} gold when it is in your winning three in a row. 1 energy more.', { n: R_GOLD })) : null,
+    once ? h('p.info-plus', {}, t('Glass: once played, it is gone from your pouch.')) : null,
+    s.mat === 'marble' ? h('p.info-plus', {}, t('Marble: it goes anywhere, whatever the other side\'s stones restrict.')) : null,
+    s.mat === 'gold' ? h('p.info-plus', {}, t('Gold: +{n} gold when it is in your winning three in a row.', { n: R_GOLD })) : null,
     extra ? h('p.info-extra', {}, extra) : null,
     infoButtons(() => close(), action));
   const close = modal(body);
