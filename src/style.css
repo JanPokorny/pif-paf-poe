@@ -43,15 +43,12 @@ body {
   color: var(--ink);
   overscroll-behavior: none;
   background-color: var(--paper);
+  /* Graph paper: squares, no margin line (that is for the ruled sheets and cards). */
   background-image:
-    linear-gradient(90deg, transparent 38px, var(--margin) 38px, var(--margin) 40px, transparent 40px),
     linear-gradient(var(--grid) 1px, transparent 1px),
     linear-gradient(90deg, var(--grid) 1px, transparent 1px);
-  background-size: 100% 100%, 24px 24px, 24px 24px;
+  background-size: 24px 24px, 24px 24px;
   background-attachment: fixed;
-}
-@media (max-width: 560px) {
-  body { background-image: linear-gradient(var(--grid) 1px, transparent 1px), linear-gradient(90deg, var(--grid) 1px, transparent 1px); background-size: 24px 24px, 24px 24px; }
 }
 #app { max-width: 520px; margin: 0 auto; min-height: 100dvh; }
 button { font: inherit; color: inherit; cursor: pointer; touch-action: manipulation; }
