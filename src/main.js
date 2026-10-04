@@ -802,7 +802,7 @@ function craftFlow(done) {
           sfx('click'); drawPick();
         },
       }))),
-      h('p.dim', {}, b ? t('→ one {tier} stone', { tier: t(R.craftTier(a, b)) }) : t('Two stones → one better.')),
+      h('p.dim', {}, t('Two stones → one new.')),
       h('button.btn.primary.wide', {
         disabled: !b || undefined,
         onclick: () => {
@@ -839,7 +839,7 @@ function craftScreen() {
   // One job a visit: a trade, or a stone made marble or gold.
   const price = (mat) => R.price(run, R.POLISH[mat]);
   const jobs = [
-    { label: t('Trade two stones'), detail: t('Two stones → one better.'), ok: R.craftable(run).length >= 2, go: () => craftFlow(did) },
+    { label: t('Trade two stones'), detail: t('Two stones → one new.'), ok: R.craftable(run).length >= 2, go: () => craftFlow(did) },
     ...R.MATERIALS.map((mat) => ({
       label: mat === 'marble' ? t('Make a stone marble') : t('Gild a stone'),
       detail: t(mat === 'marble' ? 'Pay {n} gold: a stone of yours goes anywhere, whatever their stones restrict.' : 'Pay {n} gold: a stone of yours pays 10 gold in your winning line.', { n: price(mat) }),

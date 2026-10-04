@@ -443,7 +443,8 @@ export function infoStone(s, player = 'X', extra = '', action = null) {
   const body = h('div.info-stone', {},
     h('div.info-head', {}, stoneEl(s, player), h('div', {},
       h('div.info-name', {}, stoneName(s)),
-      h('div.info-rarity.' + st.rarity, {}, [once ? t('glass') : s.mat ? t(s.mat) : null, t(st.rarity)].filter(Boolean).join(' · ')))),
+      // What it is made of, if anything; how rare it is stays the game's business.
+      once || s.mat ? h('div.info-rarity', {}, once ? t('glass') : t(s.mat)) : null)),
     h('p', {}, stoneText(s)),
     stoneDemo(s),
     once ? h('p.info-plus', {}, t('It is glass: once played, it is gone from your pouch.')) : null,
@@ -458,7 +459,7 @@ export function infoRelic(id, action = null) {
   const r = RELICS[id];
   const body = h('div.info-stone', {},
     h('div.info-head', {}, h('div.relic-token', {}, relicArt(id)), h('div', {},
-      h('div.info-name', {}, r.name), h('div.info-rarity.' + r.rarity, {}, t('talisman') + ' · ' + t(r.rarity)))),
+      h('div.info-name', {}, r.name), h('div.info-rarity', {}, t('talisman')))),
     h('p', {}, r.text),
     // A + talisman: each stone it upgrades, and what its + form does.
     r.upgrades ? h('div.plus-list', {}, r.upgrades.map((x) => h('div.plus-row', {},
@@ -497,8 +498,7 @@ export function ruleChip(kind, id, cls = '') {
 // Cards are small: picture, name, price. A tap opens the card (where to take or
 // buy it).
 export function stoneCard(s, { onclick, price, sold, dear, footer } = {}) {
-  const st = STONES[s.type];
-  return h(`button.card.stone-card.${st.rarity}${sold ? '.sold' : dear ? '.dear' : ''}`, { disabled: sold || undefined, 'aria-label': stoneName(s), onclick: onclick ?? (() => infoStone(s, 'X')) },
+  return h(`button.card.stone-card${sold ? '.sold' : dear ? '.dear' : ''}`, { disabled: sold || undefined, 'aria-label': stoneName(s), onclick: onclick ?? (() => infoStone(s, 'X')) },
     stoneEl(s, 'X', { cost: true }),
     h('div.card-name', {}, stoneName(s)),
     price !== undefined ? h('div.price', {}, iconEl('coin'), price) : null,
@@ -507,7 +507,7 @@ export function stoneCard(s, { onclick, price, sold, dear, footer } = {}) {
 
 export function relicCard(id, { onclick, price, sold, dear } = {}) {
   const r = RELICS[id];
-  return h(`button.card.relic-card.${r.rarity}${sold ? '.sold' : dear ? '.dear' : ''}`, { disabled: sold || undefined, 'aria-label': r.name, onclick: onclick ?? (() => infoRelic(id)) },
+  return h(`button.card.relic-card${sold ? '.sold' : dear ? '.dear' : ''}`, { disabled: sold || undefined, 'aria-label': r.name, onclick: onclick ?? (() => infoRelic(id)) },
     h('div.relic-token', {}, relicArt(id)),
     h('div.card-name', {}, r.name),
     price !== undefined ? h('div.price', {}, iconEl('coin'), price) : null);

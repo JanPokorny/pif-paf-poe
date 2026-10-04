@@ -153,9 +153,6 @@ export default {
 
   // ── Codex ─────────────────────────────────────────────────────────────────
   'starter': 'základní',
-  'common': 'běžný',
-  'uncommon': 'neobvyklý',
-  'rare': 'vzácný',
 
   // ── Duel ──────────────────────────────────────────────────────────────────
   'top-left': 'vlevo nahoře',
@@ -320,8 +317,7 @@ export default {
   'Undead {boss}': 'Nemrtvý {boss}',
   'The moon rises…': 'Vychází měsíc…',
   '{boss} climbs out of the earth.': '{boss} se hrabe ze země.',
-  '→ one {tier} stone': '→ jeden kámen: {tier}',
-  'Two stones → one better.': 'Dva kameny → jeden lepší.',
+  'Two stones → one new.': 'Dva kameny → jeden nový.',
   'Pick': 'Vybrat',
   'Buy': 'Koupit',
   'One more energy in every duel from now on: room for a costlier stone.': 'Odteď o energii víc v každém duelu: místo pro dražší kámen.',
@@ -421,7 +417,7 @@ export const CS_DATA = {
     'lucky-coin': { name: 'Šťastná mince', text: '+8 zlaťáků za každý vyhraný duel.' },
     herbs: { name: 'Bylinkový sáček', text: 'Vyléčí 1 srdce, kdykoli porazíš elitu nebo bosse.' },
     badge: { name: 'Kupecký odznak', text: 'Všechno v obchodech stojí o 25 % méně.' },
-    clover: { name: 'Čtyřlístek', text: 'Odměny nabízejí 4 kameny místo 3 a vzácné se objevují častěji.' },
+    clover: { name: 'Čtyřlístek', text: 'Odměny nabízejí 4 kameny místo 3.' },
     bell: { name: 'Zvoneček', text: 'Po každé poražené elitě nebo bossovi najdeš skleněný kámen.' },
     phoenix: { name: 'Fénixovo pero', text: 'Jednou, až ti dojdou srdce, povstaneš znovu se 3.' },
     rematch: { name: 'Lístek na odvetu', text: 'První prohraný duel v každém dějství se hraje znovu, místo aby stál srdce.' },
@@ -491,13 +487,13 @@ export const CS_DATA = {
     stonemason: { title: 'Potulný kameník',
       text: 'Zaprášený kameník odloží dláto. „Dej mi dva z těch kamenů a vytesám ti jeden lepší.“',
       choices: [
-        { label: 'Vyměnit dva kameny', detail: 'Dva kameny za jeden vyšší třídy.' },
+        { label: 'Vyměnit dva kameny', detail: 'Dva kameny za jeden nový.' },
         { label: 'Odejít' },
       ] },
     shrine: { title: 'Svatyně vzácností',
       text: 'Stará svatyně tiše bzučí. U jejích nohou leží obětiny: kameny ve tvaru srdce.',
       choices: [
-        { label: 'Obětovat srdce', detail: 'Přijdeš o 1 srdce navždy. Vybereš si vzácný kámen.' },
+        { label: 'Obětovat srdce', detail: 'Přijdeš o 1 srdce navždy. Vybereš si kámen.' },
         { label: 'Pomodlit se', detail: 'Vyléčí 1 srdce.' },
       ] },
     gambler: { title: 'Hráčský stůl',
@@ -523,7 +519,7 @@ export const CS_DATA = {
     transmuter: { title: 'Přeměňovač',
       text: 'Vozík lemují bublající baňky. „Dej mi kámen a já ti vrátím něco… jiného.“',
       choices: [
-        { label: 'Přeměnit kámen', detail: 'Kámen se změní v náhodný vzácnější.' },
+        { label: 'Přeměnit kámen', detail: 'Kámen se změní v náhodný jiný.' },
         { label: 'Odejít' },
       ] },
     chest: { title: 'Podezřelá truhla',
@@ -554,15 +550,15 @@ export const CS_DATA = {
     trader: { title: 'Obchodník s triky',
       text: 'Kouzelník rozloží vějíř skleněných kamenů. „Vyměň jeden, kterýkoli.“',
       choices: [
-        { label: 'Vyměnit jeden', detail: 'Skleněný kámen za náhodný vzácný.' },
+        { label: 'Vyměnit jeden', detail: 'Skleněný kámen za náhodný jiný.' },
         { label: 'Koupit jeden', detail: 'Náhodný skleněný kámen za 25 zlaťáků.' },
         { label: 'Ne, díky' },
       ] },
     library: { title: 'Knihovna pravidel',
       text: 'Police plné ohmataných pravidel. Někdo počmáral každý okraj strategiemi.',
       choices: [
-        { label: 'Studovat', detail: 'Zaplať 30 zlaťáků, vyber si neobvyklý kámen.' },
-        { label: 'Půjčit si knihu', detail: 'Získáš náhodný neobvyklý skleněný kámen.' },
+        { label: 'Studovat', detail: 'Zaplať 30 zlaťáků, vyber si kámen.' },
+        { label: 'Půjčit si knihu', detail: 'Získáš náhodný skleněný kámen.' },
         { label: 'Odejít' },
       ] },
     bridge: { title: 'Vratký most',

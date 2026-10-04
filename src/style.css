@@ -374,7 +374,6 @@ b { font-weight: 400; background: linear-gradient(transparent 55%, var(--hi) 55%
 .card.sold::after { content: 'SOLD'; position: absolute; top: 40%; left: 12%; right: 12%; font-family: var(--marker); color: var(--red); font-size: 1.5rem; border: 3px solid var(--red); transform: rotate(-14deg); border-radius: 4px; }
 .card .stone { --size: 50px; margin: 4px 0; }
 .card-name { font-family: var(--marker); font-size: 0.95rem; line-height: 1.05; }
-.card.rare .card-name { color: var(--rare); } .card.uncommon .card-name { color: var(--uncommon); }
 .price { display: inline-flex; align-items: center; gap: 4px; font-family: var(--marker); color: var(--rare); }
 .price .icon { color: var(--rare); }
 .trick-token { width: 50px; height: 56px; padding: 9px; display: flex; flex: none; background: var(--card); border: 2px solid var(--blue); border-radius: 3px; color: var(--blue); transform: rotate(-4deg); }
@@ -428,8 +427,7 @@ b { font-weight: 400; background: linear-gradient(transparent 55%, var(--hi) 55%
 .info-head { display: flex; align-items: center; gap: 14px; }
 .info-head .stone { --size: 58px; }
 .info-name { font-family: var(--marker); font-size: 1.5rem; }
-.info-rarity { font-size: 0.95rem; }
-.info-rarity.common { color: var(--common); } .info-rarity.uncommon { color: var(--uncommon); } .info-rarity.rare { color: var(--rare); } .info-rarity.starter { color: var(--starter); }
+.info-rarity { font-size: 0.95rem; color: var(--pencil); }
 .info-plus { color: var(--pencil); }
 .info-extra { color: var(--pencil); font-size: 1rem; }
 .menu { display: flex; flex-direction: column; gap: 10px; padding-left: 22px; }

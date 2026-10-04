@@ -28,7 +28,7 @@ export const RELICS = {
   badge: { name: 'Merchant\'s Badge', emoji: '🏷️', rarity: 'common',
     text: 'Everything in shops costs 25% less.' },
   clover: { name: 'Four-Leaf Clover', emoji: '🍀', rarity: 'uncommon',
-    text: 'Stone rewards offer 4 choices instead of 3, and rares turn up more.' },
+    text: 'Stone rewards offer 4 choices instead of 3.' },
   bell: { name: 'Hand Bell', emoji: '🛎️', rarity: 'common',
     text: 'Find a glass stone after every elite or boss you beat.' },
   phoenix: { name: 'Phoenix Feather', emoji: '🪶', rarity: 'rare',
@@ -228,7 +228,7 @@ export const EVENTS = [
     id: 'stonemason', title: 'The Wandering Stonemason', emoji: '🧑‍🔧',
     text: 'A dusty stonemason sets down her chisel. "Give me two of those stones, and I\'ll carve you one finer."',
     choices: [
-      { label: 'Trade two stones', detail: 'Two stones for one of a higher tier.', can: (r) => r.pouch.length >= 2,
+      { label: 'Trade two stones', detail: 'Two stones for one new.', can: (r) => r.pouch.length >= 2,
         act: (r, api) => api.craft() },
       { leave: true, label: 'Leave', act: () => t('You nod politely and move on.') },
     ],
@@ -237,7 +237,7 @@ export const EVENTS = [
     id: 'shrine', title: 'Shrine of Rarities', emoji: '⛩️',
     text: 'An old shrine hums quietly. Offerings of heart-shaped stones lie at its foot.',
     choices: [
-      { label: 'Offer a max heart', detail: 'Lose 1 max heart. Choose a rare stone.', can: (r) => r.maxHearts > 2,
+      { label: 'Offer a max heart', detail: 'Lose 1 max heart. Choose a stone.', can: (r) => r.maxHearts > 2,
         act: (r, api) => api.chooseStone('rare', () => { r.maxHearts--; r.hearts = Math.min(r.hearts, r.maxHearts); }) },
       { label: 'Pray', detail: 'Heal 1 heart.', act: (r) => { r.hearts = Math.min(r.maxHearts, r.hearts + 1); return t('A warmth settles in your chest.'); } },
     ],
@@ -275,7 +275,7 @@ export const EVENTS = [
     id: 'transmuter', title: 'The Transmuter', emoji: '⚗️',
     text: 'Bubbling flasks line a cart. "Give me a stone, and I\'ll give you back something… different."',
     choices: [
-      { label: 'Transmute a stone', detail: 'Replace a stone with a random one of higher rarity.', can: (r) => r.pouch.length > 0,
+      { label: 'Transmute a stone', detail: 'Replace a stone with a random other one.', can: (r) => r.pouch.length > 0,
         act: (r, api) => api.transmute() },
       { leave: true, label: 'Leave', act: () => t('The flasks keep bubbling.') },
     ],
@@ -321,7 +321,7 @@ export const EVENTS = [
     id: 'trader', title: 'The Trick Trader', emoji: '🎩',
     text: 'A magician fans out a deck of glass stones. "Swap one, any one."',
     choices: [
-      { label: 'Trade one', detail: 'Swap a glass stone for a random rare one.', can: (r) => r.pouch.some((x) => x.once || STONES[x.type].once),
+      { label: 'Trade one', detail: 'Swap a glass stone for a random other one.', can: (r) => r.pouch.some((x) => x.once || STONES[x.type].once),
         act: async (r, api) => {
           const k = await api.pickOnce(t('Trade which one?'));
           if (!k) return t('He shrugs and shuffles the deck.');
@@ -337,9 +337,9 @@ export const EVENTS = [
     id: 'library', title: 'The Rulebook Library', emoji: '📚',
     text: 'Shelves of dog-eared rulebooks. Someone has scribbled strategies in every margin.',
     choices: [
-      { label: 'Study', detail: 'Pay 30 gold, choose an uncommon stone.', can: (r) => r.gold >= 30,
+      { label: 'Study', detail: 'Pay 30 gold, choose a stone.', can: (r) => r.gold >= 30,
         act: (r, api) => api.chooseStone('uncommon', () => { r.gold -= 30; }) },
-      { label: 'Borrow a book', detail: 'Gain a random uncommon glass stone.',
+      { label: 'Borrow a book', detail: 'Gain a random glass stone.',
         act: (r, api) => api.gainRandomOnce('uncommon') },
       { leave: true, label: 'Leave', act: () => t('You put the books back.') },
     ],

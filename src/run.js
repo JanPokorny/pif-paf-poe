@@ -119,7 +119,7 @@ export const asBrought = (run, s) => (upgraded(run, s) ? { ...s, plus: true } : 
 // of the two (rares stay rare): a choice of two.
 
 const TIERS = ['common', 'uncommon', 'rare'];
-export const craftTier = (a, b) => {
+const craftTier = (a, b) => {
   const low = Math.min(TIERS.indexOf(STONES[a.type].rarity), TIERS.indexOf(STONES[b.type].rarity));
   return TIERS[Math.min(TIERS.length - 1, low + 1)];
 };
