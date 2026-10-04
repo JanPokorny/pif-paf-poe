@@ -625,9 +625,6 @@ h1, h2, .btn.primary, .enemy-name, .card-name, .section-label { letter-spacing: 
   linear-gradient(90deg, transparent 35px, var(--pencil) 35px, var(--pencil) 37px, transparent 37px, transparent 71px, var(--pencil) 71px, var(--pencil) 73px, transparent 73px),
   linear-gradient(transparent 35px, var(--pencil) 35px, var(--pencil) 37px, transparent 37px, transparent 71px, var(--pencil) 71px, var(--pencil) 73px, transparent 73px); }
 .demo-cell { display: flex; align-items: center; justify-content: center; }
-.glows { position: absolute; inset: 0; pointer-events: none; }
-.glow { position: absolute; left: calc(var(--c) * var(--cell)); top: calc(var(--r) * var(--cell)); width: var(--cell); height: var(--cell); }
-.glow.on::before { content: ''; position: absolute; inset: 9%; border-radius: 26% 22% 28% 24%; background: #fff; box-shadow: 0 0 0 1.5px rgba(0, 0, 0, 0.08), 0 2px 6px rgba(0, 0, 0, 0.1); animation: fade 0.2s; }
 .demo-cell.ok { box-shadow: inset 0 0 0 2px rgba(31, 79, 176, 0.35); border-radius: 30%; }
 .demo-cell.no { background: repeating-linear-gradient(-45deg, transparent 0 5px, rgba(200, 55, 45, 0.3) 5px 7px); border-radius: 30%; }
 .demo-arrow { font-size: 1.6rem; color: var(--pencil); }
@@ -1081,3 +1078,5 @@ body:has(.duel) #toast.show { transform: translate(-50%, 0) rotate(-1deg); }
 .ruled .heat-label { line-height: 26px; }
 .ruled .share { margin: 0; padding: 0 8px; line-height: 26px; background: none; }
 .ruled .settings-row { margin-top: 0; }
+/* Where the stone in a preview was placed: a dotted blue square, as yours are drawn. */
+.cell.placed-at::after { opacity: 1; inset: 8%; background: none; border: 2.5px dotted var(--blue); border-radius: 14% 18% 12% 16%; animation: none; filter: none; }

@@ -7,7 +7,7 @@
 
 import {
   STONES, CONDS, RULES, legalActions, applyAction, cloneState, allowedSquares,
-  winningLine, active, row, col, handKey, LINES, ELS, adjacent, specOf,
+  winningLine, active, row, col, handKey, LINES, ELS, specOf,
 } from '../engine.js';
 import { h, stoneEl, updateStone, toast, infoStone, ruleChip, stoneName, stoneText, sleep, statusLine } from './common.js';
 import { icon } from '../icons.js';
@@ -98,13 +98,12 @@ export function mountDuel(root, opts) {
   const cells = Array.from({ length: 9 }, (_, i) => h('div.cell', { dataset: { i } }));
   const stonesLayer = h('div.stones');
   // The squares a stone acts on, lit white beneath the stones.
-  const glows = Array.from({ length: 9 }, (_, i) => h('div.glow', { style: `--r: ${Math.floor(i / 3)}; --c: ${i % 3}` }));
   const overlay = h('div.overlay');
   const lineLayer = h('div.winline');
   const gridLines = h('div.board-lines', { html: `<svg viewBox="0 0 300 300" preserveAspectRatio="none" aria-hidden="true">
     <path d="M101 8 C 98 90, 104 190, 99 292"/><path d="M200 6 C 203 100, 197 200, 202 293"/>
     <path d="M7 100 C 90 97, 200 104, 294 99"/><path d="M8 201 C 100 204, 190 197, 293 202"/></svg>` });
-  const board = h('div.board', {}, gridLines, h('div.glows', {}, glows), h('div.cells', {}, cells), stonesLayer, lineLayer, overlay);
+  const board = h('div.board', {}, gridLines, h('div.cells', {}, cells), stonesLayer, lineLayer, overlay);
   const actions = h('div.actions');
   const hand = h('div.hand.player-hand');
   const info = h('div.info-line');
@@ -265,8 +264,7 @@ export function mountDuel(root, opts) {
 
   function clearOverlay() {
     overlay.replaceChildren();
-    cells.forEach((c) => c.classList.remove('allowed', 'target', 'chosen', 'from'));
-    glows.forEach((g) => g.classList.remove('on'));
+    cells.forEach((c) => c.classList.remove('allowed', 'target', 'chosen', 'from', 'placed-at'));
   }
 
   // Squares, arrows and buttons for the choice at hand.
@@ -412,16 +410,13 @@ export function mountDuel(root, opts) {
     } else if (state.phase === 'place' && preview) {
       const dud = preview.logs?.includes('silenced');
       setStatus(dud ? t('{why} — it will do nothing. Confirm?', { why: t('Hushed') }) : t('This is what happens. Confirm?'), dud ? 'lose-note' : 'you');
-      cells[preview.action.pos].classList.add('chosen');
-      // The squares it acts on from there, white: beside it, or its whole row and column.
-      // Once it is placed, the other places it could go are no longer lit.
-      const reach = state.selected && specOf(state.selected).reach, at = preview.action.pos;
-      const acts = (i) => i !== at && (reach === 'beside' ? adjacent(at, i) : reach === 'line' && (row(i) === row(at) || col(i) === col(at)));
-      for (let i = 0; i < 9; i++) if (acts(i)) glows[i].classList.add('on');
+      // Where it was placed, outlined: it may have moved on from there.
+      cells[preview.action.pos].classList.add('placed-at');
       renderActions([undo, h('button.btn.primary', { onclick: confirm }, h('span', { html: icon('check') }), t('Confirm'))]);
       verdict();
     } else if (state.phase === 'effect') {
       const btns = renderStage();
+      if (preview) cells[state.placedAt].classList.add('placed-at');
       const what = stoneName(state.board[state.placedAt]);
       setStatus(preview ? t('✓ to confirm, tap again to take it back') : t('Choose how your {what} works', { what }), 'you');
       describeSelected(); if (!preview) coach('effect');
