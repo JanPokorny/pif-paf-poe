@@ -203,7 +203,6 @@ export function mountDuel(root, opts) {
       e.addEventListener('click', () => { if (!e.classList.contains('target')) tapEnemyStone(st); });
       return h('div.hand-slot.enemy-slot', {}, e, n > 1 ? h('span.hand-count', {}, `×${n}`) : null);
     }));
-    if (!theirs.length) enemyHand.append(h('span.dim.small', {}, t('Empty: a pebble turns up on their turn.')));
     // Under Open Hands, a sticky note says which of theirs you may take.
     if (enemyHand.querySelector('.stone.borrow')) enemyHand.append(h('span.pick-note', {}, t('You can play these!')));
 
@@ -219,7 +218,6 @@ export function mountDuel(root, opts) {
       return b;
     };
     hand.replaceChildren(...groupHand(base.hands.X).map(({ st, k, n }) => slot(k, st, n)));
-    if (!base.hands.X.length) hand.append(h('span.dim.small', {}, t('Empty: you find a pebble on your turn.')));
 
   }
 
@@ -653,11 +651,13 @@ export function mountDuel(root, opts) {
         state.log = [];
         applyAction(state, action);
         if (action.from === 'X') said('O', t('took your {stone}', { stone: stoneName(state.selected) }));
-        // Show which stone it took.
-        renderHands(state);
-        const lifted = stoneEl(state.selected, 'O');
-        lifted.classList.add('lifted');
-        enemyHand.append(h('div.hand-slot.enemy-slot', {}, lifted));
+        // Show which stone it took: its kind lifts in the hand, the stone still counted there.
+        if (action.from === 'X') renderHands(state);
+        else {
+          renderHands(state, { ...state, hands: { ...state.hands, O: [...state.hands.O, state.selected] } });
+          const k = groupHand([...state.hands.O, state.selected]).findIndex(({ st }) => sameKind(st, state.selected));
+          enemyHand.children[k]?.querySelector('.stone')?.classList.add('lifted');
+        }
         sfx('select');
         await sleep(Math.max(120, 420 - waited));
         continue;
