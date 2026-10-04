@@ -17,7 +17,7 @@
   --sticky: #fff27d;
   --pink: #ffc9d9;
   --mint: #cdf1c2;
-  --sky: #c9e6ff;
+  --note: #e4e2dc;   /* a plain note: neither good nor bad news */
   --hi: rgba(255, 228, 0, 0.45);
   --hi-orange: rgba(255, 160, 40, 0.45);
   --tape: rgba(222, 205, 160, 0.72);
@@ -72,7 +72,7 @@ b { font-weight: 400; background: linear-gradient(transparent 55%, var(--hi) 55%
 /* ── Things to press ─────────────────────────────────────────────────────── */
 /* Sticky notes come in four colours: yellow is only ever something to press
    (a button, an arrow, a "More →"); light green is good news, light red bad
-   news, light blue plain information. */
+   news, light gray plain information. */
 /* A scrap of paper with a pencil outline; the important one is a sticky note. */
 .btn {
   display: inline-flex; align-items: center; justify-content: center; gap: 0.4em;
@@ -292,12 +292,12 @@ b { font-weight: 400; background: linear-gradient(transparent 55%, var(--hi) 55%
 
 .result-banner {
   position: absolute; left: 22px; right: 22px; top: 20%; z-index: 20; padding: 26px 18px 18px; text-align: center;
-  background: var(--sky); box-shadow: 2px 12px 22px -6px rgba(60, 40, 0, 0.5); transform: rotate(-1.5deg);
+  background: var(--note); box-shadow: 2px 12px 22px -6px rgba(60, 40, 0, 0.5); transform: rotate(-1.5deg);
   display: flex; flex-direction: column; gap: 10px; animation: slap 0.35s cubic-bezier(.3,1.4,.5,1);
 }
 .result-banner::before { content: ''; position: absolute; top: -11px; left: calc(50% + var(--tape-x, 0px)); width: 90px; height: 24px; margin-left: -45px; background: var(--tape); transform: rotate(calc(2deg + var(--tape-r, 0deg))); }
 .result-banner.won { background: var(--mint); }
-.result-banner.draw { background: var(--sky); }
+.result-banner.draw { background: var(--note); }
 .draw .result-title { color: var(--ink); }
 .result-banner.lost { background: var(--pink); }
 .result-banner.peek { top: auto; bottom: 8px; padding: 12px; }
@@ -340,7 +340,7 @@ b { font-weight: 400; background: linear-gradient(transparent 55%, var(--hi) 55%
 .act-intro { min-height: 100dvh; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; padding: 24px; gap: 12px; }
 .act-intro h1 { font-size: 2.6rem; transform: rotate(-2deg); }
 .act-n { font-family: var(--marker); color: var(--red); font-size: 1.2rem; }
-.rules-note { background: var(--sky); padding: 16px 16px 12px; transform: rotate(1deg); box-shadow: 2px 6px 10px -4px rgba(80, 60, 0, 0.45); max-width: 360px; text-align: left; position: relative; font-size: 1.05rem; }
+.rules-note { background: var(--note); padding: 16px 16px 12px; transform: rotate(1deg); box-shadow: 2px 6px 10px -4px rgba(80, 60, 0, 0.45); max-width: 360px; text-align: left; position: relative; font-size: 1.05rem; }
 .rules-note::before { content: ''; position: absolute; top: -10px; left: calc(50% + var(--tape-x, 0px)); width: 70px; height: 20px; margin-left: -35px; background: var(--tape); transform: rotate(calc(-3deg + var(--tape-r, 0deg))); }
 
 /* ── Before a duel ───────────────────────────────────────────────────────── */
@@ -403,7 +403,7 @@ b { font-weight: 400; background: linear-gradient(transparent 55%, var(--hi) 55%
 .choice { text-align: left; padding: 12px 14px; font-size: 1.05rem; }
 .choice:nth-child(odd) { transform: rotate(-0.4deg); }
 .choice.disabled { opacity: 0.4; }
-.event-result { font-size: 1.15rem; padding: 14px; background: var(--sky); transform: rotate(-0.6deg); box-shadow: 2px 6px 10px -5px rgba(80, 60, 0, 0.45); }
+.event-result { font-size: 1.15rem; padding: 14px; background: var(--note); transform: rotate(-0.6deg); box-shadow: 2px 6px 10px -5px rgba(80, 60, 0, 0.45); }
 
 .end { text-align: center; align-items: center; min-height: 100dvh; justify-content: center; }
 .stats { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; width: 100%; }
@@ -445,7 +445,7 @@ b { font-weight: 400; background: linear-gradient(transparent 55%, var(--hi) 55%
 /* A sticky note slapped at the top of the page. */
 #toast {
   position: fixed; left: 50%; bottom: calc(14px + var(--safe-b)); z-index: 100; max-width: 90vw; text-align: center;
-  background: var(--sky); padding: 10px 16px; font-size: 1.05rem;
+  background: var(--note); padding: 10px 16px; font-size: 1.05rem;
   box-shadow: 2px 8px 14px -6px rgba(80, 60, 0, 0.55);
   opacity: 0; transform: translate(-50%, 30px) rotate(-2deg); transition: opacity 0.2s, transform 0.2s; pointer-events: none;
 }
@@ -505,7 +505,7 @@ b { font-weight: 400; background: linear-gradient(transparent 55%, var(--hi) 55%
 .campfire .icon { width: 100%; height: 100%; }
 .map-cell .label { max-width: 96%; text-align: center; font-size: 0.8rem; line-height: 0.95; }
 .stone-grid.upgrades { grid-template-columns: repeat(2, 1fr); }
-.coach { color: var(--ink); background: var(--sky); padding: 2px 6px; box-shadow: 1px 3px 5px -3px rgba(80,60,0,.5); display: inline-block; transform: rotate(-0.5deg); }
+.coach { color: var(--ink); background: var(--note); padding: 2px 6px; box-shadow: 1px 3px 5px -3px rgba(80,60,0,.5); display: inline-block; transform: rotate(-0.5deg); }
 
 /* Ink art replaces the stamped emoji where it exists. */
 .art { display: inline-flex; align-items: center; justify-content: center; line-height: 1; }
@@ -590,7 +590,7 @@ h1, h2, .btn.primary, .enemy-name, .card-name, .section-label { letter-spacing: 
 /* ── The slower game: Pebbles for ever, rules and conditions ───────────── */
 .hand-slot { position: relative; }
 .enemy-hand .stone.borrow { cursor: pointer; }
-.pick-note { flex: none; max-width: 92px; margin-left: 4px; padding: 5px 8px 6px; background: var(--sky); font-family: var(--hand); font-size: 0.85rem; line-height: 1.1; color: var(--ink); text-align: center;
+.pick-note { flex: none; max-width: 92px; margin-left: 4px; padding: 5px 8px 6px; background: var(--note); font-family: var(--hand); font-size: 0.85rem; line-height: 1.1; color: var(--ink); text-align: center;
   transform: rotate(4deg); box-shadow: 1px 2px 4px rgba(0, 0, 0, 0.16); border-radius: 1px 1px 2px 8px; animation: fade 0.3s; }
 .enemy-hand .stone.forbidden { opacity: 0.35; }
 .enemy-hand .stone.selected { transform: translateY(4px) scale(1.12); outline: 3px solid var(--hi); outline-offset: 2px; border-radius: 50%; }
@@ -967,19 +967,19 @@ body:has(.duel) #toast.show { transform: translate(-50%, 0) rotate(-1deg); }
 /* ── Small notes ─────────────────────────────────────────────────────────────
    Rule and condition chips, a duel's status chips, the energy counter and the
    counts on stones: rectangular post-its, a little askew, in the colours of
-   every note (light red bad, light green good, light blue plain information). */
+   every note (light red bad, light green good, light gray plain information). */
 .rule-chip, .chips .chip, .energy-bar, .hand-count {
   border: 0; border-radius: 1px; box-shadow: 1px 2px 3px rgba(60, 40, 0, 0.22); color: var(--ink);
 }
-.rule-chip { background: var(--sky); padding: 4px 8px 4px 6px; transform: rotate(-1.5deg); }
+.rule-chip { background: var(--note); padding: 4px 8px 4px 6px; transform: rotate(-1.5deg); }
 .rule-chip.rule { background: var(--pink); color: var(--ink); }
 .rule-chip.rule .chip-ico { color: var(--red); }
-.chips .chip { padding: 3px 8px; background: var(--sky); transform: rotate(-1.5deg); }
+.chips .chip { padding: 3px 8px; background: var(--note); transform: rotate(-1.5deg); }
 .chips .chip.bad { background: var(--pink); color: var(--ink); }
 .chips .chip.good { background: var(--mint); color: var(--ink); }
 .chips > :nth-child(even) { transform: rotate(1.5deg); }
-.energy-bar { background: var(--sky); transform: rotate(-1deg); padding: 4px 10px; }
-.hand-count { background: var(--sky); transform: rotate(5deg); padding: 0 5px; }
+.energy-bar { background: var(--note); transform: rotate(-1deg); padding: 4px 10px; }
+.hand-count { background: var(--note); transform: rotate(5deg); padding: 0 5px; }
 .map-scroll { cursor: grab; }
 .map-scroll.dragging { cursor: grabbing; }
 .map-scroll.dragging .map-cell { cursor: grabbing; }
@@ -987,8 +987,8 @@ body:has(.duel) #toast.show { transform: translate(-50%, 0) rotate(-1deg); }
 /* Energy as little bolts: a stone's cost in its corner, and the energy before a
    duel, a bolt each, filled for what the chosen stones use. */
 .stone .cost { gap: 0; padding: 1px 2px; border-radius: 1px; }
-.stone .cost i { width: 11px; height: 14px; border-radius: 0; background: none; box-shadow: none; display: flex; }
-.stone.mini .cost i { width: 8px; height: 10px; }
+.stone .cost i { width: 13px; height: 16px; border-radius: 0; background: none; box-shadow: none; display: flex; }
+.stone.mini .cost i { width: 10px; height: 12px; }
 .stone .cost i .icon { width: 100%; height: 100%; color: var(--blue); stroke-width: 2.2; }
 .stone .cost i .icon path { fill: var(--blue); }
 .energy-bar { gap: 1px; padding: 3px 8px; }
@@ -1018,4 +1018,4 @@ body:has(.duel) #toast.show { transform: translate(-50%, 0) rotate(-1deg); }
 .portrait.big .rip { font-size: 1.45rem; text-shadow: 1px 0px 0 var(--rip-edge), -1px 0px 0 var(--rip-edge), 0px 1px 0 var(--rip-edge), 0px -1px 0 var(--rip-edge), 1px 1px 0 var(--rip-edge), -1px 1px 0 var(--rip-edge), 1px -1px 0 var(--rip-edge), -1px -1px 0 var(--rip-edge); }
 /* A stone's energy cost: the same little blue note as a count. */
 /* Top right, where a count sits: a stone has one or the other, never both. */
-.stone .cost { background: var(--sky); border-radius: 1px; box-shadow: 1px 2px 3px rgba(60, 40, 0, 0.22); padding: 1px 3px; transform: rotate(5deg); left: auto; right: -5px; }
+.stone .cost { background: var(--note); border-radius: 1px; box-shadow: 1px 2px 3px rgba(60, 40, 0, 0.22); padding: 1px 3px; transform: rotate(5deg); left: auto; right: -5px; }
