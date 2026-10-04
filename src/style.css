@@ -1015,5 +1015,5 @@ body:has(.duel) #toast.show { transform: translate(-50%, 0) rotate(-1deg); }
 .portrait .rip { position: absolute; left: 50%; top: 42%; z-index: 2; translate: -50% -50%; rotate: -32deg; pointer-events: none;
   font-family: var(--marker); font-size: 0.85rem; line-height: 1; color: var(--red); white-space: nowrap;
   /* A sharp edge the colour of the (undead) photo's ground, so the letters stand clear of the picture. */
-  --rip-edge: #d8f8ce; text-shadow: 1.5px 0px 0 var(--rip-edge), -1.5px 0px 0 var(--rip-edge), 0px 1.5px 0 var(--rip-edge), 0px -1.5px 0 var(--rip-edge), 1.5px 1.5px 0 var(--rip-edge), -1.5px 1.5px 0 var(--rip-edge), 1.5px -1.5px 0 var(--rip-edge), -1.5px -1.5px 0 var(--rip-edge); }
-.portrait.big .rip { font-size: 1.45rem; text-shadow: 2px 0px 0 var(--rip-edge), -2px 0px 0 var(--rip-edge), 0px 2px 0 var(--rip-edge), 0px -2px 0 var(--rip-edge), 2px 2px 0 var(--rip-edge), -2px 2px 0 var(--rip-edge), 2px -2px 0 var(--rip-edge), -2px -2px 0 var(--rip-edge); }
+  --rip-edge: #d8f8ce; text-shadow: 0.8px 0px 0 var(--rip-edge), -0.8px 0px 0 var(--rip-edge), 0px 0.8px 0 var(--rip-edge), 0px -0.8px 0 var(--rip-edge), 0.8px 0.8px 0 var(--rip-edge), -0.8px 0.8px 0 var(--rip-edge), 0.8px -0.8px 0 var(--rip-edge), -0.8px -0.8px 0 var(--rip-edge); }
+.portrait.big .rip { font-size: 1.45rem; text-shadow: 1px 0px 0 var(--rip-edge), -1px 0px 0 var(--rip-edge), 0px 1px 0 var(--rip-edge), 0px -1px 0 var(--rip-edge), 1px 1px 0 var(--rip-edge), -1px 1px 0 var(--rip-edge), 1px -1px 0 var(--rip-edge), -1px -1px 0 var(--rip-edge); }
