@@ -311,6 +311,12 @@ b { font-weight: 400; background: linear-gradient(transparent 55%, var(--hi) 55%
 .info-line { font-size: 1rem; color: var(--pencil); text-align: center; min-height: 2.5em; padding: 0 6px; line-height: 1.2; }
 .info-line b { color: var(--ink); }
 .info-more { background: none; border: 0; color: var(--blue); font-size: 1.1rem; padding: 0 4px; }
+/* "More →": a little sticky note at the end of the line, for the stone's card. */
+.info-line .info-more {
+  display: inline-block; margin-left: 6px; padding: 0 7px; vertical-align: 1px;
+  background: var(--sticky); color: var(--ink); font-family: var(--marker); font-size: 0.9rem; line-height: 1.5;
+  transform: rotate(-3deg); box-shadow: 1px 2px 2px rgba(60, 40, 0, 0.25);
+}
 
 .result-banner {
   position: absolute; left: 22px; right: 22px; top: 20%; z-index: 20; padding: 26px 18px 18px; text-align: center;

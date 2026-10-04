@@ -115,8 +115,7 @@ export function mountDuel(root, opts) {
       enemy.tier && enemy.tier !== 'normal' ? h('span.tier.' + enemy.tier, {}, t(enemy.tier === 'event' ? 'challenge' : enemy.tier)) : null),
     ), extra);
 
-  const el = h('div.duel', {}, header, chips, status.el, enemyHand, h('div.board-wrap', {}, board), actions, hand,
-    h('div.press-hint', {}, t('Tap a stone to pick it up, ⓘ for its card.')), info);
+  const el = h('div.duel', {}, header, chips, status.el, enemyHand, h('div.board-wrap', {}, board), actions, hand, info);
   root.replaceChildren(el);
   // The board's lines on the paper's: nudged onto the nearest of its 24px squares.
   const wrap = el.querySelector('.board-wrap');
@@ -474,7 +473,7 @@ export function mountDuel(root, opts) {
     if (!c) return;
     info.replaceChildren(h('b', {}, stoneName(c) + ': '), stoneText(c),
       state.silenced.X > 0 && state.phase === 'place' && c.type !== 'pebble' ? h('span.red', {}, t(' — but you are hushed: it will do nothing.')) : '',
-      h('button.info-more', { onclick: () => infoStone(c, 'X') }, 'ⓘ'));
+      h('button.info-more', { onclick: () => infoStone(c, 'X') }, t('More →')));
   }
 
   const allEffect = () => effectCands;

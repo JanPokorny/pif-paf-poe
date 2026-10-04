@@ -18,8 +18,9 @@ export const RELICS = {
     text: '+2 max hearts, and heal 2 now.' },
   'deep-pockets': { name: 'Second Wind', emoji: '🌬️', rarity: 'rare',
     text: '+1 energy: bring stones worth one more into every duel.' },
-  satchel: { name: 'Satchel', emoji: '🎒', rarity: 'common',
-    text: 'Shops sell one more stone.' },
+  // (Its id is still 'satchel', as saves have it.)
+  satchel: { name: 'Loyalty Card', emoji: '🎫', rarity: 'common',
+    text: 'Shopkeepers know you: every shop shows you one more stone.' },
   'lucky-coin': { name: 'Lucky Coin', emoji: '🪙', rarity: 'common',
     text: '+8 gold for every duel you win.' },
   herbs: { name: 'Herbal Pouch', emoji: '🌿', rarity: 'common',
