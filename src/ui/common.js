@@ -251,6 +251,14 @@ function demoCaption(st) {
   return null;
 }
 
+// Whether a stone's card has an example to show (worked out once per kind).
+const demoKnown = new Map();
+export function hasExample(s) {
+  const key = s.type + (s.plus && STONES[s.type]?.plus ? '+' : '');
+  if (!demoKnown.has(key)) demoKnown.set(key, !!stoneDemo(s));
+  return demoKnown.get(key);
+}
+
 function stoneDemo(s) {
   const st = specOf(s);
   const plus = s.plus && STONES[s.type].plus ? { plus: true } : {};

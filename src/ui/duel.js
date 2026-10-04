@@ -9,7 +9,7 @@ import {
   STONES, CONDS, RULES, legalActions, applyAction, cloneState, allowedSquares,
   winningLine, active, row, col, handKey, LINES, ELS, specOf,
 } from '../engine.js';
-import { h, stoneEl, updateStone, toast, infoStone, ruleChip, stoneName, stoneText, sleep, statusLine } from './common.js';
+import { h, stoneEl, updateStone, toast, infoStone, hasExample, ruleChip, stoneName, stoneText, sleep, statusLine } from './common.js';
 import { icon } from '../icons.js';
 import { t } from '../i18n.js';
 import { think } from '../brain.js';
@@ -472,7 +472,8 @@ export function mountDuel(root, opts) {
     if (!c) return;
     info.replaceChildren(h('b', {}, stoneName(c) + ': '), stoneText(c),
       state.silenced.X > 0 && state.phase === 'place' && c.type !== 'pebble' ? h('span.red', {}, t(' — but you are hushed: it will do nothing.')) : '',
-      h('button.info-more', { onclick: () => infoStone(c, 'X') }, t('More →')));
+      // Its card, when it has an example to show beyond this line.
+      hasExample(c) ? h('button.info-more', { onclick: () => infoStone(c, 'X') }, t('More →')) : null);
   }
 
   const allEffect = () => effectCands;

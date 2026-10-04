@@ -920,19 +920,30 @@ function eventScreen() {
       return null;
     },
   };
+  // What a choice came to, by what it changed: anything gained is good news
+  // (even paid for), only losses bad, nothing at all neither.
+  const sig = () => ({ hearts: run.hearts, maxHearts: run.maxHearts, gold: run.gold, energy: run.energy ?? 0, relics: run.relics.length, pouch: JSON.stringify(run.pouch) });
+  const moodOf = (a, b) => {
+    const gained = b.hearts > a.hearts || b.maxHearts > a.maxHearts || b.gold > a.gold || b.energy > a.energy || b.relics > a.relics
+      || (b.pouch !== a.pouch && JSON.parse(b.pouch).length >= JSON.parse(a.pouch).length);
+    const lost = b.hearts < a.hearts || b.maxHearts < a.maxHearts || b.gold < a.gold || JSON.parse(b.pouch).length < JSON.parse(a.pouch).length;
+    return gained ? 'good' : lost ? 'bad' : '';
+  };
   const choose = (c) => async () => {
     // A reload in the middle of a choice must not offer the event again.
     run.pending.result = t('You move on.');
     save();
+    const was = sig();
     const out = await c.act(run, api);
     if (out === null) return;   // it started a duel
     run.pending.result = out;
+    run.pending.mood = moodOf(was, sig());
     save();
     eventScreen();
   };
   const leave = result ? null : ev.choices.find((c) => c.leave);
   const choices = result
-    ? [h('p.event-result', {}, result)]
+    ? [h('p.event-result' + (run.pending.mood ? '.' + run.pending.mood : ''), {}, result)]
     : ev.choices.filter((c) => !c.leave).map((c) => {
       const ok = !c.can || c.can(run, api);
       return h('button.choice' + (ok ? '' : '.disabled'), {
