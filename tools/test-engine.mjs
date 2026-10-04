@@ -10,8 +10,8 @@
 
 import assert from 'node:assert/strict';
 import {
-  createGame, applyAction, legalActions, cloneState, allowedSquares, isStuck,
-  hasLine, render, STONES, STONE_TYPES, BASE_STONES, ONCE_STONES, CONDS, RULES, ELS,
+  createGame, applyAction, legalActions, cloneState, allowedSquares,
+  render, STONES, STONE_TYPES, BASE_STONES, ONCE_STONES, CONDS, RULES, ELS,
 } from '../src/engine.js';
 import { chooseAction } from '../src/ai.js';
 
@@ -778,6 +778,7 @@ test('glass costs 1, marble and gold one more; a + talisman makes a group of sto
   assert.equal(RUN.costOf({ type: 'swap', mat: 'marble' }), 3);
   assert.equal(RUN.costOf({ type: 'shift', mat: 'gold' }), 2);
   const run = RUN.newRun({ seed: 2 });
+  run.pouch = [];
   RUN.gainStone(run, { type: 'rotate' });
   RUN.gainStone(run, { type: 'bonfire' });
   RUN.gainRelic(run, 'plus-turn');
@@ -796,14 +797,23 @@ test('gold stones in your winning line pay 10 each; crafting keeps the material'
 });
 test('a + talisman is offered only for stones in the pouch', () => {
   const run = RUN.newRun({ seed: 3 });
+  run.pouch = [];
   RUN.gainStone(run, { type: 'stinky' });
   for (let i = 0; i < 200; i++) {
     const r = RUN.randomRelic(run);
     if (r?.startsWith('plus-')) assert.equal(r, 'plus-fence');
   }
 });
+test('a run starts with a Shift and a Waltz, and 1 energy', () => {
+  const run = RUN.newRun({ seed: 1 });
+  assert.deepEqual(run.pouch.map((x) => x.type), ['shift', 'rotate']);
+  assert.equal(RUN.energyOf(run), 1);
+  assert.equal(RUN.defaultHand(run).length, 1);
+  assert.ok(!Object.values(RUN.makeMap(run).cells).some((c) => c.kind === 'gift'));
+});
 test('stones cost energy; a stone found joins the last hand if the energy pays for it', () => {
-  const run = RUN.newRun({ seed: 1 });   // 1 energy, nothing in the pouch
+  const run = RUN.newRun({ seed: 1 });
+  run.pouch = [];   // 1 energy, nothing in the pouch
   const hand = () => RUN.defaultHand(run).map((u) => run.pouch.find((x) => x.uid === u).type).sort();
   assert.deepEqual(RUN.playerHand(run, RUN.defaultHand(run)).map((x) => x.type), ['pebble', 'pebble', 'pebble', 'pebble']);
   run.lastHand = RUN.defaultHand(run);

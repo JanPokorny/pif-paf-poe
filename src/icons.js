@@ -69,25 +69,6 @@ function gear() {
   return P(d + 'Z') + C(0, 0, 2.2);
 }
 
-// Open jaw trap: two jaws hinged on the left, teeth pointing inward.
-function snare() {
-  const H = [-6.2, 0];
-  let out = '';
-  for (const sgn of [-1, 1]) {
-    const T = [6.4, 5.4 * sgn];
-    out += P(`M ${H[0]} ${H[1]} L ${T[0]} ${T[1]}`, SW(1.6));
-    const dx = T[0] - H[0], dy = T[1] - H[1], L = Math.hypot(dx, dy);
-    const ux = dx / L, uy = dy / L, nx = -uy * sgn * -1, ny = ux * sgn * -1; // normal toward centre line
-    for (const t of [0.42, 0.66, 0.9]) {
-      const bx = H[0] + dx * t, by = H[1] + dy * t;
-      const a = [r2(bx - ux * 1.1), r2(by - uy * 1.1)], b = [r2(bx + ux * 1.1), r2(by + uy * 1.1)];
-      const tip = [r2(bx + nx * 2.2), r2(by + ny * 2.2)];
-      out += F(`M ${a[0]} ${a[1]} L ${tip[0]} ${tip[1]} L ${b[0]} ${b[1]} Z`);
-    }
-  }
-  return out + DOT(H[0], H[1], 1.5);
-}
-
 const PEBBLE = 'M -5.4 2.3 C -5.9 -1.4 -2.6 -4.2 0.6 -4.1 C 4.2 -4 6.2 -1.4 5.8 1.4 C 5.4 3.9 2.8 4.6 0 4.6 C -3.1 4.6 -5.1 4.1 -5.4 2.3 Z';
 
 // Leaf: base (bx,by), pointing along `deg`, length L, half-width W.
@@ -99,24 +80,7 @@ function leaf(bx, by, deg, L, W, extra = '') {
   return P(`M ${r2(bx)} ${r2(by)} Q ${c1[0]} ${c1[1]} ${tx} ${ty} Q ${c2[0]} ${c2[1]} ${r2(bx)} ${r2(by)} Z`, extra);
 }
 
-// Outline of a rectangle (cx,cy,hw,hh) rotated by deg, clipped to x <= cut (open at the cut).
-function clippedCard(cx, cy, hw, hh, deg, cut) {
-  const c = Math.cos(rad(deg)), s = Math.sin(rad(deg));
-  const pts = [[-hw, -hh], [hw, -hh], [hw, hh], [-hw, hh]].map(([x, y]) => [cx + x * c - y * s, cy + x * s + y * c]);
-  const segs = [];
-  for (let i = 0; i < 4; i++) {
-    let a = pts[i], b = pts[(i + 1) % 4];
-    if (a[0] > cut && b[0] > cut) continue;
-    const at = (p, q) => { const t = (cut - p[0]) / (q[0] - p[0]); return [cut, p[1] + (q[1] - p[1]) * t]; };
-    if (a[0] > cut) a = at(a, b);
-    if (b[0] > cut) b = at(b, a);
-    segs.push(`M ${r2(a[0])} ${r2(a[1])} L ${r2(b[0])} ${r2(b[1])}`);
-  }
-  return P(segs.join(' '));
-}
-
 const HEART_D = 'M 0 6.2 C -4 3.4 -7 0.6 -7 -2.2 C -7 -4.6 -5.2 -6 -3.4 -6 C -1.8 -6 -0.6 -5 0 -3.8 C 0.6 -5 1.8 -6 3.4 -6 C 5.2 -6 7 -4.6 7 -2.2 C 7 0.6 4 3.4 0 6.2 Z';
-const rays = (cx, cy, r0, r1, angs, w = 1.2) => angs.map((a) => { const s = pt(cx, cy, r0, a), e = pt(cx, cy, r1, a); return P(`M ${s[0]} ${s[1]} L ${e[0]} ${e[1]}`, SW(w)); }).join('');
 const arcD = (cx, cy, r, a0, a1) => { const s = pt(cx, cy, r, a0), e = pt(cx, cy, r, a1); return `M ${s[0]} ${s[1]} A ${r} ${r} 0 ${Math.abs(a1 - a0) > 180 ? 1 : 0} ${a1 > a0 ? 1 : 0} ${e[0]} ${e[1]}`; };
 
 const RAW = {
@@ -157,9 +121,6 @@ const RAW = {
   'empty-3': P('M -6.4 3.6 L -5.6 1 M -5.2 3.6 L -5.2 0.6 M -4 3.6 L -4.6 1.2 M 3.4 -1 L 4 -3.4 M 4.6 -1 L 4.8 -3.8 M 5.8 -1 L 5.4 -3.2', SW(1)),
   rock: P('M -7.6 5.4 L -2.4 -5.2 L 1.2 1.2 L 3.6 -2.2 L 7.6 5.4 Z', ' fill="var(--rock-fill, #c9c6c0)"') + P('M -4.6 -0.7 L -2.4 -5.2 L -0.15 -0.8 L -1.4 0.3 L -2.4 -0.9 L -3.4 0.3 Z', ' fill="var(--paper, #fff)"' + SW(1.1)),
 
-
-  '4096': '<text x="0" y="2.3" font-family="Caveat Brush, system-ui, sans-serif" font-size="6.2" text-anchor="middle" fill="currentColor" stroke="none" letter-spacing="-0.1">4096</text>',
-
   bumper: DOT(0, 0, 2) + arrow(0, -3.4, 0, -7.4) + arrow(0, 3.4, 0, 7.4) + arrow(-3.4, 0, -7.4, 0) + arrow(3.4, 0, 7.4, 0),
 
   lasso:
@@ -172,36 +133,22 @@ const RAW = {
     C(3.6, 3, 3.9, SW(1.3)) + DOT(-2.9, 3.7, 4.6) +
     P('M -3.6 -2.4 V -3.8 C -3.6 -9 4.2 -9 4.2 -3.8 V -2.9') + head(-3.6, -1.3, 90, 2.4, 1.6) + head(4.2, -1.8, 90, 2.4, 1.6),
 
-
   // A frog's head: two eyes on top, a wide grin.
   frog:
     P('M -5.7 -1.2 C -8 0.8 -7.6 6.3 0 6.4 C 7.6 6.3 8 0.8 5.7 -1.2 M -1.3 -1.9 Q 0 -1.3 1.3 -1.9') +
     C(-3.6, -3, 2.4) + C(3.6, -3, 2.4) + DOT(-3.4, -2.8, 1.05) + DOT(3.8, -2.8, 1.05) +
     P('M -4 2.6 Q 0 5.2 4 2.6', SW(1.1)),
 
-
   // A small fire with the stones going round it.
   bonfire:
     P('M 0 -3.4 C 1.6 -2 2.4 -0.8 2.4 0.8 C 2.4 2.2 1.3 3 0 3 C -1.3 3 -2.4 2.2 -2.4 0.8 C -2.4 -0.2 -2 -0.9 -1.4 -1.5 C -1.2 -0.6 -0.8 -0.1 -0.4 0 C -0.8 -1.4 -0.6 -2.5 0 -3.4 Z', SW(1.3)) +
     arcArrow(0, 0, 6.6, 200, 340, 2.6, 1.6) + arcArrow(0, 0, 6.6, 20, 160, 2.6, 1.6),
-
-  snare: snare(),
-
-  hush:
-    C(0, -0.6, 6.4) + P('M -3.8 -2.4 Q -2.6 -1.2 -1.4 -2.4 M 1.4 -2.4 Q 2.6 -1.2 3.8 -2.4', SW(1.3)) +
-    P('M -3 2.4 H 3', SW(1.4)) +
-    '<rect x="-1.1" y="0" width="2.2" height="7.4" rx="1.1" fill="currentColor" stroke="none"/>',
-
-  glue:
-    P('M 0 -6.8 C 2 -3.6 5 -1 5 2.2 A 5 5 0 0 1 -5 2.2 C -5 -1 -2 -3.6 0 -6.8 Z') +
-    P('M -2.4 2 A 2.6 2.6 0 0 0 0 4.6', SW(1.2)),
 
   firecracker:
     P('M -6.8 1.2 h 4.4 v 6.2 h -4.4 Z M -6.8 3.4 h 4.4', SW(1.3)) +
     P('M -4.6 1.2 C -4.6 -2 -1.6 -2 0.4 -3.2', SW(1.2)) +
     DOT(3.2, -4, 1.1) +
     [0, 60, 120, 180, 240, 300].map((a) => { const s = pt(3.2, -4, 2.1, a + 30), e = pt(3.2, -4, 3.7, a + 30); return P(`M ${s[0]} ${s[1]} L ${e[0]} ${e[1]}`, SW(1.3)); }).join(''),
-
 
   parrot:
     P('M 1.4 -3.2 C 0.2 -6.6 -5.8 -6.6 -5.8 -1.2 C -5.8 2.8 -4.2 5.4 -2.6 7') +
@@ -210,11 +157,6 @@ const RAW = {
     DOT(-1.6, -2.4, 1.1),
 
   twin: C(-2.4, 0, 4) + C(2.4, 0, 4),
-
-  joker:
-    P('M -5.4 3 L -6.4 -4 L -2 0.4 L 0 -5 L 2 0.4 L 6.4 -4 L 5.4 3 Z') +
-    P('M -5.6 3 h 11.2 v 3 h -11.2 Z') +
-    DOT(-6.5, -5.4, 1.2) + DOT(0, -6.3, 1.2) + DOT(6.5, -5.4, 1.2),
 
   // An apple: what falls.
   gravity:
@@ -227,29 +169,15 @@ const RAW = {
     GRID + DOT(-4.67, 4.67, 2.5) + C(4.67, -4.67, 2.2, SW(1.1)) +
     P('M -4.67 1.4 C -6 -3.4 -2 -7.4 0.8 -7.2', SW(1.3)) + head(2.8, -7, 5, 2.4, 1.4),
 
-
   'mind-control':
     P('M -7.2 2.4 h 4 v 4 h -4 Z M 3.2 2.4 h 4 v 4 h -4 Z', FAINT.replace('0.7', '1')) +
     P('M -2 2.4 h 4 v 4 h -4 Z') +
     arrow(0, -7.4, 0, 0.6),
 
-
-
   muffle:
     P('M -4.6 3.4 V -0.6 A 4.6 4.6 0 0 1 4.6 -0.6 V 3.4 L 6 4.8 H -6 L -4.6 3.4 Z') +
     P('M -1.6 6.6 A 1.6 1.6 0 0 0 1.6 6.6') + P('M 0 -5.2 V -6.6') +
     P('M -6.6 -6.6 L 6.6 6.6'),
-
-  anchor:
-    C(0, -5.4, 1.6) + P('M 0 -3.8 V 6.4 M -3.2 -1.6 H 3.2') +
-    P('M -6 1.4 C -5.6 4.8 -3 6.4 0 6.4 C 3 6.4 5.6 4.8 6 1.4') +
-    P('M -7.2 3 L -6 1.4 L -4.2 2.4 M 7.2 3 L 6 1.4 L 4.2 2.4'),
-
-
-
-  reinforce:
-    `<g transform="translate(-1.8 2.4) scale(0.85)">${P(PEBBLE, SW(1.76))}</g>` +
-    P('M 4.4 -7.2 V -1.6 M 1.6 -4.4 H 7.2', SW(1.6)),
 
   // ---------- UI ----------
   heart: P('M 0 6.2 C -4 3.4 -7 0.6 -7 -2.2 C -7 -4.6 -5.2 -6 -3.4 -6 C -1.8 -6 -0.6 -5 0 -3.8 C 0.6 -5 1.8 -6 3.4 -6 C 5.2 -6 7 -4.6 7 -2.2 C 7 0.6 4 3.4 0 6.2 Z'),
@@ -261,11 +189,6 @@ const RAW = {
   energy: P('M 2 -7.6 L -4.6 1.2 H -0.4 L -2 7.6 L 4.6 -1.2 H 0.4 Z', ' fill="currentColor"' + SW(1.1)),
 
   star: P(star(0, 0.5, 7.2, 3.1)),
-
-  lock:
-    P('M -5.2 -1 h 10.4 v 7.4 h -10.4 Z') +
-    P('M -3.2 -1 V -3.4 A 3.2 3.2 0 0 1 3.2 -3.4 V -1') +
-    P('M 0 1.8 V 3.6'),
 
   sword:
     P('M -3.2 2 L 5 -6.4 L 6.8 -6.8 L 6.4 -5 L -2 3.2') +
@@ -301,11 +224,7 @@ const RAW = {
 
   check: P('M -6.2 0.6 L -2.2 4.6 L 6.4 -4.4', SW(1.8)),
 
-  close: P('M -5.2 -5.2 L 5.2 5.2 M 5.2 -5.2 L -5.2 5.2', SW(1.8)),
-
   undo: P('M -5.6 -2.2 H 2 A 4.2 4.2 0 0 1 2 6.2 H -2.4 M -2.4 -5.6 L -5.8 -2.2 L -2.4 1.2', SW(1.6)),
-
-  info: C(0, 0, 6.6) + DOT(0, -3.3, 1.1) + P('M 0 -0.6 V 3.8', SW(1.7)),
 
   gear: gear(),
 
@@ -339,25 +258,14 @@ const RAW = {
     P('M -6.8 -2.4 H -4 L 0 -6 V 6 L -4 2.4 H -6.8 Z') +
     P('M 3 -2.4 L 7.2 2.4 M 7.2 -2.4 L 3 2.4'),
 
-  'x-mark': P('M -5.8 -5.8 L 5.8 5.8 M 5.8 -5.8 L -5.8 5.8', SW(3)),
-
-  'o-mark': C(0, 0, 5.6, SW(3)),
-
-  guardian: P('M 0 -7 L 6 -4.6 V 0 C 6 3.8 3.4 6 0 7.4 C -3.4 6 -6 3.8 -6 0 V -4.6 Z') + P('M -2.6 0.2 L -0.6 2.4 L 3 -2.2', SW(1.6)),
-  seesaw: P('M -7.5 -0.5 L 7.5 -3.5', SW(1.8)) + P('M -2 5.5 L 0 -1.8 L 2 5.5 Z') + C(-5.6, -3.4, 1.7) + C(5.4, -6.2, 1.7),
   magpie: P('M -6.5 1.5 C -4 -4.5 2 -5.5 5 -2.5 L 7.5 -3.5 L 6 0 C 4 4 -2 5 -6.5 1.5 Z') + DOT(2.6, -2.2, 0.9) + P('M -6.5 1.5 L -8 5.5 M -4.5 3.2 L -5 6.5') + C(-1, 6.2, 1.3, SW(1.1)),
-  flytrap: P('M -6.5 -1 C -5 -6.5 5 -6.5 6.5 -1 Z') + P('M -6.5 1 C -5 6.5 5 6.5 6.5 1 Z') + P('M -4 -2.6 L -3.2 -0.9 L -2.2 -2.9 L -1.2 -0.9 L 0 -3.1 L 1.2 -0.9 L 2.2 -2.9 L 3.2 -0.9 L 4 -2.6', SW(1)) + P('M -4 2.6 L -3.2 0.9 L -2.2 2.9 L -1.2 0.9 L 0 3.1 L 1.2 0.9 L 2.2 2.9 L 3.2 0.9 L 4 2.6', SW(1)),
+
   'arrow-up': arrow(0, 6, 0, -6.4, 4, 3),
   'arrow-down': arrow(0, -6, 0, 6.4, 4, 3),
   'arrow-left': arrow(6, 0, -6.4, 0, 4, 3),
   'arrow-right': arrow(-6, 0, 6.4, 0, 4, 3),
   'rotate-cw': arcArrow(0, 0, 5, 200, 470, 3.4, 2.4),
   'rotate-ccw': arcArrow(0, 0, 5, -20, -290, 3.4, 2.4),
-
-  // ---------- RELICS ----------
-  'relic-home-turf':
-    P('M -7 -0.4 L 0 -6.6 L 7 -0.4') + P('M -5.2 -1.8 V 6.4 H 5.2 V -1.8') +
-    P('M -1.7 6.4 V 2.2 H 1.7 V 6.4', SW(1.3)) + P('M 3.2 -3.8 V -6.2 H 4.9 V -2.4', SW(1.3)),
 
   'relic-hourglass':
     P('M -5 -7 H 5 M -5 7 H 5', SW(1.7)) +
@@ -377,11 +285,6 @@ const RAW = {
     P(arcD(0, -0.4, 5.6, -35, 35) + arcD(0, -0.4, 5.6, 145, 215), SW(1.3)) +
     P(arcD(0, -0.4, 7.4, -30, 30) + arcD(0, -0.4, 7.4, 150, 210), SW(1.1)),
 
-  'relic-velvet-rope':
-    P('M -5.4 -3 V 5.6 M 5.4 -3 V 5.6', SW(1.6)) + P('M -7.2 6.6 H -3.6 M 3.6 6.6 H 7.2', SW(1.6)) +
-    DOT(-5.4, -4.4, 1.5) + DOT(5.4, -4.4, 1.5) +
-    P('M -5.4 -1.8 C -3 4 3 4 5.4 -1.8', SW(2)),
-
   'relic-iron-heart':
     P(HEART_D, SW(1.6)) + `<g transform="translate(0 -0.3) scale(0.6)">${P(HEART_D, SW(1.8))}</g>` +
     DOT(-5.3, -2.6, 0.7) + DOT(5.3, -2.6, 0.7) + DOT(-3.4, -4.7, 0.7) + DOT(3.4, -4.7, 0.7) + DOT(-3.6, 2.2, 0.7) + DOT(3.6, 2.2, 0.7) + DOT(0, 4.7, 0.7),
@@ -398,16 +301,7 @@ const RAW = {
     P('M -5.4 -2.4 H -0.8', SW(1.1)) +
     F(star(-3.8, 1.2, 1.9, 0.8)) + F(star(0, 1.2, 1.9, 0.8)) + C(3.8, 1.2, 1.6, SW(1)),
 
-  'relic-gloves':
-    P('M -3.2 6.8 V 2.8 L -5.9 0.2 Q -6.8 -0.8 -5.9 -1.5 Q -5.1 -2 -4.3 -1.2 L -3.2 -0.2 V -4.8 Q -3.2 -5.9 -2.3 -5.9 Q -1.4 -5.9 -1.4 -4.8 V -1.8 V -6.2 Q -1.4 -7.3 -0.4 -7.3 Q 0.6 -7.3 0.6 -6.2 V -1.8 V -5.6 Q 0.6 -6.7 1.6 -6.7 Q 2.6 -6.7 2.6 -5.6 V -1.6 V -4 Q 2.6 -5 3.5 -5 Q 4.4 -5 4.4 -4 V 1.8 Q 4.4 3 3.6 3.6 V 6.8 Z') +
-    P('M -3.2 4.4 H 3.6', SW(1.2)),
-
   'relic-lucky-coin': C(0, 0, 6.6) + P('M 0 -5.3 V -4.7 M 0 5.3 V 4.7 M -5.3 0 H -4.7 M 5.3 0 H 4.7', SW(1)) + F(star(0, 0.3, 3.7, 1.55)),
-
-  'relic-hammer':
-    `<g transform="rotate(-35)">` +
-    P('M -5.4 -6.2 H 4.4 Q 5.6 -6.2 5.6 -5 V -2.8 Q 5.6 -1.6 4.4 -1.6 H -5.4 Z') + P('M -3.2 -6.2 V -1.6 M 3.4 -6.2 V -1.6', SW(1.1)) +
-    P('M -1 -1.6 V 6.2 Q -1 7 0 7 Q 1 7 1 6.2 V -1.6') + '</g>',
 
   'relic-herbs':
     P('M -3.8 7.2 C -2.6 2.6 -0.6 -1.6 3.6 -6.6', SW(1.3)) +
@@ -428,11 +322,6 @@ const RAW = {
     P('M -0.9 -3.2 V -5.6 M 0.9 -3.2 V -5.6', SW(1.2)) + '<rect x="-1.6" y="-7.4" width="3.2" height="2" rx="1" fill="currentColor" stroke="none"/>' +
     DOT(0, 5.6, 1.2) + P('M -2.4 0.4 C -2 -1 -1.4 -1.6 -0.6 -1.8', SW(1)),
 
-  'relic-opening-book':
-    P('M 0 -3.8 C -2 -5.4 -4.6 -5.6 -7 -4.8 V 5 C -4.6 4.2 -2 4.4 0 6 C 2 4.4 4.6 4.2 7 5 V -4.8 C 4.6 -5.6 2 -5.4 0 -3.8 Z') +
-    P('M 0 -3.8 V 6') +
-    P('M -5.4 -2.4 C -4 -2.8 -2.8 -2.6 -1.6 -2 M -5.4 0.2 C -4 -0.2 -2.8 0 -1.6 0.6 M -5.4 2.8 C -4 2.4 -2.8 2.6 -1.6 3.2 M 5.4 -2.4 C 4 -2.8 2.8 -2.6 1.6 -2 M 5.4 0.2 C 4 -0.2 2.8 0 1.6 0.6', SW(1)),
-
   'relic-phoenix':
     P('M -4 4 C -4.8 -1 -0.8 -6.2 6.6 -6.8 C 6.2 0 1.2 4.8 -4 4 Z') +
     P('M -6.8 6.8 L 3.8 -3.8', SW(1.3)) +
@@ -446,34 +335,6 @@ const RAW = {
     P('M -6.6 -3.6 H 6.6 V -1.4 A 1.4 1.4 0 0 0 6.6 1.4 V 3.6 H -6.6 V 1.4 A 1.4 1.4 0 0 0 -6.6 -1.4 Z') +
     P('M 2.8 -3.6 V 3.6', SW(1.1) + ' stroke-dasharray="0.9 1.3"') +
     P('M -4.2 -1.2 H 0.4 M -4.2 1.2 H -0.8', SW(1.1)) + DOT(4.7, 0, 0.8) + '</g>',
-
-  'relic-polisher':
-    P(star(-1.6, 1.6, 5.6, 1.4, 4)) + F(star(4.6, -4.6, 2.6, 0.7, 4)) + F(star(5, 4.2, 1.6, 0.5, 4)) + DOT(-5.6, -5.4, 0.8),
-
-  'relic-lodestone':
-    `<g transform="translate(-1.2 1.2) rotate(45) scale(0.82)">` +
-    P('M -5 -5.8 V 1 A 5 5 0 0 0 5 1 V -5.8 H 2 V 1 A 2 2 0 0 1 -2 1 V -5.8 Z', SW(1.7)) +
-    P('M -5 -5.8 h 3 v 2.4 h -3 Z M 2 -5.8 h 3 v 2.4 h -3 Z', ' fill="currentColor"' + SW(1.7)) + '</g>' +
-    P('M 2.2 -6.2 L 2.8 -7.6 M 5 -5 L 6.6 -6.6 M 6.2 -2.2 L 7.6 -2.8', SW(1.2)),
-
-  'relic-bedrock':
-    P('M -7 -2.6 Q -4.6 -6.4 -1.4 -4.8 Q 1.6 -3.4 4 -5.4 Q 6 -6.8 7 -4.4 V 6.4 H -7 Z') +
-    P('M -7 0.6 Q -3.6 -1 0 0.4 Q 3.6 1.8 7 0 M -7 3.6 Q -3.2 2.4 0.4 3.6 Q 3.8 4.8 7 3.2', SW(1.1)) +
-    DOT(-3.4, -2.4, 0.6) + DOT(2.4, -1.4, 0.6) + DOT(4.6, 2.6, 0.6) + DOT(-4.4, 2, 0.6) + DOT(-1, 5.2, 0.6),
-
-  'relic-pinwheel':
-    P('M 0.2 -1.4 L 1.6 7.4', SW(1.4)) +
-    [0, 90, 180, 270].map((a) => `<g transform="translate(0 -1.4) rotate(${a})">${P('M 0 0 V -5.6 A 2.8 2.8 0 0 1 0 0 Z', SW(1.3))}</g>`).join('') +
-    DOT(0, -1.4, 1),
-
-  'relic-soap':
-    P('M -6.6 1.4 Q -6.6 -0.6 -4.6 -0.6 H 3.2 Q 5.2 -0.6 5.2 1.4 V 4.6 Q 5.2 6.6 3.2 6.6 H -4.6 Q -6.6 6.6 -6.6 4.6 Z') +
-    P('M -4.6 1.6 H -1.8', SW(1.2)) +
-    C(2.2, -3.6, 1.7, SW(1.2)) + C(-1.8, -4.6, 1.1, SW(1.1)) + C(5.4, -6.2, 1.1, SW(1.1)) + DOT(6.2, -2.6, 0.6),
-
-  'relic-slingshot':
-    P('M 0 7.2 V 1.6', SW(2)) + P('M 0 1.8 C -3.2 1.2 -4.6 -2 -4.6 -6 M 0 1.8 C 3.2 1.2 4.6 -2 4.6 -6', SW(1.7)) +
-    P('M -4.6 -5 L -1.2 -2.8 M 4.6 -5 L 1.2 -2.8', SW(1.1)) + DOT(0, -2.6, 1.5),
 
   'relic-piggy':
     `<ellipse cx="-0.6" cy="1" rx="5.6" ry="4.2"/>` +
@@ -560,26 +421,6 @@ const RAW = {
     P('M -6.6 -4.6 Q -6.6 -6.2 -5 -6.2 H 5 Q 6.6 -6.2 6.6 -4.6 V 1.8 Q 6.6 3.4 5 3.4 H -0.6 L -4.2 6.8 V 3.4 H -5 Q -6.6 3.4 -6.6 1.8 Z') +
     P('M -4 -3.4 H 4 M -4 -1 H 4 M -4 1.2 H 1', SW(1.2)),
 
-  // ---------- KITS ----------
-  'kit-apprentice':
-    `<g transform="rotate(45)">` +
-    P('M -1.9 -6.8 H 1.9 V 3.6 L 0 7.2 L -1.9 3.6 Z') + P('M -1.9 -4.6 H 1.9 M -1.9 3.6 H 1.9 M 0 -4.6 V 3.6', SW(1.1)) +
-    F('M -0.65 5.9 L 0 7.2 L 0.65 5.9 Z') + '</g>',
-
-  'kit-tinkerer':
-    `<g transform="rotate(45) translate(0 0.4)">` +
-    P(`M ${pt(0, -4, 3.6, 110).join(' ')} A 3.6 3.6 0 0 1 ${pt(0, -4, 3.6, 251).join(' ')} L -1.2 -4.4 H 1.2 L ${pt(0, -4, 3.6, 289).join(' ')} A 3.6 3.6 0 0 1 ${pt(0, -4, 3.6, 70).join(' ')} V 5.8 A 1.23 1.23 0 0 1 -1.23 5.8 Z`) +
-    C(0, 4.4, 0.5, SW(1)) + '</g>',
-
-  'kit-warden':
-    P('M 0 -7 L 6 -4.6 V 0 C 6 3.8 3.4 6 0 7.4 C -3.4 6 -6 3.8 -6 0 V -4.6 Z') +
-    DOT(0, -1, 1.6) + F('M -0.6 0 L -1.3 3.4 H 1.3 L 0.6 0 Z'),
-
-  'kit-gambler':
-    clippedCard(-2.4, 0, 3.6, 5.4, -16, -1.4) +
-    P('M -1.4 -5.6 h 7.4 v 11 h -7.4 Z') +
-    `<g transform="translate(2.3 0.2) scale(0.28)">${F(HEART_D)}</g>` + DOT(0, -4.2, 0.55) + DOT(4.6, 4, 0.55),
-
   // ---------- MISC ----------
   trophy:
     P('M -4.4 -6.6 H 4.4 V -3 C 4.4 0.4 2.4 1.8 0 1.8 C -2.4 1.8 -4.4 0.4 -4.4 -3 Z') +
@@ -607,9 +448,6 @@ Object.assign(RAW, {
   'relic-war-chest':
     P('M -6.6 0 h 13.2 v 6.4 h -13.2 Z') + P('M -6.6 0 V -1.6 C -6.6 -3.6 -4.4 -4.2 0 -4.2 C 4.4 -4.2 6.6 -3.6 6.6 -1.6 V 0') +
     C(-2.6, -6.4, 1.6) + C(1.4, -7, 1.6) + C(4.4, -5.8, 1.4) + P('M -1.3 1 h 2.6 v 2.6 h -2.6 Z', ' fill="currentColor"' + SW(1)),
-  'relic-whetstone':
-    P('M -7 3.4 L -4.6 -1.8 H 7 L 4.6 3.4 Z') + P('M -4.6 -1.8 L -7 3.4 V 5.6 L -4.6 0.4 Z M 4.6 3.4 V 5.6 H -7', SW(1.1)) +
-    P('M 1.6 -7.4 L 2.2 -4.6 M 5.6 -6.6 L 3.8 -4.2 M -1.8 -6.4 L 0.4 -4.2', SW(1)),
   'rule-double': P('M -6.6 -1 h 5.6 v 5.6 h -5.6 Z M 1 -4.6 h 5.6 v 5.6 h -5.6 Z') + P('M -3.8 -3.4 V -6.4 M 3.8 3.4 V 6.4', SW(1)),
   'rule-headstart': P('M -6 -5 L -1 0 L -6 5 M 0 -5 L 5 0 L 0 5', SW(1.8)),
   'rule-elko': P('M -5.6 -5.6 H -0.4 V -0.4 H 5.6 V 5.6 H -5.6 Z') + P('M -0.4 -0.4 V 5.6 M -5.6 -0.4 H -0.4', FAINT),
@@ -619,9 +457,6 @@ Object.assign(RAW, {
   'rule-reserved': MINI_GRID + F(star(0, 0.2, 2.1, 0.9)),
   'rule-patient': RAW['relic-hourglass'],
 });
-
-RAW['kit-trickster'] = RAW.trick;
-RAW['kit-mason'] = RAW.mountain;
 
 const G = '<g fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">';
 

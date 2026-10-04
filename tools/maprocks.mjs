@@ -7,7 +7,7 @@ import * as R from '../src/run.js';
 const cfgs = JSON.parse(process.argv[2]);
 for (const cfg of cfgs) {
   Object.assign(R.MAPGEN, cfg); R.MAPCFG.sees = cfg.sees ?? 0.75;
-  let opened = 0, steps = 0, rocks = 0, cells = 0, lost = 0, olines = 0;
+  let opened = 0, steps = 0, rocks = 0, cells = 0, olines = 0;
   const N = 300;
   for (let seed = 1; seed <= N; seed++) {
     const run = R.newRun({ seed }); run.hearts = 99;

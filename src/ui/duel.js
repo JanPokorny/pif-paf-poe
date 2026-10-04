@@ -753,8 +753,8 @@ export function mountDuel(root, opts) {
 
   // ── Go ────────────────────────────────────────────────────────────────────
   state.log = [];
-  // An old save from the middle of a turn: put a chosen stone back in hand,
-  // or pick up the choice it was waiting on.
+  // Saved in the middle of a turn: put a chosen stone back in hand, or pick up
+  // the choice it was waiting on.
   if (!state.over && state.player === 'X' && state.phase === 'place' && state.selected) {
     state.hands[state.from ?? 'X'].push(state.selected);
     state.selected = null;

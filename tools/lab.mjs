@@ -19,7 +19,7 @@
 //
 // The player's brain is `--iters` (250) with a 5% blunder: a fair, careful player.
 
-import { Worker, isMainThread, parentPort, workerData } from 'node:worker_threads';
+import { Worker, isMainThread, parentPort } from 'node:worker_threads';
 import { cpus } from 'node:os';
 import { mkdirSync, writeFileSync } from 'node:fs';
 import { other, createGame, applyAction, legalActions, allowedSquares, STONES, STONE_TYPES, PLUS_STONES, CONDS } from '../src/engine.js';
@@ -31,7 +31,6 @@ const arg = (k, d) => { const i = process.argv.indexOf('--' + k); return i > 0 ?
 const P = (n) => Array(Math.max(0, n)).fill('pebble');
 // Every stone, and the + form of each that has one ('shift+').
 const WITH_PLUS = [...STONE_TYPES, ...PLUS_STONES.map((t) => `${t}+`)];
-const SPECIALS = STONE_TYPES.filter((t) => t !== 'pebble');
 
 // ── One duel ────────────────────────────────────────────────────────────────
 //

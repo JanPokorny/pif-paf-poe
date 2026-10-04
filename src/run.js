@@ -50,7 +50,9 @@ export const HEAT = [
 // full board takes five of its stones).
 export const HAND = 4;
 const ENEMY_STONES = 5;
-export const START = { pouch: [], hearts: 6, gold: 30, energy: 1 };
+// Every run starts with a Shift and a Waltz (only one of them fits the first
+// duels' energy): the first duels are never plain tic-tac-toe.
+export const START = { pouch: ['shift', 'rotate'], hearts: 6, gold: 30, energy: 1 };
 export const COST = { starter: 0, common: 1, uncommon: 2, rare: 3 };
 // What a stone costs to bring: by its rarity. Glass costs 1 whatever it is;
 // marble and gold one more than the plain stone.
@@ -90,7 +92,7 @@ export function goldFromLine(state) {
 export function newRun({ seed = (Math.random() * 2 ** 31) | 0, heat = 0 } = {}) {
   const hearts = START.hearts - (heat >= 3 ? 1 : 0);
   const run = {
-    v: 4, seed, rs: seed, heat,
+    seed, rs: seed, heat,
     act: 1, atBoss: false, map: null,
     hearts, maxHearts: hearts,
     gold: START.gold, pouch: [], relics: [],
@@ -200,7 +202,6 @@ function isRock(run, x, y, mine, first = false) {
   // outer ring of that layout only adds the ones it needs to the usual chance.
   if (map.start && d <= OPENING.near) return map.start.includes(keyOf(x, y));
   if (map.start && d <= OPENING.lay && map.start.includes(keyOf(x, y))) return true;
-  if (!map.start && onLattice(map, x, y)) return true;   // an old save's map
   if (first || d >= MAPGEN.end) return false;
   // A square on two or more of your live lines is where a fork would be.
   const lines = liveLines(run.map, x, y, 'X');
@@ -280,7 +281,7 @@ function liveLines(map, x, y, mark) {
   }
   return n;
 }
-const GOOD = ['shop', 'rest', 'treasure', 'craft', 'gift'];
+const GOOD = ['shop', 'rest', 'treasure', 'craft'];
 const DIRS4 = [[1, 0], [0, 1], [1, 1], [1, -1]];
 export const keyOf = (x, y) => `${x},${y}`;
 export const coords = (k) => k.split(',').map(Number);
@@ -337,7 +338,7 @@ function claimLine(map, k) {
 
 // The boss's lair takes the place of one of the obstacles next to its first
 // mark: a wall like any other, until your line opens it.
-export function placeLair(run, map = run.map) {
+function placeLair(run, map) {
   if (map.lair) return;
   const near = Object.keys(map.cells).filter((k) => map.cells[k].kind === 'rock' && ringOf(...coords(k)) === 1);
   const pool = near.length ? near : Object.keys(map.cells).filter((k) => map.cells[k].kind === 'rock');
@@ -386,14 +387,6 @@ export function makeMap(run) {
   }
   reveal(run, 0, 0, true);
   placeLair(run, map);
-  // The very first page hides a gift: a special stone, free.
-  // On a square in reach from the very first step.
-  if (run.act === 1) {
-    const free = ([k, c]) => !c.mark && c.kind !== 'elite';
-    const ring = Object.entries(map.cells).filter((e) => free(e) && inReach(map, e[0]));
-    const [k] = pick(run, ring.length ? ring : Object.entries(map.cells).filter(free));
-    map.cells[k] = { kind: 'gift', mark: null };
-  }
   return map;
 }
 
@@ -523,7 +516,7 @@ function bossMark(run, far = false) {
   const free = Object.entries(map.cells).filter(([k, c]) => (!c.mark || c.mark === 'S') && (far || inReach(map, k)));
   if (!free.length) return null;
   const sees = rand(run) < MAPCFG.sees;
-  const value = { treasure: 6, gift: 5, shop: 3, rest: 3, craft: 3, event: 2, elite: 1, fight: 1 };
+  const value = { treasure: 6, shop: 3, rest: 3, craft: 3, event: 2, elite: 1, fight: 1 };
   let best = null, bestScore = -Infinity;
   for (const [k, c] of free) {
     const [x, y] = coords(k);
@@ -769,16 +762,6 @@ export function enterNode(run, key) {
     case 'shop': run.pending = { kind: 'shop', shop: makeShop(run) }; run.screen = 'shop'; break;
     case 'rest': run.pending = { kind: 'rest' }; run.screen = 'rest'; break;
     case 'craft': run.pending = { kind: 'craft' }; run.screen = 'craft'; break;
-    case 'gift': {
-      // The first page's treasure: a special stone, free, one of two. Plain
-      // commons (1 energy, all a first duel has), and not the Mountain, which
-      // does nothing on its own.
-      const pool = shuffle(run, REWARD_STONES.filter((x) => STONES[x].rarity === 'common' && x !== 'mountain'));
-      const stones = pool.slice(0, 2).map((type) => ({ type }));
-      run.pending = { kind: 'reward', gift: true, gold: 0, stones, once: null, relic: null, relicChoice: null, tier: 'gift', taken: {} };
-      run.screen = 'reward';
-      break;
-    }
     case 'treasure': {
       // Two relics to choose from.
       const first = randomRelic(run);

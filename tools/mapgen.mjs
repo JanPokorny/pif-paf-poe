@@ -12,7 +12,7 @@ import { ENEMIES } from '../src/content.js';
 if (process.argv[2]) Object.assign(R.MAPGEN, JSON.parse(process.argv[2]));
 const N = 120, RINGS = 13;
 const per = Array.from({ length: RINGS }, () => ({ n: 0, rock: 0, empty: 0, enc: 0, elite: 0, good: 0, iters: 0, fights: 0 }));
-let sameKind = 0, kinds = 0, sameOther = 0, others = 0, sameFoe = 0, foes = 0, furthest = 0, cells = 0;
+let sameKind = 0, kinds = 0, sameOther = 0, others = 0, sameFoe = 0, foes = 0, furthest = 0;
 for (let seed = 1; seed <= N; seed++) {
   const run = R.newRun({ seed: seed * 7 + 3 });
   run.act = 1 + (seed % 3);
@@ -31,7 +31,7 @@ for (let seed = 1; seed <= N; seed++) {
   for (const [k, c] of Object.entries(map.cells)) {
     const [x, y] = R.coords(k); const d = R.ringOf(x, y);
     if (d >= RINGS || k === '0,0') continue;
-    const r = per[d]; r.n++; cells++;
+    const r = per[d]; r.n++;
     if (c.kind === 'rock') r.rock++;
     else if (c.kind === 'empty') r.empty++;
     else {

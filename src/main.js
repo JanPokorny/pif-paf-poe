@@ -2,7 +2,7 @@
 // run.screen, rendered into #app.
 
 import { STONES, CONDS, RULES, createGame } from './engine.js';
-import { RELICS, OLD_PLUS_RELICS, ENEMIES, ACTS, EVENTS } from './content.js';
+import { RELICS, ENEMIES, ACTS, EVENTS } from './content.js';
 import * as R from './run.js';
 import { h, hideToast, tapeUp, art, relicArt, scribbleX, scribbleO, stoneEl, iconEl, toast, modal, ask, tickStone, infoStone, infoRelic, infoThing, stoneCard, relicCard, stoneName, langToggle, energyBar, statusLine } from './ui/common.js';
 import { icon } from './icons.js';
@@ -21,7 +21,7 @@ document.documentElement.lang = lang;
 const shortName = (e) => e.short ?? e.name.replace(/^(The|Captain) /, '');
 
 const app = document.getElementById('app');
-const SAVE = 'ppp-run-v2';   // v1 runs were of the faster game, with kits
+const SAVE = 'ppp-run-v3';   // older runs are not carried over
 const META = 'ppp-meta-v1';
 
 let run = null;
@@ -163,45 +163,6 @@ function settingsRow() {
   return row;
 }
 
-// Saves with stones since retired: what each became. 'x+' is a + one-shot.
-const RETIRED = { rail: 'shift', pivot: 'rotate', electromagnet: 'magnet', stench: 'stinky', 4096: 'gravity', 2048: 'gravity', blast: 'bumper',
-  teleport: 'swap', cyclone: 'bonfire', whirl: 'bonfire', turncoat: 'swap', overtake: 'relocate', pluck: 'relocate', bribe: 'relocate',
-  kangaroo: 'frog', lighthouse: 'magnet', beacon: 'magnet', kaleidoscope: 'bonfire', flip: 'bonfire', bomb: 'firecracker',
-  mirror: 'swap+', nudge: 'lasso+', rehearse: 'parrot+' };
-function migrate() {
-  for (const st of run.pouch) {
-    const to = RETIRED[st.type];
-    if (!to) continue;
-    st.type = to.replace(/\+$/, '');
-    if (to.endsWith('+')) { st.plus = true; st.once = true; }
-  }
-  run.pouch = run.pouch.filter((st) => STONES[st.type]);
-  // A + form since retired (Magnet+): the plain stone.
-  for (const st of run.pouch) if (st.plus && !STONES[st.type].plus) delete st.plus;
-  // Energy in place of slots, and no Pebbles in the pouch: a slot past four
-  // becomes energy, and each act already climbed one more.
-  if ((run.v ?? 2) < 4) {
-    run.energy = run.energy ?? Math.max(1, (run.slots ?? 4) - 3) + (run.act - 1);
-    delete run.slots;
-    run.pouch = run.pouch.filter((st) => st.type !== 'pebble');
-    run.lastHand = null;
-    run.v = 4;
-    if (duelState) { duelState = null; if (run.screen === 'duel') run.screen = 'predual'; }
-  }
-  // Tricks are one-shot stones now: into the pouch they go.
-  for (const x of run.tricks ?? []) if (STONES[x]?.once) run.pouch.push({ type: x, uid: run.nextUid++ });
-  delete run.tricks;
-  if (duelState && (!duelState.spent || duelState.phase === 'trick')) { duelState = null; if (run.screen === 'duel') run.screen = 'predual'; }
-  // Per-stone + talismans became grouped ones.
-  run.relics = [...new Set(run.relics.map((x) => OLD_PLUS_RELICS[x] ?? x))].filter((x) => RELICS[x]);
-  // A duel in progress with a retired stone in it starts over.
-  const known = (h) => STONES[h.type];
-  if (duelState && !(duelState.hands.X.every(known) && duelState.hands.O.every(known) && duelState.board.every((c) => !c || known(c)))) {
-    duelState = null;
-    if (run.screen === 'duel') run.screen = 'predual';
-  }
-}
-
 // ── Title ───────────────────────────────────────────────────────────────────
 
 function title() {
@@ -223,7 +184,7 @@ function title() {
           }, 'PIFPAFPOE'[i]))),
       ),
       h('div.title-buttons', {},
-        resumable ? h('button.btn.primary.wide.big.continue', { onclick: () => { run = saved.run; duelState = saved.duel; migrate(); route(); } },
+        resumable ? h('button.btn.primary.wide.big.continue', { onclick: () => { run = saved.run; duelState = saved.duel; route(); } },
           h('span', {}, t('Continue run')),
           h('span.continue-sub', {}, `${t('Act {n}', { n: saved.run.act })} · ❤ ${saved.run.hearts}`)) : null,
         // The yellow button is Continue when there is a run to go back to, else New run.
@@ -300,8 +261,8 @@ function route() {
 
 // ── Map ─────────────────────────────────────────────────────────────────────
 
-const NODE_ICON = { fight: 'sword', elite: 'skull', rock: 'mountain', shop: 'shop', rest: 'fire', event: 'question', treasure: 'chest', boss: 'crown', gift: 'chest', craft: 'relic-anvil' };
-const NODE_NAME = { 'boss-mark': t('Boss'), fight: t('Duel'), elite: t('Elite'), shop: t('Shop'), rest: t('Campfire'), event: t('Unknown'), treasure: t('Treasure'), boss: t('Boss'), rock: t('Rock'), gift: t('Treasure'), craft: t('Workshop'), empty: t('Empty'), lair: t('Lair') };
+const NODE_ICON = { fight: 'sword', elite: 'skull', rock: 'mountain', shop: 'shop', rest: 'fire', event: 'question', treasure: 'chest', boss: 'crown', craft: 'relic-anvil' };
+const NODE_NAME = { 'boss-mark': t('Boss'), fight: t('Duel'), elite: t('Elite'), shop: t('Shop'), rest: t('Campfire'), event: t('Unknown'), treasure: t('Treasure'), boss: t('Boss'), rock: t('Rock'), craft: t('Workshop'), empty: t('Empty'), lair: t('Lair') };
 
 // Each act's ground: what blocks the way (trees, boulders, crags), and empty ground.
 const terrain = () => Math.min(3, Math.max(1, run?.act ?? 1));
@@ -310,10 +271,8 @@ const blockName = () => t(['Thicket', 'Boulders', 'Crag'][terrain() - 1]);
 // The act's map: tic-tac-toe against its boss on an endless sheet, revealed
 // a mark at a time.
 function mapScreen() {
-  if (run.map?.v !== 7) R.makeMap(run);   // a save from an older map: a fresh one
   const map = run.map;
   if (map.news === 'oline') flash = 'hurt';   // the hearts in the top bar take the hit
-  R.placeLair(run, map);   // a page from before the lair
   // Your line has just opened the lair: it opens on the page once the marks are drawn.
   const opening = map.open && !map.doorHeard;
   const reach = new Set(R.reachable(run));
@@ -677,7 +636,7 @@ function radioRow(chosen, items) {
 
 function rewardScreen() {
   const rw = run.pending;
-  const parts = [h('h1.reward-title', {}, rw.gift ? t('Treasure!') : rw.tier === 'boss' ? t('Boss defeated!') : t('Victory!'))];
+  const parts = [h('h1.reward-title', {}, rw.tier === 'boss' ? t('Boss defeated!') : t('Victory!'))];
   if (rw.gold) parts.push(h('div.reward-gold', {}, h('span', { html: icon('coin') }), t('+{n} gold', { n: rw.gold })));
   if (rw.goldStones) parts.push(h('p.dim.reward-note', {}, t('{n} of it from your gold stones.', { n: rw.goldStones })));
   if (rw.energy) parts.push(h('div.reward-gold.reward-energy', {}, h('span', { html: icon('energy') }), t('+{n} energy', { n: rw.energy })));
@@ -691,8 +650,7 @@ function rewardScreen() {
   // its cards), tap one to choose it. Continue takes it all, once every
   // choice is made.
   rw.sel = rw.sel ?? {};
-  // (A save from before the form may have taken some of it already.)
-  const want = { once: rw.once && !rw.taken.once, boss: rw.relicChoice?.length && !rw.taken.boss, stone: rw.stones.length && !rw.taken.stone };
+  const want = { once: !!rw.once, boss: !!rw.relicChoice?.length, stone: !!rw.stones.length };
   const rows = [];
   if (rw.relic) rows.push(h('div.cards.one', {}, relicCard(rw.relic, { onclick: () => infoRelic(rw.relic) })));
   if (want.once) rows.push(h('div.cards.one', {}, stoneCard(rw.once, { onclick: () => infoStone(rw.once, 'X') })));
@@ -769,9 +727,9 @@ function shopScreen(redraw = false) {
         price: r.price, sold: r.sold || R.has(run, r.relic), dear: run.gold < r.price,
         onclick: () => infoRelic(r.relic, offer(r.price, (pay) => { R.gainRelic(run, r.relic); r.sold = true; pay(); })),
       })),
-      serviceCard('energy', t('+1 energy'), shop.energyPrice ?? shop.slotPrice,
-        shop.energized || shop.slotted, () => infoThing({ art: icon('energy'), name: t('+1 energy'), text: t('One more energy in every duel from now on: room for a costlier stone.') },
-          offer(shop.energyPrice ?? shop.slotPrice, (pay) => { run.energy = (run.energy ?? 1) + 1; shop.energized = true; pay(); toast(t('{n} energy', { n: R.energyOf(run) }), 'good'); }))),
+      serviceCard('energy', t('+1 energy'), shop.energyPrice,
+        shop.energized, () => infoThing({ art: icon('energy'), name: t('+1 energy'), text: t('One more energy in every duel from now on: room for a costlier stone.') },
+          offer(shop.energyPrice, (pay) => { run.energy = (run.energy ?? 1) + 1; shop.energized = true; pay(); toast(t('{n} energy', { n: R.energyOf(run) }), 'good'); }))),
       serviceCard('heart', '+1 ❤', shop.healPrice,
         run.hearts >= run.maxHearts || shop.healed >= 2, () => infoThing({ art: icon('heart'), name: '+1 ❤', text: t('Heal one heart. Twice per shop at most.') },
           offer(shop.healPrice, (pay) => { run.hearts++; shop.healed++; sfx('heal'); pay(); })))),

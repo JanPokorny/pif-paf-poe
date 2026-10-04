@@ -24,7 +24,8 @@ duel, and a rule for who wins when someone runs out. The second version slows it
 
 - **Energy.** What you bring into a duel is a decision of its own: every special stone costs
   energy (common 1, uncommon 2, rare 3, a dot each in the stone's corner), and together they may
-  cost no more than you have. A run starts with 1. Beating an elite gives 1, an act's boss 2;
+  cost no more than you have. A run starts with 1, and with a Shift and a Waltz in the pouch
+  (one of them fits): the first duels are never plain tic-tac-toe. Beating an elite gives 1, an act's boss 2;
   every shop sells 1 (once a visit), the Meditating Monk trades one for a max heart or 40 gold,
   and Second Wind (a boss relic) adds 1. Picking stones before a duel fills a bar of dots.
 - **Rewards are a form.** Each row of a reward is yours ("~ and ~" between rows); a row that

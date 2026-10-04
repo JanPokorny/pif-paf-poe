@@ -153,10 +153,6 @@ export default {
   'All stones': 'Všechny kameny',
 
   // ── Codex ─────────────────────────────────────────────────────────────────
-  'stones': 'kameny',
-  'tricks': 'triky',
-  'relics': 'talismany',
-  'enemies': 'soupeři',
   'starter': 'základní',
   'common': 'běžný',
   'uncommon': 'neobvyklý',
@@ -295,7 +291,6 @@ export default {
   'took your {stone}': 'vzal ti {stone}',
   'Your turn — pick a stone': 'Jsi na tahu — vyber kámen',
   'Your second stone — pick one': 'Tvůj druhý kámen — vyber si',
-  'middle': 'prostřední',
   'Workshop': 'Dílna',
   'Trade which two stones?': 'Které dva kameny vyměnit?',
   'Choose what to make': 'Vyber, co vyrobit',
@@ -332,7 +327,6 @@ export default {
   '{boss} climbs out of the earth.': '{boss} se hrabe ze země.',
   '→ one {tier} stone': '→ jeden kámen: {tier}',
   'Two stones → one better.': 'Dva kameny → jeden lepší.',
-  'Needs two special stones.': 'Chce to dva speciální kameny.',
   'Pick': 'Vybrat',
   'Buy': 'Koupit',
   'One more energy in every duel from now on: room for a costlier stone.': 'Odteď o energii víc v každém duelu: místo pro dražší kámen.',
@@ -361,7 +355,6 @@ export default {
   'Gold': 'Zlato',
   'Pay {n} gold: a stone of yours goes anywhere, whatever their stones restrict.': 'Zaplatíš {n} zlaťáků: tvůj kámen smí kamkoli, ať ho soupeřovy kameny omezují jakkoli.',
   'Pay {n} gold: a stone of yours pays 10 gold in your winning line.': 'Zaplatíš {n} zlaťáků: tvůj kámen vynese 10 zlaťáků ve vítězné trojici.',
-  'One use: once played, it is gone from your pouch.': 'Jen jednou: jakmile ho zahraješ, zmizí z váčku.',
   'Trade which one?': 'Který vyměnit?',
   'You put the books back.': 'Vracíš knihy na místo.',
 };

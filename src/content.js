@@ -61,8 +61,6 @@ for (const [id, p] of Object.entries(PLUS_TALISMANS)) {
     },
   };
 }
-// Saves from when each stone had a talisman of its own.
-export const OLD_PLUS_RELICS = Object.fromEntries(Object.entries(PLUS_TALISMANS).flatMap(([id, p]) => p.stones.map((x) => [`plus-${x}`, id])));
 export const BOSS_RELICS = ['deep-pockets', 'echo', 'phoenix', 'war-chest'];
 export const RELIC_TYPES = Object.keys(RELICS);
 
