@@ -246,6 +246,19 @@ What the boss's lines on the map weigh (each costs a heart today):
   boss line is possible at all, and how the bot (and a player) is warned — now that the dashed
   danger circles are gone, a player sees less of it coming than the bot does.
 
+### The boss always blocks (a dead setting)
+
+`MAPCFG.sees` is meant to be the chance the boss blocks your two in a row (0.75). Varying it
+from 0 to 1 changes nothing (99, 102, 102, 101 victories in 256). In `bossMark` the "spoil
+yours" weight already gives a square on your two +20, more than any square's value plus its
+noise, so the boss blocks **every time** whatever `sees` says. In practice a lair opens only
+through a fork (two lines at once), which is what the rocks are laid out to make rare.
+
+Not changed tonight (it would move every number in this document): if the boss should miss
+sometimes, as the setting intends, the +20 for `yours >= 2` should only apply when it `sees`.
+That is also the most natural place to ease act 1: a boss that sometimes lets a line through
+makes the map less of a grind without touching the duels.
+
 ## Events (second pass)
 
 Read against what the measurements say a run runs on — hearts first, energy second, gold a
