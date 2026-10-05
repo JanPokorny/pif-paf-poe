@@ -132,9 +132,25 @@ export function mountDuel(root, opts) {
 
   // ── Rendering ─────────────────────────────────────────────────────────────
   const stoneEls = new Map();
+  // The stone just placed, when its effect went off at once: {id, pos}. It lands
+  // where it was placed first, and only then does what it does (a Frog's leap).
+  let landing = null;
+  // The stone whose effect is being shown: it rides above the stones it moves.
+  let actor = null;
+  const flip = (e) => {
+    e.classList.remove('pop', 'flip');
+    void e.offsetWidth;
+    e.classList.add('flip');
+    setTimeout(() => e.classList.remove('flip'), 420);
+  };
 
   function renderBoard(s) {
+    const land = landing;
+    landing = null;
     const seen = new Set();
+    // Squares whose stone has left the board, and by whom it was held.
+    const leaving = new Map();
+    for (const [id, e] of stoneEls) if (!s.board.some((c) => c?.id === id)) leaving.set(+e.dataset.at, e);
     s.board.forEach((c, i) => {
       if (!c) return;
       seen.add(c.id);
@@ -146,7 +162,27 @@ export function mountDuel(root, opts) {
         stonesLayer.append(e);
         stoneEls.set(c.id, e);
         setTimeout(() => e.classList.remove('pop'), 300);
-      }
+        // A stone of the other side gone from this very square (a Frog's Pebble
+        // in place of the stone it leapt): it turns over, it does not vanish.
+        const old = leaving.get(i);
+        if (old && old.classList.contains(c.player === 'X' ? 'O' : 'X')) {
+          leaving.delete(i);
+          const turn = () => { old.remove(); e.style.visibility = ''; flip(e); };
+          // With a stone still to land and leap, it turns as that one passes over.
+          if (land && land.pos !== s.board.findIndex((x) => x?.id === land.id)) { e.style.visibility = 'hidden'; setTimeout(turn, 520); } else turn();
+        }
+        // Placed and acted at once: drawn where it landed, then moved on.
+        if (land?.id === c.id && land.pos !== i) {
+          e.style.setProperty('--r', row(land.pos));
+          e.style.setProperty('--c', col(land.pos));
+          e.style.setProperty('--tilt', `${((c.id * 37) % 9) - 4}deg`);
+          e.dataset.at = land.pos;
+          actor = c.id;
+          setTimeout(() => { if (stoneEls.get(c.id) === e) renderBoard(preview?.state ?? state); }, 330);
+          return;
+        }
+      } else if (e.dataset.player && e.dataset.player !== c.player) flip(e);   // won over (Mind Control)
+      e.dataset.player = c.player;
       updateStone(e, c, c.player, { stuck: !!c.stuck, dead: !active(s, c) });
       const was = e.dataset.at === undefined ? i : +e.dataset.at;
       if (!fresh && Math.abs(row(was) - row(i)) + Math.abs(col(was) - col(i)) >= 2) {
@@ -155,6 +191,11 @@ export function mountDuel(root, opts) {
         void e.offsetWidth;
         e.classList.add('hop');
         setTimeout(() => e.classList.remove('hop'), 450);
+      }
+      // The stone acting, carried over the others as it goes.
+      if (!fresh && c.id === actor && was !== i) {
+        e.classList.add('ride');
+        setTimeout(() => e.classList.remove('ride'), 450);
       }
       // In a preview, the stone just placed pulses, faint, and every other stone
       // it moves or changes.
@@ -172,6 +213,7 @@ export function mountDuel(root, opts) {
     for (const [id, e] of stoneEls) {
       if (seen.has(id)) continue;
       stoneEls.delete(id);
+      if (!e.isConnected || ![...leaving.values()].includes(e)) continue;   // turned over into another, above
       e.classList.add('gone');
       setTimeout(() => e.remove(), 300);
     }
@@ -534,6 +576,7 @@ export function mountDuel(root, opts) {
       }
       if (!st.apply && state.selected.type !== 'parrot') { sfx('place'); commitState(test, action); return; }
       preview = { state: test, action, logs: test.log };
+      landing = { id: state.nextId, pos: i };
       sfx('place');
       show();
       return;
@@ -563,6 +606,7 @@ export function mountDuel(root, opts) {
   }
 
   function showPreview(action) {
+    if (action.type === 'effect') actor = state.board[state.placedAt]?.id ?? null;
     const test = cloneState(state); test.log = [];
     applyAction(test, action);
     preview = { state: test, action };
@@ -670,6 +714,8 @@ export function mountDuel(root, opts) {
         beforeFall.conds = state.conds.filter((c) => c !== 'gravity');
         applyAction(beforeFall, action);
       }
+      if (action.type === 'place') landing = { id: state.nextId, pos: action.pos };
+      if (action.type === 'effect') actor = state.board[state.placedAt]?.id ?? null;
       applyAction(state, action);
       const logs = state.log;
       state.log = [];
