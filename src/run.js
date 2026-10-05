@@ -169,7 +169,7 @@ export const MAX_POWER = 2;
 // a line of the boss's Os costs you.
 // `strict`: an experiment, off -- `sees` alone decides whether your two is blocked
 // (as it is, the boss's wish to spoil your lines blocks it anyway).
-export const MAPCFG = { sees: 0.75, lineDamage: 1, strict: false };
+export const MAPCFG = { sees: 0.75, lineDamage: 1, strict: false, enemyMarble: true };
 // Rocks: a lattice -- (x + 3y) mod 7 in two neighbouring classes -- that cuts
 // every row, column and diagonal into runs between two and five squares long,
 // so an open two is rarely a double threat and a line has to be set up; plus a
@@ -641,7 +641,7 @@ function rollEnemyHand(run, enemy, tier, context) {
   while (hand.length < size) hand.push(pick(run, enemy.pool));
   // Later acts' enemies sometimes bring marble (never gold: it pays only you).
   const marble = [0, 0.15, 0.3][Math.min(2, Math.max(0, (enemy.act || run.act) - 1))];
-  return hand.map(stoneOf).map((s) => (rand(run) < marble ? { ...s, mat: 'marble' } : s));
+  return hand.map(stoneOf).map((s) => (rand(run) < marble && MAPCFG.enemyMarble ? { ...s, mat: 'marble' } : s));
 }
 
 
