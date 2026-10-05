@@ -74,6 +74,7 @@ function playRun(spec) {
   // --start rotate,stinky / --energy 2: try another start (an experiment).
   if (spec.start) R.START.pouch = spec.start;
   if (spec.energy) R.START.energy = spec.energy;
+  if (spec.sees != null) R.MAPCFG.sees = spec.sees;   // --sees 0.5: how often the boss blocks your two
   const run = R.newRun({ seed: spec.seed, heat: spec.heat });
   for (const id of spec.relics ?? []) R.gainRelic(run, id);   // --relics a,b: start with them
   const rng = makeRng(spec.seed);
@@ -205,7 +206,7 @@ if (!isMainThread) {
   parentPort.postMessage(out);
 } else {
   const runs = +arg('runs', 8), piters = +arg('piters', 150), pblunder = +arg('pblunder', 0.1), heat = +arg('heat', 0);
-  const specs = Array.from({ length: runs }, (_, i) => ({ seed: +arg('seed', 100) + i, piters, pblunder, heat, stay: arg('stay', 8), linedmg: arg('linedmg', null) == null ? null : +arg('linedmg'), relics: arg('relics', '') ? arg('relics').split(',') : [], pouch: +arg('pouch', 0), start: arg('start', '') ? arg('start').split(',') : null, energy: +arg('energy', 0) }));
+  const specs = Array.from({ length: runs }, (_, i) => ({ seed: +arg('seed', 100) + i, piters, pblunder, heat, stay: arg('stay', 8), linedmg: arg('linedmg', null) == null ? null : +arg('linedmg'), relics: arg('relics', '') ? arg('relics').split(',') : [], pouch: +arg('pouch', 0), start: arg('start', '') ? arg('start').split(',') : null, energy: +arg('energy', 0), sees: arg('sees', null) == null ? null : +arg('sees') }));
   const W = Math.min(cpus().length, runs);
   const chunks = Array.from({ length: W }, () => []);
   specs.forEach((s, i) => chunks[i % W].push(s));
