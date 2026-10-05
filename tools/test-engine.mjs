@@ -507,6 +507,22 @@ test('Muffle: an enemy stone placed beside it does nothing', () => {
   expectAt(t, { 4: 104 });   // beside the Muffle: nothing happens
   turnPassedTo(t, 'X');
 });
+test('Hammer smashes a stone beside it for good; Snatch takes one into your hand; Seed grows your Mountain', () => {
+  const s = G({ handX: ['hammer'] });
+  lay(s, { 1: 'O shift' });
+  play(s, 'hammer', 4);
+  assert.equal(s.board[1], null);
+  assert.equal(count(s, 'O', 'shift'), 0);
+  const t = G({ handX: ['snatch'] });
+  lay(t, { 1: 'O swap' });
+  play(t, 'snatch', 4);
+  assert.equal(t.board[1], null);
+  assert.equal(count(t, 'X', 'swap'), 1);
+  const u = G({ handX: ['seed'] });
+  lay(u, { 1: 'O pebble', 3: 'O pebble', 5: 'O pebble' });
+  play(u, 'seed', 4);   // one empty square beside it: at once
+  assert.deepEqual([u.board[7].player, u.board[7].type], ['X', 'mountain']);
+});
 test('Mountain obeys restrictions; Relocate cannot move a Mountain', () => {
   const s = G({ handX: ['mountain'] });
   lay(s, { 0: 'O magnet' });

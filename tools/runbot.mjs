@@ -109,6 +109,14 @@ async function playRun(spec) {
   if (spec.pouch != null) R.POUCH.stones = spec.pouch || Infinity;
   if (spec.glasscap != null) R.POUCH.glass = spec.glasscap || Infinity;
   if (spec.linedmg != null) R.MAPCFG.lineDamage = spec.linedmg;
+  // --freelines 1: the boss's first line on each page is free; --glassworth 2;
+  // --hearts 8; --gift relic|stone: a starter gift.
+  R.MAPCFG.freeLines = spec.freelines;
+  R.ECON.glassWorth = spec.glassworth;
+  if (spec.hearts) { run.maxHearts = run.hearts = spec.hearts; }
+  if (spec.gift === 'relic') R.gainRelic(run, R.randomRelic(run, 'common'));
+  if (spec.gift === 'stone') R.gainStone(run, R.randomStone(run, 'uncommon'));
+  if (spec.gift === 'glass') { R.gainStone(run, R.randomOnce(run)); R.gainStone(run, R.randomOnce(run)); }
   while (!run.over && guard++ < 3000) {
     const page = run.map, seen = page?.oLines ?? 0, hearts = run.hearts, screen = run.screen, act = run.act;
     const d = run.pending?.duel;
@@ -247,7 +255,7 @@ if (!isMainThread) {
   parentPort.postMessage(out);
 } else {
   const runs = +arg('runs', 8), piters = +arg('piters', 150), pblunder = +arg('pblunder', 0.1), heat = +arg('heat', 0);
-  const specs = Array.from({ length: runs }, (_, i) => ({ seed: +arg('seed', 100) + i, piters, pblunder, heat, stay: arg('stay', 8), linedmg: arg('linedmg', null) == null ? null : +arg('linedmg'), relics: arg('relics', '') ? arg('relics').split(',') : [], pouch: arg('pouch', null) == null ? null : +arg('pouch'), start: arg('start', '') ? arg('start').split(',') : null, energy: +arg('energy', 0), glass: !!+arg('glass', 1), glasscap: arg('glasscap', null) == null ? null : +arg('glasscap') }));
+  const specs = Array.from({ length: runs }, (_, i) => ({ seed: +arg('seed', 100) + i, piters, pblunder, heat, stay: arg('stay', 8), linedmg: arg('linedmg', null) == null ? null : +arg('linedmg'), relics: arg('relics', '') ? arg('relics').split(',') : [], pouch: arg('pouch', null) == null ? null : +arg('pouch'), start: arg('start', '') ? arg('start').split(',') : null, energy: +arg('energy', 0), glass: !!+arg('glass', 1), freelines: +arg('freelines', 0), glassworth: +arg('glassworth', 1), hearts: +arg('hearts', 0), gift: arg('gift', ''), glasscap: arg('glasscap', null) == null ? null : +arg('glasscap') }));
   const W = Math.min(cpus().length, runs);
   const chunks = Array.from({ length: W }, () => []);
   specs.forEach((s, i) => chunks[i % W].push(s));

@@ -276,6 +276,34 @@ def('muffle', {
   text: 'As long as it stands, enemy stones in its row and column do nothing: no effect, no restriction, no wall.',
 });
 
+def('hammer', {
+  name: 'Hammer', rarity: 'uncommon', kind: 'once', once: true, reach: 'beside',
+  text: 'Smashes a stone beside it, either side\'s, off the board for good.',
+  options: (s, pos) => neighbours(pos, false).filter((j) => s.board[j]).map((target) => ({ target })),
+  apply(s, pos, a) { s.board[a.target] = null; },
+});
+
+def('snatch', {
+  name: 'Snatch', rarity: 'uncommon', kind: 'once', once: true, reach: 'beside',
+  text: 'Takes a stone beside it, either side\'s, off the board into your hand.',
+  options: (s, pos) => neighbours(pos, false).filter((j) => s.board[j] && !isStuck(s, j)).map((target) => ({ target })),
+  apply(s, pos, a, cell) {
+    const c = s.board[a.target];
+    s.board[a.target] = null;
+    s.hands[cell.player].push({ type: c.type });
+  },
+});
+
+def('seed', {
+  name: 'Seed', rarity: 'common', kind: 'once', once: true, reach: 'beside',
+  text: 'A Mountain of yours grows on an empty square beside it.',
+  options: (s, pos) => neighbours(pos, false).filter((j) => !s.board[j]).map((target) => ({ target })),
+  apply(s, pos, a, cell) {
+    s.board[a.target] = { player: cell.player, type: 'mountain', id: s.nextId++ };
+    s.placements[cell.player]++;
+  },
+});
+
 export const STONE_TYPES = Object.keys(STONES);
 // Stones you can find: everything but the Pebble.
 export const BASE_STONES = STONE_TYPES.filter((t) => t !== 'pebble');

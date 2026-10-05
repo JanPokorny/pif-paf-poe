@@ -152,7 +152,7 @@ export const BOSS_LIVES = 2;              // duels a boss must lose
 export const LINE = 3;                     // marks in a row that count
 export const MAX_POWER = 2;
 // `lineDamage`: hearts a line of the boss's Os costs you.
-export const MAPCFG = { lineDamage: 1 };
+export const MAPCFG = { lineDamage: 1, freeLines: 0 };
 // Rocks: a lattice -- (x + 3y) mod 7 in two neighbouring classes -- that cuts
 // every row, column and diagonal into runs between two and five squares long,
 // so an open two is rarely a double threat and a line has to be set up; plus a
@@ -546,6 +546,8 @@ function bossTurn(run) {
 function bossLine(run) {
   run.map.oLines++;
   run.map.news = 'oline';
+  // `freeLines`: the boss's first lines on each page cost no heart (an experiment).
+  if (run.map.oLines <= MAPCFG.freeLines) { run.map.news = 'oline-free'; return; }
   hurt(run, MAPCFG.lineDamage);
 }
 
@@ -960,7 +962,9 @@ export const KINDS_LIKED = {
   tricks: (s) => ['copy', 'curse'].includes(STONES[s.type].kind) || STONES[s.type].kind === 'once',
 };
 export const likes = (merchant, s) => !!merchant?.likes && KINDS_LIKED[merchant.likes](s);
-export const worth = (merchant, s) => costOf(s) + (likes(merchant, s) ? 1 : 0);
+// `glassWorth`: what a glass stone fetches (an experiment knob).
+export const ECON = { glassWorth: 1 };
+export const worth = (merchant, s) => (isOnce(s) ? ECON.glassWorth : costOf(s)) + (likes(merchant, s) ? 1 : 0);
 // What a price comes to after talismans: the Merchant's Badge takes one off.
 export const priceOf = (run, n) => Math.max(1, n - (has(run, 'badge') ? 1 : 0));
 // Can the pouch pay `price` to this merchant (the Collector wants one kind only)?

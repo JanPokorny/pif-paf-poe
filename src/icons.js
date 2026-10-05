@@ -171,6 +171,13 @@ const RAW = {
     P('M -2 2.4 h 4 v 4 h -4 Z') +
     arrow(0, -7.4, 0, 0.6),
 
+  // Hammer: a mallet, its head square.
+  hammer: P('M -5.6 6.4 L 1.4 -0.6', SW(2.2)) + P('M -1.6 -5.6 L 4.2 0.2 L 6.4 -2 L 0.6 -7.8 Z', ' fill="currentColor"' + SW(1.1)),
+  // Snatch: a hooked hand pulling a stone away.
+  snatch: C(-3.6, 3.2, 2.6, SW(1.4)) + P('M 6.4 -6 C 6.4 -1 3 1.6 -0.6 2', SW(1.6)) + head(-1.6, 2.1, 175, 2.6, 1.6),
+  // Seed: a sprout beside a little Mountain.
+  seed: P('M -7.4 6 L -3.6 -1.2 L 0.2 6 Z', ' fill="var(--rock-fill, #c9c6c0)"') + P('M -9 6 H 9', SW(1.2))
+    + P('M 4.6 6 V -1.4', SW(1.4)) + P('M 4.6 0.4 C 1.6 0.6 1 -2.4 1.2 -4 C 3.4 -3.8 4.6 -2 4.6 0.4 Z M 4.6 -1.4 C 7 -1.2 8.4 -3.6 8 -5.8 C 5.8 -5.6 4.6 -3.8 4.6 -1.4 Z', ' fill="currentColor"' + SW(0.8)),
   muffle:
     P('M -4.6 3.4 V -0.6 A 4.6 4.6 0 0 1 4.6 -0.6 V 3.4 L 6 4.8 H -6 L -4.6 3.4 Z') +
     P('M -1.6 6.6 A 1.6 1.6 0 0 0 1.6 6.6') + P('M 0 -5.2 V -6.6') +

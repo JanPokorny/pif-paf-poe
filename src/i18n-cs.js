@@ -378,6 +378,9 @@ export const CS_DATA = {
     magpie: { name: 'Straka', text: 'Ukradne soupeři z ruky kámen podle tvé volby.' },
     relocate: { name: 'Ústup', text: 'Přesuň jeden svůj kámen, i tenhle, na libovolné volné políčko.' },
     'mind-control': { name: 'Vyhláška', text: 'Soupeřův kámen vedle ní je teď tvůj a Vyhláška zmizí.' },
+    hammer: { name: 'Kladivo', text: 'Rozbije kámen vedle sebe, tvůj i soupeřův, a z desky ho smete navždy.' },
+    snatch: { name: 'Chňapka', text: 'Sebere kámen vedle sebe, tvůj i soupeřův, z desky do tvé ruky.' },
+    seed: { name: 'Semínko', text: 'Na volném poli vedle něj ti vyroste Hora.' },
     muffle: { name: 'Roubík', text: 'Dokud stojí, soupeřovy kameny v jeho řádku a sloupci nedělají nic: žádný účinek, žádné omezení, žádná zeď.' },
   },
 
