@@ -167,7 +167,9 @@ export const LINE = 3;                     // marks in a row that count
 export const MAX_POWER = 2;
 // `sees`: the chance the boss blocks your two in a row; `lineDamage`: hearts
 // a line of the boss's Os costs you.
-export const MAPCFG = { sees: 0.75, lineDamage: 1 };
+// `strict`: an experiment, off -- `sees` alone decides whether your two is blocked
+// (as it is, the boss's wish to spoil your lines blocks it anyway).
+export const MAPCFG = { sees: 0.75, lineDamage: 1, strict: false };
 // Rocks: a lattice -- (x + 3y) mod 7 in two neighbouring classes -- that cuts
 // every row, column and diagonal into runs between two and five squares long,
 // so an open two is rarely a double threat and a line has to be set up; plus a
@@ -514,7 +516,7 @@ function bossMark(run, far = false) {
     let score = (c.mark ? 0 : value[c.kind] ?? 0) + rand(run) * 6;
     if (mine >= LINE - 1) score += 1000;
     if (yours >= LINE - 1 && sees) score += 500;
-    score += [0, 8, 20][Math.min(2, yours)] + [0, 6, 16][Math.min(2, mine)];
+    score += (MAPCFG.strict && yours >= LINE - 1 && !sees ? 0 : [0, 8, 20][Math.min(2, yours)]) + [0, 6, 16][Math.min(2, mine)];
     if (score > bestScore) { bestScore = score; best = k; }
   }
   map.cells[best].mark = 'O';
