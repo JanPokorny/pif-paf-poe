@@ -413,6 +413,11 @@ function mapScreen() {
         if (freshLine) el.style.setProperty('--spent-at', spentIn.mark === 'X' ? '1.3s' : '2.6s');
         else el.classList.add('spent-old');
       }
+      // Where the boss would close a line of three next: ringed in red dashes, to block in time.
+      if ((!c.mark || c.mark === 'S') && kind !== 'rock' && kind !== 'lair' && R.inReach(map, k) && R.lineReach(map, k, 'O') >= R.LINE - 1) {
+        el.classList.add('threat');
+        el.append(h('span.threat-ring', { title: t('The boss would make three in a row here.') }));
+      }
       if (c.mark === 'S') el.classList.add('scorched');
       if (freshS === k) el.classList.add('fresh-burn');
       // The square's own picture stays a moment and fades as the mark is drawn.

@@ -91,6 +91,7 @@ export default {
   'Empty. The fox chuckles. −1 heart.': 'Prázdno. Liška se uchechtne. −1 srdce.',
   'Glass stones · {n}': 'Skleněné kameny · {n}',
   '−{n} ❤': '−{n} ❤',
+  'The boss would make three in a row here.': 'Tady by boss udělal tři v řadě.',
   'The Stonecutter': 'Kameník',
   'The Glassblower': 'Sklář',
   'The Herbalist': 'Bylinkářka',

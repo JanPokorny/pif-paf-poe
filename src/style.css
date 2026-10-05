@@ -1068,3 +1068,6 @@ body:has(.duel) #toast.show { transform: translate(-50%, 0) rotate(-1deg); }
 .merchant-head p { margin: 2px 0; }
 .merchant-terms { font-size: 1rem; }
 .pouch-slot.liked .stone::after { content: '+1'; position: absolute; right: -8px; bottom: -6px; font: 700 0.8rem var(--marker, inherit); color: var(--good, #2f7a4a); background: var(--card, #fff); border-radius: 6px; padding: 0 3px; }
+
+/* The square that would give the boss three in a row: a red dashed ring, breathing. */
+.map-cell .threat-ring { position: absolute; inset: 6%; border: 3px dashed var(--red); border-radius: 46% 40% 50% 42%; opacity: 0.75; pointer-events: none; animation: breathe 1.4s ease-in-out infinite; }
