@@ -62,16 +62,40 @@ function recordEnd() {
 
 // ── Chrome ──────────────────────────────────────────────────────────────────
 
+// The energy last shown in the top bar: more than that, and the gain is played out.
+let shownEnergy = null;
 function topBar(menu = showMenu) {
   const hearts = h('div.hearts' + (flash ? '.' + flash : ''), {},
     h('span', { html: icon('heart') }), `${run.hearts}/${run.maxHearts}`);
   flash = null;
+  const energy = R.energyOf(run);
+  const counter = h('div.energy', { onclick: () => toast(t('Energy: what your stones may cost together in a duel.')) }, h('span', { html: icon('energy') }), energy);
+  if (shownEnergy !== null && energy > shownEnergy) energyBurst(energy - shownEnergy, counter);
+  shownEnergy = energy;
   return h('div.topbar', {},
     hearts,
     h('div.gold', {}, h('span', { html: icon('coin') }), run.gold),
-    h('div.energy', { onclick: () => toast(t('Energy: what your stones may cost together in a duel.')) }, h('span', { html: icon('energy') }), R.energyOf(run)),
+    counter,
     h('button.icon-btn', { onclick: showPouch, 'aria-label': t('Your pouch') }, h('span', { html: icon('hand') })),
     h('button.icon-btn', { onclick: menu, 'aria-label': t('Menu') }, h('span', { html: icon('gear') })));
+}
+
+// Energy gained: a big bolt bursts in the middle of the screen, then flies into
+// the top bar's counter, which jumps. It decides what can be brought to a duel,
+// so it is not to be missed.
+function energyBurst(n, counter) {
+  const burst = h('div.energy-burst', {}, h('span.energy-burst-bolt', { html: icon('energy') }), h('span.energy-burst-text', {}, t('+{n} energy', { n })));
+  document.body.append(burst);
+  sfx('heal');
+  setTimeout(() => {
+    const to = counter.getBoundingClientRect(), from = burst.getBoundingClientRect();
+    if (to.width) {
+      burst.style.setProperty('--fly-x', `${to.left + to.width / 2 - (from.left + from.width / 2)}px`);
+      burst.style.setProperty('--fly-y', `${to.top + to.height / 2 - (from.top + from.height / 2)}px`);
+    }
+    burst.classList.add('fly');
+  }, 1300);
+  setTimeout(() => { burst.remove(); if (counter.isConnected) { counter.classList.add('gained'); setTimeout(() => counter.classList.remove('gained'), 900); } }, 2000);
 }
 
 // `keep`: a redraw of the same screen, which stays where it was scrolled to.
@@ -166,6 +190,7 @@ function settingsRow() {
 // ── Title ───────────────────────────────────────────────────────────────────
 
 function title() {
+  shownEnergy = null;   // a run picked up again does not replay its energy
   duelView?.destroy();
   duelView = null;
   setScene('title', 0);
@@ -754,7 +779,7 @@ function shopScreen(redraw = false) {
       })),
       serviceCard('energy', t('+1 energy'), shop.energyPrice,
         shop.energized, () => infoThing({ art: icon('energy'), name: t('+1 energy'), text: t('One more energy in every duel from now on: room for a costlier stone.') },
-          offer(shop.energyPrice, (pay) => { run.energy = (run.energy ?? 1) + 1; shop.energized = true; pay(); toast(t('{n} energy', { n: R.energyOf(run) }), 'good'); }))),
+          offer(shop.energyPrice, (pay) => { run.energy = (run.energy ?? 1) + 1; shop.energized = true; pay(); }))),
       serviceCard('heart', '+1 ❤', shop.healPrice,
         run.hearts >= run.maxHearts || shop.healed >= 2, () => infoThing({ art: icon('heart'), name: '+1 ❤', text: t('Heal one heart. Twice per shop at most.') },
           offer(shop.healPrice, (pay) => { run.hearts++; shop.healed++; sfx('heal'); pay(); })))),
