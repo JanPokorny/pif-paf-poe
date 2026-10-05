@@ -523,6 +523,37 @@ test('Hammer smashes a stone beside it for good; Snatch takes one into your hand
   play(u, 'seed', 4);   // one empty square beside it: at once
   assert.deepEqual([u.board[7].player, u.board[7].type], ['X', 'mountain']);
 });
+test('Nomad: at the end of each of your turns it moves to the next free square, row by row; lines count after', () => {
+  const s = G({ handX: ['nomad'] });
+  lay(s, { 1: 'O pebble', 2: 'O pebble' });
+  const id = play(s, 'nomad', 0);
+  assert.equal(s.phase, 'nomad');
+  assert.deepEqual(legalActions(s), [{ type: 'nomad' }]);
+  applyAction(s, { type: 'nomad' });
+  expectAt(s, { 3: id, 0: 0 });   // 1 and 2 taken: on to 3
+  assert.equal(s.player, 'O');
+  play(s, 'pebble', 8);   // the enemy's turn: it stays
+  expectAt(s, { 3: id });
+  play(s, 'pebble', 0);
+  applyAction(s, { type: 'nomad' });
+  expectAt(s, { 4: id });
+  // A line made by placing, then broken by the Nomad leaving it, does not count.
+  const t = G({ handX: ['nomad'] });
+  lay(t, { 3: 'X pebble', 5: 'X pebble' });
+  play(t, 'nomad', 4);
+  assert.ok(!t.over);
+  applyAction(t, { type: 'nomad' });
+  assert.ok(!t.over && t.board[4] === null);
+});
+test('Nomads of yours travel together through the free squares and each other', () => {
+  const s = G({ handX: ['nomad', 'nomad'] });
+  lay(s, { 1: 'X nomad', 2: 'O pebble' });
+  s.board[1].id = 51;
+  const id = play(s, 'nomad', 4);
+  applyAction(s, { type: 'nomad' });
+  // squares: 0, 1 (Nomad), 3, 4 (Nomad), 5..8 → each one step on
+  expectAt(s, { 3: 51, 5: id, 1: 0, 4: 0 });
+});
 test('Mountain obeys restrictions; Relocate cannot move a Mountain', () => {
   const s = G({ handX: ['mountain'] });
   lay(s, { 0: 'O magnet' });
@@ -850,7 +881,7 @@ function rng32(seed) {
   };
 }
 
-const PHASES = new Set(['select', 'place', 'effect', 'dictate', 'over']);
+const PHASES = new Set(['select', 'place', 'effect', 'dictate', 'over', 'nomad']);
 const fuzzFails = new Map();
 let fuzzSteps = 0, maxLen = 0;
 const wins = { X: 0, O: 0 }, reasons = {};

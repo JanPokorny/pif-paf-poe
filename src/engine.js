@@ -304,6 +304,13 @@ def('seed', {
   },
 });
 
+// The Nomad moves by itself: at the end of each of its owner's turns (see
+// nomadSquares and the 'nomad' phase below), not when placed.
+def('nomad', {
+  name: 'Nomad', rarity: 'common', kind: 'move', wanders: true,
+  text: 'At the end of each of your turns it moves on to the next free square, row by row. Your Nomads travel together. Three in a row counts only after.',
+});
+
 export const STONE_TYPES = Object.keys(STONES);
 // Stones you can find: everything but the Pebble.
 export const BASE_STONES = STONE_TYPES.filter((t) => t !== 'pebble');
@@ -422,6 +429,15 @@ function stepAlong(s, cells) {
   for (let k = 0; k < free.length; k++) b[free[(k + 1) % free.length]] = before[k];
 }
 
+// The squares a player's Nomads travel through, in reading order: the free
+// ones and those holding a Nomad of theirs (a hushed one stays put). Empty if
+// they have no Nomad that moves.
+export function nomadSquares(s, p) {
+  const mine = (c) => c && c.player === p && STONES[c.type].wanders && active(s, c);
+  if (!s.board.some(mine)) return [];
+  return [...Array(9).keys()].filter((i) => !s.board[i] || mine(s.board[i]));
+}
+
 function lineOrder(index, dir) {
   const horizontal = dir === 'left' || dir === 'right';
   const idx = horizontal ? rowSquares(index) : colSquares(index);
@@ -501,7 +517,7 @@ export function cloneState(s) {
     selected: s.selected ? { ...s.selected } : null, from: s.from,
     placedAt: s.placedAt, placedId: s.placedId,
     over: s.over, winner: s.winner, reason: s.reason,
-    turns: s.turns, nextId: s.nextId,
+    turns: s.turns, nextId: s.nextId, nomadDone: !!s.nomadDone,
     log: null,
   };
 }
@@ -571,6 +587,7 @@ export function legalActions(s) {
     case 'place': return allowedSquares(s).map((pos) => ({ type: 'place', pos }));
     case 'effect': return effectOptions(s).map((o) => ({ type: 'effect', ...o }));
     case 'dictate': return dictateOptions(s);
+    case 'nomad': return [{ type: 'nomad' }];
     default: return [];
   }
 }
@@ -586,6 +603,9 @@ function finish(s, winner, reason) {
 
 function endTurn(s) {
   const p = s.player;
+  // Nomads first: a step of their own, before lines are counted.
+  if (!s.nomadDone && nomadSquares(s, p).length > 1) { s.phase = 'nomad'; return; }
+  s.nomadDone = false;
   if (s.forced?.player === p) s.forced = null;
   if (s.conds.includes('gravity')) { slideAll(s, 'down', null); note(s, 'cond:gravity'); }
 
@@ -679,6 +699,13 @@ export function applyAction(s, a) {
       const c = s.board[s.placedAt];
       if (specOf(c).apply(s, s.placedAt, a, c) === 'again') afterPlacement(s);
       else afterEffect(s);
+      break;
+    }
+    case 'nomad': {
+      stepAlong(s, nomadSquares(s, p));
+      note(s, 'nomad');
+      s.nomadDone = true;
+      endTurn(s);
       break;
     }
     case 'dictate': {

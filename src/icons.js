@@ -178,6 +178,12 @@ const RAW = {
   // Seed: a sprout beside a little Mountain.
   seed: P('M -7.4 6 L -3.6 -1.2 L 0.2 6 Z', ' fill="var(--rock-fill, #c9c6c0)"') + P('M -9 6 H 9', SW(1.2))
     + P('M 4.6 6 V -1.4', SW(1.4)) + P('M 4.6 0.4 C 1.6 0.6 1 -2.4 1.2 -4 C 3.4 -3.8 4.6 -2 4.6 0.4 Z M 4.6 -1.4 C 7 -1.2 8.4 -3.6 8 -5.8 C 5.8 -5.6 4.6 -3.8 4.6 -1.4 Z', ' fill="currentColor"' + SW(0.8)),
+  // Nomad: footprints walking on, with a staff of an arrow.
+  nomad: P('M -5.4 1.6 C -7 1.4 -7.4 -1.6 -6.4 -3.4 C -5.4 -5 -3.6 -4.6 -3.4 -2.6 C -3.2 -0.6 -3.8 1.8 -5.4 1.6 Z', ' fill="currentColor"' + SW(0.8))
+    + C(-5, 3.6, 0.9, ' fill="currentColor" stroke="none"')
+    + P('M 0.4 -1.4 C -1.2 -1.6 -1.6 -4.6 -0.6 -6.4 C 0.4 -8 2.2 -7.6 2.4 -5.6 C 2.6 -3.6 2 -1.2 0.4 -1.4 Z', ' fill="currentColor"' + SW(0.8))
+    + C(0.8, 0.6, 0.9, ' fill="currentColor" stroke="none"')
+    + P('M -2 6.4 H 5.6', SW(1.4)) + head(7.8, 6.4, 0, 2.4, 1.5),
   muffle:
     P('M -4.6 3.4 V -0.6 A 4.6 4.6 0 0 1 4.6 -0.6 V 3.4 L 6 4.8 H -6 L -4.6 3.4 Z') +
     P('M -1.6 6.6 A 1.6 1.6 0 0 0 1.6 6.6') + P('M 0 -5.2 V -6.6') +

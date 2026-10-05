@@ -467,6 +467,18 @@ export function mountDuel(root, opts) {
       setStatus(dud ? t('{why} — it will do nothing. Confirm?', { why: t('Hushed') }) : t('This is what happens. Confirm?'), dud ? 'lose-note' : 'you');
       renderActions([undo, h('button.btn.primary', { onclick: confirm }, h('span', { html: icon('check') }), t('Confirm'))]);
       verdict();
+    } else if (state.phase === 'nomad') {
+      // The Nomads' own step, at the end of the turn: shown, then confirmed.
+      if (!preview) {
+        const test = cloneState(state); test.log = [];
+        applyAction(test, { type: 'nomad' });
+        preview = { state: test, action: { type: 'nomad' } };
+        show();
+        return;
+      }
+      setStatus(t('Your Nomads move on. Confirm?'), 'you');
+      renderActions([undo, h('button.btn.primary', { onclick: confirm }, h('span', { html: icon('check') }), t('Confirm'))]);
+      verdict();
     } else if (state.phase === 'effect') {
       const btns = renderStage();
       const what = stoneName(state.board[state.placedAt]);
