@@ -3,7 +3,7 @@
 //
 //   node tools/runbot.mjs --runs 8 --piters 150 --pblunder 0.1 [--heat 0] [--linedmg 2] [--each 1]
 //   (--each 1 prints every run's story; the summary says where runs end and what hurts;
-//   --relics echo,wings starts every run with those talismans; --pouch 4 / --glasscap 3 set the pouch's limits (0: none);
+//   --relics phoenix,wings starts every run with those talismans; --pouch 4 / --glasscap 3 set the pouch's limits (0: none);
 //   --start rotate --energy 2 tries another start)
 
 import { Worker, isMainThread, parentPort, workerData } from 'node:worker_threads';
@@ -14,9 +14,8 @@ import { EVENTS } from '../src/content.js';
 import * as R from '../src/run.js';
 
 const arg = (k, d) => { const i = process.argv.indexOf('--' + k); return i > 0 ? process.argv[i + 1] : d; };
-// Roughly how much each stone wins: its mean over every enemy of every act,
-// as `node tools/lab.mjs matrix` measures it.
-const STRENGTH = { magpie: 42, bumper: 31, firecracker: 30, relocate: 26, stinky: 25, magnet: 24, swap: 24, shift: 24, muffle: 22, gravity: 18, lasso: 21, rotate: 20, frog: 20, twin: 20, parrot: 20, 'mind-control': 19, mountain: 19, bonfire: 18, pebble: 14 };
+// Roughly how much each stone wins: alone against act 2 (docs/HARMONY.md), in 80 duels.
+const STRENGTH = { 'mind-control': 40, firecracker: 32, gravity: 28, magpie: 26, relocate: 25, lasso: 25, swap: 25, stinky: 23, bumper: 23, magnet: 22, frog: 21, shift: 20, twin: 19, rotate: 19, parrot: 17, muffle: 17, bonfire: 15, mountain: 12, pebble: 6 };
 const value = (s) => (STRENGTH[s.type] ?? 22) / 25;
 
 function playDuel(run, cfg, piters, pblunder, rng) {
@@ -74,8 +73,6 @@ function playRun(spec) {
   // --start rotate,stinky / --energy 2: try another start (an experiment).
   if (spec.start) R.START.pouch = spec.start;
   if (spec.energy) R.START.energy = spec.energy;
-  if (spec.sees != null) R.MAPCFG.sees = spec.sees;   // --sees 0.5: how often the boss blocks your two
-  if (spec.strict) R.MAPCFG.strict = true;            // --strict 1: and only then
   const run = R.newRun({ seed: spec.seed, heat: spec.heat });
   for (const id of spec.relics ?? []) R.gainRelic(run, id);   // --relics a,b: start with them
   const rng = makeRng(spec.seed);
@@ -217,7 +214,7 @@ if (!isMainThread) {
   parentPort.postMessage(out);
 } else {
   const runs = +arg('runs', 8), piters = +arg('piters', 150), pblunder = +arg('pblunder', 0.1), heat = +arg('heat', 0);
-  const specs = Array.from({ length: runs }, (_, i) => ({ seed: +arg('seed', 100) + i, piters, pblunder, heat, stay: arg('stay', 8), linedmg: arg('linedmg', null) == null ? null : +arg('linedmg'), relics: arg('relics', '') ? arg('relics').split(',') : [], pouch: arg('pouch', null) == null ? null : +arg('pouch'), start: arg('start', '') ? arg('start').split(',') : null, energy: +arg('energy', 0), sees: arg('sees', null) == null ? null : +arg('sees'), strict: !!+arg('strict', 0), glass: !!+arg('glass', 1), glasscap: arg('glasscap', null) == null ? null : +arg('glasscap') }));
+  const specs = Array.from({ length: runs }, (_, i) => ({ seed: +arg('seed', 100) + i, piters, pblunder, heat, stay: arg('stay', 8), linedmg: arg('linedmg', null) == null ? null : +arg('linedmg'), relics: arg('relics', '') ? arg('relics').split(',') : [], pouch: arg('pouch', null) == null ? null : +arg('pouch'), start: arg('start', '') ? arg('start').split(',') : null, energy: +arg('energy', 0), glass: !!+arg('glass', 1), glasscap: arg('glasscap', null) == null ? null : +arg('glasscap') }));
   const W = Math.min(cpus().length, runs);
   const chunks = Array.from({ length: W }, () => []);
   specs.forEach((s, i) => chunks[i % W].push(s));

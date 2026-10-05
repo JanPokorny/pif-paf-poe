@@ -6,7 +6,7 @@
 
 import { STONES, CONDS } from './engine.js';
 import {
-  RELICS, RELIC_TYPES, BOSS_RELICS, PLUS_STONES, ENEMIES, ACTS, EVENTS, enemiesOf, EASY_OPENERS,
+  RELICS, RELIC_TYPES, BOSS_RELICS, ENEMIES, ACTS, EVENTS, enemiesOf, EASY_OPENERS,
   STONE_PRICE, ONCE_PRICE, RELIC_PRICE, REWARD_STONES, ONCE_STONES,
 } from './content.js';
 
@@ -51,23 +51,23 @@ export const HEAT = [
 export const HAND = 4;
 const ENEMY_STONES = 5;
 // Every run starts with a Shift: the first duels are never plain tic-tac-toe.
-export const START = { pouch: ['shift'], hearts: 6, gold: 30, energy: 1 };
+export const START = { pouch: ['shift'], hearts: 6, gold: 30, energy: 2 };
 export const COST = { starter: 0, common: 1, uncommon: 2, rare: 3 };
-// What a stone costs to bring: by its rarity. Glass (played once and gone)
-// costs 1 whatever it is.
+// What a stone costs to bring: by its rarity (docs/HARMONY.md measures what each
+// wins). Glass, played once and gone, costs one less, but at least 1.
 export const costOf = (s) => {
   const type = s?.type ?? s, st = STONES[type];
-  if (s?.once || st?.once) return 1;
-  return COST[st?.rarity] ?? 0;
+  const cost = COST[st?.rarity] ?? 0;
+  return s?.once || st?.once ? Math.max(1, cost - 1) : cost;
 };
-// The pouch holds so many lasting stones and so many glass ones, each apart:
-// a run is a build, not a hoard. A stone past the limit means giving one up.
-export const POUCH = { stones: 6, glass: 6 };
+// The pouch holds so many lasting stones (glass does not count): a run is a
+// build, not a hoard. A stone past the limit means giving one up.
+export const POUCH = { stones: 6, glass: Infinity };
 export const energyOf = (run) => (run.energy ?? START.energy) + (has(run, 'deep-pockets') ? 1 : 0);
 export const handCost = (run, uids) => uids.reduce((n, u) => n + costOf(run.pouch.find((x) => x.uid === u)), 0);
 
-// A stone in the pouch: {uid, type}, for glass `plus` and `once`.
-const stone = (run, s) => ({ type: s.type ?? s, uid: run.nextUid++, ...(s.plus && { plus: true }), ...(s.once && { once: true }) });
+// A stone in the pouch: {uid, type}, and `once` for glass.
+const stone = (run, s) => ({ type: s.type ?? s, uid: run.nextUid++, ...(s.once && { once: true }) });
 // Which part of the pouch a stone goes in, what is in it, and whether it has room.
 export const shelfOf = (s) => (isOnce(s) ? 'glass' : 'stones');
 export const shelf = (run, k) => run.pouch.filter((x) => shelfOf(x) === k);
@@ -100,9 +100,6 @@ export function newRun({ seed = (Math.random() * 2 ** 31) | 0, heat = 0 } = {}) 
 export const has = (run, relic) => run.relics.includes(relic);
 export const stoneName = (s) => STONES[s.type].name;
 export const isOnce = (s) => !!(s.once || STONES[s.type]?.once);
-// A stone as you bring it: its + form if it is a + one-shot or a talisman upgrades its kind.
-export const upgraded = (run, s) => !!(s.plus || run.relics.some((r) => RELICS[r]?.upgrades?.includes(s.type)));
-export const asBrought = (run, s) => (upgraded(run, s) ? { ...s, plus: true } : s);
 
 // ── Crafting ────────────────────────────────────────────────────────────────
 //
@@ -154,11 +151,8 @@ export const craftable = (run) => run.pouch;
 export const BOSS_LIVES = 2;              // duels a boss must lose
 export const LINE = 3;                     // marks in a row that count
 export const MAX_POWER = 2;
-// `sees`: the chance the boss blocks your two in a row; `lineDamage`: hearts
-// a line of the boss's Os costs you.
-// `strict`: an experiment, off -- `sees` alone decides whether your two is blocked
-// (as it is, the boss's wish to spoil your lines blocks it anyway).
-export const MAPCFG = { sees: 0.75, lineDamage: 1, strict: false };
+// `lineDamage`: hearts a line of the boss's Os costs you.
+export const MAPCFG = { lineDamage: 1 };
 // Rocks: a lattice -- (x + 3y) mod 7 in two neighbouring classes -- that cuts
 // every row, column and diagonal into runs between two and five squares long,
 // so an open two is rarely a double threat and a line has to be set up; plus a
@@ -496,7 +490,6 @@ function bossMark(run, far = false) {
   const map = run.map;
   const free = Object.entries(map.cells).filter(([k, c]) => (!c.mark || c.mark === 'S') && (far || inReach(map, k)));
   if (!free.length) return null;
-  const sees = rand(run) < MAPCFG.sees;
   const value = { treasure: 6, shop: 3, rest: 3, craft: 3, event: 2, elite: 1, fight: 1 };
   let best = null, bestScore = -Infinity;
   for (const [k, c] of free) {
@@ -504,8 +497,8 @@ function bossMark(run, far = false) {
     const mine = reach(map, x, y, 'O'), yours = reach(map, x, y, 'X');
     let score = (c.mark ? 0 : value[c.kind] ?? 0) + rand(run) * 6;
     if (mine >= LINE - 1) score += 1000;
-    if (yours >= LINE - 1 && sees) score += 500;
-    score += (MAPCFG.strict && yours >= LINE - 1 && !sees ? 0 : [0, 8, 20][Math.min(2, yours)]) + [0, 6, 16][Math.min(2, mine)];
+    if (yours >= LINE - 1) score += 500;   // it always blocks your two
+    score += [0, 8, 20][Math.min(2, yours)] + [0, 6, 16][Math.min(2, mine)];
     if (score > bestScore) { bestScore = score; best = k; }
   }
   map.cells[best].mark = 'O';
@@ -615,8 +608,7 @@ export function hurt(run, n) {
 const CLASH = { shared: ['magpie'] };
 const clashes = (cond, hand) => (CLASH[cond] ?? []).some((type) => hand.some((s) => s.type === type));
 
-// 'magnet' or 'magnet+' (its + form) as a stone for a hand.
-const stoneOf = (name) => (name.endsWith('+') ? { type: name.slice(0, -1), plus: true } : { type: name });
+const stoneOf = (name) => ({ type: name });
 
 function rollEnemyHand(run, enemy, tier, context) {
   if (tier === 'boss') return [];
@@ -688,7 +680,7 @@ export const QUIRKS = {
 // The chosen stones, and Pebbles up to a hand of four.
 export function playerHand(run, uids) {
   const hand = uids.map((u) => run.pouch.find((s) => s.uid === u)).filter(Boolean)
-    .map((s) => ({ type: s.type, ...(upgraded(run, s) && { plus: true }), ...(s.once && { once: true }) }));
+    .map((s) => ({ type: s.type, ...(s.once && { once: true }) }));
   while (hand.length < HAND) hand.push({ type: 'pebble' });
   return hand;
 }
@@ -876,7 +868,6 @@ function rarityTable(run, tier) {
   ][run.act - 1];
   const out = { ...t };
   if (tier !== 'normal') { out.rare += 12; out.common -= 12; }
-  if (has(run, 'clover')) { out.rare += 8; out.common -= 8; }
   return out;
 }
 
@@ -896,13 +887,14 @@ export function stoneChoices(run, tier = 'normal', rarity = null, count = 3) {
   return out;
 }
 
-// A one-shot: one of the one-shot stones, or the + form of a stone that has one.
+// A glass stone: one of the stones that are only ever glass, or any other
+// stone in glass.
 export function randomOnce(run, rarity = null) {
   const r = rarity ?? weighted(run, { common: 60, uncommon: 28, rare: 12 });
-  const all = [...ONCE_STONES, ...PLUS_STONES.map((t) => `${t}+`)];
-  const pool = all.filter((n) => STONES[n.replace(/\+$/, '')].rarity === r);
-  const name = pick(run, pool.length ? pool : all);
-  return name.endsWith('+') ? { type: name.slice(0, -1), plus: true, once: true } : { type: name };
+  const all = [...ONCE_STONES, ...REWARD_STONES];
+  const pool = all.filter((n) => STONES[n].rarity === r);
+  const type = pick(run, pool.length ? pool : all);
+  return STONES[type].once ? { type } : { type, once: true };
 }
 
 // After a duel: the one-shot stones you played are gone from the pouch.
@@ -910,19 +902,17 @@ export function spendOnce(run, uids, spent) {
   const left = [...spent];
   for (const u of uids ?? []) {
     const st = run.pouch.find((x) => x.uid === u);
-    const k = st ? left.indexOf(st.type + (st.plus ? '+' : '')) : -1;
+    const k = st ? left.indexOf(st.type) : -1;
     if (k < 0) continue;
     left.splice(k, 1);
     run.pouch = run.pouch.filter((x) => x !== st);
   }
 }
 
-// A + talisman only for a kind of stone you keep in your pouch.
-const relicFits = (run, r) => !RELICS[r].upgrades || run.pouch.some((x) => RELICS[r].upgrades.includes(x.type) && !isOnce(x));
 export function randomRelic(run, rarity = null) {
-  let pool = RELIC_TYPES.filter((r) => !has(run, r) && !BOSS_RELICS.includes(r) && relicFits(run, r));
+  let pool = RELIC_TYPES.filter((r) => !has(run, r) && !BOSS_RELICS.includes(r) );
   if (rarity) pool = pool.filter((r) => RELICS[r].rarity === rarity);
-  if (!pool.length) pool = RELIC_TYPES.filter((r) => !has(run, r) && relicFits(run, r));
+  if (!pool.length) pool = RELIC_TYPES.filter((r) => !has(run, r) );
   if (!pool.length) return null;
   const table = { common: 55, uncommon: 32, rare: 13 };
   const byR = weighted(run, table);

@@ -22,15 +22,14 @@
 import { Worker, isMainThread, parentPort } from 'node:worker_threads';
 import { cpus } from 'node:os';
 import { mkdirSync, writeFileSync } from 'node:fs';
-import { other, createGame, applyAction, legalActions, allowedSquares, STONES, STONE_TYPES, PLUS_STONES, CONDS } from '../src/engine.js';
+import { createGame, applyAction, legalActions, allowedSquares, STONES, STONE_TYPES, CONDS } from '../src/engine.js';
 import { chooseAction, makeRng } from '../src/ai.js';
 import { ENEMIES } from '../src/content.js';
 import * as R from '../src/run.js';
 
 const arg = (k, d) => { const i = process.argv.indexOf('--' + k); return i > 0 ? process.argv[i + 1] : d; };
 const P = (n) => Array(Math.max(0, n)).fill('pebble');
-// Every stone, and the + form of each that has one ('shift+').
-const WITH_PLUS = [...STONE_TYPES, ...PLUS_STONES.map((t) => `${t}+`)];
+const WITH_PLUS = STONE_TYPES;   // (once with the + forms too; there are none now)
 
 // ── One duel ────────────────────────────────────────────────────────────────
 //
@@ -51,9 +50,9 @@ function duel(t) {
       ? { iterations: t.itersX ?? 250, blunder: t.blunderX ?? 0.05, rng }
       : { iterations: t.itersO ?? 250, blunder: t.blunderO ?? 0, rng });
     if (me && a.type === 'place' && s.selected && s.selected.type !== 'pebble') {
-      const kind = s.selected.type, type = kind + (s.selected.plus ? '+' : '');   // a + form counted on its own
-      const snap = (skip) => JSON.stringify([s.board.map((c) => (c && c.id !== skip ? [c.id, c.player] : null)), s.hands.O.length, s.forced, s.silenced.O]);
-      const hushed = s.silenced.X > 0;
+      const kind = s.selected.type, type = kind;
+      const snap = (skip) => JSON.stringify([s.board.map((c) => (c && c.id !== skip ? [c.id, c.player] : null)), s.hands.O.length, s.forced]);
+      const hushed = false;
       const before = snap(null), handBefore = s.hands.X.length, pid = s.nextId;   // the hand already gave the stone up at select
       applyAction(s, a);
       bump(type, 'placed');
@@ -72,7 +71,6 @@ function duel(t) {
       const allowed = allowedSquares(s).length;
       for (const c of s.board) if (c && c.player === 'X' && c.hushed !== true && STONES[c.type].restrict) { bump(c.type, 'restrictTurns'); if (allowed < free) bump(c.type, 'bite'); }
       // What a Muffle of ours caught: often just a Pebble, as the enemy sees it coming.
-      if (s.silenced.O > 0) { bump('muffle', 'hushed'); if (s.selected.type === 'pebble') bump('muffle', 'hushedPebble'); }
     }
     applyAction(s, a);
   }
@@ -117,8 +115,6 @@ const PATCHES = {
   'lasso:enemy': { options: (s, pos, cell) => (ORIGINAL.lasso.options(s, pos).length && enemyPulls(s, pos, cell).length ? [{}] : []), apply(s, pos, a, cell) { for (const [f, t] of enemyPulls(s, pos, cell)) { s.board[t] = s.board[f]; s.board[f] = null; } } },
   // Mountain: it may go anywhere, whatever the enemy's restrictions.
   'mountain:free': { free: true },
-  // Mind Control: the stone named does nothing, too.
-  'mind-control:hush': { apply(s, pos, a, cell) { s.forced = { player: other(cell.player), stone: a.stone }; if (a.stone !== 'pebble') s.silenced[other(cell.player)] = 1; } },
 
   // Bumper: pushes in all eight directions.
   'bumper:eight': { apply(s, pos, a, cell) {
@@ -185,11 +181,11 @@ const BUILDS = {
   'movers (Shift, Rotate)': ['shift', 'rotate'],
   'restrictions (Magnet, Stinky)': ['magnet', 'stinky'],
   'Magnet + Shift': ['magnet', 'shift'],
-  'Magnet + Stinky+': ['magnet', 'stinky+'],
+  'Magnet + Stinky': ['magnet', 'stinky'],
   'two Mountains': ['mountain', 'mountain'],
   'Swap + Lasso': ['swap', 'lasso'],
-  'Gravity+ + Bonfire': ['gravity+', 'bonfire'],
-  'one-shots (Relocate, Lasso+)': ['relocate', 'lasso+'],
+  'Gravity + Bonfire': ['gravity', 'bonfire'],
+  'one-shots (Relocate, Muffle)': ['relocate', 'muffle'],
   'Magnet, Stinky, Shift, Rotate': ['magnet', 'stinky', 'shift', 'rotate'],
 };
 
@@ -214,7 +210,7 @@ const EXPERIMENTS = {
     const cast = Object.keys(ENEMIES).filter((k) => ENEMIES[k].act === 1 && ENEMIES[k].tier === 'normal');
     for (const type of STONE_TYPES) for (const id of cast) for (let i = 0; i < g; i++) {
       const d = enemyDuel(1, id, i * 31 + 7);
-      out.push({ key: `${type}|${id}`, handX: [type, ...P(3)], handO: d.handO.map((x) => x.type + (x.plus ? '+' : '')), conds: d.conds, rules: d.rules, modsO: d.modsO, itersO: d.iters, blunderO: d.blunder, seed: i + 1 });
+      out.push({ key: `${type}|${id}`, handX: [type, ...P(3)], handO: d.handO.map((x) => x.type), conds: d.conds, rules: d.rules, modsO: d.modsO, itersO: d.iters, blunderO: d.blunder, seed: i + 1 });
     }
     return out;
   },
@@ -232,7 +228,7 @@ const EXPERIMENTS = {
       for (const [fk, handO] of Object.entries(foes)) for (let i = 0; i < g; i++) out.push({ key: `${version === 'now' ? type + ' now' : version}|${fk}`, patch: p, handX: [type, ...withX, ...P(3 - withX.length)], handO, seed: i + 1 });
       for (const id of cast) for (let i = 0; i < g / 4; i++) {
         const d = enemyDuel(1, id, i * 31 + 7, { tier: ENEMIES[id].tier });
-        out.push({ key: `${version === 'now' ? type + ' now' : version}|act 1`, patch: p, handX: [type, ...withX, ...P(3 - withX.length)], handO: d.handO.map((x) => x.type + (x.plus ? '+' : '')), conds: d.conds, rules: d.rules, modsO: d.modsO, itersO: d.iters, blunderO: d.blunder, seed: i + 1 });
+        out.push({ key: `${version === 'now' ? type + ' now' : version}|act 1`, patch: p, handX: [type, ...withX, ...P(3 - withX.length)], handO: d.handO.map((x) => x.type), conds: d.conds, rules: d.rules, modsO: d.modsO, itersO: d.iters, blunderO: d.blunder, seed: i + 1 });
       }
     }
     return out;
@@ -247,7 +243,7 @@ const EXPERIMENTS = {
       const label = v.label ?? `${v.id}${v.undead ? '+undead' : ''} ${JSON.stringify(v.set ?? {})}`;
       for (let i = 0; i < g; i++) {
         const d = enemyDuel(e.act, v.id, i * 17 + 3, ctx);
-        out.push({ key: label, handX: typicalHand(e.act, i), handO: d.handO.map((x) => x.type + (x.plus ? '+' : '')), conds: d.conds, rules: d.rules, modsO: d.modsO, itersO: d.iters, blunderO: d.blunder, seed: i + 1 });
+        out.push({ key: label, handX: typicalHand(e.act, i), handO: d.handO.map((x) => x.type), conds: d.conds, rules: d.rules, modsO: d.modsO, itersO: d.iters, blunderO: d.blunder, seed: i + 1 });
       }
       for (const k of Object.keys(e)) if (!(k in saved)) delete e[k];
       Object.assign(e, saved);
@@ -269,7 +265,7 @@ const EXPERIMENTS = {
       if (!e.act || e.tier === 'boss') continue;
       for (const type of arg('stones', null)?.split(',') ?? WITH_PLUS) for (let i = 0; i < g; i++) {
         const d = enemyDuel(e.act, id, i * 31 + 7, { tier: e.tier });
-        out.push({ key: `${type}|${id}`, handX: [type, ...P(SLOTS[e.act] - 1)], handO: d.handO.map((x) => x.type + (x.plus ? '+' : '')), conds: d.conds, rules: d.rules, modsO: d.modsO, itersO: d.iters, blunderO: d.blunder, seed: i + 1 });
+        out.push({ key: `${type}|${id}`, handX: [type, ...P(SLOTS[e.act] - 1)], handO: d.handO.map((x) => x.type), conds: d.conds, rules: d.rules, modsO: d.modsO, itersO: d.iters, blunderO: d.blunder, seed: i + 1 });
       }
     }
     return out;
@@ -281,13 +277,13 @@ const EXPERIMENTS = {
       const phases = e.tier === 'boss' ? [0, 1] : [null];
       for (const ph of phases) for (let i = 0; i < g; i++) {
         const d = enemyDuel(e.act, id, i * 17 + 3, e.tier === 'boss' ? { bossWins: ph } : { tier: e.tier });
-        out.push({ key: `${id}${ph ? '+undead' : ''}`, handX: typicalHand(e.act, i), handO: d.handO.map((x) => x.type + (x.plus ? '+' : '')), conds: d.conds, rules: d.rules, modsO: d.modsO, itersO: d.iters, blunderO: d.blunder, seed: i + 1 });
+        out.push({ key: `${id}${ph ? '+undead' : ''}`, handX: typicalHand(e.act, i), handO: d.handO.map((x) => x.type), conds: d.conds, rules: d.rules, modsO: d.modsO, itersO: d.iters, blunderO: d.blunder, seed: i + 1 });
       }
     }
     // The events' duels too.
     for (const id of ['hermit', 'nightowl', 'thief']) for (let i = 0; i < g; i++) {
       const d = enemyDuel(2, id, i * 17 + 3, { tier: 'event', event: id });
-      out.push({ key: id, handX: typicalHand(2, i), handO: d.handO.map((x) => x.type + (x.plus ? '+' : '')), conds: d.conds, rules: d.rules, itersO: d.iters, blunderO: d.blunder, seed: i + 1 });
+      out.push({ key: id, handX: typicalHand(2, i), handO: d.handO.map((x) => x.type), conds: d.conds, rules: d.rules, itersO: d.iters, blunderO: d.blunder, seed: i + 1 });
     }
     return out;
   },
@@ -298,7 +294,7 @@ const EXPERIMENTS = {
       for (const ph of [0, 1]) for (const [bk, build] of Object.entries(BUILDS)) for (let i = 0; i < g; i++) {
         const d = enemyDuel(e.act, id, i * 17 + 3, { bossWins: ph });
         const slots = SLOTS[e.act];
-        out.push({ key: `${id}${ph ? '+undead' : ''}|${bk}`, handX: [...build.slice(0, slots), ...P(slots - build.length)], handO: d.handO.map((x) => x.type + (x.plus ? '+' : '')), rules: d.rules, itersO: d.iters, blunderO: d.blunder, seed: i + 1 });
+        out.push({ key: `${id}${ph ? '+undead' : ''}|${bk}`, handX: [...build.slice(0, slots), ...P(slots - build.length)], handO: d.handO.map((x) => x.type), rules: d.rules, itersO: d.iters, blunderO: d.blunder, seed: i + 1 });
       }
     }
     return out;

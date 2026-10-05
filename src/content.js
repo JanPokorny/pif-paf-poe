@@ -1,7 +1,7 @@
 // Everything a run is made of that is not the duel itself: relics, enemies,
 // acts, events. Numbers here are the balance; tools/balance.mjs measures them.
 
-import { STONES, BASE_STONES, ONCE_STONES, PLUS_STONES } from './engine.js';
+import { STONES, BASE_STONES, ONCE_STONES } from './engine.js';
 import { t } from './i18n.js';
 
 // ── Relics ──────────────────────────────────────────────────────────────────
@@ -12,8 +12,6 @@ import { t } from './i18n.js';
 export const RELICS = {
   wings: { name: 'Wings', emoji: '🪽', rarity: 'common', mod: 'freeFirst',
     text: 'Your first stone each duel ignores the enemy\'s restrictions.' },
-  echo: { name: 'Echo Chamber', emoji: '🔔', rarity: 'rare', mod: 'echo',
-    text: 'The first stone each duel that does something does it twice.' },
   'iron-heart': { name: 'Iron Heart', emoji: '🫀', rarity: 'common',
     text: '+2 max hearts, and heal 2 now.' },
   'deep-pockets': { name: 'Second Wind', emoji: '🌬️', rarity: 'rare',
@@ -28,7 +26,7 @@ export const RELICS = {
   badge: { name: 'Merchant\'s Badge', emoji: '🏷️', rarity: 'common',
     text: 'Everything in shops costs 25% less.' },
   clover: { name: 'Four-Leaf Clover', emoji: '🍀', rarity: 'uncommon',
-    text: 'Stone rewards offer 4 choices instead of 3, and stones of more energy turn up more often.' },
+    text: 'Stone rewards offer 4 choices instead of 3.' },
   bell: { name: 'Hand Bell', emoji: '🛎️', rarity: 'common',
     text: 'Find a glass stone after every elite or boss you beat.' },
   phoenix: { name: 'Phoenix Feather', emoji: '🪶', rarity: 'rare',
@@ -40,28 +38,7 @@ export const RELICS = {
   'war-chest': { name: 'War Chest', emoji: '💰', rarity: 'rare', gold: 150,
     text: 'Gain 150 gold now.' },
 };
-// + talismans: every stone of their kinds you bring is its + form. Kinds go
-// together by what they do and how much their + form adds (docs/STONE-FAMILIES.md).
-// Offered only when the pouch holds one of them. Text is read when shown, in
-// the language in use.
-const PLUS_TALISMANS = {
-  'plus-turn': { stones: ['rotate', 'bonfire'], rarity: 'uncommon', emoji: '🌀', name: 'Weathervane' },
-  'plus-slide': { stones: ['shift', 'gravity'], rarity: 'uncommon', emoji: '🛷', name: 'Sled' },
-  'plus-reach': { stones: ['swap', 'lasso'], rarity: 'uncommon', emoji: '🪝', name: 'Long Arm' },
-  'plus-blast': { stones: ['firecracker', 'bumper'], rarity: 'rare', emoji: '🧨', name: 'Fuse' },
-  'plus-fence': { stones: ['stinky'], rarity: 'uncommon', emoji: '🪧', name: 'Boundary Stone' },
-  'plus-trick': { stones: ['frog', 'parrot'], rarity: 'common', emoji: '🎩', name: 'Trickster\'s Hat' },
-};
-for (const [id, p] of Object.entries(PLUS_TALISMANS)) {
-  RELICS[id] = {
-    upgrades: p.stones, rarity: p.rarity, emoji: p.emoji, name: p.name,
-    get text() {
-      const names = p.stones.map((x) => STONES[x].name);
-      return t('Your {stones} stones play as their + form.', { stones: names.join(t(' and ')) });
-    },
-  };
-}
-export const BOSS_RELICS = ['deep-pockets', 'echo', 'phoenix', 'war-chest'];
+export const BOSS_RELICS = ['deep-pockets', 'phoenix', 'war-chest'];
 export const RELIC_TYPES = Object.keys(RELICS);
 
 // ── Stone economy ───────────────────────────────────────────────────────────
@@ -73,7 +50,7 @@ export const RELIC_PRICE = { common: 110, uncommon: 140, rare: 170 };
 // Stones you can find as rewards: everything but the Pebble and the one-shot
 // stones, which come on their own.
 export const REWARD_STONES = BASE_STONES.filter((t) => !STONES[t].once);
-export { ONCE_STONES, PLUS_STONES };
+export { ONCE_STONES };
 
 // ── Enemies ─────────────────────────────────────────────────────────────────
 //
@@ -144,7 +121,7 @@ export const ENEMIES = {
     core: ['bonfire', 'bonfire'], pool: ['bonfire', 'swap', 'magnet'], iters: 130, blunder: 0.15,
     quote: 'Round and round it goes!' },
   miner: { name: 'Quarry Miner', emoji: '⛏️', act: 2, tier: 'normal',
-    core: ['gravity+', 'mountain', 'magnet'], pool: ['gravity', 'mountain', 'shift', 'stinky'], iters: 130, blunder: 0.05,
+    core: ['gravity', 'mountain', 'magnet'], pool: ['gravity', 'mountain', 'shift', 'stinky'], iters: 130, blunder: 0.05,
     quote: 'Dig, slide, dig.' },
   magpie: { name: 'Magpie Meg', emoji: '🐦', act: 2, tier: 'normal',
     core: ['magpie', 'shift'], pool: ['shift', 'rotate', 'magnet'], iters: 90, blunder: 0.28,
@@ -155,7 +132,7 @@ export const ENEMIES = {
     once: ['muffle'], quote: 'Nobody sits in the middle, dear.' },
   golem: { name: 'Stone Golem', emoji: '🗿', act: 2, tier: 'elite',
     core: ['mountain', 'mountain', 'magnet'], pool: ['gravity', 'shift', 'magnet'], iters: 350, blunder: 0.08,
-    once: ['lasso+'], quote: 'I. DO. NOT. MOVE.' },
+    once: ['lasso'], quote: 'I. DO. NOT. MOVE.' },
   // bosses
   colossus: { name: 'Clockwork Colossus', emoji: '⚙️', act: 2, tier: 'boss',
     rules: ['column'], rules2: ['column', 'spy'], iters: 60, blunder: 0.2,
@@ -181,15 +158,15 @@ export const ENEMIES = {
     core: ['swap', 'bonfire'], pool: ['shift', 'swap', 'magnet', 'bonfire'], iters: 220, blunder: 0.14,
     quote: 'Now you see it, now you don\'t!' },
   robot: { name: 'Tilt Bot', emoji: '🤖', act: 3, tier: 'normal',
-    core: ['gravity+', 'gravity+'], pool: ['mountain', 'magnet', 'stinky'], iters: 450, blunder: 0.05,
+    core: ['gravity', 'gravity'], pool: ['mountain', 'magnet', 'stinky'], iters: 450, blunder: 0.05,
     quote: 'CALCULATING OPTIMAL SLIDE.' },
   yeti: { name: 'Summit Yeti', emoji: '🦍', act: 3, tier: 'normal', cond: 'gravity',
     core: ['mountain', 'magnet', 'stinky'], pool: ['lasso', 'frog', 'bonfire', 'mountain'], iters: 450, blunder: 0.02,
     once: ['muffle'], quote: 'ROAR. Everything falls down mountain.' },
   // elites
   owl: { name: 'Grand Tactician', emoji: '🐙', act: 3, tier: 'elite',
-    core: ['magnet', 'shift', 'swap'], pool: ['rotate', 'swap', 'stinky+', 'firecracker'], iters: 300, blunder: 0.06,
-    once: ['swap+'], quote: 'I have seen this position before.' },
+    core: ['magnet', 'shift', 'swap'], pool: ['rotate', 'swap', 'stinky', 'firecracker'], iters: 300, blunder: 0.06,
+    once: ['swap'], quote: 'I have seen this position before.' },
   storm: { name: 'Storm Caller', emoji: '🦅', act: 3, tier: 'elite',
     core: ['bonfire', 'bonfire', 'magnet'], pool: ['gravity', 'bumper', 'shift'], iters: 450, blunder: 0.03,
     quote: 'The wind takes everything.' },
@@ -246,10 +223,10 @@ export const EVENTS = [
     id: 'gambler', title: 'The Gambler\'s Table', emoji: '🎲',
     text: 'A grinning fox shuffles three cups. "Double or nothing, friend?"',
     choices: [
-      { label: 'Bet 30 gold', detail: '50%: +30 gold. 50%: −30 gold.', can: (r) => r.gold >= 30,
-        act: (r, api) => { if (api.rng() < 0.5) { r.gold += 30; return t('The pebble is under your cup! +30 gold.'); } r.gold -= 30; return t('Empty. The fox chuckles. −30 gold.'); } },
-      { label: 'Bet everything', detail: '50%: double your gold.', can: (r) => r.gold > 0,
-        act: (r, api) => { if (api.rng() < 0.5) { r.gold *= 2; return t('Fortune smiles! You now have {n} gold.', { n: r.gold }); } r.gold = 0; return t('Gone. All of it.'); } },
+      { label: 'Bet 40 gold', detail: '50%: win a talisman. 50%: lose the gold.', can: (r) => r.gold >= 40,
+        act: (r, api) => { r.gold -= 40; return api.rng() < 0.5 ? api.gainRandomRelic(t('The pebble is under your cup! The fox pays up:')) : t('Empty. The fox chuckles. −40 gold.'); } },
+      { label: 'Bet a heart', detail: '50%: win a talisman. 50%: lose 1 heart.', can: (r) => r.hearts > 1,
+        act: (r, api) => { if (api.rng() < 0.5) return api.gainRandomRelic(t('The pebble is under your cup! The fox pays up:')); r.hearts--; return t('Empty. The fox chuckles. −1 heart.'); } },
       { leave: true, label: 'Walk away', act: () => t('The fox shrugs and pockets the cups.') },
     ],
   },
@@ -257,8 +234,8 @@ export const EVENTS = [
     id: 'well', title: 'The Wishing Well', emoji: '🪣',
     text: 'Coins glitter at the bottom of a mossy well.',
     choices: [
-      { label: 'Drink', detail: 'Heal 2 hearts.', act: (r) => { r.hearts = Math.min(r.maxHearts, r.hearts + 2); return t('Cool, clear water. You feel restored.'); } },
-      { label: 'Fish for coins', detail: 'Gain 25–50 gold.', act: (r, api) => { const g = 25 + ((api.rng() * 26) | 0); r.gold += g; return t('You fish out {n} gold.', { n: g }); } },
+      { label: 'Drink', detail: 'Heal 1 heart.', act: (r) => { r.hearts = Math.min(r.maxHearts, r.hearts + 1); return t('Cool, clear water. You feel restored.'); } },
+      { label: 'Fish for coins', detail: 'Gain 40–60 gold.', act: (r, api) => { const g = 40 + ((api.rng() * 21) | 0); r.gold += g; return t('You fish out {n} gold.', { n: g }); } },
       { label: 'Toss a coin', detail: 'Pay 10 gold, gain a random glass stone.', can: (r) => r.gold >= 10,
         act: (r, api) => { r.gold -= 10; return api.gainRandomOnce(); } },
     ],
@@ -303,7 +280,7 @@ export const EVENTS = [
     text: 'A shadow bumps into you and reaches for your coin purse…',
     choices: [
       { label: 'Chase him', detail: 'Duel him. Win: get it back with interest. Lose: −1 heart.', act: (r, api) => api.fight('thief') },
-      { label: 'Let it go', detail: 'Lose 20 gold.', act: (r) => { r.gold = Math.max(0, r.gold - 20); return t('Easy come, easy go.'); } },
+      { label: 'Let it go', detail: 'Lose 40 gold.', act: (r) => { r.gold = Math.max(0, r.gold - 40); return t('Easy come, easy go.'); } },
     ],
   },
   {
@@ -312,8 +289,8 @@ export const EVENTS = [
     choices: [
       { label: 'Wish for strength', detail: 'Choose a stone. Lose 1 heart.', can: (r) => r.hearts > 1,
         act: (r, api) => api.chooseStone(null, () => { r.hearts--; }) },
-      { label: 'Wish for health', detail: 'Pay 20 gold, heal 2 hearts.', can: (r) => r.gold >= 20,
-        act: (r) => { r.gold -= 20; r.hearts = Math.min(r.maxHearts, r.hearts + 2); return t('You feel much better.'); } },
+      { label: 'Wish for health', detail: 'Pay 30 gold, heal 1 heart.', can: (r) => r.gold >= 30,
+        act: (r) => { r.gold -= 30; r.hearts = Math.min(r.maxHearts, r.hearts + 1); return t('You feel much better.'); } },
       { leave: true, label: 'Move on', act: () => t('You keep your coins.') },
     ],
   },
@@ -350,8 +327,8 @@ export const EVENTS = [
     choices: [
       { label: 'Breathe deeply', detail: '+1 energy. Lose 1 max heart.', can: (r) => r.maxHearts > 2,
         act: (r) => { r.energy = (r.energy ?? 1) + 1; r.maxHearts--; r.hearts = Math.min(r.hearts, r.maxHearts); return t('Your mind clears. +1 energy.'); } },
-      { label: 'Donate 40 gold', detail: '+1 energy.', can: (r) => r.gold >= 40,
-        act: (r) => { r.gold -= 40; r.energy = (r.energy ?? 1) + 1; return t('The monk bows. +1 energy.'); } },
+      { label: 'Donate 80 gold', detail: '+1 energy.', can: (r) => r.gold >= 80,
+        act: (r) => { r.gold -= 80; r.energy = (r.energy ?? 1) + 1; return t('The monk bows. +1 energy.'); } },
       { leave: true, label: 'Tiptoe past', act: () => t('You leave the monk to the quiet.') },
     ],
   },
@@ -359,8 +336,8 @@ export const EVENTS = [
     id: 'bridge', title: 'The Rickety Bridge', emoji: '🌉',
     text: 'A rope bridge sways over a gorge. On the far side, something glints.',
     choices: [
-      { label: 'Cross it', detail: 'Lose 1 heart, gain 50 gold.', can: (r) => r.hearts > 1,
-        act: (r) => { r.hearts--; r.gold += 50; return t('A plank snaps under you — but you make it, and pocket 50 gold.'); } },
+      { label: 'Cross it', detail: 'Lose 1 heart, gain 80 gold and a random glass stone.', can: (r) => r.hearts > 1,
+        act: (r, api) => { r.hearts--; r.gold += 80; return `${t('A plank snaps under you — but you make it, and pocket 80 gold.')} ${api.gainRandomOnce()}`; } },
       { leave: true, label: 'Go around', act: () => t('The long way round. Nothing lost, nothing found.') },
     ],
   },
@@ -376,13 +353,12 @@ export const EVENTS = [
     id: 'storyteller', title: 'The Storyteller', emoji: '🧓',
     text: 'An old camper tells of the summer the stones first learned to move.',
     choices: [
-      { label: 'Listen', detail: 'Heal 1 heart and gain a random glass stone.', act: (r, api) => {
+      { label: 'Listen', detail: 'Heal 1 heart.', act: (r) => {
         const healed = r.hearts < r.maxHearts;
         r.hearts = Math.min(r.maxHearts, r.hearts + 1);
-        const extra = ` ${api.gainRandomOnce()}`;
-        return `${healed ? t('You feel better.') : t('A fine story.')}${extra}`;
+        return healed ? t('You feel better.') : t('A fine story.');
       } },
-      { label: 'Tell your own', detail: 'Gain 20 gold for a good yarn.', act: (r) => { r.gold += 20; return t('They toss you 20 gold. Not bad!'); } },
+      { label: 'Tell your own', detail: 'Gain 40 gold for a good yarn.', act: (r) => { r.gold += 40; return t('They toss you 40 gold. Not bad!'); } },
     ],
   },
 ];
@@ -392,7 +368,7 @@ ENEMIES.hermit = { name: 'The Hermit', emoji: '🧙', act: 0, tier: 'event',
   core: ['swap', 'frog', 'mountain'], pool: ['shift', 'rotate', 'magnet', 'stinky'], iters: 300, blunder: 0.1,
   quote: 'Show me what you have learned.' };
 ENEMIES.nightowl = { name: 'The Night Owl', emoji: '🦉', act: 0, tier: 'event',
-  core: ['magnet', 'stinky', 'swap'], pool: ['shift', 'rotate', 'stinky+', 'bumper'], iters: 700, blunder: 0,
+  core: ['magnet', 'stinky', 'swap'], pool: ['shift', 'rotate', 'stinky', 'bumper'], iters: 700, blunder: 0,
   quote: 'Hoo. Your move.' };
 ENEMIES.thief = { name: 'The Pickpocket', emoji: '🥷', act: 0, tier: 'event',
   core: ['firecracker', 'swap'], pool: ['shift', 'pebble', 'stinky'], iters: 150, blunder: 0.2,

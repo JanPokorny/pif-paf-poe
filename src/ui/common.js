@@ -27,8 +27,6 @@ export function h(tag, attrs = {}, ...children) {
 }
 
 // A hand-drawn star sticker (unused while no stone is special enough).
-// A + stone: a small + drawn in the stone's own ink, in the corner of its face.
-const STAR = '<svg class="badge-plus" viewBox="-10 -10 20 20" aria-hidden="true"><path d="M0 -6.5 V6.5 M-6.5 0 H6.5"/></svg>';
 
 // Pen marks, as SVG strings in a 0..100 box: an X in two strokes, an O in one
 // loop that overshoots where it closes. `fresh` draws them in.
@@ -44,10 +42,7 @@ export function art(kind, id, emoji) {
   const name = kind === 'x' ? id : `${kind}-${id}`;
   return ICONS[name] ? h('span.art', { html: icon(name) }) : h('span.art.stamp', {}, emoji);
 }
-// A + talisman shows the stone it upgrades, starred.
-export const relicArt = (id) => (RELICS[id]?.upgrades
-  ? h('span.art.upgrade', { html: RELICS[id].upgrades.map((x) => icon(x)).join('') + STAR })
-  : art('relic', id, RELICS[id]?.emoji ?? '?'));
+export const relicArt = (id) => art('relic', id, RELICS[id]?.emoji ?? '?');
 
 export const iconEl = (name, cls = '') => h('span.icon-wrap', { html: icon(name, cls) });
 
@@ -80,10 +75,9 @@ export function updateStone(el, s, player, opts = {}) {
   el.classList.toggle('dead', !!opts.dead);
   el.classList.toggle('mini', !!opts.mini);
   el.classList.toggle('once', !!(s.once || STONES[s.type]?.once));
-  el.classList.toggle('plus', !!(s.plus && STONES[s.type]?.plus));
   if (el.dataset.type !== s.type || !el.firstChild) {
     el.dataset.type = s.type;
-    el.innerHTML = icon(s.type, 'glyph') + STAR + '<span class="tape"></span>';
+    el.innerHTML = icon(s.type, 'glyph') + '<span class="tape"></span>';
   }
 }
 
@@ -234,7 +228,7 @@ function demoBoard(board, marks = {}) {
   for (let i = 0; i < 9; i++) {
     const c = board[i];
     const cell = h('div.demo-cell' + (marks[i] ? '.' + marks[i] : ''));
-    if (c) cell.append(stoneEl(c, c.player, { mini: true, stuck: !!c.stuck, dead: !!c.hushed }));
+    if (c) cell.append(stoneEl(c, c.player, { mini: true, stuck: !!c.stuck }));
     g.append(cell);
   }
   return g;
@@ -248,37 +242,34 @@ function demoCaption(st) {
 // Whether a stone's card has an example to show (worked out once per kind).
 const demoKnown = new Map();
 export function hasExample(s) {
-  const key = s.type + (s.plus && STONES[s.type]?.plus ? '+' : '');
+  const key = s.type;
   if (!demoKnown.has(key)) demoKnown.set(key, !!stoneDemo(s));
   return demoKnown.get(key);
 }
 
 function stoneDemo(s) {
   const st = specOf(s);
-  const plus = s.plus && STONES[s.type].plus ? { plus: true } : {};
-  // The sample board; a copying stone gets an enemy Shift to copy, one played last.
+  // The sample board; a copying stone gets an enemy Shift to copy.
   const copies = s.type === 'parrot';
   if (s.type === 'mountain') return mountainDemo();
   const fresh = (empty = false) => {
-    const g = createGame({ handX: [{ type: s.type, ...plus }], first: 'X', log: false });
+    const g = createGame({ handX: [{ type: s.type }], first: 'X', log: false });
     let id = 50;
     // A Waltz gets a full block of four to turn.
     const sample = s.type === 'rotate' ? { ...DEMO_BOARD, 0: 'X' } : DEMO_BOARD;
     if (!empty) for (const [i, p] of Object.entries(sample)) g.board[+i] = { player: p, type: copies && +i === 8 ? 'shift' : 'pebble', id: id++ };
-    if (copies) g.lastPlaced.O = { type: 'shift' };
     g.nextId = 100;
     return g;
   };
   try {
     if (st.restrict) {
       // On an empty board, the squares it closes to the enemy, struck through one
-      // after another: in the centre, so the corners show untouched; a + one,
-      // reaching its row and column, in a corner, where that differs.
-      const at = plus.plus ? 0 : 4;
+      // after another: in the centre, so the corners show untouched.
+      const at = 4;
       const g = fresh(true);
       const before = cloneState(g).board;
-      before[at] = { player: 'X', type: s.type, id: g.nextId, ...plus };
-      applyAction(g, { type: 'select', stone: s.type, ...plus });
+      before[at] = { player: 'X', type: s.type, id: g.nextId };
+      applyAction(g, { type: 'select', stone: s.type });
       applyAction(g, { type: 'place', pos: at });
       if (g.phase === 'effect') applyAction(g, legalActions(g)[0]);
       g.phase = 'place';
@@ -295,25 +286,25 @@ function stoneDemo(s) {
       if (empty && best?.moved) break;
       const g = fresh(empty);
       if (g.board[pos]) continue;
-      applyAction(g, { type: 'select', stone: s.type, ...plus });
+      applyAction(g, { type: 'select', stone: s.type });
       // Before: the stone drawn where it lands, nothing done yet.
       const before = cloneState(g).board;
-      before[pos] = { player: 'X', type: s.type, id: g.nextId, ...plus };
+      before[pos] = { player: 'X', type: s.type, id: g.nextId };
       applyAction(g, { type: 'place', pos });
       const opts = g.phase === 'effect' ? legalActions(g) : [null];
       for (const o of opts) {
         const after = cloneState(g);
         if (o) applyAction(after, o);
-        // A Parrot+ became another stone: let that one act too.
+        // A Parrot became another stone: let that one act too.
         for (let k = 0; k < 3 && after.phase === 'effect' && after.player === 'X'; k++) applyAction(after, legalActions(after)[0]);
         const same = (a, b) => (!a && !b) || (a && b && a.player === b.player && a.type === b.type);
         // Stones it moves or changes, then squares it changes.
         const at = (id) => after.board.findIndex((c) => c?.id === id);
         const stones = before.reduce((n, c, i) => n + (c && (at(c.id) !== i || !same(after.board[at(c.id)], c)) ? 1 : 0), 0);
         // (A stone sent back to a hand has left the board: counted already.)
-        // A + form shows what its plain form cannot: it is worth more acting on a
-        // stone that is not beside it (a Firecracker+ blowing one away from afar).
-        const far = plus.plus && before.some((c, i) => c && i !== pos && (at(c.id) !== i || !same(after.board[at(c.id)], c))
+        // Acting on a stone that is not beside it shows a long reach (a
+        // Firecracker blowing one away from afar).
+        const far = before.some((c, i) => c && i !== pos && (at(c.id) !== i || !same(after.board[at(c.id)], c))
           && Math.abs((i % 3) - (pos % 3)) + Math.abs(((i / 3) | 0) - ((pos / 3) | 0)) > 1);
         const moved = stones * 10 + (far ? 5 : 0) + after.board.reduce((n, c, i) => n + (same(c, before[i]) ? 0 : 1), 0);
         if (!best || moved > best.moved) best = { moved, before, after: after.board, pos, o };
@@ -459,9 +450,6 @@ export function infoRelic(id, action = null) {
     h('div.info-head', {}, h('div.relic-token', {}, relicArt(id)), h('div', {},
       h('div.info-name', {}, r.name), h('div.info-rarity', {}, t('talisman')))),
     h('p', {}, r.text),
-    // A + talisman: each stone it upgrades, and what its + form does.
-    r.upgrades ? h('div.plus-list', {}, r.upgrades.map((x) => h('div.plus-row', {},
-      stoneEl({ type: x, plus: true }, 'X', { mini: true }), h('span', {}, h('b', {}, `${STONES[x].name}+: `), STONES[x].plusText)))) : null,
     infoButtons(() => close(), action));
   const close = modal(body);
 }

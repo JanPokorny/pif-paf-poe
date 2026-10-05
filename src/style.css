@@ -159,9 +159,6 @@ b { font-weight: 400; background: linear-gradient(transparent 55%, var(--hi) 55%
 .stone.O { color: var(--red); }
 .stone.O::before { background: var(--red-wash); border: 2.5px solid var(--red); border-radius: 50% 47% 52% 49%; }
 .stone .glyph { position: relative; width: 64%; height: 64%; filter: url(#ink); }
-.stone .badge-plus { display: none; position: absolute; bottom: 5%; right: 5%; width: 27%; height: 27%; z-index: 2; pointer-events: none; }
-.stone .badge-plus path { fill: none; stroke: currentColor; stroke-width: 3.4; stroke-linecap: round; }
-.stone.plus .badge-plus { display: block; }
 .stone .tape { display: none; position: absolute; left: -12%; right: -12%; top: 38%; height: 26%; background: var(--tape); transform: rotate(-24deg); z-index: 2; box-shadow: 0 1px 1px rgba(0,0,0,0.1); }
 .stone.stuck .tape { display: block; }
 .stone.dead { opacity: 0.6; }
@@ -250,7 +247,7 @@ b { font-weight: 400; background: linear-gradient(transparent 55%, var(--hi) 55%
 @keyframes bounce { from { scale: 1; } to { scale: 1.08; } }
 .winline { position: absolute; inset: 0; pointer-events: none; z-index: 5; }
 .winline svg { width: 100%; height: 100%; overflow: visible; }
-.winline path { fill: none; stroke-width: 9; stroke-linecap: round; stroke-dasharray: 100; stroke-dashoffset: 100; animation: draw 0.5s ease-out forwards; filter: url(#pencil); opacity: 0.85; }
+.winline path { fill: none; stroke-width: 9; stroke-linecap: round; stroke-linejoin: round; stroke-dasharray: 100; stroke-dashoffset: 100; animation: draw 0.5s ease-out forwards; filter: url(#pencil); opacity: 0.85; }
 .winline path.X { stroke: var(--blue); } .winline path.O { stroke: var(--red); }
 @keyframes draw { to { stroke-dashoffset: 0; } }
 
@@ -504,7 +501,6 @@ b { font-weight: 400; background: linear-gradient(transparent 55%, var(--hi) 55%
 .campfire { width: 110px; height: 110px; color: #c0621a; filter: url(#ink) !important; }
 .campfire .icon { width: 100%; height: 100%; }
 .map-cell .label { max-width: 96%; text-align: center; font-size: 0.8rem; line-height: 0.95; }
-.stone-grid.upgrades { grid-template-columns: repeat(2, 1fr); }
 .coach { color: var(--ink); background: var(--note); padding: 2px 6px; box-shadow: 1px 3px 5px -3px rgba(80,60,0,.5); display: inline-block; transform: rotate(-0.5deg); }
 
 /* Ink art replaces the stamped emoji where it exists. */
@@ -844,16 +840,6 @@ body:has(.duel) #toast.show { transform: translate(-50%, 0) rotate(-1deg); }
 .log-list li.good { color: var(--good); }
 .log-list li.you { color: var(--blue); }
 
-/* A + talisman: the stone it upgrades, with the + star. */
-.art.upgrade { position: relative; display: inline-flex; align-items: center; justify-content: center; width: 100%; height: 100%; gap: 1px; }
-.art.upgrade .icon { width: 46%; height: 46%; }
-.art.upgrade .badge-plus { display: block; position: absolute; right: 4%; bottom: 4%; width: 26%; height: 26%; }
-.art.upgrade .badge-plus path { fill: none; stroke: currentColor; stroke-width: 3.4; stroke-linecap: round; }
-
-.plus-list { display: flex; flex-direction: column; gap: 8px; }
-.plus-row { display: flex; align-items: center; gap: 10px; font-size: 0.95rem; line-height: 1.2; }
-.plus-row .stone { flex: none; }
-
 /* The title fits the screen and never scrolls. */
 .screen:has(> .title) { height: 100dvh; overflow: hidden; }
 .screen > .title { min-height: 0; flex: 1; }
@@ -915,9 +901,6 @@ body:has(.duel) #toast.show { transform: translate(-50%, 0) rotate(-1deg); }
 .info-stone .demo { margin: 0; gap: 0 12px; }
 .info-stone .demo-board { margin: 11px 0; }   /* 108px of board in 130: five rules */
 .info-stone .demo-cap { line-height: 26px; }
-.plus-list { gap: 0; }
-.plus-row { align-items: flex-start; line-height: 26px; }
-.plus-row .stone.mini { --size: 22px; margin-top: 2px; }
 .info-stone > .info-actions, .info-stone > .btn { margin-top: 14px; }
 
 /* The pouch, menus and questions on the same rules (blocks topped up in JS:

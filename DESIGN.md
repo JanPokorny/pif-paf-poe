@@ -11,8 +11,9 @@ numbers. The camp game's own reasoning is in `old/adr/`.
   where you satisfy as many as any square can (`old/adr/2026-08-18-…`).
 - **Counterattacks → one-shot stones.** The camp game's counterattacks became tricks, spent
   at the end of a turn; now they are stones like any other, brought along like any other and placed on the
-  board, that then do their one thing (Relocate, Mind Control, Muffle, and + stones). Once played in a duel, won or lost, one is gone from the pouch. They
-  have a dashed outline, come as their own reward and shop shelf, and are cheaper than stones.
+  board, that then do their one thing (Relocate, Mind Control, Muffle, and any stone in glass). Once played in a duel, won or lost, one is gone from the pouch. They
+  have a dashed outline, come as their own reward and shop shelf, and cost one energy less
+  than the lasting stone (at least 1).
   Encore, which handed back your last special stone, did not survive the change.
 - **Boss rules** come from an older iteration's sheet of special rules (Taktika, Náskok, Elko,
   Lep, Sloup, Špion, Reservé).
@@ -24,9 +25,9 @@ duel, and a rule for who wins when someone runs out. The second version slows it
 
 - **Energy.** What you bring into a duel is a decision of its own: every special stone costs
   energy (common 1, uncommon 2, rare 3, a dot each in the stone's corner), and together they may
-  cost no more than you have. A run starts with 1, and with a Shift in the pouch: the first
+  cost no more than you have. A run starts with 2, and with a Shift in the pouch: the first
   duels are never plain tic-tac-toe. Beating an elite gives 1, an act's boss 2;
-  every shop sells 1 (once a visit), the Meditating Monk trades one for a max heart or 40 gold,
+  every shop sells 1 (once a visit), the Meditating Monk trades one for a max heart or 80 gold,
   and Second Wind (a boss relic) adds 1. Picking stones before a duel fills a bar of dots.
 - **Rewards are a form.** Each row of a reward is yours ("~ and ~" between rows); a row that
   offers a choice ("or" between its cards) works like radio buttons, and Continue stays grey
@@ -92,7 +93,7 @@ its own, with its boss.
   boss as from any duel; it waits in its lair as it was, risen already if you beat it once.
   Lose to it and it throws you out (−1 ❤): the lair shuts, and another line of three opens it
   again, the boss still risen if you had beaten it once.
-  The boss's three in a row costs you a heart (two made it the last blow in a quarter of the bots' runs). There is no page limit any more: the lair opens
+  The boss always blocks an open two of yours, and its three in a row costs you a heart (two made it the last blow in a quarter of the bots' runs). There is no page limit any more: the lair opens
   only to your line, and when nothing on view is free the boss moves again (into the fog beside
   the page if it must) until something is.
 - **Spent lines.** Every line of three is crossed through on the page, and its marks are spent:
@@ -143,24 +144,24 @@ Every stone's card shows an example computed by the engine.
   may place only as far as some square is left ("if you can" is implied, never written).
 - **"Beside" always means the four squares that share a side**, for every stone and boss rule
   (Clinch included). The map is the one place where "next to" counts corners.
-- **The + tier.** Eleven stones have a + form, the same stone with a wider effect (usually from
-  beside to its whole row and column). A + stone comes in glass (in glass rewards and shop
-  shelves) or through a talisman that makes every stone of that kind you bring its + form,
-  offered only for kinds in your pouch. A + stone has a small + in the corner of its face.
-  Magnet has none: a Magnet reaching its whole row and column narrowed the enemy less than one
-  reaching only beside it.
-- **Glass.** A stone is plain or **glass** (a dashed outline): played once, then gone from the
-  pouch; always the + form where there is one, always 1 energy. The one-use stones of old are
-  glass. (Marble and gold materials were tried and dropped: neither earned its extra energy,
-  see docs/HARMONY.md.)
-- **The pouch has limits**: 6 stones and, apart, 6 glass ones (`POUCH` in run.js). A stone
-  past a limit asks which to give up for it, or to keep what you have; a run is a build, not a
-  hoard.
+- **No + tier any more.** Stones once had a + form (a wider effect, from glass or a talisman).
+  Where the + form was the better stone it became the stone (Waltz, Gravity, Lasso, Swap, Frog,
+  Firecracker, Parrot); Stinky and Bumper kept their plain form; Bonfire was redone (it turns
+  the board's outer ring). The + talismans went with it.
+- **Every stone acts on the board.** Mind Control turns an enemy stone beside it yours (and is
+  gone); Muffle hushes the enemy stones in its row and column for as long as it stands.
+- **Glass.** A stone is lasting or **glass** (a dashed outline): played once, then gone from the
+  pouch; one energy less than the lasting stone, at least 1. Relocate, Mind Control and Muffle
+  are glass by nature. (Marble and gold materials were tried and dropped: neither earned its
+  extra energy, see docs/HARMONY.md.)
+- **The pouch holds 6 stones**; glass ones do not count (`POUCH` in run.js). A stone past the
+  limit asks which to give up for it, or to keep what you have; a run is a build, not a hoard.
 - **Mountain is only a wall**: nothing moves it, but it obeys restrictions like any stone.
 - **Rarity follows power** (`node tools/lab.mjs matrix`, `power`, `effects`), and power decides
   the energy cost.
 
-`docs/STONE-FAMILIES.md` has every stone, its + form and their measurements.
+`docs/STONE-FAMILIES.md` has the older measurements, + forms included; `docs/HARMONY.md` the
+latest (what each stone wins alone, which set the energy costs).
 
 ## Difficulty
 

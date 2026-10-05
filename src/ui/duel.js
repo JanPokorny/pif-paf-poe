@@ -40,7 +40,7 @@ function stageOf(cands) {
 
 // A hand as one entry per kind of stone (a + form a kind of its own): {st, k (its first index), n}.
 const sameKind = (a, b) => handKey(a) === handKey(b);
-// The key of a stone in the enemy's hand, as a hand slot: 'O:shift' or 'O:shift+'.
+// The key of a stone in the enemy's hand, as a hand slot: 'O:shift' or 'O:shift!'.
 const enemyKey = (st) => `O:${handKey(st)}`;   // '!': glass
 function groupHand(hand) {
   const out = [];
@@ -69,7 +69,7 @@ function describe(a, by) {
   if (a.from !== undefined && a.to !== undefined) return `${sq(a.from)} → ${sq(a.to)}`;
   if (a.a !== undefined) return t('swapped {a} and {b}', { a: sq(a.a), b: sq(a.b) });
   if (a.stone && a.type === 'effect') {
-    return t(by === 'magpie' ? 'stole {stone}' : 'the next stone must be {stone}', { stone: STONES[a.stone].name });
+    return t('stole {stone}', { stone: STONES[a.stone].name });
   }
   if (a.dir) {
     if (a.index === undefined) return t(`slid ${a.dir}`);
@@ -77,7 +77,7 @@ function describe(a, by) {
   }
   if (a.block) return t('turned the {block} block {turn}', { block: t(BLOCK[a.block]), turn: turning(a.cw) });
   if (a.turn) return t('turned the ring {n} {turn}', { n: Math.abs(a.turn), turn: turning(a.turn > 0) });
-  if (a.spin) return t('turned the stones around it {turn}', { turn: turning(a.spin > 0) });
+  if (a.spin) return t('turned the outer ring {turn}', { turn: turning(a.spin > 0) });
   if (a.target !== undefined) return t('targeting the {square}', { square: sq(a.target) });
   return '';
 }
@@ -179,8 +179,8 @@ export function mountDuel(root, opts) {
 
   const slotStone = (key) => {
     if (typeof key !== 'string') return (snapshot ?? state).hands.X[key];
-    const m = key.slice(2).match(/^(.*?)(\+?)(!?)$/);
-    return { type: m[1], ...(m[2] && { plus: true }), ...(m[3] && { once: true }) };
+    const m = key.slice(2).match(/^(.*?)(!?)$/);
+    return { type: m[1], ...(m[2] && { once: true }) };
   };
   // Which select action a hand slot stands for: a hand index, or 'O:type'
   // for a stone taken from the enemy's hand (Open Hands).
@@ -188,7 +188,7 @@ export function mountDuel(root, opts) {
     const acts = legalActions(s);
     const st = typeof key === 'string' ? slotStone(key) : s.hands.X[key];
     const from = typeof key === 'string' ? 'O' : undefined;
-    return st && acts.find((a) => a.from === from && sameKind({ type: a.stone, plus: a.plus, once: a.once }, st));
+    return st && acts.find((a) => a.from === from && sameKind({ type: a.stone, once: a.once }, st));
   };
 
   function renderHands(s, shown = s) {
@@ -232,8 +232,6 @@ export function mountDuel(root, opts) {
     for (const r of s.rules) items.push(ruleChip('rule', r));
     if (s.dictate?.kind === 'column') items.push(h('span.chip.bad', {}, t(['Left column closed', 'Middle column closed', 'Right column closed'][s.dictate.value])));
     if (s.dictate?.kind === 'spy') items.push(h('span.chip.bad', {}, t(`Moves go ${s.dictate.value}`)));
-    if (s.silenced.X) items.push(h('button.chip.bad', { onclick: () => toast(t('Your next stone will do nothing.'), 'bad') }, t('Hushed: next stone')));
-    if (s.silenced.O) items.push(h('button.chip.good', { onclick: () => toast(t('Their next stone will do nothing.'), 'good') }, t('Enemy hushed: next stone')));
     if (s.forced) items.push(h('span.chip.bad', {}, t(s.forced.player === 'X' ? 'You must play {stone}' : 'They must play {stone}', { stone: STONES[s.forced.stone].name })));
     chips.replaceChildren(...items);
   }
@@ -242,11 +240,22 @@ export function mountDuel(root, opts) {
   // path has a zero-size box and the pencil filter would swallow it.
   function lineSvg(line, who, dashed = false) {
     const cx = (i) => (col(i) + 0.5) * 100, cy = (i) => (row(i) + 0.5) * 100;
+    const svg = (d) => `<svg viewBox="0 0 300 300" aria-hidden="true"><path class="${who}${dashed ? ' dashed' : ''}" pathLength="100" d="${d}"/></svg>`;
+    // An L (the Elbow's): one stroke through its corner, the one beside both others.
+    const near = (i, j) => Math.abs(row(i) - row(j)) + Math.abs(col(i) - col(j)) === 1;
+    const elbow = new Set(line.map(row)).size === 2 && new Set(line.map(col)).size === 2;
+    const corner = elbow ? line.find((i) => line.every((j) => j === i || near(i, j))) : undefined;
+    if (corner !== undefined) {
+      const [e1, e2] = line.filter((i) => i !== corner);
+      const out = (e) => [cx(e) + (cx(e) - cx(corner)) * 0.3, cy(e) + (cy(e) - cy(corner)) * 0.3];
+      const [x1, y1] = out(e1), [x2, y2] = out(e2);
+      return svg(`M${x1} ${y1} L${cx(corner) + 1.5} ${cy(corner) + 1.5} L${x2} ${y2}`);
+    }
     const [a, , b] = line;
     const dx = (cx(b) - cx(a)) * 0.18, dy = (cy(b) - cy(a)) * 0.18;
     const x1 = cx(a) - dx, y1 = cy(a) - dy, x2 = cx(b) + dx, y2 = cy(b) + dy;
     const mx = (x1 + x2) / 2 + (y2 - y1) * 0.04 + 1.5, my = (y1 + y2) / 2 - (x2 - x1) * 0.04 + 1.5;
-    return `<svg viewBox="0 0 300 300" aria-hidden="true"><path class="${who}${dashed ? ' dashed' : ''}" pathLength="100" d="M${x1} ${y1} Q${mx} ${my} ${x2} ${y2}"/></svg>`;
+    return svg(`M${x1} ${y1} Q${mx} ${my} ${x2} ${y2}`);
   }
 
   // What the previewed move would do to the game, said out loud.
@@ -457,7 +466,6 @@ export function mountDuel(root, opts) {
     const c = state.phase === 'effect' ? state.board[state.placedAt] : state.selected;
     if (!c) return;
     info.replaceChildren(h('b', {}, stoneName(c) + ': '), stoneText(c),
-      state.silenced.X > 0 && state.phase === 'place' && c.type !== 'pebble' ? h('span.red', {}, t(' — but you are hushed: it will do nothing.')) : '',
       // Its card, when it has an example to show beyond this line.
       hasExample(c) ? h('button.info-more', { onclick: () => infoStone(c, 'X') }, t('More →')) : null);
   }
@@ -612,7 +620,6 @@ export function mountDuel(root, opts) {
     const v = { enemy: enemy.name };
     for (const l of logs) {
       if (l === 'silenced') status.log(t(me ? 'Hushed! Your stone does nothing.' : 'Hushed! {enemy}\'s stone does nothing.', v), me ? 'bad' : 'good');
-      else if (l === 'echo') status.log(t('Echo! It goes again.'), 'good');
       else if (l.startsWith('copy:')) { const [, by, what] = l.split(':'); status.log(t('The {parrot} copies {stone}!', { parrot: STONES[by].name, stone: STONES[what].name })); }
       else if (l === 'found:X') status.log(t('You found a pebble!'), 'good');
       else if (l === 'found:O') status.log(t('{enemy} finds a pebble!', v), 'bad');

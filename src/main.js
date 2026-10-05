@@ -21,7 +21,7 @@ document.documentElement.lang = lang;
 const shortName = (e) => e.short ?? e.name.replace(/^(The|Captain) /, '');
 
 const app = document.getElementById('app');
-const SAVE = 'ppp-run-v3';   // older runs are not carried over
+const SAVE = 'ppp-run-v4';   // older runs are not carried over
 const META = 'ppp-meta-v1';
 
 let run = null;
@@ -129,8 +129,8 @@ function fitPouch() {
   fitting = true;
   const list = R.shelf(run, k);
   const body = h('div.pouch-view', {}, h('h2', {}, t('Your pouch is full')),
-    h('p.dim', {}, k === 'glass' ? t('It holds {n} glass stones. Give one up.', { n: R.POUCH.glass }) : t('It holds {n} stones (glass apart). Give one up.', { n: R.POUCH.stones })),
-    h('div.stone-grid', {}, list.map((s) => h('button.pouch-slot', { onclick: () => { close(); fitting = false; R.dropStone(run, s.uid); sfx('click'); save(); fitPouch(); } }, stoneEl(R.asBrought(run, s), 'X', { cost: true }), h('span', {}, stoneName(R.asBrought(run, s)))))));
+    h('p.dim', {}, t('It holds {n} stones (glass ones do not count). Give one up.', { n: R.POUCH.stones })),
+    h('div.stone-grid', {}, list.map((s) => h('button.pouch-slot', { onclick: () => { close(); fitting = false; R.dropStone(run, s.uid); sfx('click'); save(); fitPouch(); } }, stoneEl(s, 'X', { cost: true }), h('span', {}, stoneName(s))))));
   const close = modal(body, { dismissable: false, cls: 'tall' });
 }
 
@@ -140,12 +140,12 @@ function relicStrip() {
 }
 
 function showPouch() {
-  const grid = (list) => h('div.stone-grid', {}, list.map((p) => R.asBrought(run, p)).map((s) => h('button.pouch-slot', { onclick: () => infoStone(s, 'X') }, stoneEl(s, 'X', { cost: true }), h('span', {}, stoneName(s)))));
+  const grid = (list) => h('div.stone-grid', {}, list.map((s) => h('button.pouch-slot', { onclick: () => infoStone(s, 'X') }, stoneEl(s, 'X', { cost: true }), h('span', {}, stoneName(s)))));
   const stones = R.shelf(run, 'stones'), glass = R.shelf(run, 'glass');
   const body = h('div.pouch-view', {},
     h('h2', {}, t('Stones · {n}/{max}', { n: stones.length, max: R.POUCH.stones })),
     stones.length ? grid(stones) : h('p.dim', {}, t('No stones yet. You will use pebbles you find.')),
-    h('h2', {}, t('Glass stones · {n}/{max}', { n: glass.length, max: R.POUCH.glass })),
+    h('h2', {}, t('Glass stones · {n}', { n: glass.length })),
     glass.length ? grid(glass) : h('p.dim', {}, t('No glass stones.')),
     h('h2', {}, t('Talismans')),
     run.relics.length ? h('div.relic-list', {}, run.relics.map((r) => h('button.relic-row', { onclick: () => infoRelic(r) }, h('span.relic-token.small', {}, relicArt(r)), h('span', {}, h('b', {}, RELICS[r].name), h('br'), RELICS[r].text)))) : h('p.dim', {}, t('No talismans yet.')),
@@ -565,7 +565,7 @@ function preDuel() {
   const fight = h('button.btn.primary.wide.big', { onclick: begin }, t('Fight!'));
   const draw = () => {
     const fill = Math.max(0, R.HAND - chosen.length);
-    grid.replaceChildren(...run.pouch.map((p) => R.asBrought(run, p)).map((s) => {
+    grid.replaceChildren(...run.pouch.map((s) => {
       const on = chosen.includes(s.uid);
       return tickStone(s, {
         on, face: '.stone-pick',
@@ -683,13 +683,11 @@ function showDuelMenu() {
 // for it, or keep what you have. Calls done(taken).
 function takeStone(s, done) {
   if (R.hasRoom(run, s)) { R.gainStone(run, s); sfx('coin'); done(true); return; }
-  const glass = R.shelfOf(s) === 'glass';
   const list = R.shelf(run, R.shelfOf(s));
   const body = h('div.pouch-view', {}, h('h2', {}, t('Your pouch is full')),
     h('div.cards.one', {}, stoneCard(s, { onclick: () => infoStone(s, 'X') })),
-    h('p.dim', {}, glass ? t('It holds {n} glass stones. Give one up for the {stone}?', { n: R.POUCH.glass, stone: stoneName(s) })
-      : t('It holds {n} stones (glass apart). Give one up for the {stone}?', { n: R.POUCH.stones, stone: stoneName(s) })),
-    h('div.stone-grid', {}, list.map((x) => h('button.pouch-slot', { onclick: () => { close(); R.dropStone(run, x.uid); R.gainStone(run, s); sfx('coin'); save(); done(true); } }, stoneEl(R.asBrought(run, x), 'X', { cost: true }), h('span', {}, stoneName(R.asBrought(run, x)))))),
+    h('p.dim', {}, t('It holds {n} stones (glass ones do not count). Give one up for the {stone}?', { n: R.POUCH.stones, stone: stoneName(s) })),
+    h('div.stone-grid', {}, list.map((x) => h('button.pouch-slot', { onclick: () => { close(); R.dropStone(run, x.uid); R.gainStone(run, s); sfx('coin'); save(); done(true); } }, stoneEl(x, 'X', { cost: true }), h('span', {}, stoneName(x))))),
     h('button.btn.wide.ghost', { onclick: () => { close(); done(false); } }, t('Keep my stones')));
   const close = modal(body, { dismissable: false, cls: 'tall' });
 }
@@ -697,7 +695,7 @@ function takeStone(s, done) {
 function pickFromPouch(prompt, cb, { filter = () => true, cancel = t('Cancel') } = {}) {
   const list = run.pouch.filter(filter);
   const body = h('div.pouch-view', {}, h('h2', {}, prompt),
-    list.length ? h('div.stone-grid', {}, list.map((s) => h('button.pouch-slot', { onclick: () => { close(); cb(s); } }, stoneEl(R.asBrought(run, s), 'X', { cost: true }), h('span', {}, stoneName(R.asBrought(run, s))))))
+    list.length ? h('div.stone-grid', {}, list.map((s) => h('button.pouch-slot', { onclick: () => { close(); cb(s); } }, stoneEl(s, 'X', { cost: true }), h('span', {}, stoneName(s)))))
       : h('p.dim', {}, t('Nothing to choose.')),
     h('button.btn.wide.ghost', { onclick: () => { close(); cb(null); } }, cancel));
   const close = modal(body, { dismissable: false, cls: 'tall' });
@@ -798,7 +796,7 @@ function shopScreen(redraw = false) {
       price: s.price, sold: s.sold, dear: run.gold < s.price,
       onclick: () => infoStone(s, 'X', '', offer(s.price, (pay) => takeStone(s, (ok) => { if (ok) { s.sold = true; pay(); } }))),
     }))),
-    h('div.section-label', {}, t('Glass stones · {n}/{max}', { n: R.shelf(run, 'glass').length, max: R.POUCH.glass })),
+    h('div.section-label', {}, t('Glass stones')),
     h('div.cards.scroll', {}, (shop.once ?? []).map((x) => stoneCard(x, {
       price: x.price, sold: x.sold, dear: run.gold < x.price,
       onclick: () => infoStone(x, 'X', '', offer(x.price, (pay) => takeStone(x, (ok) => { if (ok) { x.sold = true; pay(); } }))),
@@ -849,7 +847,7 @@ function craftFlow(done) {
     pickBody.replaceChildren(
       h('h2', {}, t('Trade which two stones?')),
       // As before a duel: the box ticks a stone, a tap on it opens its card.
-      h('div.stone-grid', {}, R.craftable(run).map((x) => tickStone(R.asBrought(run, x), {
+      h('div.stone-grid', {}, R.craftable(run).map((x) => tickStone(x, {
         on: picked.includes(x.uid), name: true, face: '.pouch-slot',
         toggle: () => {
           picked = picked.includes(x.uid) ? picked.filter((u) => u !== x.uid) : picked.length < 2 ? [...picked, x.uid] : [picked[1], x.uid];
@@ -1023,7 +1021,7 @@ function endScreen(victory) {
       h('div', {}, h('b', {}, st.gold), t(' gold earned', { n: st.gold })),
       h('div', {}, h('b', {}, mins), tp(mins, ' minute', ' minutes'))),
     h('div.section-label', {}, t('Final pouch')),
-    h('div.hand.show', {}, run.pouch.map((s) => stoneEl(R.asBrought(run, s), 'X', { mini: true }))),
+    h('div.hand.show', {}, run.pouch.map((s) => stoneEl(s, 'X', { mini: true }))),
     relicStrip(),
     victory && meta.maxHeat > run.heat ? h('p.good', {}, t('Heat {n} unlocked!', { n: run.heat + 1 })) : null,
     h('button.btn.wide', { onclick: () => shareResult(victory) }, t('Copy result to share')),
