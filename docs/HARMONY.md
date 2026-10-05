@@ -247,6 +247,54 @@ same seeds:
   - Glass kept outside the cap can pile up. A few glass slots (e.g. 3) would keep the
     "build" feel; this was not measured.
 
+## Marble and gold: do materials earn their energy?
+
+A marble or gold stone costs one energy more than the plain stone. Marble may go on squares
+the enemy's stones forbid; gold pays 10 gold for each gold stone in your winning line. The
+bot's stone ranking knows nothing of either, so on its own it never brings one: one more
+energy for nothing.
+
+So the measurement tells the bot that a material is worth more and more. The scale is the
+bot's ranking, where a Pebble is 0.56 and a Magpie is 1.68. If a material were worth its
+energy, some bonus would beat "no materials at all". 256 runs each, the same seeds. In every
+run with materials, the bot brought them into duels.
+
+| | 1 energy at the start | 2 energy at the start |
+|---|---|---|
+| no materials | **99** | **151** |
+| marble, bonus 0.3 / 0.6 / 1 | 83 / 74 / 63 | 137 / 110 / 98 |
+| gold, bonus 0.3 / 0.6 / 1 | 96 / 88 / 65 | 130 / 110 / 98 |
+| no materials, and no enemy marble either | 103 | 154 |
+
+What happens in play (2 energy, bonus 1, a run):
+
+- **Marble**: placed 11 times. Only about 1 placement in 9 (1.2 a run) lands where a plain
+  stone could not have gone. Its rule matters only when the enemy holds a stone that forbids
+  squares and you want one of those squares. For the other 8 in 9 you paid a stone's worth of
+  energy for nothing.
+- **Gold**: placed 9 times, paying about 35 gold a run. Gold barely buys anything that
+  matters (see Events), so that is half a heal for a run's worth of weaker hands.
+- **Enemy marble** (acts 2 and 3) makes no difference you could see: 99 vs 103, 151 vs 154,
+  inside the noise.
+
+**Verdict: as built, neither material makes sense.** The more the bot uses them, the worse it
+does: the extra energy is always better spent on a second real stone. Caveats:
+
+- The bot doesn't plan for them. It doesn't build lines to cash gold, and it doesn't seek
+  marble's forbidden squares on purpose. A person could get somewhat more out of both.
+- Even so, marble's rule fires too rarely to be worth a whole energy.
+
+The options, in order:
+
+1. **Drop them** (the simple game): normal and glass stones only, each with a limit of its
+   own (see the next section). This also removes the Sculptor's polishing, the workshop's
+   price list and the shop's dearer stones.
+2. Keep them as **free upgrades, not +1 energy**: marble or gold as a bonus on a stone, never
+   a cost. Then they never hurt, but they are a small flourish, not a decision.
+3. Make marble also **ignore the board's rules** (no centre, reserved, the boss's column),
+   so it fires often enough to be worth paying for. That is more rules text for one
+   material.
+
 ## Heat, and the map's weight (second pass)
 
 256 runs each, the same seeds. Heat levels add up (heat 3 has the first three's rules too).
