@@ -605,14 +605,10 @@ function duelScreen() {
       const bonus = R.goldFromLine(duelState);   // the gold stones in your line pay
       const draw = winner === 'X' && duelState.reason === 'full';
       duelState = null;
-      // A draw counts as won, but costs a heart first -- the last one ends the run.
-      if (draw) {
-        flash = 'hurt';
-        toast('−❤', 'bad');
-        if (R.hurt(run, 1)) { route(); return; }
-      }
+      if (draw) { flash = 'hurt'; toast('−❤', 'bad'); }
       if (winner === 'X') {
-        const res = R.duelWon(run, bonus);
+        const res = R.duelWon(run, bonus, draw);
+        if (res.kind === 'dead') { route(); return; }
         if (res.kind === 'boss-continue') { if (bonus) toast(t('Gold stones: +{n} gold', { n: bonus }), 'good'); save(); moonrise(ENEMIES[duel.enemyId], route); return; }
         if (res.kind === 'reward' && duel.tier === 'boss') {
           meta.beaten = { ...(meta.beaten ?? {}), [duel.enemyId]: true };

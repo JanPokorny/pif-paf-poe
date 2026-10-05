@@ -807,6 +807,14 @@ test('a + talisman is offered only for stones in the pouch', () => {
     if (r?.startsWith('plus-')) assert.equal(r, 'plus-fence');
   }
 });
+test('a draw counts as won, and costs a heart', () => {
+  const run = RUN.newRun({ seed: 5 });
+  run.map = RUN.makeMap(run);
+  run.pending = { kind: 'duel', duel: RUN.prepareDuel(run, 'pip', { tier: 'normal' }) };
+  const hearts = run.hearts;
+  assert.equal(RUN.duelWon(run, 0, true).kind, 'reward');
+  assert.equal(run.hearts, hearts - 1);
+});
 test('a shop never sells a talisman for more gold than it pays', () => {
   for (let seed = 1; seed < 300; seed++) {
     const run = RUN.newRun({ seed });

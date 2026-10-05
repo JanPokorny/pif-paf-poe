@@ -42,7 +42,7 @@ function playDuel(run, cfg, piters, pblunder, rng) {
   }
   if (!s.over) throw new Error('duel did not end');
   R.spendOnce(run, hand, s.spent.X);
-  return s.winner === 'X';
+  return { won: s.winner === 'X', draw: s.winner === 'X' && s.reason === 'full' };
 }
 
 const takeStone = (run, st) => R.gainStone(run, st);
@@ -62,6 +62,8 @@ const api = (run) => ({
   gainRandomOnce: (r) => { R.gainStone(run, R.randomOnce(run, r)); return 'ok'; },
   gainRandomRelic: (t) => { R.gainRelic(run, R.randomRelic(run)); return t; },
   transmute: () => { const p = run.pouch[0]; const n = R.randomStone(run, 'uncommon'); p.type = n.type; return 'ok'; },
+  canPolish: () => R.polishable(run).length > 0,
+  polish: (mat, cost) => { const s = R.polishable(run).sort((a, b) => value(b) - value(a))[0]; if (s) { run.gold -= cost; R.polish(run, s.uid, mat); } return 'ok'; },
   duplicate: () => { const b = run.pouch.slice().sort((a, b) => value(b) - value(a))[0]; R.gainStone(run, { type: b.type }); return 'ok'; },
   fight: (id) => { run.pending = { kind: 'duel', duel: R.prepareDuel(run, id, { tier: 'event', event: id }) }; run.screen = 'predual'; return null; },
 });
@@ -104,10 +106,10 @@ function playRun(spec) {
       }
       case 'predual': case 'duel': {
         const d = run.pending.duel;
-        const won = playDuel(run, null, spec.piters, spec.pblunder, rng);
+        const { won, draw } = playDuel(run, null, spec.piters, spec.pblunder, rng);
         duels.push({ act: run.act, enemy: d.enemyId, tier: d.tier, undead: d.tier === 'boss' && d.bossWins > 0, won });
         log.push(`${run.act}:${d.enemyId}${d.tier !== 'normal' ? '(' + d.tier + ')' : ''}${won ? '+' : '-'}`);
-        if (won) R.duelWon(run); else R.duelLost(run);
+        if (won) R.duelWon(run, 0, draw); else R.duelLost(run);
         break;
       }
       case 'reward': {

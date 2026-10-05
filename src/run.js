@@ -778,9 +778,11 @@ export function enterNode(run, key) {
 
 // ── Duel results ────────────────────────────────────────────────────────────
 
-// `bonus`: gold the gold stones of the winning line earned.
-export function duelWon(run, bonus = 0) {
+// `bonus`: gold the gold stones of the winning line earned. `draw`: the board
+// filled up -- it counts as won, but costs a heart first (the last one ends the run).
+export function duelWon(run, bonus = 0, draw = false) {
   const duel = run.pending.duel;
+  if (draw && hurt(run, 1)) return { kind: 'dead' };
   run.stats.won++;
   if (duel.tier === 'boss' && duel.bossWins + 1 < BOSS_LIVES) {
     // A boss is beaten twice, and rises again with its harder rules.

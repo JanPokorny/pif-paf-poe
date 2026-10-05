@@ -58,7 +58,8 @@ const BLOCK = { TL: 'top-left', TR: 'top-right', BL: 'bottom-left', BR: 'bottom-
 // A few words on what a move did, for the status line and its log.
 const sq = (i) => t(SQUARE[i]);
 const turning = (cw) => t(cw ? 'clockwise' : 'anticlockwise');
-function describe(a) {
+// `by`: the kind of stone acting, where the words depend on it.
+function describe(a, by) {
   if (a.type === 'dictate') {
     if (a.kind === 'tactics') return t('you must play {stone}', { stone: STONES[a.value].name });
     if (a.kind === 'column') return t(['the left column is closed to you', 'the middle column is closed to you', 'the right column is closed to you'][a.value]);
@@ -67,7 +68,9 @@ function describe(a) {
   if (a.ring) return t(a.ring === 'diag' ? 'pushed the diagonals' : 'pushed the straight neighbours');
   if (a.from !== undefined && a.to !== undefined) return `${sq(a.from)} → ${sq(a.to)}`;
   if (a.a !== undefined) return t('swapped {a} and {b}', { a: sq(a.a), b: sq(a.b) });
-  if (a.stone && a.type === 'effect') return t('next must come {stone}', { stone: STONES[a.stone].name });
+  if (a.stone && a.type === 'effect') {
+    return t(by === 'magpie' ? 'stole {stone}' : 'the next stone must be {stone}', { stone: STONES[a.stone].name });
+  }
   if (a.dir) {
     if (a.index === undefined) return t(`slid ${a.dir}`);
     return t(a.dir === 'left' || a.dir === 'right' ? `slid row {n} ${a.dir}` : `slid column {n} ${a.dir}`, { n: a.index + 1 });
@@ -579,7 +582,7 @@ export function mountDuel(root, opts) {
     const logs = next.log ?? [];
     // A Parrot+ choosing what to copy says so itself (the 'copy' log below).
     const copying = action?.type === 'effect' && state.board[state.placedAt]?.type === 'parrot';
-    if (action && !copying) said('X', action.type === 'place' ? t('played {stone} on the {square}', { stone: stoneName(state.selected), square: sq(action.pos) }) : describe(action));
+    if (action && !copying) said('X', action.type === 'place' ? t('played {stone} on the {square}', { stone: stoneName(state.selected), square: sq(action.pos) }) : describe(action, state.board[state.placedAt]?.type));
     state = next;
     state.log = [];
     preview = null;
@@ -682,7 +685,7 @@ export function mountDuel(root, opts) {
       if (action.type === 'place') {
         lastEnemyId = state.placedId;
         said('O', t('played {stone} on the {square}', { stone: stoneName(state.lastPlaced.O), square: sq(action.pos) }));
-      } else said('O', describe(action));
+      } else said('O', describe(action, state.board[state.placedAt]?.type));
       if (action.type === 'place') {
         sfx('place');
         const e = [...stoneEls.values()].find((x) => +x.dataset.at === action.pos);
