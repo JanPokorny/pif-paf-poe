@@ -316,7 +316,11 @@ function stoneDemo(s) {
         const at = (id) => after.board.findIndex((c) => c?.id === id);
         const stones = before.reduce((n, c, i) => n + (c && (at(c.id) !== i || !same(after.board[at(c.id)], c)) ? 1 : 0), 0);
         // (A stone sent back to a hand has left the board: counted already.)
-        const moved = stones * 10 + after.board.reduce((n, c, i) => n + (same(c, before[i]) ? 0 : 1), 0);
+        // A + form shows what its plain form cannot: it is worth more acting on a
+        // stone that is not beside it (a Firecracker+ blowing one away from afar).
+        const far = plus.plus && before.some((c, i) => c && i !== pos && (at(c.id) !== i || !same(after.board[at(c.id)], c))
+          && Math.abs((i % 3) - (pos % 3)) + Math.abs(((i / 3) | 0) - ((pos / 3) | 0)) > 1);
+        const moved = stones * 10 + (far ? 5 : 0) + after.board.reduce((n, c, i) => n + (same(c, before[i]) ? 0 : 1), 0);
         if (!best || moved > best.moved) best = { moved, before, after: after.board, pos, o };
       }
     }
