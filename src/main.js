@@ -71,13 +71,13 @@ function topBar(menu = showMenu) {
   const hearts = h('div.hearts' + (flash && !lost ? '.' + flash : ''), {},
     h('span', { html: icon('heart') }), `${run.hearts}/${run.maxHearts}`);
   // Hearts lost: shown as energy gained is, after `hurtDelay` (a boss line drawn first).
-  if (lost) heartBurst(lost, hearts, hurtDelay);
+  if (lost) heartBurst(lost, hurtDelay);
   shownHearts = run.hearts;
   hurtDelay = 0;
   flash = null;
   const energy = R.energyOf(run);
   const counter = h('div.energy', { onclick: () => toast(t('Energy: what your stones may cost together in a duel.')) }, h('span', { html: icon('energy') }), energy);
-  if (shownEnergy !== null && energy > shownEnergy) energyBurst(energy - shownEnergy, counter);
+  if (shownEnergy !== null && energy > shownEnergy) energyBurst(energy - shownEnergy);   // after the hearts' (queued above)
   shownEnergy = energy;
   return h('div.topbar', {},
     hearts,
@@ -90,40 +90,42 @@ function topBar(menu = showMenu) {
 // Energy gained: a big bolt bursts in the middle of the screen, then flies into
 // the top bar's counter, which jumps. It decides what can be brought to a duel,
 // so it is not to be missed.
-function energyBurst(n, counter) {
+function energyBurst(n) {
   const burst = h('div.energy-burst', {}, h('span.energy-burst-bolt', { html: icon('energy') }), h('span.energy-burst-text', {}, t('+{n} energy', { n })));
-  document.body.append(burst);
-  sfx('heal');
-  setTimeout(() => {
-    const to = counter.getBoundingClientRect(), from = burst.getBoundingClientRect();
-    if (to.width) {
-      burst.style.setProperty('--fly-x', `${to.left + to.width / 2 - (from.left + from.width / 2)}px`);
-      burst.style.setProperty('--fly-y', `${to.top + to.height / 2 - (from.top + from.height / 2)}px`);
-    }
-    burst.classList.add('fly');
-  }, 1300);
-  setTimeout(() => { burst.remove(); if (counter.isConnected) { counter.classList.add('gained'); setTimeout(() => counter.classList.remove('gained'), 900); } }, 2000);
+  playBurst(burst, '.energy', 'heal', 'gained', 0);
 }
 
-// Hearts lost: a big heart bursts in the middle of the screen and cracks, then
-// flies into the top bar's hearts, which shake. Like the energy, not to be missed.
-function heartBurst(n, counter, delay = 0) {
-  const burst = h('div.energy-burst.heart-burst', {},
-    h('span.energy-burst-bolt.heart-burst-heart', { html: icon('heart') + '<svg class="heart-crack" viewBox="-9 -9 18 18" aria-hidden="true"><path pathLength="100" d="M 0.2 -3.6 L -1.4 -0.8 L 1.2 1 L -0.9 3.2 L 0.2 5.8"/></svg>' }),
-    h('span.energy-burst-text', {}, t('−{n} ❤', { n })));
+// One burst at a time: a heart lost and energy gained together (a draw that
+// ends an act's boss) play one after the other.
+let burstsFree = 0;
+// `at`: the top bar's counter it flies into, found when it flies (the screen may
+// have been drawn anew by then).
+function playBurst(burst, at, sound, cls, delay) {
+  const counter = () => document.querySelector(`.topbar ${at}`);
+  const now = Date.now(), start = Math.max(now + delay * 1000, burstsFree);
+  burstsFree = start + 2150;
   setTimeout(() => {
     document.body.append(burst);
-    sfx('hurt');
+    sfx(sound);
     setTimeout(() => {
-      const to = counter.getBoundingClientRect(), from = burst.getBoundingClientRect();
-      if (to.width) {
+      const to = counter()?.getBoundingClientRect(), from = burst.getBoundingClientRect();
+      if (to?.width) {
         burst.style.setProperty('--fly-x', `${to.left + to.width / 2 - (from.left + from.width / 2)}px`);
         burst.style.setProperty('--fly-y', `${to.top + to.height / 2 - (from.top + from.height / 2)}px`);
       }
       burst.classList.add('fly');
     }, 1300);
-    setTimeout(() => { burst.remove(); if (counter.isConnected) { counter.classList.add('hurt'); setTimeout(() => counter.classList.remove('hurt'), 800); } }, 2000);
-  }, delay * 1000);
+    setTimeout(() => { burst.remove(); const c = counter(); if (c) { c.classList.add(cls); setTimeout(() => c.classList.remove(cls), 900); } }, 2000);
+  }, start - now);
+}
+
+// Hearts lost: a big heart bursts in the middle of the screen and cracks, then
+// flies into the top bar's hearts, which shake. Like the energy, not to be missed.
+function heartBurst(n, delay = 0) {
+  const burst = h('div.energy-burst.heart-burst', {},
+    h('span.energy-burst-bolt.heart-burst-heart', { html: icon('heart') + '<svg class="heart-crack" viewBox="-9 -9 18 18" aria-hidden="true"><path pathLength="100" d="M 0.2 -3.6 L -1.4 -0.8 L 1.2 1 L -0.9 3.2 L 0.2 5.8"/></svg>' }),
+    h('span.energy-burst-text', {}, t('−{n} ❤', { n })));
+  playBurst(burst, '.hearts', 'hurt', 'hurt', delay);
 }
 
 // `keep`: a redraw of the same screen, which stays where it was scrolled to.
