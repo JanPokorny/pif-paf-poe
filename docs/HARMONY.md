@@ -60,7 +60,23 @@ limits a duel's hand)*
 - It is a **boss relic**, picked from three, against Second Wind (+1 energy — the resource the
   whole game is built on), Phoenix Feather and War Chest. Next to +1 energy it is hard to want.
 
-*(pending: its measured effect.)*
+Measured (200 act-2 duels, typical hands, the same duels with and without it):
+
+- It **fired in 56%** of duels — mostly on a Shift (48 times) or a Swap (27); a duel without a
+  stone that does something never sees it.
+- In **27% of the times it fired, the repeat put the board back** as it was but for the new
+  stone: the bot, forced to act again, undid its own move (a Shift slid back, a Swap swapped
+  back) because the first move was the good one.
+- It won **99 duels against 94** without it: about +2.5 points, for a boss relic.
+
+**Verdict: not something a player would want.** It is a weak, sometimes self-defeating effect
+dressed as a big one. Options, best first:
+1. **Make the repeat optional** ("…may do it twice"): a Skip button in the effect choice. Keeps
+   the idea, removes the undoing; still small.
+2. **Let the player choose when**: once per duel, a tap on the talisman before confirming an
+   effect repeats it. A real decision, and a good one to look for.
+3. **Replace it** among the boss relics with something that changes how a run is built (see
+   Recommendations).
 
 ## Stones
 
