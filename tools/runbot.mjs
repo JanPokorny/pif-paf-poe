@@ -2,7 +2,8 @@
 // how far a player of a given strength gets.
 //
 //   node tools/runbot.mjs --runs 8 --piters 150 --pblunder 0.1 [--heat 0] [--linedmg 2] [--each 1]
-//   (--each 1 prints every run's story; the summary says where runs end and what hurts)
+//   (--each 1 prints every run's story; the summary says where runs end and what hurts;
+//   --relics echo,wings starts every run with those talismans; --pouch 4 caps the pouch)
 
 import { Worker, isMainThread, parentPort, workerData } from 'node:worker_threads';
 import { cpus } from 'node:os';
@@ -70,6 +71,7 @@ const api = (run) => ({
 
 function playRun(spec) {
   const run = R.newRun({ seed: spec.seed, heat: spec.heat });
+  for (const id of spec.relics ?? []) R.gainRelic(run, id);   // --relics a,b: start with them
   const rng = makeRng(spec.seed);
   const log = [];
   // Where the run hurt: every duel fought, and every heart lost and to what.
@@ -83,6 +85,12 @@ function playRun(spec) {
     const what = (screen === 'predual' || screen === 'duel') && d ? `${d.enemyId}${d.tier === 'boss' ? `(boss${d.bossWins ? ', undead' : ''})` : d.tier !== 'normal' ? `(${d.tier})` : ''}`
       : screen === 'event' ? `event ${run.pending?.id}` : 'boss line on the map';
     step(screen);
+    // --pouch N: an experiment, a pouch of at most N stones; past that the
+    // weakest goes (the bot's judgement), so a run is a build, not a hoard.
+    if (spec.pouch) while (run.pouch.length > spec.pouch) {
+      const worst = run.pouch.slice().sort((a, b) => value(a) - value(b))[0];
+      run.pouch = run.pouch.filter((x) => x !== worst);
+    }
     if (run.map === page && page && page.oLines > seen) { lines += page.oLines - seen; if (run.over) lineDeath = true; }
     if (run.hearts < hearts || (run.over && !run.victory && hearts > 0)) { hurts.push({ act, what, n: hearts - run.hearts }); blow = what; }
   }
@@ -193,7 +201,7 @@ if (!isMainThread) {
   parentPort.postMessage(out);
 } else {
   const runs = +arg('runs', 8), piters = +arg('piters', 150), pblunder = +arg('pblunder', 0.1), heat = +arg('heat', 0);
-  const specs = Array.from({ length: runs }, (_, i) => ({ seed: +arg('seed', 100) + i, piters, pblunder, heat, stay: arg('stay', 8), linedmg: arg('linedmg', null) == null ? null : +arg('linedmg') }));
+  const specs = Array.from({ length: runs }, (_, i) => ({ seed: +arg('seed', 100) + i, piters, pblunder, heat, stay: arg('stay', 8), linedmg: arg('linedmg', null) == null ? null : +arg('linedmg'), relics: arg('relics', '') ? arg('relics').split(',') : [], pouch: +arg('pouch', 0) }));
   const W = Math.min(cpus().length, runs);
   const chunks = Array.from({ length: W }, () => []);
   specs.forEach((s, i) => chunks[i % W].push(s));
