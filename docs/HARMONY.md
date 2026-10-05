@@ -254,10 +254,12 @@ yours" weight already gives a square on your two +20, more than any square's val
 noise, so the boss blocks **every time** whatever `sees` says. In practice a lair opens only
 through a fork (two lines at once), which is what the rocks are laid out to make rare.
 
-Not changed tonight (it would move every number in this document): if the boss should miss
-sometimes, as the setting intends, the +20 for `yours >= 2` should only apply when it `sees`.
-That is also the most natural place to ease act 1: a boss that sometimes lets a line through
-makes the map less of a grind without touching the duels.
+Tried (behind an experiment switch, `MAPCFG.strict`, off): with the +20 applied only when the
+boss `sees`, the bot wins 96, 97, 97 at `sees` 0.9, 0.75, 0.5 — no change either. **Blocking
+your lines is not what limits a run**: the lair opens often enough either way, and runs end on
+hearts — the boss's own lines and the boss duels. So easing the map means its *lines against
+you* (their damage, or how readily the boss builds them), not its blocks. The setting can go,
+or be wired up as intended for a heat level that does not matter much.
 
 ## Events (second pass)
 
