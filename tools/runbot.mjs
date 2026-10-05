@@ -4,7 +4,7 @@
 //   node tools/runbot.mjs --runs 8 --piters 150 --pblunder 0.1 [--heat 0] [--linedmg 2] [--each 1]
 //   (--each 1 prints every run's story; the summary says where runs end and what hurts;
 //   --relics phoenix,wings starts every run with those talismans; --pouch 4 / --glasscap 3 set the pouch's limits (0: none);
-//   --start rotate --energy 2 tries another start)
+//   --start rotate --slots 3 tries another start)
 
 import { Worker, isMainThread, parentPort, workerData } from 'node:worker_threads';
 import { cpus } from 'node:os';
@@ -18,18 +18,18 @@ const arg = (k, d) => { const i = process.argv.indexOf('--' + k); return i > 0 ?
 const STRENGTH = { 'mind-control': 40, hammer: 34, snatch: 32, seed: 30, firecracker: 32, gravity: 28, magpie: 26, relocate: 25, lasso: 25, swap: 25, stinky: 23, bumper: 23, magnet: 22, frog: 21, shift: 20, twin: 19, rotate: 19, parrot: 17, muffle: 17, bonfire: 15, mountain: 12, pebble: 6 };
 const value = (s) => (STRENGTH[s.type] ?? 22) / 25;
 
-// The best set the energy pays for (every subset: the pouch is small), each
+// The best set the slots hold (every subset: the pouch is small), each
 // stone worth what it adds over the Pebble it replaces; a mover is worth a bonus.
 // A boss holds only Pebbles: nothing for a Magpie to steal or a Parrot to copy.
 function bestHand(run, boss = false) {
   const dead = boss ? ['magpie', 'parrot', 'mind-control'] : [];
   const worth = (x) => (dead.includes(x.type) ? 0 : value(x));
-  const energy = R.energyOf(run), P0 = value({ type: 'pebble' });
+  const energy = R.slotsOf(run), P0 = value({ type: 'pebble' });
   let hand = [], best = 0;
   const pouch = run.pouch.slice(0, 12);
   for (let m = 1; m < 1 << pouch.length; m++) {
     const set = pouch.filter((_, i) => m & (1 << i));
-    if (set.reduce((n, x) => n + R.costOf(x), 0) > energy) continue;
+    if (set.reduce((n, x) => n + R.slotOf(x), 0) > energy) continue;
     const sc = set.reduce((n, x) => n + worth(x) - P0, 0) + (set.some((x) => STONES[x.type].kind === 'move') ? 0.2 : 0);
     if (sc > best) { best = sc; hand = set.map((x) => x.uid); }
   }
@@ -70,6 +70,7 @@ const takeStone = (run, st) => R.gainStone(run, st);
 
 const api = (run) => ({
   rng: () => R.rand(run),
+  xp: (n) => { R.gainXp(run, n); return 'ok'; },
   // Trade the two weakest stones, if that yields something better than both.
   craft: () => {
     const [a, b] = R.craftable(run).sort((x, y) => value(x) - value(y));
@@ -79,7 +80,7 @@ const api = (run) => ({
     return 'ok';
   },
   pickOnce: () => run.pouch.find((x) => R.isOnce(x)) ?? null,
-  canPay: (n) => { const keep = new Set(bestHand(run)); return run.pouch.filter((x) => !keep.has(x.uid)).reduce((k, x) => k + R.costOf(x), 0) >= n; },
+  canPay: (n) => { const keep = new Set(bestHand(run)); return run.pouch.filter((x) => !keep.has(x.uid)).reduce((k, x) => k + R.tierOf(x), 0) >= n; },
   pay: (n) => barter(run, null, n),
   loseStone: () => { const keep = new Set(bestHand(run)); const x = run.pouch.filter((y) => !keep.has(y.uid)).sort((a, b) => value(a) - value(b))[0] ?? run.pouch[0]; if (x) R.dropStone(run, x.uid); },
   rocks: () => R.rocksInReach(run.map).length,
@@ -92,9 +93,10 @@ const api = (run) => ({
 });
 
 async function playRun(spec) {
-  // --start rotate,stinky / --energy 2: try another start (an experiment).
+  // --start rotate,stinky / --slots 3: try another start (an experiment).
   if (spec.start) R.START.pouch = spec.start;
-  if (spec.energy) R.START.energy = spec.energy;
+  if (spec.energy) R.START.slots = spec.energy;
+  if (spec.levels) R.LEVELS.splice(0, R.LEVELS.length, ...spec.levels);
   const run = R.newRun({ seed: spec.seed, heat: spec.heat });
   for (const id of spec.relics ?? []) R.gainRelic(run, id);   // --relics a,b: start with them
   const rng = makeRng(spec.seed);
@@ -174,20 +176,20 @@ async function playRun(spec) {
         break;
       }
       case 'shop': {
-        // A merchant: what helps most first (hearts when hurt, energy, a talisman,
+        // A merchant: what helps most first (hearts when hurt, XP, a talisman,
         // a stone better than the weakest kept), paid from spare stones.
         const m = run.pending.shop;
         const weakest = () => Math.min(...run.pouch.filter((x) => !R.isOnce(x)).map(value), 9);
-        const wantsIt = (w) => (w.kind === 'heal' ? run.hearts <= run.maxHearts - w.n : w.kind === 'maxheart' || w.kind === 'energy' || w.kind === 'relic' ? true
+        const wantsIt = (w) => (w.kind === 'heal' ? run.hearts <= run.maxHearts - w.n : w.kind === 'maxheart' || w.kind === 'xp' || w.kind === 'relic' ? true
           : w.kind === 'stone' ? (R.isOnce(w.stone) ? value(w.stone) > 1 : value(w.stone) > weakest()) : false);
-        const order = { heal: 0, energy: 1, relic: 2, maxheart: 3, stone: 4 };
+        const order = { heal: 0, xp: 1, relic: 2, maxheart: 3, stone: 4 };
         for (const w of m.wares.slice().sort((a, b) => order[a.kind] - order[b.kind])) {
           while (w.sold < w.times && wantsIt(w) && !(w.kind === 'relic' && R.has(run, w.relic)) && barter(run, m, w.price, w.only)) {
             w.sold++;
             trades[w.kind] = (trades[w.kind] ?? 0) + 1;
             if (w.kind === 'heal') run.hearts = Math.min(run.maxHearts, run.hearts + w.n);
             else if (w.kind === 'maxheart') { run.maxHearts++; run.hearts++; }
-            else if (w.kind === 'energy') run.energy++;
+            else if (w.kind === 'xp') R.gainXp(run, w.n);
             else if (w.kind === 'relic') R.gainRelic(run, w.relic);
             else takeStone(run, w.stone);
           }
@@ -217,7 +219,7 @@ async function playRun(spec) {
   if (!run.over) throw new Error('run did not end: ' + run.screen);
   // JSON round trip must survive (the save format).
   JSON.parse(JSON.stringify(run));
-  return { seed: spec.seed, victory: run.victory, act: run.act, row: run.map.visited, duels, hurts, blow, hearts: run.hearts, lines, lineDeath, log: log.join(' '), relics: run.relics.join(','), pouch: run.pouch.map((s) => s.type).join(',') + ` energy ${R.energyOf(run)}`, energy: R.energyOf(run), glass: { gained: glass.seen.size, played: glass.played, dropped: glass.dropped }, trades };
+  return { seed: spec.seed, victory: run.victory, act: run.act, row: run.map.visited, duels, hurts, blow, hearts: run.hearts, lines, lineDeath, log: log.join(' '), relics: run.relics.join(','), pouch: run.pouch.map((s) => s.type).join(',') + ` slots ${R.slotsOf(run)} level ${R.levelOf(run)}`, energy: R.slotsOf(run), level: R.levelOf(run), glass: { gained: glass.seen.size, played: glass.played, dropped: glass.dropped }, trades };
 }
 
 // Where runs end and what hurts: the hard parts of a climb.
@@ -255,7 +257,7 @@ if (!isMainThread) {
   parentPort.postMessage(out);
 } else {
   const runs = +arg('runs', 8), piters = +arg('piters', 150), pblunder = +arg('pblunder', 0.1), heat = +arg('heat', 0);
-  const specs = Array.from({ length: runs }, (_, i) => ({ seed: +arg('seed', 100) + i, piters, pblunder, heat, stay: arg('stay', 8), linedmg: arg('linedmg', null) == null ? null : +arg('linedmg'), relics: arg('relics', '') ? arg('relics').split(',') : [], pouch: arg('pouch', null) == null ? null : +arg('pouch'), start: arg('start', '') ? arg('start').split(',') : null, energy: +arg('energy', 0), glass: !!+arg('glass', 1), freelines: +arg('freelines', 0), glassworth: +arg('glassworth', 1), hearts: +arg('hearts', 0), gift: arg('gift', ''), glasscap: arg('glasscap', null) == null ? null : +arg('glasscap') }));
+  const specs = Array.from({ length: runs }, (_, i) => ({ seed: +arg('seed', 100) + i, piters, pblunder, heat, stay: arg('stay', 8), linedmg: arg('linedmg', null) == null ? null : +arg('linedmg'), relics: arg('relics', '') ? arg('relics').split(',') : [], pouch: arg('pouch', null) == null ? null : +arg('pouch'), start: arg('start', '') ? arg('start').split(',') : null, energy: +arg('slots', 0), levels: arg('levels', '') ? arg('levels').split(',').map(Number) : null, glass: !!+arg('glass', 1), freelines: +arg('freelines', 0), glassworth: +arg('glassworth', 1), hearts: +arg('hearts', 0), gift: arg('gift', ''), glasscap: arg('glasscap', null) == null ? null : +arg('glasscap') }));
   const W = Math.min(cpus().length, runs);
   const chunks = Array.from({ length: W }, () => []);
   specs.forEach((s, i) => chunks[i % W].push(s));
@@ -268,10 +270,10 @@ if (!isMainThread) {
   }
   const ok = res.filter((r) => !r.error);
   const byAct = [1, 2, 3].map((a) => { const r = ok.filter((x) => x.act >= a); return r.length ? (r.reduce((n, x) => n + (x.act === a ? x.energy : 0), 0) / Math.max(1, r.filter((x) => x.act === a).length)).toFixed(1) : '-'; });
-  console.log(`\nenergy where runs ended, by act: ${byAct.join(' / ')}`);
+  console.log(`\nslots where runs ended, by act: ${byAct.join(' / ')}`);
   report(ok);
   const g = (k) => (ok.reduce((n, r) => n + r.glass[k], 0) / ok.length).toFixed(2);
-  const tk = ['heal', 'maxheart', 'energy', 'relic', 'stone'];
+  const tk = ['heal', 'maxheart', 'xp', 'relic', 'stone'];
   console.log(`\nmerchants' trades a run: ${tk.map((k) => `${k} ${(ok.reduce((n, r) => n + (r.trades[k] ?? 0), 0) / ok.length).toFixed(2)}`).join(', ')}`);
   console.log(`\nglass a run: gained ${g('gained')}, played ${g('played')}, dropped by the cap ${g('dropped')}`);
   console.log(`\n${ok.filter((r) => r.victory).length}/${ok.length} victories; mean act reached ${(ok.reduce((a, r) => a + r.act, 0) / ok.length).toFixed(2)}; boss lines ${(ok.reduce((a, r) => a + r.lines, 0) / ok.length).toFixed(1)} a run, the last blow in ${ok.filter((r) => r.lineDeath).length}; ${((Date.now() - t0) / 1000).toFixed(0)}s`);

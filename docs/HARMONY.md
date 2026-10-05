@@ -573,6 +573,33 @@ What it means:
   - the cap keeps hands from growing;
   - trade would mean something: a better stone, or a stone that fits, is worth paying for.
 
+## Slots and XP instead of energy (seventh pass)
+
+**Built.** With every stone costing the same, energy is only a hand size (see above). So
+energy is gone:
+- every lasting stone takes one slot in a duel hand, and glass none;
+- duels won give XP (normal 1, elite 2, boss 4), and every level gives one more slot;
+- a stone keeps its tier as **worth** (1–3 amber pips): what merchants count, and what
+  crafting and rewards go by.
+
+Tuning the curve, 256 runs each:
+
+| start | XP for levels 2, 3, … | slots where runs end (act 1 / 2 / 3) | victories |
+|---|---|---|---|
+| 2 | 3, 8, 15, 24, 35, 48 | 2.8 / 4.7 / 6.7 | 190 |
+| 3 | 3, 8, 15, 24, 35, 48 | 3.7 / 5.3 / 7.7 | 216 |
+| 2 | 4, 10, 18, 28, 40, 55 | 2.4 / 4.0 / 6.2 | 181 |
+| 1 | 4, 10, 18, 28, 40, 55 | 1.5 / 3.0 / 5.2 | 119 |
+| 2 | 6, 14, 24, 36, 50 | 2.2 / 3.4 / 5.6 | 169 |
+| **2** | **8, 18, 30, 44, 60** | **2.1 / 3.2 / 5.1** | **150** |
+
+**Adopted:** 2 slots at the start, levels at 8, 18, 30, 44 and 60 XP. That keeps difficulty
+where it was (146 with energy).
+
+Still open from the flat-cost finding: with no cost to hold them back, the strong stones are
+the right pick every time. The weak ones (Shift, Waltz, Bonfire, Parrot, Mountain, Twin) need
+a lift for picks to be about fit.
+
 ## Heat, and the map's weight (second pass)
 
 256 runs each, the same seeds. Heat levels add up (heat 3 has the first three's rules too).

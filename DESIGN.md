@@ -12,8 +12,8 @@ numbers. The camp game's own reasoning is in `old/adr/`.
 - **Counterattacks → one-shot stones.** The camp game's counterattacks became tricks, spent
   at the end of a turn; now they are stones like any other, brought along like any other and placed on the
   board, that then do their one thing (Relocate, Mind Control, Muffle, and any stone in glass). Once played in a duel, won or lost, one is gone from the pouch. They
-  have a dashed outline, come as their own reward, sold by the Glassblower, and cost 1 energy, whatever
-  they are. A 1-energy stone never comes in glass: it would save nothing.
+  have a dashed outline, come as their own reward, sold by the Glassblower, and take no slot.
+  Only stones of tier 2 and 3 come in glass.
   Encore, which handed back your last special stone, did not survive the change.
 - **Boss rules** come from an older iteration's sheet of special rules (Taktika, Náskok, Elko,
   Lep, Sloup, Špion, Reservé).
@@ -23,12 +23,15 @@ numbers. The camp game's own reasoning is in `old/adr/`.
 The first version ran fast: a hand of five or six stones, all of them spent by the end of a
 duel, and a rule for who wins when someone runs out. The second version slows it down.
 
-- **Energy.** What you bring into a duel is a decision of its own: every special stone costs
-  energy (common 1, uncommon 2, rare 3, a dot each in the stone's corner), and together they may
-  cost no more than you have. A run starts with 3, and with a Shift in the pouch: the first
-  duels are never plain tic-tac-toe. Beating an elite gives 1, an act's boss 2;
-  the Mystic and the Collector sell 1, the Meditating Monk trades one for a max heart or stones worth 4,
-  and Second Wind (a boss relic) adds 1. Picking stones before a duel fills a bar of dots.
+- **Slots and XP.** (Energy, with stones costing 1–3 by tier, came first. The bot showed
+  cheap stones winning more per energy than strong ones, and a flat cost being just a hand
+  size, so energy became slots; docs/HARMONY.md.) Every lasting special stone takes one slot
+  in a duel hand; glass stones take none. A run starts with a Shift and the slots in
+  `START.slots`. Duels won give XP (normal 1, elite 2, boss 4). Each level (`LEVELS` in run.js)
+  gives one more slot, with a burst on screen. The Mystic, the Collector and the Monk sell
+  XP; Second Wind (a boss relic) adds a slot. The XP towards the next level is a thin bar
+  under the slots in the top bar. A stone's **worth** (its tier: 1–3 amber pips in its corner)
+  is what merchants count, and what crafting and rewards go by.
 - **Rewards are a form.** Each row of a reward is yours ("~ and ~" between rows); a row that
   offers a choice ("or" between its cards) works like radio buttons, and Continue stays grey
   until every choice is made, then takes it all. Nothing can be skipped.
@@ -116,7 +119,7 @@ its own, with its boss.
   fills 34% of the time, in about nine steps (62% and seven steps without).
 - **Bosses** bring no stones, only their rule (above), and are beaten twice: once beaten, the moon
   rises and the boss climbs back out of the earth as its undead self ("Undead Old Oak"), with its
-  harder rule. A boss won is a boss relic, three hearts and 2 energy. **Elites** are just
+  harder rule. A boss won is a boss relic, three hearts and 4 XP. **Elites** are just
   stronger regular enemies: bigger hands, a red star in the corner. A lost duel costs one heart, elite and boss alike.
 - **No map aids.** Duels used to offer a *Double Step* (the boss skipped a reply) or a *Pickaxe*
   (broke a rock) instead of a stone; they are gone. A duel's reward is stones, often a glass one, and (elites) relics.
@@ -137,14 +140,14 @@ Balance was measured and retuned with `tools/lab.mjs`; the run bots (see Difficu
 
 ## Barter, no gold
 
-There is no money. **Stones are the currency**: a stone is worth its energy (the dots in its
+There is no money. **Stones are the currency**: a stone is worth its tier (the pips in its
 corner), and glass, which the pouch's limit leaves out, is the small change at 1. A shop square
 holds one **merchant** of six trades, each taking stones by their worth, with a liked kind
 (movers, walls and restrictions, glass, tricksters) worth one more each:
 the **Stonecutter** (lasting stones, a tier dearer than they cost to bring), the **Glassblower**
-(glass stones), the **Herbalist** (hearts, a max heart), the **Mystic** (energy, a rare glass
+(glass stones), the **Herbalist** (hearts, a max heart), the **Mystic** (XP, a rare glass
 stone), the **Curio Dealer** (talismans) and the **Collector**, who wants one named stone and
-pays a talisman or an energy for it. With the pouch capped at six, paying means choosing what
+pays a talisman or XP for it. With the pouch capped at six, paying means choosing what
 the build can spare. Events that asked for gold ask for stones; the gold talismans are gone
 (Lucky Coin, Piggy Bank; the War Chest became the Bottomless Bag, two more pouch slots), the
 Badge takes one off every price. The Quarryman, for stones worth 2, has your next X break a
@@ -171,7 +174,7 @@ Every stone's card shows an example computed by the engine.
 - **Every stone acts on the board.** Mind Control turns an enemy stone beside it yours (and is
   gone); Muffle hushes the enemy stones in its row and column for as long as it stands.
 - **Glass.** A stone is lasting or **glass** (a dashed outline): played once, then gone from the
-  pouch; always 1 energy (so only 2- and 3-energy stones come in glass). Relocate, Mind Control, Muffle,
+  pouch; it takes no slot (only stones of tier 2 and 3 come in glass). Relocate, Mind Control, Muffle,
   Hammer (smashes a stone beside it for good), Snatch (takes one into your hand) and Seed (grows a Mountain of yours) are glass by nature. (Marble and gold materials were tried and dropped: neither earned its
   extra energy, see docs/HARMONY.md.)
 - **The pouch holds 6 stones**; glass ones do not count (`POUCH` in run.js). A stone past the

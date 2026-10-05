@@ -24,18 +24,18 @@ const pick = (a) => a[Math.floor(rand() * a.length)];
   await page.evaluate(async ([lang, act, seed]) => {
     localStorage.clear(); localStorage.setItem('ppp-lang', lang); localStorage.setItem('ppp-fast', 'on');
     if (act > 1) {
-      // A run already into a later act: the energy and the stones a player has by then.
+      // A run already into a later act: the slots and the stones a player has by then.
       const R = await import('/src/run.js');
       const run = R.newRun({ seed });
-      run.act = act; run.energy = { 2: 4, 3: 8 }[act]; run.gold = 120;
+      run.act = act; R.gainXp(run, { 2: 14, 3: 34 }[act]);
       for (let i = 0; i < 2 + 2 * act; i++) R.gainStone(run, R.randomStone(run, null, 'elite'));
       R.gainStone(run, R.randomOnce(run));
       run.map = R.makeMap(run); run.screen = 'actintro';
-      localStorage.setItem('ppp-run-v5', JSON.stringify({ run, duel: null }));
+      localStorage.setItem('ppp-run-v6', JSON.stringify({ run, duel: null }));
     }
   }, [LANG, +ACT, +SEED]);
   await page.goto('http://localhost:8080/');
-  const state = () => page.evaluate(() => { try { const s = JSON.parse(localStorage.getItem('ppp-run-v5')); return s?.run ? { screen: s.run.screen, act: s.run.act, hearts: s.run.hearts, over: s.run.over, duel: !!s.duel, tier: s.run.pending?.duel?.tier } : null; } catch { return null; } });
+  const state = () => page.evaluate(() => { try { const s = JSON.parse(localStorage.getItem('ppp-run-v6')); return s?.run ? { screen: s.run.screen, act: s.run.act, hearts: s.run.hearts, over: s.run.over, duel: !!s.duel, tier: s.run.pending?.duel?.tier } : null; } catch { return null; } });
   const click = async (loc) => { try { await loc.click({ timeout: 1500, force: true }); return true; } catch { return false; } };
   const any = async (sel) => { const l = page.locator(sel); const n = await l.count(); if (!n) return false; return click(l.nth(Math.floor(rand() * n))); };
   const snap = async (name) => { if (seen.has(name)) return; seen.add(name); await page.screenshot({ path: `${OUT}/${String(seen.size).padStart(2, '0')}-${name}.png` }); };

@@ -42,27 +42,47 @@ export const HEAT = [
   { n: 5, text: 'Enemies never blunder.' },
 ];
 
-// Energy decides what you bring into a duel: each special stone costs some
-// (a common 1, an uncommon 2, a rare 3) and together they may cost no more than
-// you have. Pebbles are free and never sit in the pouch: they fill your hand up
-// to four stones at the start of a duel, the enemy's up to five (it opens, so a
-// full board takes five of its stones).
+// Slots decide what you bring into a duel: each lasting special stone takes
+// one, glass stones none (they are played once and gone). Slots come with
+// levels: duels won give XP, and each level one more slot. Pebbles are free and
+// never sit in the pouch: they fill your hand up to four stones at the start of
+// a duel, the enemy's up to five (it opens, so a full board takes five of its stones).
 export const HAND = 4;
 const ENEMY_STONES = 5;
 // Every run starts with a Shift: the first duels are never plain tic-tac-toe.
-export const START = { pouch: ['shift'], hearts: 6, energy: 3 };
+export const START = { pouch: ['shift'], hearts: 6, slots: 2 };
+// XP for a duel won, by its tier, and the XP each level starts at (level 1 at 0).
+export const XP = { normal: 1, event: 1, elite: 2, boss: 4 };
+export const LEVELS = [0, 8, 18, 30, 44, 60];
+export const levelOf = (run) => LEVELS.filter((x) => (run.xp ?? 0) >= x).length;
+// XP towards the next level: [had, needed], or null at the top.
+export function xpBar(run) {
+  const l = levelOf(run);
+  if (l >= LEVELS.length) return null;
+  return [(run.xp ?? 0) - LEVELS[l - 1], LEVELS[l] - LEVELS[l - 1]];
+}
+// XP gained; a level gained is a slot gained. Returns the levels gained.
+export function gainXp(run, n) {
+  const before = levelOf(run);
+  run.xp = (run.xp ?? 0) + n;
+  const up = levelOf(run) - before;
+  run.slots = (run.slots ?? START.slots) + up;
+  return up;
+}
 export const COST = { starter: 0, common: 1, uncommon: 2, rare: 3 };
-// What a stone costs to bring: by its rarity (docs/HARMONY.md measures what each
-// wins). Glass, played once and gone, costs 1 whatever it is.
-export const costOf = (s) => {
+// A stone's worth, by its rarity (the pips in its corner): what merchants count
+// it at, and how crafting and rewards name stones. Glass is small change at 1.
+export const tierOf = (s) => {
   const type = s?.type ?? s, st = STONES[type];
   return s?.once || st?.once ? 1 : COST[st?.rarity] ?? 0;
 };
+// The slots a stone takes in a duel hand: glass none.
+export const slotOf = (s) => (isOnce(s) ? 0 : 1);
 // The pouch holds so many lasting stones (glass does not count): a run is a
 // build, not a hoard. A stone past the limit means giving one up.
 export const POUCH = { stones: 6, glass: Infinity };
-export const energyOf = (run) => (run.energy ?? START.energy) + (has(run, 'deep-pockets') ? 1 : 0);
-export const handCost = (run, uids) => uids.reduce((n, u) => n + costOf(run.pouch.find((x) => x.uid === u)), 0);
+export const slotsOf = (run) => (run.slots ?? START.slots) + (has(run, 'deep-pockets') ? 1 : 0);
+export const handCost = (run, uids) => uids.reduce((n, u) => n + slotOf(run.pouch.find((x) => x.uid === u)), 0);
 
 // A stone in the pouch: {uid, type}, and `once` for glass.
 const stone = (run, s) => ({ type: s.type ?? s, uid: run.nextUid++, ...(s.once && { once: true }) });
@@ -86,7 +106,7 @@ export function newRun({ seed = (Math.random() * 2 ** 31) | 0, heat = 0 } = {}) 
     act: 1, atBoss: false, map: null,
     hearts, maxHearts: hearts,
     pouch: [], relics: [],
-    energy: START.energy,
+    slots: START.slots, xp: 0,
     lastHand: null, nextUid: 1,
     rematchUsed: {}, phoenixUsed: false,
     stats: { won: 0, lost: 0, elites: 0, bosses: 0, started: Date.now() },
@@ -111,7 +131,7 @@ const craftTier = (a, b) => {
   const low = Math.min(TIERS.indexOf(STONES[a.type].rarity), TIERS.indexOf(STONES[b.type].rarity));
   return TIERS[Math.min(TIERS.length - 1, low + 1)];
 };
-// What the new stone will cost: its tier's energy.
+// What the new stone will be worth: its tier.
 export const craftCost = (a, b) => COST[craftTier(a, b)];
 export function craftChoices(run, a, b) {
   const tier = craftTier(a, b);
@@ -623,7 +643,7 @@ const stoneOf = (name) => ({ type: name });
 function rollEnemyHand(run, enemy, tier, context) {
   if (tier === 'boss') return [];
   const act = ACTS[Math.max(0, (enemy.act || run.act) - 1)];
-  // Enemies grow with the acts as your energy does: one special stone in the
+  // Enemies grow with the acts as your slots do: one special stone in the
   // first, two in the second, three in the third; an elite brings one more.
   let size = enemy.size ?? act.size + (tier === 'elite' ? 1 : 0);
   if (run.heat >= 4 && tier === 'elite') size++;
@@ -710,14 +730,14 @@ export function gameConfig(run, duel, uids) {
 
 // The default loadout: last time's stones if still owned, topped up.
 // The default loadout: last time's stones if still owned and affordable, then
-// the dearest stones the energy still pays for.
+// the dearest stones the slots still hold.
 export function defaultHand(run) {
-  const energy = energyOf(run);
+  const energy = slotsOf(run);
   const owned = new Set(run.pouch.map((s) => s.uid));
   const chosen = [];
   const take = (u) => { if (!chosen.includes(u) && handCost(run, [...chosen, u]) <= energy) chosen.push(u); };
   for (const u of run.lastHand ?? []) if (owned.has(u)) take(u);
-  if (!run.lastHand) for (const s of [...run.pouch].sort((a, b) => costOf(b) - costOf(a))) take(s.uid);
+  if (!run.lastHand) for (const s of [...run.pouch].sort((a, b) => tierOf(b) - tierOf(a))) take(s.uid);
   return chosen;
 }
 
@@ -792,11 +812,11 @@ export function duelWon(run, draw = false) {
   if (rand(run) < onceChance) reward.once = randomOnce(run);
   const big = duel.tier === 'elite' || duel.tier === 'boss';
   if (duel.tier === 'elite' || duel.event === 'hermit' || duel.event === 'nightowl') reward.relic = randomRelic(run);
-  if (duel.tier === 'elite') { run.stats.elites++; run.energy = (run.energy ?? START.energy) + 1; reward.energy = 1; }
+  reward.xp = XP[duel.tier] ?? 1;
+  reward.levels = gainXp(run, reward.xp);
+  if (duel.tier === 'elite') run.stats.elites++;
   if (duel.tier === 'boss') {
     run.stats.bosses++;
-    run.energy = (run.energy ?? START.energy) + 2;   // a boss beaten: more energy for the climb
-    reward.energy = 2;
     reward.relicChoice = shuffle(run, BOSS_RELICS.filter((r) => !has(run, r))).slice(0, 3);
     run.hearts = Math.min(run.maxHearts, run.hearts + 3);
   }
@@ -897,7 +917,7 @@ export function stoneChoices(run, tier = 'normal', rarity = null, count = 3) {
 // stone in glass.
 export function randomOnce(run, rarity = null) {
   const r = rarity ?? weighted(run, { common: 20, uncommon: 50, rare: 30 });
-  // A 1-energy stone in glass would save nothing: only dearer ones come in glass.
+  // Only stones of tier 2 and 3 come in glass.
   const all = [...ONCE_STONES, ...REWARD_STONES.filter((t) => COST[STONES[t].rarity] > 1)];
   const pool = all.filter((n) => STONES[n].rarity === r);
   const type = pick(run, pool.length ? pool : all);
@@ -937,11 +957,10 @@ export function gainRelic(run, id) {
 export function gainStone(run, s) {
   const st = stone(run, s);
   run.pouch.push(st);
-  // A new stone goes into the hand you last took into a duel, if the energy
-  // left over pays for it.
+  // A new stone goes into the hand you last took into a duel, if a slot is free.
   if (run.lastHand) {
     const hand = run.lastHand.filter((u) => run.pouch.some((x) => x.uid === u));
-    if (handCost(run, hand) + costOf(st) <= energyOf(run)) hand.push(st.uid);
+    if (handCost(run, hand) + slotOf(st) <= slotsOf(run)) hand.push(st.uid);
     run.lastHand = hand;
   }
   return st;
@@ -950,8 +969,8 @@ export function gainStone(run, s) {
 
 // ── Merchants: barter, no gold ─────────────────────────────────────────────
 //
-// There is no money: stones are the currency. A stone is worth its energy (the
-// dots in its corner; glass, outside the pouch's limit, is small change at 1),
+// There is no money: stones are the currency. A stone is worth its tier (the
+// pips in its corner; glass, outside the pouch's limit, is small change at 1),
 // and a merchant who likes a kind of stone counts each of those one more.
 // Every shop square holds one merchant, of one of a few trades.
 
@@ -964,7 +983,7 @@ export const KINDS_LIKED = {
 export const likes = (merchant, s) => !!merchant?.likes && KINDS_LIKED[merchant.likes](s);
 // `glassWorth`: what a glass stone fetches (an experiment knob).
 export const ECON = { glassWorth: 1 };
-export const worth = (merchant, s) => (isOnce(s) ? ECON.glassWorth : costOf(s)) + (likes(merchant, s) ? 1 : 0);
+export const worth = (merchant, s) => (isOnce(s) ? ECON.glassWorth : tierOf(s)) + (likes(merchant, s) ? 1 : 0);
 // What a price comes to after talismans: the Merchant's Badge takes one off.
 export const priceOf = (run, n) => Math.max(1, n - (has(run, 'badge') ? 1 : 0));
 // Can the pouch pay `price` to this merchant (the Collector wants one kind only)?
@@ -1001,7 +1020,7 @@ export function makeShop(run) {
     ware({ kind: 'maxheart', price: 4 });
   } else if (type === 'mystic') {
     m.likes = 'walls';
-    ware({ kind: 'energy', price: 4 + Math.max(0, (run.energy ?? START.energy) - START.energy) });
+    ware({ kind: 'xp', n: 3, price: 3 });
     for (const st of distinct(() => randomOnce(run, 'rare'), 1)) ware({ kind: 'stone', stone: st, price: 2 });
   } else if (type === 'curio') {
     const ids = [];
@@ -1015,7 +1034,7 @@ export function makeShop(run) {
     m.wants = want;
     const id = randomRelic(run);
     if (id) ware({ kind: 'relic', relic: id, only: want });
-    ware({ kind: 'energy', only: want });
+    ware({ kind: 'xp', n: 4, only: want });
   }
   return m;
 }

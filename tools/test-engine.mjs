@@ -730,12 +730,12 @@ test('a rule with nothing to choose leaves the boss\'s turn plain', () => {
 
 group('run');
 const RUN = await import('../src/run.js');
-test('a stone costs its tier\'s energy; glass 1; no 1-energy stone comes in glass', () => {
-  assert.equal(RUN.costOf({ type: 'swap' }), 2);
-  assert.equal(RUN.costOf({ type: 'swap', once: true }), 1);
-  assert.equal(RUN.costOf({ type: 'firecracker', once: true }), 1);
-  assert.equal(RUN.costOf({ type: 'relocate' }), 1);
-  assert.equal(RUN.costOf({ type: 'mind-control' }), 1);
+test('a stone is worth its tier; glass 1; no stone of tier 1 comes in glass', () => {
+  assert.equal(RUN.tierOf({ type: 'swap' }), 2);
+  assert.equal(RUN.tierOf({ type: 'swap', once: true }), 1);
+  assert.equal(RUN.tierOf({ type: 'firecracker', once: true }), 1);
+  assert.equal(RUN.tierOf({ type: 'relocate' }), 1);
+  assert.equal(RUN.tierOf({ type: 'mind-control' }), 1);
   const run = RUN.newRun({ seed: 9 });
   for (let i = 0; i < 300; i++) {
     const g = RUN.randomOnce(run);
@@ -764,7 +764,7 @@ test('a draw counts as won, and costs a heart', () => {
   assert.equal(RUN.duelWon(run, true).kind, 'reward');
   assert.equal(run.hearts, hearts - 1);
 });
-test('merchants barter: a stone is worth its energy, one more if liked; every kind turns up', () => {
+test('merchants barter: a stone is worth its tier, one more if liked; every kind turns up', () => {
   const run = RUN.newRun({ seed: 3 });
   run.pouch = [];
   const swap = RUN.gainStone(run, { type: 'swap' }), glass = RUN.gainStone(run, { type: 'firecracker', once: true });
@@ -798,28 +798,43 @@ test('the Quarryman\'s trick: the next X goes on a rock in reach, and breaks it'
   assert.ok(!run.map.breaker);
   assert.ok(!RUN.reachable(run).some((k) => run.map.cells[k]?.kind === 'rock'));
 });
-test('a run starts with a Shift, and 3 energy', () => {
+test('a run starts with a Shift, and 2 slots', () => {
   const run = RUN.newRun({ seed: 1 });
   assert.deepEqual(run.pouch.map((x) => x.type), ['shift']);
-  assert.equal(RUN.energyOf(run), 3);
+  assert.equal(RUN.slotsOf(run), 2);
+  assert.equal(RUN.levelOf(run), 1);
   assert.equal(RUN.defaultHand(run).length, 1);
   assert.ok(!Object.values(RUN.makeMap(run).cells).some((c) => c.kind === 'gift'));
 });
-test('stones cost energy; a stone found joins the last hand if the energy pays for it', () => {
+test('XP: each level gives a slot; a duel won gives XP by its tier', () => {
   const run = RUN.newRun({ seed: 1 });
-  run.pouch = []; run.energy = 1;   // 1 energy, nothing in the pouch
+  assert.equal(RUN.gainXp(run, RUN.LEVELS[1] - 1), 0);
+  assert.equal(RUN.slotsOf(run), 2);
+  assert.equal(RUN.gainXp(run, 1), 1);
+  assert.equal(RUN.levelOf(run), 2);
+  assert.equal(RUN.slotsOf(run), 3);
+  assert.equal(RUN.gainXp(run, 100), RUN.LEVELS.length - 2);
+  assert.equal(RUN.xpBar(run), null);
+  const r2 = RUN.newRun({ seed: 6 });
+  r2.map = RUN.makeMap(r2);
+  r2.pending = { kind: 'duel', duel: RUN.prepareDuel(r2, 'pip', { tier: 'elite' }) };
+  const rw = RUN.duelWon(r2);
+  assert.equal(rw.xp, RUN.XP.elite);
+  assert.equal(r2.xp, RUN.XP.elite);
+});
+test('a stone takes one slot, glass none; a stone found joins the last hand if a slot is free', () => {
+  const run = RUN.newRun({ seed: 1 });
+  run.pouch = []; run.slots = 1;
   const hand = () => RUN.defaultHand(run).map((u) => run.pouch.find((x) => x.uid === u).type).sort();
   assert.deepEqual(RUN.playerHand(run, RUN.defaultHand(run)).map((x) => x.type), ['pebble', 'pebble', 'pebble', 'pebble']);
   run.lastHand = RUN.defaultHand(run);
-  RUN.gainStone(run, { type: 'rotate' });   // common: 1
+  RUN.gainStone(run, { type: 'rotate' });
   assert.deepEqual(hand(), ['rotate']);
-  RUN.gainStone(run, { type: 'mountain' });   // no energy left for it
+  RUN.gainStone(run, { type: 'mountain' });   // no slot left for it
   assert.deepEqual(hand(), ['rotate']);
-  run.energy = 4;
-  RUN.gainStone(run, { type: 'firecracker' });   // rare: 3, and 3 are left
+  RUN.gainStone(run, { type: 'firecracker', once: true });   // glass: no slot
   assert.deepEqual(hand(), ['firecracker', 'rotate']);
-  assert.equal(RUN.handCost(run, RUN.defaultHand(run)), 4);
-  assert.deepEqual(RUN.playerHand(run, RUN.defaultHand(run)).map((x) => x.type).sort(), ['firecracker', 'pebble', 'pebble', 'rotate']);
+  assert.equal(RUN.handCost(run, RUN.defaultHand(run)), 1);
 });
 
 // ── cloneState ──────────────────────────────────────────────────────────────

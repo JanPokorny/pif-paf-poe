@@ -21,7 +21,7 @@ document.documentElement.lang = lang;
 const shortName = (e) => e.short ?? e.name.replace(/^(The|Captain) /, '');
 
 const app = document.getElementById('app');
-const SAVE = 'ppp-run-v5';   // older runs are not carried over
+const SAVE = 'ppp-run-v6';   // older runs are not carried over
 const META = 'ppp-meta-v1';
 
 let run = null;
@@ -62,7 +62,7 @@ function recordEnd() {
 
 // ── Chrome ──────────────────────────────────────────────────────────────────
 
-// The energy last shown in the top bar: more than that, and the gain is played out.
+// The slots last shown in the top bar: more than that, and the level up is played out.
 let shownEnergy = null;
 let shownHearts = null;   // the hearts the top bar showed last: fewer now is a loss to show
 let hurtDelay = 0;        // seconds before it shows
@@ -75,9 +75,12 @@ function topBar(menu = showMenu) {
   shownHearts = run.hearts;
   hurtDelay = 0;
   flash = null;
-  const energy = R.energyOf(run);
-  const counter = h('div.energy', { onclick: () => toast(t('Energy: what your stones may cost together in a duel.')) }, h('span', { html: icon('energy') }), energy);
-  if (shownEnergy !== null && energy > shownEnergy) energyBurst(energy - shownEnergy);   // after the hearts' (queued above)
+  const energy = R.slotsOf(run);
+  const xp = R.xpBar(run), level = R.levelOf(run);
+  const counter = h('div.energy', { onclick: () => toast(xp ? t('Slots: how many stones you bring into a duel (glass ones ride free). Level {l}: {x}/{n} XP to the next.', { l: level, x: xp[0], n: xp[1] }) : t('Slots: how many stones you bring into a duel (glass ones ride free). Level {l}, the highest.', { l: level })) },
+    h('span', { html: icon('slot') }), energy,
+    xp ? h('span.xp-bar', {}, h('i', { style: `width: ${Math.round((xp[0] / xp[1]) * 100)}%` })) : null);
+  if (shownEnergy !== null && energy > shownEnergy) energyBurst(energy - shownEnergy, level);   // after the hearts' (queued above)
   shownEnergy = energy;
   return h('div.topbar', {},
     hearts,
@@ -86,11 +89,12 @@ function topBar(menu = showMenu) {
     h('button.icon-btn', { onclick: menu, 'aria-label': t('Menu') }, h('span', { html: icon('gear') })));
 }
 
-// Energy gained: a big bolt bursts in the middle of the screen, then flies into
-// the top bar's counter, which jumps. It decides what can be brought to a duel,
-// so it is not to be missed.
-function energyBurst(n) {
-  const burst = h('div.energy-burst', {}, h('span.energy-burst-bolt', { html: icon('energy') }), h('span.energy-burst-text', {}, t('+{n} energy', { n })));
+// A level up (or a slot from elsewhere): a big slot bursts in the middle of the
+// screen, then flies into the top bar's counter, which jumps. It decides what
+// can be brought to a duel, so it is not to be missed.
+function energyBurst(n, level) {
+  const burst = h('div.energy-burst', {}, h('span.energy-burst-bolt', { html: icon('slot') }),
+    h('span.energy-burst-text', {}, n === 1 ? t('Level {l}! +1 slot', { l: level }) : t('Level {l}! +{n} slots', { l: level, n })));
   playBurst(burst, '.energy', 'heal', 'gained', 0);
 }
 
@@ -237,7 +241,7 @@ function settingsRow() {
 // ── Title ───────────────────────────────────────────────────────────────────
 
 function title() {
-  shownEnergy = null;   // a run picked up again does not replay its energy
+  shownEnergy = null;   // a run picked up again does not replay its level ups
   shownHearts = null;
   duelView?.destroy();
   duelView = null;
@@ -590,7 +594,7 @@ function moonrise(boss, done) {
 function preDuel() {
   const duel = run.pending.duel;
   const enemy = ENEMIES[duel.enemyId];
-  const energy = R.energyOf(run);
+  const energy = R.slotsOf(run);
   let chosen = R.defaultHand(run);
   const grid = h('div.stone-row.pick');
   const bar = h('div.energy-slot');
@@ -614,7 +618,7 @@ function preDuel() {
           if (on) chosen = chosen.filter((u) => u !== s.uid);
           else if (R.handCost(run, [...chosen, s.uid]) <= energy) chosen.push(s.uid);
           else {
-            // Over budget: the energy bar shakes its head.
+            // No slot left: the slots bar shakes its head.
             const e = bar.firstChild;
             e?.classList.remove('shake'); void e?.offsetWidth; e?.classList.add('shake');
             e?.addEventListener('animationend', () => e.classList.remove('shake'), { once: true });
@@ -677,7 +681,7 @@ function duelScreen() {
   const duel = run.pending.duel;
   const base = ENEMIES[duel.enemyId];
   const enemy = { ...base, name: isUndead(duel) ? undeadName(base) : base.name, undead: isUndead(duel), iters: duel.iters, blunder: duel.blunder, tier: duel.tier };
-  // The same top bar as on the map: your hearts and energy, the menu.
+  // The same top bar as on the map: your hearts and slots, the menu.
   const holder = screen(topBar(showDuelMenu), h('div.duel-host'));
   const extra = null;
   duelView = mountDuel(holder.querySelector('.duel-host'), {
@@ -755,7 +759,7 @@ function radioRow(chosen, items) {
 function rewardScreen() {
   const rw = run.pending;
   const parts = [h('h1.reward-title', {}, rw.tier === 'boss' ? t('Boss defeated!') : t('Victory!'))];
-  if (rw.energy) parts.push(h('div.reward-gold.reward-energy', {}, h('span', { html: icon('energy') }), t('+{n} energy', { n: rw.energy })));
+  if (rw.xp) parts.push(h('div.reward-gold.reward-energy', {}, h('span', { html: icon('star') }), t('+{n} XP', { n: rw.xp })));
   if (rw.relic && !rw.taken.relic) {
     R.gainRelic(run, rw.relic);
     rw.taken.relic = true;
@@ -824,7 +828,7 @@ const MERCHANT = {
 const LIKED = { movers: t('stones that move others'), walls: t('restrictions and Mountains'), glass: t('glass stones'), tricks: t('tricksters and glass-only stones') };
 
 // Pay `price` from the pouch: tick stones until they are worth enough (each
-// worth its energy, one more if the merchant likes it). `only`: one stone of
+// worth its tier, one more if the merchant likes it). `only`: one stone of
 // that kind and nothing else. Calls done(uids), or done(null) if backed out.
 function payFlow(merchant, price, prompt, done, { only = null } = {}) {
   if (only) {
@@ -838,7 +842,7 @@ function payFlow(merchant, price, prompt, done, { only = null } = {}) {
     const sum = total();
     body.replaceChildren(
       h('h2', {}, prompt),
-      h('p.dim', {}, t('Worth {n} of {price}. A stone is worth its energy{liked}.', { n: sum, price, liked: merchant?.likes ? t(', {kind} one more', { kind: LIKED[merchant.likes] }) : '' })),
+      h('p.dim', {}, t('Worth {n} of {price}. A stone is worth its pips{liked}.', { n: sum, price, liked: merchant?.likes ? t(', {kind} one more', { kind: LIKED[merchant.likes] }) : '' })),
       h('div.stone-grid', {}, run.pouch.map((x) => tickStone(x, {
         on: picked.includes(x.uid), name: true, face: '.pouch-slot' + (R.likes(merchant, x) ? '.liked' : ''),
         toggle: () => { picked = picked.includes(x.uid) ? picked.filter((u) => u !== x.uid) : [...picked, x.uid]; sfx('click'); draw(); },
@@ -883,15 +887,15 @@ function shopScreen(redraw = false) {
       offer(w, (done) => { run.hearts = Math.min(run.maxHearts, run.hearts + w.n); sfx('heal'); done(); })));
     if (w.kind === 'maxheart') return serviceCard('heart', t('+1 max ❤'), label(w), off, dear, () => infoThing({ art: icon('heart'), name: t('+1 max ❤'), text: t('One more heart to your maximum, and heal it.') },
       offer(w, (done) => { run.maxHearts++; run.hearts++; sfx('heal'); done(); })));
-    return serviceCard('energy', t('+1 energy'), label(w), off, dear, () => infoThing({ art: icon('energy'), name: t('+1 energy'), text: t('One more energy in every duel from now on: room for a costlier stone.') },
-      offer(w, (done) => { run.energy = (run.energy ?? 1) + 1; done(); })));
+    return serviceCard('star', t('+{n} XP', { n: w.n }), label(w), off, dear, () => infoThing({ art: icon('star'), name: t('+{n} XP', { n: w.n }), text: t('Experience: every level brings one more slot for a stone in your duels.') },
+      offer(w, (done) => { R.gainXp(run, w.n); done(); })));
   };
   const worthAll = run.pouch.reduce((n, x) => n + R.worth(m, x), 0);
   screen(...(redraw ? [KEEP_SCROLL] : []), topBar(), h('div.page.shop', {},
     h('div.merchant-head', {}, h('div.merchant-emoji', {}, who.emoji), h('div', {},
       h('h2', {}, who.name), h('p.dim', {}, who.line),
       h('p.merchant-terms', {}, m.wants ? t('Wants a {stone}, and nothing else.', { stone: STONES[m.wants].name })
-        : t('Takes stones by their energy. Likes {kind}: one more each.', { kind: LIKED[m.likes] })),
+        : t('Takes stones by their pips. Likes {kind}: one more each.', { kind: LIKED[m.likes] })),
       m.wants ? null : h('p.dim', {}, t('Your stones are worth {n} here.', { n: worthAll })))),
     h('div.cards.scroll', {}, m.wares.map(card)),
     h('div.sticky-bottom', {}, h('button.btn.primary.wide.big', { onclick: () => { R.leaveNode(run); route(); } }, t('Leave')))));
@@ -934,7 +938,7 @@ function craftFlow(done) {
           sfx('click'); drawPick();
         },
       }))),
-      h('p.dim', {}, b ? t('→ a stone of {n} energy', { n: R.craftCost(a, b) }) : t('Two stones → one costing 1 energy more than the cheaper.')),
+      h('p.dim', {}, b ? t('→ a stone worth {n}', { n: R.craftCost(a, b) }) : t('Two stones → one worth 1 more than the cheaper.')),
       h('button.btn.primary.wide', {
         disabled: !b || undefined,
         onclick: () => {
@@ -959,7 +963,7 @@ function craftScreen() {
   const did = (text) => { if (text) { run.pending.made = text; save(); craftScreen(); } };
   // One job a visit: a trade.
   const jobs = [
-    { label: t('Trade two stones'), detail: t('Two stones → one costing 1 energy more than the cheaper.'), ok: R.craftable(run).length >= 2, go: () => craftFlow(did) },
+    { label: t('Trade two stones'), detail: t('Two stones → one worth 1 more than the cheaper.'), ok: R.craftable(run).length >= 2, go: () => craftFlow(did) },
   ];
   screen(topBar(), h('div.page.rest', {},
     h('div.campfire', { html: icon('relic-anvil') }),
@@ -1012,6 +1016,7 @@ function eventScreen() {
     pay: (n, prompt) => new Promise((resolve) => payFlow(null, n, prompt, (uids) => { if (uids) { R.pay(run, uids); save(); } resolve(!!uids); })),
     loseStone: (prompt) => new Promise((resolve) => (run.pouch.length ? pickFromPouch(prompt, (s) => { if (s) R.dropStone(run, s.uid); resolve(); }, { cancel: null }) : resolve())),
     rocks: () => R.rocksInReach(run.map).length,
+    xp: (n) => (R.gainXp(run, n) ? t('+{n} XP. Level up!', { n }) : t('+{n} XP.', { n })),
     duplicate: () => new Promise((resolve) => pickFromPouch(t('Duplicate which stone?'), (s) => {
       if (!s) return resolve(t('The reflection fades.'));
       R.gainStone(run, { type: s.type });
@@ -1027,7 +1032,7 @@ function eventScreen() {
   };
   // What a choice came to, by what it changed: anything gained is good news
   // (even paid for), only losses bad, nothing at all neither.
-  const sig = () => ({ hearts: run.hearts, maxHearts: run.maxHearts, energy: run.energy ?? 0, relics: run.relics.length, pouch: JSON.stringify(run.pouch), breaker: !!run.map?.breaker });
+  const sig = () => ({ hearts: run.hearts, maxHearts: run.maxHearts, energy: run.xp ?? 0, relics: run.relics.length, pouch: JSON.stringify(run.pouch), breaker: !!run.map?.breaker });
   const moodOf = (a, b) => {
     const gained = b.hearts > a.hearts || b.maxHearts > a.maxHearts || b.energy > a.energy || b.relics > a.relics || (b.breaker && !a.breaker)
       || (b.pouch !== a.pouch && JSON.parse(b.pouch).length >= JSON.parse(a.pouch).length);

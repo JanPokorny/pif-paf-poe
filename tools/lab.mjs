@@ -172,7 +172,7 @@ function typicalHand(act, seed) {
   if (act >= 2) pouch.push(R.randomOnce(run).type);
   const hand = [];
   let left = ENERGY[act];
-  for (const t of pouch.sort((x, y) => R.costOf(y) - R.costOf(x))) if (R.costOf(t) <= left) { hand.push(t); left -= R.costOf(t); }
+  for (const t of pouch.sort((x, y) => R.tierOf(y) - R.tierOf(x))) if (R.tierOf(t) <= left) { hand.push(t); left -= R.tierOf(t); }
   return [...hand, ...P(R.HAND - hand.length)];
 }
 

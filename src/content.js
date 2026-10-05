@@ -15,7 +15,7 @@ export const RELICS = {
   'iron-heart': { name: 'Iron Heart', emoji: '🫀', rarity: 'common',
     text: '+2 max hearts, and heal 2 now.' },
   'deep-pockets': { name: 'Second Wind', emoji: '🌬️', rarity: 'rare',
-    text: '+1 energy: bring stones worth one more into every duel.' },
+    text: '+1 slot: bring one more stone into every duel.' },
   // (Its id is still 'satchel', as saves have it.)
   satchel: { name: 'Loyalty Card', emoji: '🎫', rarity: 'common',
     text: 'Merchants know you: every one shows you one more ware.' },
@@ -204,7 +204,7 @@ export const EVENTS = [
     id: 'stonemason', title: 'The Wandering Stonemason', emoji: '🧑‍🔧',
     text: 'A dusty stonemason sets down her chisel. "Give me two of those stones, and I\'ll carve you one finer."',
     choices: [
-      { label: 'Trade two stones', detail: 'Two stones → one costing 1 energy more than the cheaper.', can: (r) => r.pouch.length >= 2,
+      { label: 'Trade two stones', detail: 'Two stones → one worth 1 more than the cheaper.', can: (r) => r.pouch.length >= 2,
         act: (r, api) => api.craft() },
       { leave: true, label: 'Leave', act: () => t('You nod politely and move on.') },
     ],
@@ -213,7 +213,7 @@ export const EVENTS = [
     id: 'shrine', title: 'The Wayside Shrine', emoji: '⛩️',
     text: 'An old shrine hums quietly. Offerings of heart-shaped stones lie at its foot.',
     choices: [
-      { label: 'Offer a max heart', detail: 'Lose 1 max heart. Choose a stone of 3 energy.', can: (r) => r.maxHearts > 2,
+      { label: 'Offer a max heart', detail: 'Lose 1 max heart. Choose a stone worth 3.', can: (r) => r.maxHearts > 2,
         act: (r, api) => api.chooseStone('rare', () => { r.maxHearts--; r.hearts = Math.min(r.hearts, r.maxHearts); }) },
       { label: 'Pray', detail: 'Heal 1 heart.', act: (r) => { r.hearts = Math.min(r.maxHearts, r.hearts + 1); return t('A warmth settles in your chest.'); } },
     ],
@@ -252,7 +252,7 @@ export const EVENTS = [
     id: 'transmuter', title: 'The Transmuter', emoji: '⚗️',
     text: 'Bubbling flasks line a cart. "Give me a stone, and I\'ll give you back something… different."',
     choices: [
-      { label: 'Transmute a stone', detail: 'Replace a stone with a random one of 1 energy more.', can: (r) => r.pouch.length > 0,
+      { label: 'Transmute a stone', detail: 'Replace a stone with a random one worth 1 more.', can: (r) => r.pouch.length > 0,
         act: (r, api) => api.transmute() },
       { leave: true, label: 'Leave', act: () => t('The flasks keep bubbling.') },
     ],
@@ -320,7 +320,7 @@ export const EVENTS = [
     id: 'library', title: 'The Rulebook Library', emoji: '📚',
     text: 'Shelves of dog-eared rulebooks. Someone has scribbled strategies in every margin.',
     choices: [
-      { label: 'Study', detail: 'Give stones worth 2, choose a stone of 2 energy.', can: (r, api) => api.canPay(2),
+      { label: 'Study', detail: 'Give stones worth 2, choose a stone worth 2.', can: (r, api) => api.canPay(2),
         act: async (r, api) => {
           if (!(await api.pay(2, t('Give which stones?')))) return t('You put the books back.');
           return api.chooseStone('uncommon');
@@ -334,12 +334,12 @@ export const EVENTS = [
     id: 'monk', title: 'The Meditating Monk', emoji: '🧘',
     text: 'A monk sits still as a stone on a mossy rock. "Breathe with me, traveller."',
     choices: [
-      { label: 'Breathe deeply', detail: '+1 energy. Lose 1 max heart.', can: (r) => r.maxHearts > 2,
-        act: (r) => { r.energy = (r.energy ?? 1) + 1; r.maxHearts--; r.hearts = Math.min(r.hearts, r.maxHearts); return t('Your mind clears. +1 energy.'); } },
-      { label: 'Offer stones', detail: 'Stones worth 4: +1 energy.', can: (r, api) => api.canPay(4),
+      { label: 'Breathe deeply', detail: '+4 XP. Lose 1 max heart.', can: (r) => r.maxHearts > 2,
+        act: (r, api) => { r.maxHearts--; r.hearts = Math.min(r.hearts, r.maxHearts); return `${t('Your mind clears.')} ${api.xp(4)}`; } },
+      { label: 'Offer stones', detail: 'Stones worth 4: +4 XP.', can: (r, api) => api.canPay(4),
         act: async (r, api) => {
           if (!(await api.pay(4, t('Offer which stones?')))) return t('You leave the monk to the quiet.');
-          r.energy = (r.energy ?? 1) + 1; return t('The monk bows. +1 energy.');
+          return `${t('The monk bows.')} ${api.xp(4)}`;
         } },
       { leave: true, label: 'Tiptoe past', act: () => t('You leave the monk to the quiet.') },
     ],

@@ -193,6 +193,8 @@ const RAW = {
     + P('M 0.8 -5.6 C 4 -5.6 5.6 -4 5.6 -1.4', SW(1.1)) + F('M 5.6 0.4 L 3.8 -2 L 7.4 -2 Z')
     + P('M -0.8 5.6 C -4 5.6 -5.6 4 -5.6 1.8', SW(1.1)) + F('M -5.6 0 L -7.4 2.4 L -3.8 2.4 Z'),
   'chevron-down': P('M -5 -2 L 0 3.2 L 5 -2', SW(1.8)),
+  // A slot: a stone's place in a duel hand.
+  slot: P('M -5.6 -5.6 H 5.6 V 5.6 H -5.6 Z', ' fill="currentColor" rx="2"' + SW(1.6)),
   // Energy: a bolt.
   energy: P('M 2 -7.6 L -4.6 1.2 H -0.4 L -2 7.6 L 4.6 -1.2 H 0.4 Z', ' fill="currentColor"' + SW(1.1)),
 
