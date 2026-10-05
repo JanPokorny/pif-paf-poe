@@ -110,11 +110,9 @@ const RAW = {
   'empty-1': P('M -6.5 3.5 C -6.8 1.6 -5.6 0.6 -4.6 1.6 C -4.2 0.4 -2.6 0.6 -2.6 2 C -1.8 2 -1.6 3.2 -2.2 3.5 Z', FILL_ROCK + SW(1.1))
     + P('M 2.4 -1.5 C 2.2 -3 3.4 -3.7 4.2 -2.8 C 4.8 -3.6 6.2 -3 5.9 -1.8 C 6.6 -1.6 6.5 -0.6 6 -0.4 L 2.4 -0.4 Z', FILL_ROCK + SW(1.1))
     + P('M -4.6 3.5 V 4.6 M 4.2 -0.4 V 0.6', SW(1)),
-  // Quarry: a heap of boulders; gravel.
-  'block-2': P('M -7.8 6 C -8.4 2.4 -6.4 -0.6 -3.4 -0.4 C -1.6 -0.3 -0.6 1.4 -0.6 3.2 C -0.6 5 -1.6 6 -3 6 Z', FILL_ROCK)
-    + P('M 0.2 6 C -0.6 2.6 1.4 0.2 4.2 0.4 C 7 0.6 8.4 3.2 7.8 6 Z', FILL_ROCK)
-    + P('M -4.4 1 C -4.8 -3.2 -2 -6.4 1.2 -6.2 C 4.4 -6 6 -3 5.2 0.4 C 4.4 3.6 -3.6 4.2 -4.4 1 Z', FILL_ROCK)
-    + P('M -1.6 -3.6 C -0.4 -4.6 1.4 -4.6 2.4 -3.8 M 3 4 L 4.6 3.2', SW(1)),
+  // Quarry: a jagged crag, ridges down its faces and ledges cut into its side; gravel.
+  'block-2': P('M -8 6 L -5.8 -0.6 L -4 -1.8 L -1.6 -7.2 L 1 -3.4 L 2.6 -4.8 L 5.6 0.6 L 6.6 0.2 L 8 6 Z', FILL_ROCK)
+    + P('M -1.6 -7.2 L -0.4 -2.6 L 1.2 0.8 M 2.6 -4.8 L 2.4 -1.6 M -4 -1.8 L -3.4 1.6 M 4.2 3.2 H 7.1 M 3.4 0.6 H 5.8', SW(1)),
   'empty-2': DOT(-5, 3, 0.9) + DOT(-2.6, 4.4, 0.6) + DOT(4.6, -2, 0.8) + DOT(6.2, -0.6, 0.55) + DOT(2.6, -0.8, 0.5) + DOT(-4, -3.6, 0.55),
   // Summit: the snow-capped mountain; tufts of grass in the snow.
   'block-3': P('M -7.6 5.4 L -2.4 -5.2 L 1.2 1.2 L 3.6 -2.2 L 7.6 5.4 Z', FILL_ROCK) + P('M -4.6 -0.7 L -2.4 -5.2 L -0.15 -0.8 L -1.4 0.3 L -2.4 -0.9 L -3.4 0.3 Z', ' fill="var(--paper, #fff)"' + SW(1.1)),
