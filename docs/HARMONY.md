@@ -473,6 +473,61 @@ next to your marks, and breaks it.
   `MAPCFG.freeLines` stays as an experiment knob, off.
 - The heat ladder is iced: every run is at heat 0.
 
+## Why trading is pointless (fifth pass)
+
+The question: with gold and with barter alike, merchants barely matter. Is it because duels
+already give what a run needs? Or because stones are all about as good?
+
+The bot was instrumented at every duel: what it brings, what it leaves at home, and why.
+256 runs, as built (barter, 3 energy at the start).
+
+| act | energy | stones brought | lasting stones in the pouch | left at home | the pouch's total cost |
+|---|---|---|---|---|---|
+| 1 | 3.2 | 2.0 | 3.0 | 1.4 | 5.5 |
+| 2 | 6.0 | 3.4 | 5.5 (full in 61% of duels) | 2.8 | 12.6 |
+| 3 | 9.0 | 4.0 | 6.4 (full in 77%) | 3.1 | 17.0 |
+
+**1. Duels give more stones than a run can use.** From act 2 on, the pouch costs twice the
+energy there is to bring it. In 83–88% of duels stones stay at home *because energy runs out*.
+Energy is the scarce thing; stones are not. A merchant selling stones sells the one thing you
+have too much of. Only energy and hearts move a run, and those are what few merchants sell.
+
+**2. Stones differ, but not in a way worth paying for.** The same runs with the reward stone
+chosen differently:
+
+| pick from each reward | victories |
+|---|---|
+| the strongest (the bot's ranking) | 146 |
+| at random | 160 |
+| **the weakest (the cheapest)** | **177** |
+| none at all | 7 |
+| hand capped at 4 stones, the strongest | 148 |
+| hand capped at 4 stones, the weakest | 166 |
+
+- Taking the weakest stone wins *more*. Cheap stones let more of them into each duel, and
+  four 1-energy stones beat one 3-energy stone and a Pebble. Even with the hand capped at four
+  stones, cheap ones still win more.
+- A 3-energy stone is stronger alone (Firecracker 48 of 120 against Shift 30), but not three
+  times as strong in a hand. **Per energy, cheap stones are better.** So trading up (two
+  commons for a rare, a stone for a better one) is a loss, which is what the economy offers.
+- Stones are not worthless: without any reward stones the bot wins 7 of 256. But the run
+  needs *some* stones, which duels give anyway, not *better* ones.
+
+**So both answers hold:**
+- duels already supply the stones;
+- what extra stones could buy (strength) is not worth their energy;
+- the only real currency is energy, and it is sold rarely.
+
+What would make trade matter:
+- **Make energy the merchants' trade.** Sell energy (rising price), "this stone costs 1 less
+  from now on", or "+1 to the next duel". Take stones as payment: surplus stones are what a
+  run has.
+- **Fix the cost curve** so a stone's energy matches what it adds in a hand. Candidates: rares
+  cost 2; or each duel caps the specials at 3–4 *and* commons get a little weaker; or energy
+  grows slower, so an expensive stone is a real choice.
+- **Make stones scarcer:** a stone reward only every other duel, or one choice of two. Then a
+  merchant's stone is worth a stone of yours.
+
 ## Heat, and the map's weight (second pass)
 
 256 runs each, the same seeds. Heat levels add up (heat 3 has the first three's rules too).
