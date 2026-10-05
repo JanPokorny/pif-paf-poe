@@ -373,7 +373,7 @@ function animatedDemo(before, after, pos, { marks = null } = {}) {
     for (let i = 0; i < 9; i++) cellAt(i).classList.remove('placed', 'ok', 'no');
     for (const [id, el] of els) {
       el.classList.add('still');
-      el.classList.remove('flash');
+      el.classList.remove('flash', 'leaving');
       const i = where(before, id);
       const c = i >= 0 ? before[i] : after[where(after, id)];
       updateStone(el, c, c.player, { mini: true, stuck: !!c.stuck });
@@ -404,7 +404,8 @@ function animatedDemo(before, after, pos, { marks = null } = {}) {
     Object.entries(marks ?? {}).forEach(([i, m], k) => { cellAt(+i).style.setProperty('--d', `${k * 0.18}s`); cellAt(+i).classList.add(m); });
     for (const [id, el] of els) {
       const i = where(after, id);
-      if (i < 0) { el.style.opacity = 0; el.style.scale = 0.4; continue; }
+      // Off the board (knocked off, blown back to a hand): it is struck, spins up and away.
+      if (i < 0) { el.classList.add('leaving'); continue; }
       const c = after[i];
       updateStone(el, c, c.player, { mini: true, stuck: !!c.stuck });
       el.style.translate = spot(i);

@@ -1042,3 +1042,11 @@ body:has(.duel) #toast.show { transform: translate(-50%, 0) rotate(-1deg); }
 /* The bolts on a cost note crowd together, a little overlapped. */
 .stone .cost i + i { margin-left: -3px; }
 .card .stone .cost i + i { margin-left: -2px; }
+/* A stone leaving the board in a card's example: struck a moment after the move
+   starts, it lifts, spins and flies off. */
+.demo-stone.leaving { animation: demo-leave 0.8s ease-in 0.25s forwards; }
+@keyframes demo-leave {
+  0% { opacity: 1; transform: none; }
+  30% { opacity: 1; transform: translateY(-5px) rotate(-14deg) scale(1.2); }
+  100% { opacity: 0; transform: translate(14px, -30px) rotate(-60deg) scale(0.5); }
+}
