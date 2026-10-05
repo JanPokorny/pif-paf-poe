@@ -528,6 +528,51 @@ What would make trade matter:
 - **Make stones scarcer:** a stone reward only every other duel, or one choice of two. Then a
   merchant's stone is worth a stone of yours.
 
+## Flat costs: every stone 0, or every stone 1 (sixth pass)
+
+What if every stone costs the same? Two cases:
+- **cost 0**: energy no longer limits; the 6-stone pouch does;
+- **cost 1**: energy as usual, 3 at the start.
+
+Each was played with no limit on the hand, and with at most 4 stones in a hand. 256 runs
+each; today's rules (costs 1–3) win 146 with the strongest pick.
+
+| reward pick | cost 0 | cost 0, hand ≤ 4 | cost 1 | cost 1, hand ≤ 4 |
+|---|---|---|---|---|
+| the strongest | 210 | **194** | 210 | **202** |
+| at random | 220 | 186 | 206 | 185 |
+| the weakest | 183 | 175 | 182 | 174 |
+
+- **Runs get much easier**: 70–85% won against 57% today. The cost curve was much of the
+  difficulty.
+- **Quality starts to matter.** With flat costs, the strongest pick wins most, and the weakest
+  loses most. With the hand capped at 4, the order is clean: best > random > worst, by about
+  28 runs.
+- **Picks converge on the same eight stones.** With random picks (512 runs), how often a run
+  holding each stone at the end was won:
+
+| cost 0 | cost 1 |
+|---|---|
+| Firecracker 94%, Stinky 92%, Gravity 92%, Bumper 91%, Lasso 91%, Swap 91%, Magpie 89%, Magnet 88% | Firecracker 96%, Magpie 91%, Bumper 90%, Gravity 90%, Lasso 90%, Swap 89%, Stinky 88%, Magnet 83% |
+| Frog 82%, Twin 77%, Waltz 74%, Shift 69%, Bonfire 52%, Parrot 47%, Mountain 47% | Waltz 75%, Twin 71%, Frog 71%, Shift 54%, Bonfire 54%, Parrot 44% |
+
+  These numbers are inflated by survival: a run that dies early holds what it found early,
+  which is mostly the cheap stones. But the best-over-worst gap above says the same thing.
+- **So the dominant strategy becomes "take the 2- and 3-energy stones of today, always".** Those
+  are exactly the stones the current costs were holding back. Today's 1-energy stones become
+  traps.
+
+What it means:
+- With flat costs there is a right pick and it is always the same one. To make a flat cost
+  work, the weak stones need a lift (Shift, Waltz, Bonfire, Parrot, Mountain, Twin), or must
+  go, so that picks become a matter of fit, not of tier.
+- Then the enemies need to be harder again.
+- **Cost 1 with a hand of 4** is the cleanest model of the four:
+  - quality matters;
+  - energy limits the hand in act 2 only;
+  - the cap keeps hands from growing;
+  - trade would mean something: a better stone, or a stone that fits, is worth paying for.
+
 ## Heat, and the map's weight (second pass)
 
 256 runs each, the same seeds. Heat levels add up (heat 3 has the first three's rules too).
