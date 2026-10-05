@@ -64,9 +64,16 @@ function recordEnd() {
 
 // The energy last shown in the top bar: more than that, and the gain is played out.
 let shownEnergy = null;
+let shownHearts = null;   // the hearts the top bar showed last: fewer now is a loss to show
+let hurtDelay = 0;        // seconds before it shows
 function topBar(menu = showMenu) {
-  const hearts = h('div.hearts' + (flash ? '.' + flash : ''), {},
+  const lost = shownHearts !== null && run.hearts < shownHearts ? shownHearts - run.hearts : 0;
+  const hearts = h('div.hearts' + (flash && !lost ? '.' + flash : ''), {},
     h('span', { html: icon('heart') }), `${run.hearts}/${run.maxHearts}`);
+  // Hearts lost: shown as energy gained is, after `hurtDelay` (a boss line drawn first).
+  if (lost) heartBurst(lost, hearts, hurtDelay);
+  shownHearts = run.hearts;
+  hurtDelay = 0;
   flash = null;
   const energy = R.energyOf(run);
   const counter = h('div.energy', { onclick: () => toast(t('Energy: what your stones may cost together in a duel.')) }, h('span', { html: icon('energy') }), energy);
@@ -96,6 +103,27 @@ function energyBurst(n, counter) {
     burst.classList.add('fly');
   }, 1300);
   setTimeout(() => { burst.remove(); if (counter.isConnected) { counter.classList.add('gained'); setTimeout(() => counter.classList.remove('gained'), 900); } }, 2000);
+}
+
+// Hearts lost: a big heart bursts in the middle of the screen and cracks, then
+// flies into the top bar's hearts, which shake. Like the energy, not to be missed.
+function heartBurst(n, counter, delay = 0) {
+  const burst = h('div.energy-burst.heart-burst', {},
+    h('span.energy-burst-bolt.heart-burst-heart', { html: icon('heart') + '<svg class="heart-crack" viewBox="-9 -9 18 18" aria-hidden="true"><path pathLength="100" d="M 0.2 -3.6 L -1.4 -0.8 L 1.2 1 L -0.9 3.2 L 0.2 5.8"/></svg>' }),
+    h('span.energy-burst-text', {}, t('−{n} ❤', { n })));
+  setTimeout(() => {
+    document.body.append(burst);
+    sfx('hurt');
+    setTimeout(() => {
+      const to = counter.getBoundingClientRect(), from = burst.getBoundingClientRect();
+      if (to.width) {
+        burst.style.setProperty('--fly-x', `${to.left + to.width / 2 - (from.left + from.width / 2)}px`);
+        burst.style.setProperty('--fly-y', `${to.top + to.height / 2 - (from.top + from.height / 2)}px`);
+      }
+      burst.classList.add('fly');
+    }, 1300);
+    setTimeout(() => { burst.remove(); if (counter.isConnected) { counter.classList.add('hurt'); setTimeout(() => counter.classList.remove('hurt'), 800); } }, 2000);
+  }, delay * 1000);
 }
 
 // `keep`: a redraw of the same screen, which stays where it was scrolled to.
@@ -209,6 +237,7 @@ function settingsRow() {
 
 function title() {
   shownEnergy = null;   // a run picked up again does not replay its energy
+  shownHearts = null;
   duelView?.destroy();
   duelView = null;
   setScene('title', 0);
@@ -316,7 +345,7 @@ const blockName = () => t(['Thicket', 'Boulders', 'Crag'][terrain() - 1]);
 function mapScreen() {
   const map = run.map;
   const bossLine = map.news === 'oline';
-  if (bossLine) flash = 'hurt';   // the hearts in the top bar take the hit
+  if (bossLine) hurtDelay = 2.6;   // the boss's line is drawn first, then the heart goes
   // Your line has just opened the lair: it opens on the page once the marks are drawn.
   const opening = map.open && !map.doorHeard;
   const reach = new Set(R.reachable(run));
@@ -373,6 +402,14 @@ function mapScreen() {
       kind === 'boss-mark' || kind === 'rock' || kind === 'empty' || kind === 'lair' ? null : h('span.label', {}, c.duel ? shortName(ENEMIES[c.duel.enemyId]) : NODE_NAME[kind]));
       if (c.mark === 'X') el.insertAdjacentHTML('beforeend', scribbleX(freshX === k));
       if (c.mark === 'O') el.insertAdjacentHTML('beforeend', scribbleO(lastO === k).replace('<svg ', `<svg style="--o-at: ${oAt}s" `));
+      // A mark in a line of three is spent: it fades, once the line is struck through.
+      const spentIn = (map.lines ?? []).find((l) => l.cells.includes(k) && l.mark === c.mark);
+      if (spentIn) {
+        el.classList.add('spent');
+        const freshLine = spentIn.cells.includes(spentIn.mark === 'X' ? freshX : lastO);
+        if (freshLine) el.style.setProperty('--spent-at', spentIn.mark === 'X' ? '1.3s' : '2.6s');
+        else el.classList.add('spent-old');
+      }
       if (c.mark === 'S') el.classList.add('scorched');
       if (freshS === k) el.classList.add('fresh-burn');
       // The square's own picture stays a moment and fades as the mark is drawn.
@@ -647,7 +684,7 @@ function duelScreen() {
       R.spendOnce(run, run.lastHand, duelState.spent.X);
       const draw = winner === 'X' && duelState.reason === 'full';
       duelState = null;
-      if (draw) { flash = 'hurt'; toast('−❤', 'bad'); }
+
       if (winner === 'X') {
         const res = R.duelWon(run, draw);
         if (res.kind === 'dead') { route(); return; }
@@ -660,8 +697,7 @@ function duelScreen() {
         const res = R.duelLost(run);
         if (res.kind === 'rematch') toast(t('🎟️ {relic}: try again!', { relic: RELICS.rematch.name }), 'good');
         else if (res.kind === 'dead') { /* recorded by the end screen */ }
-        else if (res.kind === 'lost') { toast('−❤', 'bad'); flash = 'hurt'; }
-        else if (res.kind === 'boss-out') flash = 'hurt';
+
       }
       route();
     },

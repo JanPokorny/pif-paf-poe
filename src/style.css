@@ -572,6 +572,10 @@ h1, h2, .btn.primary, .enemy-name, .card-name, .section-label { letter-spacing: 
 .map-strikes path { fill: none; stroke-width: 7; stroke-linecap: round; filter: url(#pencil); opacity: 0.85; }
 .map-strikes path.x { stroke: var(--blue); }
 .map-strikes path.o { stroke: var(--red); }
+/* Marks in a line of three are spent: they fade (the stroke through them stays). */
+.map-cell.spent .scribble { animation: spent-fade 0.6s ease-out var(--spent-at, 0s) both; }
+.map-cell.spent.spent-old .scribble { animation: none; opacity: 0.4; }
+@keyframes spent-fade { to { opacity: 0.4; } }
 .map-strikes path.fresh { stroke-dasharray: 100 102; stroke-dashoffset: 101; animation: draw 0.5s ease-out 0.7s forwards; }
 .map-strikes path.o.fresh { animation-delay: 2s; }
 .map-fog { display: flex; align-items: center; justify-content: center; font-family: var(--hand); font-size: 1.3rem; color: var(--pencil); opacity: 0.18; }
@@ -1046,3 +1050,10 @@ body:has(.duel) #toast.show { transform: translate(-50%, 0) rotate(-1deg); }
 @keyframes energy-glow { to { scale: 1.12; } }
 .topbar .energy.gained { animation: energy-gained 0.9s cubic-bezier(.3, 1.8, .5, 1); }
 @keyframes energy-gained { 0% { scale: 1; } 30% { scale: 1.8; color: var(--blue); } 100% { scale: 1; } }
+/* Hearts lost: the same burst in red, the heart shaking as a crack runs down it. */
+.heart-burst { color: var(--red); }
+.heart-burst-heart { position: relative; filter: drop-shadow(0 0 14px rgba(200, 40, 40, 0.5)); animation: heart-shake 0.5s ease-in-out 0.45s; }
+.heart-burst-heart .icon path { fill: var(--red); }
+.heart-crack { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; }
+.heart-crack path { fill: none; stroke: var(--paper, #fbf7ec); stroke-width: 1.3; stroke-linecap: round; stroke-linejoin: round; stroke-dasharray: 100 102; stroke-dashoffset: 101; animation: draw 0.35s ease-out 0.5s forwards; }
+@keyframes heart-shake { 20% { rotate: -9deg; } 40% { rotate: 8deg; } 60% { rotate: -6deg; } 80% { rotate: 4deg; } }

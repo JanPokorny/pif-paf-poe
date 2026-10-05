@@ -69,6 +69,7 @@ const SOUNDS = {
   coin: () => { tone(988, 0.06, { type: 'square', gain: 0.04 }); tone(1319, 0.12, { type: 'square', gain: 0.04, at: 0.06 }); },
   click: () => tone(440, 0.04, { type: 'triangle', gain: 0.04 }),
   heal: () => [440, 554, 659].forEach((f, i) => tone(f, 0.18, { gain: 0.07, at: i * 0.07 })),
+  hurt: () => { tone(330, 0.12, { type: 'square', gain: 0.05, slide: 0.7 }); scratch(0.1, 0.15); tone(196, 0.3, { type: 'triangle', gain: 0.08, at: 0.12, slide: 0.8 }); },
 };
 
 const BUZZ = { place: 12, win: [30, 40, 30], lose: 80, trick: 20 };
