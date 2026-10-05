@@ -43,8 +43,9 @@ function playDuel(run, cfg, piters, pblunder, rng) {
     applyAction(s, chooseAction(s, me ? { iterations: piters, blunder: pblunder, rng } : { iterations: duel.iters, blunder: duel.blunder, rng }));
   }
   if (!s.over) throw new Error('duel did not end');
+  const before = run.pouch.length;
   R.spendOnce(run, hand, s.spent.X);
-  return { won: s.winner === 'X', draw: s.winner === 'X' && s.reason === 'full' };
+  return { glassPlayed: before - run.pouch.length, won: s.winner === 'X', draw: s.winner === 'X' && s.reason === 'full' };
 }
 
 const takeStone = (run, st) => R.gainStone(run, st);
@@ -84,6 +85,7 @@ function playRun(spec) {
   const duels = [], hurts = [];
   let blow = null;   // what took the last heart
   let guard = 0, lines = 0, lineDeath = false;
+  const glass = { seen: new Set(), dropped: 0, played: 0 };
   if (spec.linedmg != null) R.MAPCFG.lineDamage = spec.linedmg;
   while (!run.over && guard++ < 3000) {
     const page = run.map, seen = page?.oLines ?? 0, hearts = run.hearts, screen = run.screen, act = run.act;
@@ -93,8 +95,14 @@ function playRun(spec) {
     step(screen);
     // --pouch N: an experiment, a pouch of at most N stones; past that the
     // weakest goes (the bot's judgement), so a run is a build, not a hoard.
-    if (spec.pouch) while (run.pouch.length > spec.pouch) {
-      const worst = run.pouch.slice().sort((a, b) => value(a) - value(b))[0];
+    // --pouchglass 0: glass stones sit outside the cap. --glass 0: no glass at
+    // all (what glass is worth). Counted: glass gained, played, dropped.
+    if (!spec.glass) run.pouch = run.pouch.filter((x) => !R.isOnce(x));
+    for (const x of run.pouch) if (R.isOnce(x) && !glass.seen.has(x.uid)) glass.seen.add(x.uid);
+    const counted = () => run.pouch.filter((x) => spec.pouchglass || !R.isOnce(x));
+    if (spec.pouch) while (counted().length > spec.pouch) {
+      const worst = counted().sort((a, b) => value(a) - value(b))[0];
+      if (R.isOnce(worst)) glass.dropped++;
       run.pouch = run.pouch.filter((x) => x !== worst);
     }
     if (run.map === page && page && page.oLines > seen) { lines += page.oLines - seen; if (run.over) lineDeath = true; }
@@ -120,7 +128,8 @@ function playRun(spec) {
       }
       case 'predual': case 'duel': {
         const d = run.pending.duel;
-        const { won, draw } = playDuel(run, null, spec.piters, spec.pblunder, rng);
+        const { won, draw, glassPlayed } = playDuel(run, null, spec.piters, spec.pblunder, rng);
+        glass.played += glassPlayed;
         duels.push({ act: run.act, enemy: d.enemyId, tier: d.tier, undead: d.tier === 'boss' && d.bossWins > 0, won });
         log.push(`${run.act}:${d.enemyId}${d.tier !== 'normal' ? '(' + d.tier + ')' : ''}${won ? '+' : '-'}`);
         if (won) R.duelWon(run, 0, draw); else R.duelLost(run);
@@ -169,7 +178,7 @@ function playRun(spec) {
   if (!run.over) throw new Error('run did not end: ' + run.screen);
   // JSON round trip must survive (the save format).
   JSON.parse(JSON.stringify(run));
-  return { seed: spec.seed, victory: run.victory, act: run.act, row: run.map.visited, duels, hurts, blow, hearts: run.hearts, lines, lineDeath, log: log.join(' '), relics: run.relics.join(','), pouch: run.pouch.map((s) => s.type).join(',') + ` energy ${R.energyOf(run)}`, energy: R.energyOf(run) };
+  return { seed: spec.seed, victory: run.victory, act: run.act, row: run.map.visited, duels, hurts, blow, hearts: run.hearts, lines, lineDeath, log: log.join(' '), relics: run.relics.join(','), pouch: run.pouch.map((s) => s.type).join(',') + ` energy ${R.energyOf(run)}`, energy: R.energyOf(run), glass: { gained: glass.seen.size, played: glass.played, dropped: glass.dropped } };
 }
 
 // Where runs end and what hurts: the hard parts of a climb.
@@ -207,7 +216,7 @@ if (!isMainThread) {
   parentPort.postMessage(out);
 } else {
   const runs = +arg('runs', 8), piters = +arg('piters', 150), pblunder = +arg('pblunder', 0.1), heat = +arg('heat', 0);
-  const specs = Array.from({ length: runs }, (_, i) => ({ seed: +arg('seed', 100) + i, piters, pblunder, heat, stay: arg('stay', 8), linedmg: arg('linedmg', null) == null ? null : +arg('linedmg'), relics: arg('relics', '') ? arg('relics').split(',') : [], pouch: +arg('pouch', 0), start: arg('start', '') ? arg('start').split(',') : null, energy: +arg('energy', 0), sees: arg('sees', null) == null ? null : +arg('sees'), strict: !!+arg('strict', 0) }));
+  const specs = Array.from({ length: runs }, (_, i) => ({ seed: +arg('seed', 100) + i, piters, pblunder, heat, stay: arg('stay', 8), linedmg: arg('linedmg', null) == null ? null : +arg('linedmg'), relics: arg('relics', '') ? arg('relics').split(',') : [], pouch: +arg('pouch', 0), start: arg('start', '') ? arg('start').split(',') : null, energy: +arg('energy', 0), sees: arg('sees', null) == null ? null : +arg('sees'), strict: !!+arg('strict', 0), glass: !!+arg('glass', 1), pouchglass: !!+arg('pouchglass', 1) }));
   const W = Math.min(cpus().length, runs);
   const chunks = Array.from({ length: W }, () => []);
   specs.forEach((s, i) => chunks[i % W].push(s));
@@ -222,5 +231,7 @@ if (!isMainThread) {
   const byAct = [1, 2, 3].map((a) => { const r = ok.filter((x) => x.act >= a); return r.length ? (r.reduce((n, x) => n + (x.act === a ? x.energy : 0), 0) / Math.max(1, r.filter((x) => x.act === a).length)).toFixed(1) : '-'; });
   console.log(`\nenergy where runs ended, by act: ${byAct.join(' / ')}`);
   report(ok);
+  const g = (k) => (ok.reduce((n, r) => n + r.glass[k], 0) / ok.length).toFixed(2);
+  console.log(`\nglass a run: gained ${g('gained')}, played ${g('played')}, dropped by the cap ${g('dropped')}`);
   console.log(`\n${ok.filter((r) => r.victory).length}/${ok.length} victories; mean act reached ${(ok.reduce((a, r) => a + r.act, 0) / ok.length).toFixed(2)}; boss lines ${(ok.reduce((a, r) => a + r.lines, 0) / ok.length).toFixed(1)} a run, the last blow in ${ok.filter((r) => r.lineDeath).length}; ${((Date.now() - t0) / 1000).toFixed(0)}s`);
 }
