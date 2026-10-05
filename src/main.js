@@ -115,9 +115,24 @@ function screen(...children) {
     app.scrollTop = 0;
     window.scrollTo(0, 0);
   }
+  if (run?.pouch && !run.over && R.overfull(run)) fitPouch();
   return el;
 }
 const KEEP_SCROLL = Symbol('keep scroll');
+
+// A part of the pouch past its limit (a stone that came without asking, as an
+// event's or a trade's): give one up, whichever, before going on.
+let fitting = false;
+function fitPouch() {
+  const k = R.overfull(run);
+  if (!k || fitting) return;
+  fitting = true;
+  const list = R.shelf(run, k);
+  const body = h('div.pouch-view', {}, h('h2', {}, t('Your pouch is full')),
+    h('p.dim', {}, k === 'glass' ? t('It holds {n} glass stones. Give one up.', { n: R.POUCH.glass }) : t('It holds {n} stones (glass apart). Give one up.', { n: R.POUCH.stones })),
+    h('div.stone-grid', {}, list.map((s) => h('button.pouch-slot', { onclick: () => { close(); fitting = false; R.dropStone(run, s.uid); sfx('click'); save(); fitPouch(); } }, stoneEl(R.asBrought(run, s), 'X', { cost: true }), h('span', {}, stoneName(R.asBrought(run, s)))))));
+  const close = modal(body, { dismissable: false, cls: 'tall' });
+}
 
 function relicStrip() {
   if (!run.relics.length) return null;
@@ -125,10 +140,13 @@ function relicStrip() {
 }
 
 function showPouch() {
+  const grid = (list) => h('div.stone-grid', {}, list.map((p) => R.asBrought(run, p)).map((s) => h('button.pouch-slot', { onclick: () => infoStone(s, 'X') }, stoneEl(s, 'X', { cost: true }), h('span', {}, stoneName(s)))));
+  const stones = R.shelf(run, 'stones'), glass = R.shelf(run, 'glass');
   const body = h('div.pouch-view', {},
-    h('h2', {}, t('Pouch · {n}', { n: run.pouch.length })),
-    run.pouch.length ? h('div.stone-grid', {}, run.pouch.map((p) => R.asBrought(run, p)).map((s) => h('button.pouch-slot', { onclick: () => infoStone(s, 'X') }, stoneEl(s, 'X', { cost: true }), h('span', {}, stoneName(s)))))
-      : h('p.dim', {}, t('No stones yet. You will use pebbles you find.')),
+    h('h2', {}, t('Stones · {n}/{max}', { n: stones.length, max: R.POUCH.stones })),
+    stones.length ? grid(stones) : h('p.dim', {}, t('No stones yet. You will use pebbles you find.')),
+    h('h2', {}, t('Glass stones · {n}/{max}', { n: glass.length, max: R.POUCH.glass })),
+    glass.length ? grid(glass) : h('p.dim', {}, t('No glass stones.')),
     h('h2', {}, t('Talismans')),
     run.relics.length ? h('div.relic-list', {}, run.relics.map((r) => h('button.relic-row', { onclick: () => infoRelic(r) }, h('span.relic-token.small', {}, relicArt(r)), h('span', {}, h('b', {}, RELICS[r].name), h('br'), RELICS[r].text)))) : h('p.dim', {}, t('No talismans yet.')),
     h('button.btn.wide.ghost', { onclick: () => close() }, t('Close')));
@@ -627,14 +645,13 @@ function duelScreen() {
     onEnd: (winner) => {
       // One-shot stones played in the duel are gone from the pouch.
       R.spendOnce(run, run.lastHand, duelState.spent.X);
-      const bonus = R.goldFromLine(duelState);   // the gold stones in your line pay
       const draw = winner === 'X' && duelState.reason === 'full';
       duelState = null;
       if (draw) { flash = 'hurt'; toast('−❤', 'bad'); }
       if (winner === 'X') {
-        const res = R.duelWon(run, bonus, draw);
+        const res = R.duelWon(run, draw);
         if (res.kind === 'dead') { route(); return; }
-        if (res.kind === 'boss-continue') { if (bonus) toast(t('Gold stones: +{n} gold', { n: bonus }), 'good'); save(); moonrise(ENEMIES[duel.enemyId], route); return; }
+        if (res.kind === 'boss-continue') { save(); moonrise(ENEMIES[duel.enemyId], route); return; }
         if (res.kind === 'reward' && duel.tier === 'boss') {
           meta.beaten = { ...(meta.beaten ?? {}), [duel.enemyId]: true };
           saveMeta();
@@ -662,7 +679,20 @@ function showDuelMenu() {
 // ── Rewards ─────────────────────────────────────────────────────────────────
 
 // Take a stone into the pouch: it holds any number.
-function takeStone(s, done) { R.gainStone(run, s); sfx('coin'); done(true); }
+// Take a stone into the pouch; with its part of the pouch full, give one up
+// for it, or keep what you have. Calls done(taken).
+function takeStone(s, done) {
+  if (R.hasRoom(run, s)) { R.gainStone(run, s); sfx('coin'); done(true); return; }
+  const glass = R.shelfOf(s) === 'glass';
+  const list = R.shelf(run, R.shelfOf(s));
+  const body = h('div.pouch-view', {}, h('h2', {}, t('Your pouch is full')),
+    h('div.cards.one', {}, stoneCard(s, { onclick: () => infoStone(s, 'X') })),
+    h('p.dim', {}, glass ? t('It holds {n} glass stones. Give one up for the {stone}?', { n: R.POUCH.glass, stone: stoneName(s) })
+      : t('It holds {n} stones (glass apart). Give one up for the {stone}?', { n: R.POUCH.stones, stone: stoneName(s) })),
+    h('div.stone-grid', {}, list.map((x) => h('button.pouch-slot', { onclick: () => { close(); R.dropStone(run, x.uid); R.gainStone(run, s); sfx('coin'); save(); done(true); } }, stoneEl(R.asBrought(run, x), 'X', { cost: true }), h('span', {}, stoneName(R.asBrought(run, x)))))),
+    h('button.btn.wide.ghost', { onclick: () => { close(); done(false); } }, t('Keep my stones')));
+  const close = modal(body, { dismissable: false, cls: 'tall' });
+}
 
 function pickFromPouch(prompt, cb, { filter = () => true, cancel = t('Cancel') } = {}) {
   const list = run.pouch.filter(filter);
@@ -688,7 +718,6 @@ function rewardScreen() {
   const rw = run.pending;
   const parts = [h('h1.reward-title', {}, rw.tier === 'boss' ? t('Boss defeated!') : t('Victory!'))];
   if (rw.gold) parts.push(h('div.reward-gold', {}, h('span', { html: icon('coin') }), t('+{n} gold', { n: rw.gold })));
-  if (rw.goldStones) parts.push(h('p.dim.reward-note', {}, t('{n} of it from your gold stones.', { n: rw.goldStones })));
   if (rw.energy) parts.push(h('div.reward-gold.reward-energy', {}, h('span', { html: icon('energy') }), t('+{n} energy', { n: rw.energy })));
   if (rw.relic && !rw.taken.relic) {
     R.gainRelic(run, rw.relic);
@@ -712,13 +741,16 @@ function rewardScreen() {
   if (want.stone) rows.push(radioRow(rw.sel.stone, rw.stones.map((st, k) => [k, stoneCard(st, { onclick: () => infoStone(st, 'X', '', pick('stone', k)) })])));
   rows.forEach((r, k) => { if (k) parts.push(h('div.and-sep', {}, h('span.dash'), t('and'), h('span.dash'))); parts.push(r); });
   const ready = (!want.boss || rw.sel.boss !== undefined) && (!want.stone || rw.sel.stone !== undefined);
+  // Each stone in turn, as each may ask what to give up for it.
   function take() {
-    if (want.once) R.gainStone(run, rw.once);
-    if (want.boss) R.gainRelic(run, rw.sel.boss);
-    if (want.stone) R.gainStone(run, rw.stones[rw.sel.stone]);
-    sfx('coin');
-    R.leaveNode(run);
-    route();
+    if (want.boss && !rw.taken.boss) { R.gainRelic(run, rw.sel.boss); rw.taken.boss = true; sfx('coin'); }
+    const next = [want.once && !rw.taken.once && 'once', want.stone && !rw.taken.stone && 'stone'].filter(Boolean);
+    const step = () => {
+      const k = next.shift();
+      if (!k) { save(); R.leaveNode(run); route(); return; }
+      takeStone(k === 'once' ? rw.once : rw.stones[rw.sel.stone], () => { rw.taken[k] = true; save(); step(); });
+    };
+    step();
   }
   parts.push(h('div.sticky-bottom', {}, h('button.btn.wide.big.primary', {
     disabled: !ready || undefined,
@@ -760,12 +792,13 @@ function shopScreen(redraw = false) {
   // Every ware opens its card first; the card's button buys it.
   const offer = (cost, fn) => ({ label: [t('Buy'), h('span.price-tag', {}, iconEl('coin'), cost)], disabled: run.gold < cost, run: () => buy(cost, fn) });
   screen(...(redraw ? [KEEP_SCROLL] : []), topBar(), h('div.page.shop', {},
-    h('div.section-label', {}, t('Stones')),
+    // How full each part of the pouch is: past it, a stone bought means one given up.
+    h('div.section-label', {}, t('Stones · {n}/{max}', { n: R.shelf(run, 'stones').length, max: R.POUCH.stones })),
     h('div.cards.scroll', {}, shop.stones.map((s) => stoneCard(s, {
       price: s.price, sold: s.sold, dear: run.gold < s.price,
       onclick: () => infoStone(s, 'X', '', offer(s.price, (pay) => takeStone(s, (ok) => { if (ok) { s.sold = true; pay(); } }))),
     }))),
-    h('div.section-label', {}, t('Glass stones')),
+    h('div.section-label', {}, t('Glass stones · {n}/{max}', { n: R.shelf(run, 'glass').length, max: R.POUCH.glass })),
     h('div.cards.scroll', {}, (shop.once ?? []).map((x) => stoneCard(x, {
       price: x.price, sold: x.sold, dear: run.gold < x.price,
       onclick: () => infoStone(x, 'X', '', offer(x.price, (pay) => takeStone(x, (ok) => { if (ok) { x.sold = true; pay(); } }))),
@@ -842,31 +875,13 @@ function craftFlow(done) {
   const closePick = modal(pickBody, { dismissable: false, cls: 'tall' });
 }
 
-// Make one stone of the pouch marble or gold, for `cost` gold. Calls done(text), or done(null).
-function polishFlow(mat, cost, done) {
-  pickFromPouch(mat === 'marble' ? t('Which stone in marble?') : t('Which stone in gold?'), (s) => {
-    if (!s) return done(null);
-    run.gold -= cost;
-    R.polish(run, s.uid, mat);
-    sfx('coin'); save();
-    done(t(mat === 'marble' ? 'Your {stone} is marble now.' : 'Your {stone} is gold now.', { stone: stoneName(s) }));
-  }, { filter: (x) => R.polishable(run).includes(x), cancel: t('Never mind') });
-}
-
 function craftScreen() {
   const leave = () => { R.leaveNode(run); route(); };
   const made = run.pending.made;
   const did = (text) => { if (text) { run.pending.made = text; save(); craftScreen(); } };
-  // One job a visit: a trade, or a stone made marble or gold.
-  const price = (mat) => R.price(run, R.POLISH[mat]);
+  // One job a visit: a trade.
   const jobs = [
     { label: t('Trade two stones'), detail: t('Two stones → one costing 1 energy more than the cheaper.'), ok: R.craftable(run).length >= 2, go: () => craftFlow(did) },
-    ...R.MATERIALS.map((mat) => ({
-      label: mat === 'marble' ? t('Make a stone marble') : t('Gild a stone'),
-      detail: t(mat === 'marble' ? 'Pay {n} gold: a stone of yours goes anywhere, whatever their stones restrict.' : 'Pay {n} gold: a stone of yours pays 10 gold in your winning line.', { n: price(mat) }),
-      ok: run.gold >= price(mat) && R.polishable(run).length > 0,
-      go: () => polishFlow(mat, price(mat), did),
-    })),
   ];
   screen(topBar(), h('div.page.rest', {},
     h('div.campfire', { html: icon('relic-anvil') }),
@@ -915,8 +930,6 @@ function eventScreen() {
       s.type = n.type;
       resolve(t('It bubbles and hisses… and becomes a {stone}!', { stone: stoneName(s) }));
     })),
-    canPolish: () => R.polishable(run).length > 0,
-    polish: (mat, cost) => new Promise((resolve) => polishFlow(mat, cost, (text) => resolve(text ?? t('You change your mind.')))),
     duplicate: () => new Promise((resolve) => pickFromPouch(t('Duplicate which stone?'), (s) => {
       if (!s) return resolve(t('The reflection fades.'));
       R.gainStone(run, { type: s.type });

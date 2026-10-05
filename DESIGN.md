@@ -149,21 +149,14 @@ Every stone's card shows an example computed by the engine.
   offered only for kinds in your pouch. A + stone has a small + in the corner of its face.
   Magnet has none: a Magnet reaching its whole row and column narrowed the enemy less than one
   reaching only beside it.
-- **Materials.** A stone is plain, or one of three materials:
-  - **glass** (a dashed outline): played once, then gone from the pouch; always the + form where
-    there is one, always 1 energy. The one-use stones of old are glass.
-  - **marble** (a cut, many-sided outline): goes anywhere, whatever the other side's stones
-    restrict (conditions and boss rules still hold). One energy more. Enemies from act 2 on
-    sometimes bring it.
-  - **gold** (a glinting gold rim): +10 gold for each gold stone in your winning three in a row.
-    One energy more. Only yours.
-
-  Marble and gold turn up now and then among rewards and in the shop (dearer there), at the
-  workshop (made from a stone of yours, for gold, in place of a trade) and from the Sculptor
-  event. A trade at the workshop keeps the material of what went in. + talismans upgrade them
-  as any stone.
+- **Glass.** A stone is plain or **glass** (a dashed outline): played once, then gone from the
+  pouch; always the + form where there is one, always 1 energy. The one-use stones of old are
+  glass. (Marble and gold materials were tried and dropped: neither earned its extra energy,
+  see docs/HARMONY.md.)
+- **The pouch has limits**: 6 stones and, apart, 6 glass ones (`POUCH` in run.js). A stone
+  past a limit asks which to give up for it, or to keep what you have; a run is a build, not a
+  hoard.
 - **Mountain is only a wall**: nothing moves it, but it obeys restrictions like any stone.
-  Going anywhere is marble's now.
 - **Rarity follows power** (`node tools/lab.mjs matrix`, `power`, `effects`), and power decides
   the energy cost.
 

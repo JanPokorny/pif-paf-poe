@@ -4,7 +4,7 @@
 // The run is one JSON-serialisable object. Its random stream is part of it, so
 // a saved run resumes exactly.
 
-import { STONES, CONDS, winningLine } from './engine.js';
+import { STONES, CONDS } from './engine.js';
 import {
   RELICS, RELIC_TYPES, BOSS_RELICS, PLUS_STONES, ENEMIES, ACTS, EVENTS, enemiesOf, EASY_OPENERS,
   STONE_PRICE, ONCE_PRICE, RELIC_PRICE, REWARD_STONES, ONCE_STONES,
@@ -53,39 +53,30 @@ const ENEMY_STONES = 5;
 // Every run starts with a Shift: the first duels are never plain tic-tac-toe.
 export const START = { pouch: ['shift'], hearts: 6, gold: 30, energy: 1 };
 export const COST = { starter: 0, common: 1, uncommon: 2, rare: 3 };
-// What a stone costs to bring: by its rarity. Glass costs 1 whatever it is;
-// marble and gold one more than the plain stone.
+// What a stone costs to bring: by its rarity. Glass (played once and gone)
+// costs 1 whatever it is.
 export const costOf = (s) => {
   const type = s?.type ?? s, st = STONES[type];
   if (s?.once || st?.once) return 1;
-  return (COST[st?.rarity] ?? 0) + (s?.mat ? 1 : 0);
+  return COST[st?.rarity] ?? 0;
 };
-// Materials: glass (`once`) is played once and gone; marble goes anywhere the
-// other side's stones would keep it out of; gold pays when in your winning line.
-export const MATERIALS = ['marble', 'gold'];
-export const GOLD_PAY = 10;   // for each gold stone in your three in a row
-export const POLISH = { marble: 30, gold: 40 };   // a workshop's price to make a stone one
+// The pouch holds so many lasting stones and so many glass ones, each apart:
+// a run is a build, not a hoard. A stone past the limit means giving one up.
+export const POUCH = { stones: 6, glass: 6 };
 export const energyOf = (run) => (run.energy ?? START.energy) + (has(run, 'deep-pockets') ? 1 : 0);
 export const handCost = (run, uids) => uids.reduce((n, u) => n + costOf(run.pouch.find((x) => x.uid === u)), 0);
 
-// A stone in the pouch: {uid, type}, for glass `plus` and `once`, and its `mat`.
-const stone = (run, s) => ({ type: s.type ?? s, uid: run.nextUid++, ...(s.plus && { plus: true }), ...(s.once && { once: true }), ...(s.mat && { mat: s.mat }) });
-// Now and then a stone on offer comes in marble or gold.
-const withMat = (run, s) => {
-  const x = rand(run);
-  return x < 0.1 ? { ...s, mat: 'marble' } : x < 0.18 ? { ...s, mat: 'gold' } : s;
-};
-// A stone that can still be made marble or gold: not glass, not one already.
-export const polishable = (run) => run.pouch.filter((s) => !isOnce(s) && !s.mat);
-export function polish(run, uid, mat) {
-  const s = run.pouch.find((x) => x.uid === uid);
-  if (s) s.mat = mat;
-}
-// Gold earned by the gold stones in a duel's winning line of yours.
-export function goldFromLine(state) {
-  if (state.winner !== 'X' || state.reason !== 'line') return 0;
-  const line = winningLine(state, 'X') ?? [];
-  return line.filter((i) => state.board[i]?.mat === 'gold').length * GOLD_PAY;
+// A stone in the pouch: {uid, type}, for glass `plus` and `once`.
+const stone = (run, s) => ({ type: s.type ?? s, uid: run.nextUid++, ...(s.plus && { plus: true }), ...(s.once && { once: true }) });
+// Which part of the pouch a stone goes in, what is in it, and whether it has room.
+export const shelfOf = (s) => (isOnce(s) ? 'glass' : 'stones');
+export const shelf = (run, k) => run.pouch.filter((x) => shelfOf(x) === k);
+export const hasRoom = (run, s) => shelf(run, shelfOf(s)).length < POUCH[shelfOf(s)];
+// The part of the pouch past its limit, if any.
+export const overfull = (run) => ['stones', 'glass'].find((k) => shelf(run, k).length > POUCH[k]) ?? null;
+export function dropStone(run, uid) {
+  run.pouch = run.pouch.filter((x) => x.uid !== uid);
+  if (run.lastHand) run.lastHand = run.lastHand.filter((u) => u !== uid);
 }
 
 export function newRun({ seed = (Math.random() * 2 ** 31) | 0, heat = 0 } = {}) {
@@ -123,8 +114,8 @@ const craftTier = (a, b) => {
   const low = Math.min(TIERS.indexOf(STONES[a.type].rarity), TIERS.indexOf(STONES[b.type].rarity));
   return TIERS[Math.min(TIERS.length - 1, low + 1)];
 };
-// What the new stone will cost: its tier's energy, one more in marble or gold.
-export const craftCost = (a, b) => COST[craftTier(a, b)] + (a.mat || b.mat ? 1 : 0);
+// What the new stone will cost: its tier's energy.
+export const craftCost = (a, b) => COST[craftTier(a, b)];
 export function craftChoices(run, a, b) {
   const tier = craftTier(a, b);
   const out = [];
@@ -135,11 +126,9 @@ export function craftChoices(run, a, b) {
   return out;
 }
 // Trade the two stones (by uid) for the one chosen.
-// What it is made of goes into the new stone: marble or gold, as either was.
 export function craft(run, uidA, uidB, result) {
-  const mat = run.pouch.find((s) => s.uid === uidA)?.mat ?? run.pouch.find((s) => s.uid === uidB)?.mat;
   run.pouch = run.pouch.filter((s) => s.uid !== uidA && s.uid !== uidB);
-  return gainStone(run, { ...result, ...(mat && { mat }) });
+  return gainStone(run, result);
 }
 // The stones a workshop will take: all of them.
 export const craftable = (run) => run.pouch;
@@ -169,7 +158,7 @@ export const MAX_POWER = 2;
 // a line of the boss's Os costs you.
 // `strict`: an experiment, off -- `sees` alone decides whether your two is blocked
 // (as it is, the boss's wish to spoil your lines blocks it anyway).
-export const MAPCFG = { sees: 0.75, lineDamage: 1, strict: false, enemyMarble: true };
+export const MAPCFG = { sees: 0.75, lineDamage: 1, strict: false };
 // Rocks: a lattice -- (x + 3y) mod 7 in two neighbouring classes -- that cuts
 // every row, column and diagonal into runs between two and five squares long,
 // so an open two is rarely a double threat and a line has to be set up; plus a
@@ -639,9 +628,7 @@ function rollEnemyHand(run, enemy, tier, context) {
   if (context.easy) size = Math.min(size, 1);
   const hand = enemy.core.slice(0, size);
   while (hand.length < size) hand.push(pick(run, enemy.pool));
-  // Later acts' enemies sometimes bring marble (never gold: it pays only you).
-  const marble = [0, 0.15, 0.3][Math.min(2, Math.max(0, (enemy.act || run.act) - 1))];
-  return hand.map(stoneOf).map((s) => (rand(run) < marble && MAPCFG.enemyMarble ? { ...s, mat: 'marble' } : s));
+  return hand.map(stoneOf);
 }
 
 
@@ -701,7 +688,7 @@ export const QUIRKS = {
 // The chosen stones, and Pebbles up to a hand of four.
 export function playerHand(run, uids) {
   const hand = uids.map((u) => run.pouch.find((s) => s.uid === u)).filter(Boolean)
-    .map((s) => ({ type: s.type, ...(upgraded(run, s) && { plus: true }), ...(s.once && { once: true }), ...(s.mat && { mat: s.mat }) }));
+    .map((s) => ({ type: s.type, ...(upgraded(run, s) && { plus: true }), ...(s.once && { once: true }) }));
   while (hand.length < HAND) hand.push({ type: 'pebble' });
   return hand;
 }
@@ -780,15 +767,14 @@ export function enterNode(run, key) {
 
 // ── Duel results ────────────────────────────────────────────────────────────
 
-// `bonus`: gold the gold stones of the winning line earned. `draw`: the board
-// filled up -- it counts as won, but costs a heart first (the last one ends the run).
-export function duelWon(run, bonus = 0, draw = false) {
+// `draw`: the board filled up -- it counts as won, but costs a heart first
+// (the last one ends the run).
+export function duelWon(run, draw = false) {
   const duel = run.pending.duel;
   if (draw && hurt(run, 1)) return { kind: 'dead' };
   run.stats.won++;
   if (duel.tier === 'boss' && duel.bossWins + 1 < BOSS_LIVES) {
     // A boss is beaten twice, and rises again with its harder rules.
-    run.gold += bonus; run.stats.gold += bonus;
     run.pending = { kind: 'duel', duel: prepareDuel(run, duel.enemyId, { bossRound: duel.bossRound + 1, bossWins: duel.bossWins + 1 }) };
     run.screen = 'predual';
     return { kind: 'boss-continue' };
@@ -800,10 +786,9 @@ export function duelWon(run, bonus = 0, draw = false) {
   if (duel.event === 'thief') gold += 45;
   if (duel.event === 'nightowl') gold += 30;
   if (has(run, 'lucky-coin')) gold += 8;
-  gold += bonus;
   run.gold += gold;
   run.stats.gold += gold;
-  const reward = { kind: 'reward', gold, goldStones: bonus, stones: [], once: null, relic: null, relicChoice: null, tier: duel.tier, taken: {} };
+  const reward = { kind: 'reward', gold, stones: [], once: null, relic: null, relicChoice: null, tier: duel.tier, taken: {} };
   if (duel.event !== 'thief') reward.stones = stoneChoices(run, duel.tier);
   const onceChance = duel.tier === 'normal' ? 0.3 : duel.tier === 'event' ? 0 : 0.7;
   if (rand(run) < onceChance) reward.once = randomOnce(run);
@@ -906,8 +891,7 @@ export function stoneChoices(run, tier = 'normal', rarity = null, count = 3) {
   const out = [];
   for (let guard = 0; out.length < n && guard < 50; guard++) {
     const s = randomStone(run, rarity, tier);
-    // A choice promised at a given energy (a rarity asked for) stays plain.
-    if (!out.some((o) => o.type === s.type)) out.push(rarity ? s : withMat(run, s));
+    if (!out.some((o) => o.type === s.type)) out.push(s);
   }
   return out;
 }
@@ -980,8 +964,7 @@ export function makeShop(run) {
   for (const r of rarities) {
     let s;
     for (let g = 0; g < 20; g++) { s = randomStone(run, r); if (!stones.some((o) => o.type === s.type)) break; }
-    s = withMat(run, s);
-    stones.push({ ...s, price: price(run, STONE_PRICE[r] * (s.mat ? 1.4 : 1)), sold: false });
+    stones.push({ ...s, price: price(run, STONE_PRICE[r]), sold: false });
   }
   const once = [];
   for (const r of ['common', 'common', 'uncommon', 'rare']) {

@@ -320,7 +320,7 @@ def('magpie', {
   apply(s, pos, a, cell) {
     const hand = s.hands[other(cell.player)];
     const [taken] = hand.splice(hand.findIndex((h) => h.type === a.stone), 1);
-    s.hands[cell.player].push({ type: taken.type, ...(taken.mat && { mat: taken.mat }) });
+    s.hands[cell.player].push({ type: taken.type });
   },
 });
 
@@ -432,8 +432,6 @@ export function allowedSquares(s) {
     if (s.dictate?.kind === 'column') narrow((i) => col(i) !== s.dictate.value);
   }
   if (s.mods[p].freeFirst && s.placements[p] === 0) return pool;
-  // Marble goes anywhere the other side's stones would keep it out of.
-  if (s.selected?.mat === 'marble') return pool;
   const rs = restrictionsOn(s, p);
   if (!rs.length) return pool;
   const scores = pool.map((i) => rs.reduce((n, r) => n + (r.st.restrict(i, r.pos) ? 1 : 0), 0));
@@ -451,7 +449,7 @@ function move(s, from, to) {
 // Back into its owner's hand, Pebbles too.
 function returnToHand(s, i) {
   const c = s.board[i];
-  s.hands[c.player].push({ type: c.type, ...(c.mat && { mat: c.mat }) });
+  s.hands[c.player].push({ type: c.type });
   s.board[i] = null;
 }
 
@@ -488,16 +486,15 @@ function slideAll(s, dir, holdId) {
 
 // ── State ───────────────────────────────────────────────────────────────────
 
-// A stone for a hand: 'shift', 'shift+' (its + form), or {type, plus, once, mat}.
-// `once` is glass: played once, then gone. `mat` is 'marble' (it goes anywhere,
-// whatever the other side's stones restrict) or 'gold' (it pays when in a winning line).
+// A stone for a hand: 'shift', 'shift+' (its + form), or {type, plus, once}.
+// `once` is glass: played once, then gone.
 const norm = (h) => {
   const o = typeof h === 'string' ? { type: h.replace(/\+$/, ''), plus: h.endsWith('+') } : h;
-  return { type: o.type, ...(o.plus && { plus: true }), ...(o.once && { once: true }), ...(o.mat && { mat: o.mat }) };
+  return { type: o.type, ...(o.plus && { plus: true }), ...(o.once && { once: true }) };
 };
-// What a stone in hand is, for telling kinds apart: 'shift+!@marble'.
-export const handKey = (h) => h.type + (h.plus ? '+' : '') + (h.once ? '!' : '') + (h.mat ? '@' + h.mat : '');
-const selectOf = (h) => ({ stone: h.type, ...(h.plus && { plus: true }), ...(h.once && { once: true }), ...(h.mat && { mat: h.mat }) });
+// What a stone in hand is, for telling kinds apart: 'shift+!'.
+export const handKey = (h) => h.type + (h.plus ? '+' : '') + (h.once ? '!' : '');
+const selectOf = (h) => ({ stone: h.type, ...(h.plus && { plus: true }), ...(h.once && { once: true }) });
 const noMods = () => ({});
 
 export function createGame({
@@ -731,7 +728,7 @@ export function applyAction(s, a) {
     case 'select': {
       const owner = a.from ?? p;
       const hand = s.hands[owner];
-      const k = hand.findIndex((h) => h.type === a.stone && !!h.plus === !!a.plus && !!h.once === !!a.once && (h.mat ?? null) === (a.mat ?? null));
+      const k = hand.findIndex((h) => h.type === a.stone && !!h.plus === !!a.plus && !!h.once === !!a.once);
       if (k < 0) throw new Error(`${owner} holds no ${a.stone}${a.plus ? '+' : ''}`);
       s.selected = hand.splice(k, 1)[0];
       s.from = a.from ?? null;
@@ -750,7 +747,7 @@ export function applyAction(s, a) {
         }
       }
       s.placedId = s.nextId++;
-      s.board[a.pos] = { player: p, type: stone.type, id: s.placedId, ...(stone.plus && { plus: true }), ...(s.selected.mat && { mat: s.selected.mat }) };
+      s.board[a.pos] = { player: p, type: stone.type, id: s.placedId, ...(stone.plus && { plus: true }) };
       s.placedAt = a.pos;
       s.placements[p]++;
       afterPlacement(s);

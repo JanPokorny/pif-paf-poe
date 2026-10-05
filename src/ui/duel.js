@@ -41,7 +41,7 @@ function stageOf(cands) {
 // A hand as one entry per kind of stone (a + form a kind of its own): {st, k (its first index), n}.
 const sameKind = (a, b) => handKey(a) === handKey(b);
 // The key of a stone in the enemy's hand, as a hand slot: 'O:shift' or 'O:shift+'.
-const enemyKey = (st) => `O:${handKey(st)}`;   // '!': glass, '@marble': its material
+const enemyKey = (st) => `O:${handKey(st)}`;   // '!': glass
 function groupHand(hand) {
   const out = [];
   hand.forEach((st, k) => {
@@ -179,8 +179,8 @@ export function mountDuel(root, opts) {
 
   const slotStone = (key) => {
     if (typeof key !== 'string') return (snapshot ?? state).hands.X[key];
-    const m = key.slice(2).match(/^(.*?)(\+?)(!?)(?:@(\w+))?$/);
-    return { type: m[1], ...(m[2] && { plus: true }), ...(m[3] && { once: true }), ...(m[4] && { mat: m[4] }) };
+    const m = key.slice(2).match(/^(.*?)(\+?)(!?)$/);
+    return { type: m[1], ...(m[2] && { plus: true }), ...(m[3] && { once: true }) };
   };
   // Which select action a hand slot stands for: a hand index, or 'O:type'
   // for a stone taken from the enemy's hand (Open Hands).
@@ -188,7 +188,7 @@ export function mountDuel(root, opts) {
     const acts = legalActions(s);
     const st = typeof key === 'string' ? slotStone(key) : s.hands.X[key];
     const from = typeof key === 'string' ? 'O' : undefined;
-    return st && acts.find((a) => a.from === from && sameKind({ type: a.stone, plus: a.plus, once: a.once, mat: a.mat }, st));
+    return st && acts.find((a) => a.from === from && sameKind({ type: a.stone, plus: a.plus, once: a.once }, st));
   };
 
   function renderHands(s, shown = s) {

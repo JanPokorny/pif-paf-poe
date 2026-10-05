@@ -898,19 +898,6 @@ body:has(.duel) #toast.show { transform: translate(-50%, 0) rotate(-1deg); }
 .stone.on-board.moving { animation: preview-pulse 1.1s ease-in-out infinite; }
 @keyframes preview-pulse { 50% { opacity: 0.35; } }
 
-/* ── Materials ─────────────────────────────────────────────────────────────
-   Glass is the dashed one-use stone (.once). Marble: a cut, many-sided outline
-   with a faint vein. Gold: a gold rim that catches the light now and then. */
-.stone .marble-frame { display: none; position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; filter: url(#ink); }
-.stone.marble::before { border-color: transparent; background: none; }
-.stone.marble .marble-frame { display: block; }
-.stone.marble .marble-frame path { fill: var(--blue-wash); stroke: currentColor; stroke-width: 5; stroke-linejoin: round; vector-effect: non-scaling-stroke; }
-.stone.marble.O .marble-frame path { fill: var(--red-wash); }
-.stone.marble .marble-frame path { stroke-width: 2.5px; }
-.stone.marble .marble-frame .vein { fill: none; stroke-width: 1px; opacity: 0.35; }
-.stone.gold::before { border-color: #c9940f; box-shadow: 0 0 0 1.5px #f2cf5b, 0 0 7px rgba(240, 190, 40, 0.55); animation: gold-glint 3.2s ease-in-out infinite; }
-@keyframes gold-glint { 0%, 70%, 100% { box-shadow: 0 0 0 1.5px #f2cf5b, 0 0 5px rgba(240, 190, 40, 0.45); } 80% { box-shadow: 0 0 0 2px #fff3b8, 0 0 12px rgba(255, 210, 60, 0.9); } }
-.reward-note { text-align: center; margin: -4px 0 0; font-size: 0.95rem; }
 
 /* ── Cards on ruled paper ───────────────────────────────────────────────────
    An info card's text sits on the sheet's rules: every line is one 26px rule

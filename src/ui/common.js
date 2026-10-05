@@ -2,7 +2,7 @@
 
 import { STONES, CONDS, RULES, createGame, legalActions, applyAction, cloneState, allowedSquares, specOf } from '../engine.js';
 import { RELICS } from '../content.js';
-import { costOf, GOLD_PAY as R_GOLD } from '../run.js';
+import { costOf } from '../run.js';
 import { icon, ICONS } from '../icons.js';
 import { t, lang, setLang, LANGS } from '../i18n.js';
 
@@ -29,9 +29,6 @@ export function h(tag, attrs = {}, ...children) {
 // A hand-drawn star sticker (unused while no stone is special enough).
 // A + stone: a small + drawn in the stone's own ink, in the corner of its face.
 const STAR = '<svg class="badge-plus" viewBox="-10 -10 20 20" aria-hidden="true"><path d="M0 -6.5 V6.5 M-6.5 0 H6.5"/></svg>';
-
-// Marble: a cut, many-sided outline in place of the drawn one (shown by CSS).
-const MARBLE = '<svg class="marble-frame" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true"><path d="M29 3 L71 3 L97 29 L97 71 L71 97 L29 97 L3 71 L3 29 Z"/><path class="vein" d="M14 64 C 30 56, 38 70, 56 58 S 80 46, 90 52"/></svg>';
 
 // Pen marks, as SVG strings in a 0..100 box: an X in two strokes, an O in one
 // loop that overshoots where it closes. `fresh` draws them in.
@@ -84,11 +81,9 @@ export function updateStone(el, s, player, opts = {}) {
   el.classList.toggle('mini', !!opts.mini);
   el.classList.toggle('once', !!(s.once || STONES[s.type]?.once));
   el.classList.toggle('plus', !!(s.plus && STONES[s.type]?.plus));
-  el.classList.toggle('marble', s.mat === 'marble');
-  el.classList.toggle('gold', s.mat === 'gold');
   if (el.dataset.type !== s.type || !el.firstChild) {
     el.dataset.type = s.type;
-    el.innerHTML = MARBLE + icon(s.type, 'glyph') + STAR + '<span class="tape"></span>';
+    el.innerHTML = icon(s.type, 'glyph') + STAR + '<span class="tape"></span>';
   }
 }
 
@@ -448,13 +443,11 @@ export function infoStone(s, player = 'X', extra = '', action = null) {
   const body = h('div.info-stone', {},
     h('div.info-head', {}, stoneEl(s, player), h('div', {},
       h('div.info-name', {}, stoneName(s)),
-      // What it is made of, if anything; how rare it is stays the game's business.
-      once || s.mat ? h('div.info-rarity', {}, once ? t('glass') : t(s.mat)) : null)),
+      // Glass says so; how rare it is stays the game's business.
+      once ? h('div.info-rarity', {}, t('glass')) : null)),
     h('p', {}, stoneText(s)),
     stoneDemo(s),
     once ? h('p.info-plus', {}, t('It is glass: once played, it is gone from your pouch.')) : null,
-    s.mat === 'marble' ? h('p.info-plus', {}, t('It is marble: it goes anywhere, whatever the other side\'s stones restrict.')) : null,
-    s.mat === 'gold' ? h('p.info-plus', {}, t('It is gold: +{n} gold when it is in your winning three in a row.', { n: R_GOLD })) : null,
     extra ? h('p.info-extra', {}, extra) : null,
     infoButtons(() => close(), action));
   const close = modal(body);

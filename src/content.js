@@ -365,17 +365,6 @@ export const EVENTS = [
     ],
   },
   {
-    id: 'sculptor', title: 'The Sculptor', emoji: '🏛️',
-    text: 'A sculptor dusts off a block of marble. "I can dress one of your stones. For a price."',
-    choices: [
-      { label: 'Make a stone marble', detail: 'Pay 20 gold: a stone of yours goes anywhere, whatever their stones restrict.', can: (r, api) => r.gold >= 20 && api.canPolish(),
-        act: (r, api) => api.polish('marble', 20) },
-      { label: 'Gild a stone', detail: 'Pay 30 gold: a stone of yours pays 10 gold in your winning line.', can: (r, api) => r.gold >= 30 && api.canPolish(),
-        act: (r, api) => api.polish('gold', 30) },
-      { leave: true, label: 'Walk on', act: () => t('The sculptor goes back to the marble.') },
-    ],
-  },
-  {
     id: 'nightowl', title: 'The Night Owl', emoji: '🦉',
     text: '"Hoo. A late game, traveller? I play only the best — and I pay the best."',
     choices: [

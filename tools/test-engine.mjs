@@ -582,17 +582,11 @@ test('Mind Control: the stone named is played, and works', () => {
   expectAt(s, { 1: 0 });   // pushed off the top edge
   assert.ok(!s.board[4].hushed);
 });
-test('Mountain obeys restrictions, a marble stone does not; Relocate cannot move a Mountain', () => {
-  const s = G({ handX: ['mountain', { type: 'shift', mat: 'marble' }] });
+test('Mountain obeys restrictions; Relocate cannot move a Mountain', () => {
+  const s = G({ handX: ['mountain'] });
   lay(s, { 0: 'O magnet' });
   applyAction(s, { type: 'select', stone: 'mountain' });
   sameSet(allowedSquares(s), [1, 3]);
-  s.hands.X.push(s.selected); s.selected = null; s.phase = 'select';
-  assert.ok(legalActions(s).some((a) => a.stone === 'shift' && a.mat === 'marble'));
-  applyAction(s, { type: 'select', stone: 'shift', mat: 'marble' });
-  assert.equal(allowedSquares(s).length, 8);
-  applyAction(s, { type: 'place', pos: 8 });
-  assert.equal(s.board[8].mat, 'marble');
   const t = G({ handX: ['relocate'] });
   lay(t, { 0: 'X mountain', 1: 'X pebble' });
   play(t, 'relocate', 4);
@@ -773,13 +767,11 @@ test('a rule with nothing to choose leaves the boss\'s turn plain', () => {
 
 group('run');
 const RUN = await import('../src/run.js');
-test('glass costs 1, marble and gold one more; a + talisman makes a group of stones their + form', () => {
+test('glass costs 1; a + talisman makes a group of stones their + form', () => {
   assert.equal(RUN.costOf({ type: 'swap' }), 2);
   assert.equal(RUN.costOf({ type: 'swap', plus: true, once: true }), 1);
   assert.equal(RUN.costOf({ type: 'shift', plus: true, once: true }), 1);
   assert.equal(RUN.costOf({ type: 'relocate' }), 1);
-  assert.equal(RUN.costOf({ type: 'swap', mat: 'marble' }), 3);
-  assert.equal(RUN.costOf({ type: 'shift', mat: 'gold' }), 2);
   const run = RUN.newRun({ seed: 2 });
   run.pouch = [];
   RUN.gainStone(run, { type: 'rotate' });
@@ -788,15 +780,20 @@ test('glass costs 1, marble and gold one more; a + talisman makes a group of sto
   const hand = RUN.playerHand(run, run.pouch.map((x) => x.uid));
   assert.deepEqual(hand.filter((x) => x.type !== 'pebble').map((x) => !!x.plus), [true, true]);
 });
-test('gold stones in your winning line pay 10 each; crafting keeps the material', () => {
-  const s = G();
-  lay(s, { 0: 'X pebble', 1: 'X pebble', 2: 'X pebble' });
-  s.board[0].mat = 'gold'; s.board[2].mat = 'gold';
-  s.over = true; s.winner = 'X'; s.reason = 'line';
-  assert.equal(RUN.goldFromLine(s), 20);
+test('the pouch holds 6 stones and, apart, 6 glass ones', () => {
   const run = RUN.newRun({ seed: 4 });
-  const a = RUN.gainStone(run, { type: 'shift', mat: 'marble' }), b = RUN.gainStone(run, { type: 'swap' });
-  assert.equal(RUN.craft(run, a.uid, b.uid, { type: 'frog' }).mat, 'marble');
+  run.pouch = [];
+  for (let i = 0; i < 6; i++) RUN.gainStone(run, { type: 'shift' });
+  assert.ok(!RUN.hasRoom(run, { type: 'swap' }));
+  assert.ok(RUN.hasRoom(run, { type: 'swap', plus: true, once: true }));
+  assert.ok(RUN.hasRoom(run, { type: 'relocate' }));
+  for (let i = 0; i < 6; i++) RUN.gainStone(run, { type: 'muffle' });
+  assert.equal(RUN.overfull(run), null);
+  assert.ok(!RUN.hasRoom(run, { type: 'relocate' }));
+  const extra = RUN.gainStone(run, { type: 'frog' });
+  assert.equal(RUN.overfull(run), 'stones');
+  RUN.dropStone(run, extra.uid);
+  assert.equal(RUN.overfull(run), null);
 });
 test('a + talisman is offered only for stones in the pouch', () => {
   const run = RUN.newRun({ seed: 3 });
@@ -812,7 +809,7 @@ test('a draw counts as won, and costs a heart', () => {
   run.map = RUN.makeMap(run);
   run.pending = { kind: 'duel', duel: RUN.prepareDuel(run, 'pip', { tier: 'normal' }) };
   const hearts = run.hearts;
-  assert.equal(RUN.duelWon(run, 0, true).kind, 'reward');
+  assert.equal(RUN.duelWon(run, true).kind, 'reward');
   assert.equal(run.hearts, hearts - 1);
 });
 test('a shop never sells a talisman for more gold than it pays', () => {

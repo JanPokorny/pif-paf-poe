@@ -3,12 +3,12 @@
 //
 //   node tools/runbot.mjs --runs 8 --piters 150 --pblunder 0.1 [--heat 0] [--linedmg 2] [--each 1]
 //   (--each 1 prints every run's story; the summary says where runs end and what hurts;
-//   --relics echo,wings starts every run with those talismans; --pouch 4 caps the pouch;
+//   --relics echo,wings starts every run with those talismans; --pouch 4 / --glasscap 3 set the pouch's limits (0: none);
 //   --start rotate --energy 2 tries another start)
 
 import { Worker, isMainThread, parentPort, workerData } from 'node:worker_threads';
 import { cpus } from 'node:os';
-import { createGame, applyAction, allowedSquares, STONES } from '../src/engine.js';
+import { createGame, applyAction, STONES } from '../src/engine.js';
 import { chooseAction, makeRng } from '../src/ai.js';
 import { EVENTS } from '../src/content.js';
 import * as R from '../src/run.js';
@@ -17,12 +17,7 @@ const arg = (k, d) => { const i = process.argv.indexOf('--' + k); return i > 0 ?
 // Roughly how much each stone wins: its mean over every enemy of every act,
 // as `node tools/lab.mjs matrix` measures it.
 const STRENGTH = { magpie: 42, bumper: 31, firecracker: 30, relocate: 26, stinky: 25, magnet: 24, swap: 24, shift: 24, muffle: 22, gravity: 18, lasso: 21, rotate: 20, frog: 20, twin: 20, parrot: 20, 'mind-control': 19, mountain: 19, bonfire: 18, pebble: 14 };
-// --marbleval/--goldval: what the bot thinks marble or gold adds to a stone.
-const MATVAL = { marble: 0, gold: 0 };
-const value = (s) => (STRENGTH[s.type] ?? 22) / 25 + (MATVAL[s.mat] ?? 0);
-// Marble and gold over a run: brought, placed, marble placed where plain
-// could not go, gold paid by the line.
-const mats = { marble: 0, gold: 0, broughtMarble: 0, broughtGold: 0, placedMarble: 0, placedGold: 0, freed: 0, paid: 0 };
+const value = (s) => (STRENGTH[s.type] ?? 22) / 25;
 
 function playDuel(run, cfg, piters, pblunder, rng) {
   const duel = run.pending.duel;
@@ -46,23 +41,12 @@ function playDuel(run, cfg, piters, pblunder, rng) {
   while (!s.over && n++ < 300) {
     const me = s.player === 'X';
     const a = chooseAction(s, me ? { iterations: piters, blunder: pblunder, rng } : { iterations: duel.iters, blunder: duel.blunder, rng });
-    if (me && a.type === 'place' && s.selected?.mat) {
-      if (s.selected.mat === 'marble') {
-        mats.placedMarble++;
-        const m = s.selected.mat; delete s.selected.mat;
-        if (!allowedSquares(s).includes(a.pos)) mats.freed++;
-        s.selected.mat = m;
-      } else mats.placedGold++;
-    }
     applyAction(s, a);
   }
   if (!s.over) throw new Error('duel did not end');
-  for (const u of hand) { const x = run.pouch.find((y) => y.uid === u); if (x?.mat === 'marble') mats.broughtMarble++; if (x?.mat === 'gold') mats.broughtGold++; }
-  const bonus = R.goldFromLine(s);
-  mats.paid += bonus;
   const before = run.pouch.length;
   R.spendOnce(run, hand, s.spent.X);
-  return { bonus, glassPlayed: before - run.pouch.length, won: s.winner === 'X', draw: s.winner === 'X' && s.reason === 'full' };
+  return { glassPlayed: before - run.pouch.length, won: s.winner === 'X', draw: s.winner === 'X' && s.reason === 'full' };
 }
 
 const takeStone = (run, st) => R.gainStone(run, st);
@@ -82,8 +66,6 @@ const api = (run) => ({
   gainRandomOnce: (r) => { R.gainStone(run, R.randomOnce(run, r)); return 'ok'; },
   gainRandomRelic: (t) => { R.gainRelic(run, R.randomRelic(run)); return t; },
   transmute: () => { const p = run.pouch[0]; const n = R.randomStone(run, 'uncommon'); p.type = n.type; return 'ok'; },
-  canPolish: () => R.polishable(run).length > 0,
-  polish: (mat, cost) => { const s = R.polishable(run).sort((a, b) => value(b) - value(a))[0]; if (s) { run.gold -= cost; R.polish(run, s.uid, mat); } return 'ok'; },
   duplicate: () => { const b = run.pouch.slice().sort((a, b) => value(b) - value(a))[0]; R.gainStone(run, { type: b.type }); return 'ok'; },
   fight: (id) => { run.pending = { kind: 'duel', duel: R.prepareDuel(run, id, { tier: 'event', event: id }) }; run.screen = 'predual'; return null; },
 });
@@ -103,10 +85,9 @@ function playRun(spec) {
   let blow = null;   // what took the last heart
   let guard = 0, lines = 0, lineDeath = false;
   const glass = { seen: new Set(), dropped: 0, played: 0 };
-  const matSeen = new Set();
-  for (const k in mats) mats[k] = 0;
-  MATVAL.marble = spec.marbleval; MATVAL.gold = spec.goldval;
-  R.MAPCFG.enemyMarble = spec.enemymarble;
+  // --pouch N / --glasscap N: other limits than the game's (0: none).
+  if (spec.pouch != null) R.POUCH.stones = spec.pouch || Infinity;
+  if (spec.glasscap != null) R.POUCH.glass = spec.glasscap || Infinity;
   if (spec.linedmg != null) R.MAPCFG.lineDamage = spec.linedmg;
   while (!run.over && guard++ < 3000) {
     const page = run.map, seen = page?.oLines ?? 0, hearts = run.hearts, screen = run.screen, act = run.act;
@@ -116,24 +97,14 @@ function playRun(spec) {
     step(screen);
     // --pouch N: an experiment, a pouch of at most N stones; past that the
     // weakest goes (the bot's judgement), so a run is a build, not a hoard.
-    // --pouchglass 0: glass stones sit outside the cap. --glass 0: no glass at
-    // all (what glass is worth). Counted: glass gained, played, dropped.
+    // --glass 0: no glass at all (what glass is worth). Counted: glass gained, played, dropped.
     if (!spec.glass) run.pouch = run.pouch.filter((x) => !R.isOnce(x));
     for (const x of run.pouch) if (R.isOnce(x) && !glass.seen.has(x.uid)) glass.seen.add(x.uid);
-    // --mats none|marble|gold: only those materials (the rest turn plain).
-    for (const x of run.pouch) if (x.mat && !spec.mats.includes(x.mat)) delete x.mat;
-    for (const x of run.pouch) if (x.mat && !matSeen.has(x.uid)) { matSeen.add(x.uid); mats[x.mat]++; }
-    const counted = () => run.pouch.filter((x) => spec.pouchglass || !R.isOnce(x));
-    if (spec.pouch) while (counted().length > spec.pouch) {
-      const worst = counted().sort((a, b) => value(a) - value(b))[0];
-      if (R.isOnce(worst)) glass.dropped++;
-      run.pouch = run.pouch.filter((x) => x !== worst);
-    }
-    // --glasscap N: a limit of its own for glass (with --pouchglass 0).
-    if (spec.glasscap) while (run.pouch.filter((x) => R.isOnce(x)).length > spec.glasscap) {
-      const worst = run.pouch.filter((x) => R.isOnce(x)).sort((a, b) => value(a) - value(b))[0];
-      glass.dropped++;
-      run.pouch = run.pouch.filter((x) => x !== worst);
+    // A part of the pouch past its limit: the weakest there goes (the new one, maybe).
+    for (let k; (k = R.overfull(run));) {
+      const worst = R.shelf(run, k).sort((a, b) => value(a) - value(b))[0];
+      if (k === 'glass') glass.dropped++;
+      R.dropStone(run, worst.uid);
     }
     if (run.map === page && page && page.oLines > seen) { lines += page.oLines - seen; if (run.over) lineDeath = true; }
     if (run.hearts < hearts || (run.over && !run.victory && hearts > 0)) { hurts.push({ act, what, n: hearts - run.hearts }); blow = what; }
@@ -158,11 +129,11 @@ function playRun(spec) {
       }
       case 'predual': case 'duel': {
         const d = run.pending.duel;
-        const { won, draw, glassPlayed, bonus } = playDuel(run, null, spec.piters, spec.pblunder, rng);
+        const { won, draw, glassPlayed } = playDuel(run, null, spec.piters, spec.pblunder, rng);
         glass.played += glassPlayed;
         duels.push({ act: run.act, enemy: d.enemyId, tier: d.tier, undead: d.tier === 'boss' && d.bossWins > 0, won });
         log.push(`${run.act}:${d.enemyId}${d.tier !== 'normal' ? '(' + d.tier + ')' : ''}${won ? '+' : '-'}`);
-        if (won) R.duelWon(run, bonus, draw); else R.duelLost(run);
+        if (won) R.duelWon(run, draw); else R.duelLost(run);
         break;
       }
       case 'reward': {
@@ -208,7 +179,7 @@ function playRun(spec) {
   if (!run.over) throw new Error('run did not end: ' + run.screen);
   // JSON round trip must survive (the save format).
   JSON.parse(JSON.stringify(run));
-  return { seed: spec.seed, victory: run.victory, act: run.act, row: run.map.visited, duels, hurts, blow, hearts: run.hearts, lines, lineDeath, log: log.join(' '), relics: run.relics.join(','), pouch: run.pouch.map((s) => s.type).join(',') + ` energy ${R.energyOf(run)}`, energy: R.energyOf(run), glass: { gained: glass.seen.size, played: glass.played, dropped: glass.dropped }, mats: { ...mats }, gold: run.gold };
+  return { seed: spec.seed, victory: run.victory, act: run.act, row: run.map.visited, duels, hurts, blow, hearts: run.hearts, lines, lineDeath, log: log.join(' '), relics: run.relics.join(','), pouch: run.pouch.map((s) => s.type).join(',') + ` energy ${R.energyOf(run)}`, energy: R.energyOf(run), glass: { gained: glass.seen.size, played: glass.played, dropped: glass.dropped }, gold: run.gold };
 }
 
 // Where runs end and what hurts: the hard parts of a climb.
@@ -246,7 +217,7 @@ if (!isMainThread) {
   parentPort.postMessage(out);
 } else {
   const runs = +arg('runs', 8), piters = +arg('piters', 150), pblunder = +arg('pblunder', 0.1), heat = +arg('heat', 0);
-  const specs = Array.from({ length: runs }, (_, i) => ({ seed: +arg('seed', 100) + i, piters, pblunder, heat, stay: arg('stay', 8), linedmg: arg('linedmg', null) == null ? null : +arg('linedmg'), relics: arg('relics', '') ? arg('relics').split(',') : [], pouch: +arg('pouch', 0), start: arg('start', '') ? arg('start').split(',') : null, energy: +arg('energy', 0), sees: arg('sees', null) == null ? null : +arg('sees'), strict: !!+arg('strict', 0), glass: !!+arg('glass', 1), pouchglass: !!+arg('pouchglass', 1), mats: arg('mats', 'marble,gold').split(','), marbleval: +arg('marbleval', 0), goldval: +arg('goldval', 0), enemymarble: !!+arg('enemymarble', 1), glasscap: +arg('glasscap', 0) }));
+  const specs = Array.from({ length: runs }, (_, i) => ({ seed: +arg('seed', 100) + i, piters, pblunder, heat, stay: arg('stay', 8), linedmg: arg('linedmg', null) == null ? null : +arg('linedmg'), relics: arg('relics', '') ? arg('relics').split(',') : [], pouch: arg('pouch', null) == null ? null : +arg('pouch'), start: arg('start', '') ? arg('start').split(',') : null, energy: +arg('energy', 0), sees: arg('sees', null) == null ? null : +arg('sees'), strict: !!+arg('strict', 0), glass: !!+arg('glass', 1), glasscap: arg('glasscap', null) == null ? null : +arg('glasscap') }));
   const W = Math.min(cpus().length, runs);
   const chunks = Array.from({ length: W }, () => []);
   specs.forEach((s, i) => chunks[i % W].push(s));
@@ -262,9 +233,6 @@ if (!isMainThread) {
   console.log(`\nenergy where runs ended, by act: ${byAct.join(' / ')}`);
   report(ok);
   const g = (k) => (ok.reduce((n, r) => n + r.glass[k], 0) / ok.length).toFixed(2);
-  const m = (k) => (ok.reduce((n, r) => n + r.mats[k], 0) / ok.length).toFixed(2);
-  console.log(`\nmarble a run: gained ${m('marble')}, brought ${m('broughtMarble')}, placed ${m('placedMarble')}, where plain could not ${m('freed')}`);
-  console.log(`gold stones a run: gained ${m('gold')}, brought ${m('broughtGold')}, placed ${m('placedGold')}, gold paid ${m('paid')}`);
   console.log(`\nglass a run: gained ${g('gained')}, played ${g('played')}, dropped by the cap ${g('dropped')}`);
   console.log(`\n${ok.filter((r) => r.victory).length}/${ok.length} victories; mean act reached ${(ok.reduce((a, r) => a + r.act, 0) / ok.length).toFixed(2)}; boss lines ${(ok.reduce((a, r) => a + r.lines, 0) / ok.length).toFixed(1)} a run, the last blow in ${ok.filter((r) => r.lineDeath).length}; ${((Date.now() - t0) / 1000).toFixed(0)}s`);
 }

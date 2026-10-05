@@ -41,7 +41,7 @@ each enemy of each act) and `effects` (how often a play changes nothing). A Pebb
 | Stinky | common | the enemy must not place beside it | 71 / 25 / 19 | nor in its row or column | 82 / 30 / 29 |
 | Frog | common | leaps a stone beside it; an enemy leapt is knocked off | 53 / 14 / 12 | the enemy goes back to hand, your Pebble takes its square | 54 / 19 / 13 |
 | Parrot | uncommon | becomes the enemy's last stone | 56 / 18 / 15 | any stone on the board | 56 / 14 / 16 |
-| Mountain | common | never moves (went anywhere when measured; that is marble's now) | 55 / 16 / 11 | | |
+| Mountain | common | never moves (went anywhere when measured) | 55 / 16 / 11 | | |
 | Twin | uncommon | a Pebble on the square opposite | 58 / 19 / 9 | | |
 | Magpie | rare | steals a special stone from the enemy's hand | 67 / 31 / 22 | | |
 
