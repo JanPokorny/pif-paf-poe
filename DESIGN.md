@@ -12,8 +12,8 @@ numbers. The camp game's own reasoning is in `old/adr/`.
 - **Counterattacks → one-shot stones.** The camp game's counterattacks became tricks, spent
   at the end of a turn; now they are stones like any other, brought along like any other and placed on the
   board, that then do their one thing (Relocate, Mind Control, Muffle, and any stone in glass). Once played in a duel, won or lost, one is gone from the pouch. They
-  have a dashed outline, come as their own reward and shop shelf, and cost one energy less
-  than the lasting stone (at least 1).
+  have a dashed outline, come as their own reward and shop shelf, and cost 1 energy, whatever
+  they are. A 1-energy stone never comes in glass: it would save nothing.
   Encore, which handed back your last special stone, did not survive the change.
 - **Boss rules** come from an older iteration's sheet of special rules (Taktika, Náskok, Elko,
   Lep, Sloup, Špion, Reservé).
@@ -151,7 +151,7 @@ Every stone's card shows an example computed by the engine.
 - **Every stone acts on the board.** Mind Control turns an enemy stone beside it yours (and is
   gone); Muffle hushes the enemy stones in its row and column for as long as it stands.
 - **Glass.** A stone is lasting or **glass** (a dashed outline): played once, then gone from the
-  pouch; one energy less than the lasting stone, at least 1. Relocate, Mind Control and Muffle
+  pouch; always 1 energy (so only 2- and 3-energy stones come in glass). Relocate, Mind Control and Muffle
   are glass by nature. (Marble and gold materials were tried and dropped: neither earned its
   extra energy, see docs/HARMONY.md.)
 - **The pouch holds 6 stones**; glass ones do not count (`POUCH` in run.js). A stone past the

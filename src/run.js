@@ -54,11 +54,10 @@ const ENEMY_STONES = 5;
 export const START = { pouch: ['shift'], hearts: 6, gold: 30, energy: 2 };
 export const COST = { starter: 0, common: 1, uncommon: 2, rare: 3 };
 // What a stone costs to bring: by its rarity (docs/HARMONY.md measures what each
-// wins). Glass, played once and gone, costs one less, but at least 1.
+// wins). Glass, played once and gone, costs 1 whatever it is.
 export const costOf = (s) => {
   const type = s?.type ?? s, st = STONES[type];
-  const cost = COST[st?.rarity] ?? 0;
-  return s?.once || st?.once ? Math.max(1, cost - 1) : cost;
+  return s?.once || st?.once ? 1 : COST[st?.rarity] ?? 0;
 };
 // The pouch holds so many lasting stones (glass does not count): a run is a
 // build, not a hoard. A stone past the limit means giving one up.
@@ -890,8 +889,9 @@ export function stoneChoices(run, tier = 'normal', rarity = null, count = 3) {
 // A glass stone: one of the stones that are only ever glass, or any other
 // stone in glass.
 export function randomOnce(run, rarity = null) {
-  const r = rarity ?? weighted(run, { common: 60, uncommon: 28, rare: 12 });
-  const all = [...ONCE_STONES, ...REWARD_STONES];
+  const r = rarity ?? weighted(run, { common: 20, uncommon: 50, rare: 30 });
+  // A 1-energy stone in glass would save nothing: only dearer ones come in glass.
+  const all = [...ONCE_STONES, ...REWARD_STONES.filter((t) => COST[STONES[t].rarity] > 1)];
   const pool = all.filter((n) => STONES[n].rarity === r);
   const type = pick(run, pool.length ? pool : all);
   return STONES[type].once ? { type } : { type, once: true };
@@ -957,7 +957,7 @@ export function makeShop(run) {
     stones.push({ ...s, price: price(run, STONE_PRICE[r]), sold: false });
   }
   const once = [];
-  for (const r of ['common', 'common', 'uncommon', 'rare']) {
+  for (const r of ['common', 'uncommon', 'uncommon', 'rare']) {
     let s;
     for (let g = 0; g < 20; g++) { s = randomOnce(run, r); if (!once.some((o) => o.type === s.type)) break; }
     once.push({ ...s, price: price(run, ONCE_PRICE[r]), sold: false });

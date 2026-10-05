@@ -276,7 +276,9 @@ function newRunMenu() {
     save();
     route();
   };
-  if (!meta.maxHeat) { go(0); return; }
+  // The heat ladder is iced for now: every run starts at heat 0.
+  const ICED = true;
+  if (ICED || !meta.maxHeat) { go(0); return; }
   let heat = Math.min(meta.heat ?? 0, meta.maxHeat);
   const row = h('div.heat-row');
   const draw = () => {
@@ -1061,7 +1063,7 @@ function endScreen(victory) {
     h('div.section-label', {}, t('Final pouch')),
     h('div.hand.show', {}, run.pouch.map((s) => stoneEl(s, 'X', { mini: true }))),
     relicStrip(),
-    victory && meta.maxHeat > run.heat ? h('p.good', {}, t('Heat {n} unlocked!', { n: run.heat + 1 })) : null,
+
     h('button.btn.wide', { onclick: () => shareResult(victory) }, t('Copy result to share')),
     // Leaving is the dashed button, the way on the yellow one at the bottom, as everywhere.
     h('div.sticky-bottom.pair', {},

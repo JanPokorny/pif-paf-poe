@@ -692,13 +692,17 @@ test('a rule with nothing to choose leaves the boss\'s turn plain', () => {
 
 group('run');
 const RUN = await import('../src/run.js');
-test('a stone costs its tier\'s energy; glass one less, at least 1', () => {
+test('a stone costs its tier\'s energy; glass 1; no 1-energy stone comes in glass', () => {
   assert.equal(RUN.costOf({ type: 'swap' }), 2);
   assert.equal(RUN.costOf({ type: 'swap', once: true }), 1);
-  assert.equal(RUN.costOf({ type: 'firecracker', once: true }), 2);
-  assert.equal(RUN.costOf({ type: 'shift', once: true }), 1);
+  assert.equal(RUN.costOf({ type: 'firecracker', once: true }), 1);
   assert.equal(RUN.costOf({ type: 'relocate' }), 1);
-  assert.equal(RUN.costOf({ type: 'mind-control' }), 2);
+  assert.equal(RUN.costOf({ type: 'mind-control' }), 1);
+  const run = RUN.newRun({ seed: 9 });
+  for (let i = 0; i < 300; i++) {
+    const g = RUN.randomOnce(run);
+    assert.ok(STONES[g.type].once || RUN.COST[STONES[g.type].rarity] > 1, g.type);
+  }
 });
 test('the pouch holds 6 stones; glass ones do not count', () => {
   const run = RUN.newRun({ seed: 4 });
