@@ -444,6 +444,7 @@ function mapScreen() {
   if (freshS) news.push([0, { m: 's', node: map.cells[freshS].kind }]);
   if (lastO && map.cells[lastO]?.kind !== 'boss-mark') news.push([oAt * 1000, { m: 'o', node: map.cells[lastO].kind }]);
   if (map.news === 'oline') news.push([2200, { m: 'oline', n: R.MAPCFG.lineDamage }]);
+  if (map.news === 'oline-free') news.push([2200, { m: 'oline-free' }]);
   if (opening) news.push([3600, { m: 'open' }]);
   if (map.news === 'thrown') news.push([0, { m: 'thrown', n: 1 }]);
   news.sort((a, b) => a[0] - b[0]);
@@ -455,6 +456,7 @@ function mapScreen() {
       : e.m === 's' ? [t('You lost there: the {node} square burns.', { node }), 'you']
         : e.m === 'o' ? [t('The boss marks the {node} square.', { node }), 'bad']
           : e.m === 'oline' ? [t('The boss made three in a row: −❤'), 'bad']
+            : e.m === 'oline-free' ? [t('The boss made three in a row. The first one on a page is free; the next costs a heart.'), 'bad']
             : e.m === 'open' ? [t('Three in a row: the lair opens!'), 'good']
               : e.m === 'thrown' ? [t('The boss throws you out (−❤). The lair is shut again.'), 'bad'] : ['', ''];
   };

@@ -50,7 +50,7 @@ export const HEAT = [
 export const HAND = 4;
 const ENEMY_STONES = 5;
 // Every run starts with a Shift: the first duels are never plain tic-tac-toe.
-export const START = { pouch: ['shift'], hearts: 6, energy: 2 };
+export const START = { pouch: ['shift'], hearts: 6, energy: 3 };
 export const COST = { starter: 0, common: 1, uncommon: 2, rare: 3 };
 // What a stone costs to bring: by its rarity (docs/HARMONY.md measures what each
 // wins). Glass, played once and gone, costs 1 whatever it is.
@@ -152,7 +152,7 @@ export const BOSS_LIVES = 2;              // duels a boss must lose
 export const LINE = 3;                     // marks in a row that count
 export const MAX_POWER = 2;
 // `lineDamage`: hearts a line of the boss's Os costs you.
-export const MAPCFG = { lineDamage: 1, freeLines: 0 };
+export const MAPCFG = { lineDamage: 1, freeLines: 1 };
 // Rocks: a lattice -- (x + 3y) mod 7 in two neighbouring classes -- that cuts
 // every row, column and diagonal into runs between two and five squares long,
 // so an open two is rarely a double threat and a line has to be set up; plus a
@@ -546,7 +546,7 @@ function bossTurn(run) {
 function bossLine(run) {
   run.map.oLines++;
   run.map.news = 'oline';
-  // `freeLines`: the boss's first lines on each page cost no heart (an experiment).
+  // `freeLines`: the boss's first line on each page costs no heart (a warning shot).
   if (run.map.oLines <= MAPCFG.freeLines) { run.map.news = 'oline-free'; return; }
   hurt(run, MAPCFG.lineDamage);
 }

@@ -92,6 +92,7 @@ export default {
   'Glass stones · {n}': 'Skleněné kameny · {n}',
   '−{n} ❤': '−{n} ❤',
   'The boss would make three in a row here.': 'Tady by boss udělal tři v řadě.',
+  'The boss made three in a row. The first one on a page is free; the next costs a heart.': 'Boss udělal tři v řadě. První na stránce je zadarmo, další stojí srdce.',
   'The Stonecutter': 'Kameník',
   'The Glassblower': 'Sklář',
   'The Herbalist': 'Bylinkářka',

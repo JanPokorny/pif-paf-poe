@@ -25,7 +25,7 @@ duel, and a rule for who wins when someone runs out. The second version slows it
 
 - **Energy.** What you bring into a duel is a decision of its own: every special stone costs
   energy (common 1, uncommon 2, rare 3, a dot each in the stone's corner), and together they may
-  cost no more than you have. A run starts with 2, and with a Shift in the pouch: the first
+  cost no more than you have. A run starts with 3, and with a Shift in the pouch: the first
   duels are never plain tic-tac-toe. Beating an elite gives 1, an act's boss 2;
   the Mystic and the Collector sell 1, the Meditating Monk trades one for a max heart or stones worth 4,
   and Second Wind (a boss relic) adds 1. Picking stones before a duel fills a bar of dots.
@@ -93,7 +93,7 @@ its own, with its boss.
   boss as from any duel; it waits in its lair as it was, risen already if you beat it once.
   Lose to it and it throws you out (−1 ❤): the lair shuts, and another line of three opens it
   again, the boss still risen if you had beaten it once.
-  The boss always blocks an open two of yours, and its three in a row costs you a heart (two made it the last blow in a quarter of the bots' runs). There is no page limit any more: the lair opens
+  The boss always blocks an open two of yours. Its first three in a row on a page is a warning shot, free; each after costs you a heart, and the square that would give it one is ringed in red dashes (two made it the last blow in a quarter of the bots' runs). There is no page limit any more: the lair opens
   only to your line, and when nothing on view is free the boss moves again (into the fog beside
   the page if it must) until something is.
 - **Spent lines.** Every line of three is crossed through on the page, and its marks are spent:
@@ -152,7 +152,7 @@ rock next to your marks.
 
 ## The stones
 
-18 special stones and the Pebble, three of them glass by nature (Relocate, Muffle, Mind Control).
+21 special stones and the Pebble, six of them glass by nature.
 Every stone's card shows an example computed by the engine.
 
 - **No restriction ever leaves you without a square.** Every rule and stone narrows where you
@@ -166,8 +166,8 @@ Every stone's card shows an example computed by the engine.
 - **Every stone acts on the board.** Mind Control turns an enemy stone beside it yours (and is
   gone); Muffle hushes the enemy stones in its row and column for as long as it stands.
 - **Glass.** A stone is lasting or **glass** (a dashed outline): played once, then gone from the
-  pouch; always 1 energy (so only 2- and 3-energy stones come in glass). Relocate, Mind Control and Muffle
-  are glass by nature. (Marble and gold materials were tried and dropped: neither earned its
+  pouch; always 1 energy (so only 2- and 3-energy stones come in glass). Relocate, Mind Control, Muffle,
+  Hammer (smashes a stone beside it for good), Snatch (takes one into your hand) and Seed (grows a Mountain of yours) are glass by nature. (Marble and gold materials were tried and dropped: neither earned its
   extra energy, see docs/HARMONY.md.)
 - **The pouch holds 6 stones**; glass ones do not count (`POUCH` in run.js). A stone past the
   limit asks which to give up for it, or to keep what you have; a run is a build, not a hoard.

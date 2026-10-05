@@ -15,7 +15,7 @@ import * as R from '../src/run.js';
 
 const arg = (k, d) => { const i = process.argv.indexOf('--' + k); return i > 0 ? process.argv[i + 1] : d; };
 // Roughly how much each stone wins: alone against act 2 (docs/HARMONY.md), in 80 duels.
-const STRENGTH = { 'mind-control': 40, firecracker: 32, gravity: 28, magpie: 26, relocate: 25, lasso: 25, swap: 25, stinky: 23, bumper: 23, magnet: 22, frog: 21, shift: 20, twin: 19, rotate: 19, parrot: 17, muffle: 17, bonfire: 15, mountain: 12, pebble: 6 };
+const STRENGTH = { 'mind-control': 40, hammer: 34, snatch: 32, seed: 30, firecracker: 32, gravity: 28, magpie: 26, relocate: 25, lasso: 25, swap: 25, stinky: 23, bumper: 23, magnet: 22, frog: 21, shift: 20, twin: 19, rotate: 19, parrot: 17, muffle: 17, bonfire: 15, mountain: 12, pebble: 6 };
 const value = (s) => (STRENGTH[s.type] ?? 22) / 25;
 
 // The best set the energy pays for (every subset: the pouch is small), each

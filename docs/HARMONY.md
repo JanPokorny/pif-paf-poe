@@ -389,6 +389,95 @@ cheaper, one-use copy of the lasting stones, and the energy it saves buys little
   - the heal events.
 - **Glass needs a reason of its own** (see the suggestions below).
 
+## Barter, glass-only stones, the start (fourth pass)
+
+### Barter instead of gold
+
+**Built.** Gold is gone; stones are the currency. A stone is worth its energy, and glass (which
+the pouch's limit leaves out) is small change at 1. Every shop square holds one of six merchants:
+
+| merchant | wares | likes (+1 each) |
+|---|---|---|
+| Stonecutter | 3 lasting stones, a tier dearer than they cost to bring | a random kind |
+| Glassblower | 3 glass stones, 2 each | movers |
+| Herbalist | +2 hearts (twice, 2), +1 max heart (4) | glass |
+| Mystic | +1 energy (4, rising), a rare glass stone (2) | walls |
+| Curio Dealer | 2 talismans (4–6) | a random kind |
+| Collector | wants one named stone (often one you carry): a talisman or +1 energy for it | – |
+
+- Events that asked for gold ask for stones now.
+- Lucky Coin and the Piggy Bank are gone. The War Chest became the Bottomless Bag (+2 pouch).
+- The Badge takes one off every price.
+
+256 runs each, the same seeds, with the same glass rules on both sides: **gold 79, barter 68**.
+The difference is close to the noise; a sample's noise is about ±8, so a gap between two samples
+is about ±11.
+
+How the bot traded, per run:
+- heal 0.09, max heart 0.07, energy 0.19, talisman 0.18, stone 0.35;
+- glass gained 5.1 a run and played 4.7.
+
+What it says:
+- **Trade is thin.** The bot pays only with stones it would not bring into a duel, and with a
+  pouch of six it rarely has spare lasting stones.
+- **Glass is played, not spent.** It is a stone worth playing and is only worth 1 at a merchant.
+- Raising glass to worth 2 changed nothing (83 against 85 on the later base).
+- A person may well trade more than the bot (for example, a Magnet for the Collector's
+  talisman).
+- To make barter matter:
+  - give a merchant something to buy from you (it takes a stone and gives two glass);
+  - or let rewards offer "a stone, or two stones' worth of glass";
+  - so that there is surplus to spend.
+
+New: **the Quarryman** event. For stones worth 2, your next X must go on a rock (thicket, crag)
+next to your marks, and breaks it.
+
+### Glass
+
+- **No glass copies of 1-energy stones** any more; glass costs 1 again.
+- Glass-only candidates, each alone against act 2, 120 duels. For scale: Firecracker 48,
+  Relocate 38, Muffle 25, Pebbles 8.
+
+| candidate | wins | |
+|---|---|---|
+| Mind Control (an enemy stone beside it turns yours; it leaves) | 60 | in the game |
+| **Hammer** — smashes a stone beside it off the board for good | **51** | **added** |
+| **Snatch** — takes a stone beside it into your hand | **48** | **added** |
+| **Seed** — a Mountain of yours grows beside it | **45** | **added** |
+| Blink — two stones anywhere trade places | 43 | prototype (36 choices: heavy to pick) |
+| Haste — you play again at once | 43 | prototype (needs a double-turn flow; the bot plans it badly) |
+| Bomb — every stone beside it back to hand | 39 | prototype |
+| Anchor — your stones beside it cannot be moved | 14 | dud |
+| Mirror — flips the board | 11 | dud |
+
+### The start, and the boss's lines
+
+256 runs each, the same seeds. The base is barter plus the new glass stones, at 2 energy.
+
+| | victories |
+|---|---|
+| base | 85 |
+| start with 3 energy | **118** |
+| start with 8 hearts | 116 |
+| a starter talisman (common) | 78 |
+| a starter stone (2 energy) | 64 |
+| two starter glass stones | 78 |
+| the boss's first line on each page free | 97 |
+| boss lines never cost a heart | 149 |
+| **3 energy and the first line free** | **153** |
+
+- **Gifts do not help** the bot: a talisman or stone at the start is worth less than it looks.
+- **Energy and hearts do**, about a third more wins each.
+- **Adopted:**
+  - start with 3 energy;
+  - the boss's first three in a row on each page is a warning shot (no heart);
+  - the square that would give the boss its line is ringed in red dashes, so a person sees
+    it coming as the bot does.
+
+  Together that is 153 of 256 for the bot. That may be too easy for a person who plays well;
+  dial back with `START.energy` or `MAPCFG.freeLines` in run.js.
+- The heat ladder is iced: every run is at heat 0.
+
 ## Heat, and the map's weight (second pass)
 
 256 runs each, the same seeds. Heat levels add up (heat 3 has the first three's rules too).

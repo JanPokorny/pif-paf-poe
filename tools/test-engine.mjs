@@ -776,10 +776,10 @@ test('the Quarryman\'s trick: the next X goes on a rock in reach, and breaks it'
   assert.ok(!run.map.breaker);
   assert.ok(!RUN.reachable(run).some((k) => run.map.cells[k]?.kind === 'rock'));
 });
-test('a run starts with a Shift, and 2 energy', () => {
+test('a run starts with a Shift, and 3 energy', () => {
   const run = RUN.newRun({ seed: 1 });
   assert.deepEqual(run.pouch.map((x) => x.type), ['shift']);
-  assert.equal(RUN.energyOf(run), 2);
+  assert.equal(RUN.energyOf(run), 3);
   assert.equal(RUN.defaultHand(run).length, 1);
   assert.ok(!Object.values(RUN.makeMap(run).cells).some((c) => c.kind === 'gift'));
 });
