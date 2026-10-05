@@ -304,17 +304,9 @@ def('seed', {
   },
 });
 
-// The Nomad moves by itself: at the end of each of its owner's turns (see
-// nomadSquares and the 'nomad' phase below), not when placed. Never found: it
-// is what the Caravan's Pebbles become (the Nomads boss rule).
-def('nomad', {
-  name: 'Nomad', rarity: 'common', kind: 'move', wanders: true, bossOnly: true,
-  text: 'At the end of each of its owner\'s turns it moves on to the next free square, row by row. Nomads travel together. Three in a row counts only after.',
-});
-
 export const STONE_TYPES = Object.keys(STONES);
-// Stones you can find: everything but the Pebble and what only bosses have.
-export const BASE_STONES = STONE_TYPES.filter((t) => t !== 'pebble' && !STONES[t].bossOnly);
+// Stones you can find: everything but the Pebble.
+export const BASE_STONES = STONE_TYPES.filter((t) => t !== 'pebble');
 export const ONCE_STONES = STONE_TYPES.filter((t) => STONES[t].once);
 
 
@@ -339,7 +331,8 @@ export const RULES = {
   spy: { name: 'Spy', text: 'Each turn the boss picks which way your stones move.', dictate: true },
   patient: { name: 'Patience', text: 'A full board goes to the boss.' },
   reserved: { name: 'Reserved', text: 'You may not place on the centre square. The boss may.' },
-  nomads: { name: 'Nomads', text: 'The boss\'s Pebbles are Nomads: at the end of each of its turns they move on to the next free square, row by row.' },
+  nomads: { name: 'Nomads', text: 'After each of the boss\'s turns, all its Pebbles move on to the next free square, row by row.' },
+  drift: { name: 'Drift', text: 'After each of your turns, all your stones move on to the next free square, row by row. Mountains hold.' },
 };
 
 // Winning shapes: lines of three, or under the Elbow, L-shapes of three.
@@ -431,13 +424,15 @@ function stepAlong(s, cells) {
   for (let k = 0; k < free.length; k++) b[free[(k + 1) % free.length]] = before[k];
 }
 
-// The squares a player's Nomads travel through, in reading order: the free
-// ones and those holding a Nomad of theirs (a hushed one stays put). Empty if
-// they have no Nomad that moves.
-export function nomadSquares(s, p) {
-  const mine = (c) => c && c.player === p && STONES[c.type].wanders && active(s, c);
-  if (!s.board.some(mine)) return [];
-  return [...Array(9).keys()].filter((i) => !s.board[i] || mine(s.board[i]));
+// The boss rules that make stones wander (Nomads: the boss's Pebbles; Drift:
+// all of yours): after the turn of their side, each steps on to the next free
+// square in reading order, all together, before lines are counted.
+function wander(s, p) {
+  const moves = (c) => c && c.player === p && !isStuck(s, s.board.indexOf(c))
+    && (p === 'O' ? s.rules.includes('nomads') && c.type === 'pebble' : s.rules.includes('drift'));
+  if (!s.board.some(moves) || s.board.every(Boolean)) return;
+  stepAlong(s, [...Array(9).keys()].filter((i) => !s.board[i] || moves(s.board[i])));
+  note(s, `wander:${p}`);
 }
 
 function lineOrder(index, dir) {
@@ -519,7 +514,7 @@ export function cloneState(s) {
     selected: s.selected ? { ...s.selected } : null, from: s.from,
     placedAt: s.placedAt, placedId: s.placedId,
     over: s.over, winner: s.winner, reason: s.reason,
-    turns: s.turns, nextId: s.nextId, nomadDone: !!s.nomadDone,
+    turns: s.turns, nextId: s.nextId,
     log: null,
   };
 }
@@ -589,7 +584,6 @@ export function legalActions(s) {
     case 'place': return allowedSquares(s).map((pos) => ({ type: 'place', pos }));
     case 'effect': return effectOptions(s).map((o) => ({ type: 'effect', ...o }));
     case 'dictate': return dictateOptions(s);
-    case 'nomad': return [{ type: 'nomad' }];
     default: return [];
   }
 }
@@ -605,9 +599,7 @@ function finish(s, winner, reason) {
 
 function endTurn(s) {
   const p = s.player;
-  // Nomads first: a step of their own, before lines are counted.
-  if (!s.nomadDone && nomadSquares(s, p).length > 1) { s.phase = 'nomad'; return; }
-  s.nomadDone = false;
+  wander(s, p);
   if (s.forced?.player === p) s.forced = null;
   if (s.conds.includes('gravity')) { slideAll(s, 'down', null); note(s, 'cond:gravity'); }
 
@@ -691,9 +683,7 @@ export function applyAction(s, a) {
       const stone = s.selected;
       if ((stone.once || STONES[stone.type].once) && !s.from) s.spent[p].push(stone.type);
       s.placedId = s.nextId++;
-      // The Nomads rule: the boss's Pebbles land as Nomads.
-      const type = p === 'O' && stone.type === 'pebble' && s.rules.includes('nomads') ? 'nomad' : stone.type;
-      s.board[a.pos] = { player: p, type, id: s.placedId };
+      s.board[a.pos] = { player: p, type: stone.type, id: s.placedId };
       s.placedAt = a.pos;
       s.placements[p]++;
       afterPlacement(s);
@@ -703,13 +693,6 @@ export function applyAction(s, a) {
       const c = s.board[s.placedAt];
       if (specOf(c).apply(s, s.placedAt, a, c) === 'again') afterPlacement(s);
       else afterEffect(s);
-      break;
-    }
-    case 'nomad': {
-      stepAlong(s, nomadSquares(s, p));
-      note(s, 'nomad');
-      s.nomadDone = true;
-      endTurn(s);
       break;
     }
     case 'dictate': {

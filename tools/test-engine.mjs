@@ -210,8 +210,8 @@ group('stones');
 test('every stone has a name and text', () => {
   for (const t of STONE_TYPES) assert.ok(STONES[t].name && STONES[t].text, t);
 });
-test('BASE_STONES are the findable ones: everything but the Pebble and the Nomad (a boss\'s)', () => {
-  assert.deepEqual(BASE_STONES, STONE_TYPES.filter((t) => t !== 'pebble' && t !== 'nomad'));
+test('BASE_STONES are the findable ones: everything but the Pebble', () => {
+  assert.deepEqual(BASE_STONES, STONE_TYPES.filter((t) => t !== 'pebble'));
 });
 test('Shift offers its own row and column, each way', () => {
   const s = G();
@@ -523,47 +523,27 @@ test('Hammer smashes a stone beside it for good; Snatch takes one into your hand
   play(u, 'seed', 4);   // one empty square beside it: at once
   assert.deepEqual([u.board[7].player, u.board[7].type], ['X', 'mountain']);
 });
-test('Nomad: at the end of each of your turns it moves to the next free square, row by row; lines count after', () => {
-  const s = G({ handX: ['nomad'] });
-  lay(s, { 1: 'O pebble', 2: 'O pebble' });
-  const id = play(s, 'nomad', 0);
-  assert.equal(s.phase, 'nomad');
-  assert.deepEqual(legalActions(s), [{ type: 'nomad' }]);
-  applyAction(s, { type: 'nomad' });
-  expectAt(s, { 3: id, 0: 0 });   // 1 and 2 taken: on to 3
-  assert.equal(s.player, 'O');
-  play(s, 'pebble', 8);   // the enemy's turn: it stays
-  expectAt(s, { 3: id });
-  play(s, 'pebble', 0);
-  applyAction(s, { type: 'nomad' });
-  expectAt(s, { 4: id });
-  // A line made by placing, then broken by the Nomad leaving it, does not count.
-  const t = G({ handX: ['nomad'] });
-  lay(t, { 3: 'X pebble', 5: 'X pebble' });
-  play(t, 'nomad', 4);
+test('Nomads: after each of the boss\'s turns all its Pebbles step on to the next free square; lines count after', () => {
+  const s = G({ rules: ['nomads'], first: 'O' });
+  lay(s, { 1: 'X pebble' });
+  const id = play(s, 'pebble', 0);
+  expectAt(s, { 0: 0, 2: id });   // 1 is yours: on to 2
+  assert.equal(s.board[2].type, 'pebble');
+  play(s, 'pebble', 5);   // your turn: they stay
+  expectAt(s, { 2: id });
+  const id2 = play(s, 'pebble', 6);
+  expectAt(s, { 3: id, 7: id2 });   // both step on together
+});
+test('Drift: after each of your turns all your stones step on; the boss\'s stay; Mountains hold', () => {
+  const s = G({ rules: ['drift'] });
+  lay(s, { 1: 'O pebble', 3: 'X mountain' });
+  const id = play(s, 'pebble', 0);
+  expectAt(s, { 2: id, 1: 101, 3: 103 });
+  // Two in a row made by placing, then drifted apart, do not win.
+  const t = G({ rules: ['drift'] });
+  lay(t, { 0: 'X pebble', 1: 'X pebble' });
+  play(t, 'pebble', 2);
   assert.ok(!t.over);
-  applyAction(t, { type: 'nomad' });
-  assert.ok(!t.over && t.board[4] === null);
-});
-test('Nomads boss rule: the boss\'s Pebbles land as Nomads and wander on its turns', () => {
-  const s = createGame({ handX: [...PEBBLES], handO: [...PEBBLES], rules: ['nomads'], first: 'O', log: false });
-  play(s, 'pebble', 0);
-  assert.equal(s.board[0].type, 'nomad');
-  assert.equal(s.phase, 'nomad');
-  applyAction(s, { type: 'nomad' });
-  assert.equal(s.board[1]?.type, 'nomad');
-  play(s, 'pebble', 8);
-  assert.equal(s.board[8].type, 'pebble');   // yours stay Pebbles
-  assert.ok(!BASE_STONES.includes('nomad'));
-});
-test('Nomads of yours travel together through the free squares and each other', () => {
-  const s = G({ handX: ['nomad', 'nomad'] });
-  lay(s, { 1: 'X nomad', 2: 'O pebble' });
-  s.board[1].id = 51;
-  const id = play(s, 'nomad', 4);
-  applyAction(s, { type: 'nomad' });
-  // squares: 0, 1 (Nomad), 3, 4 (Nomad), 5..8 → each one step on
-  expectAt(s, { 3: 51, 5: id, 1: 0, 4: 0 });
 });
 test('Mountain obeys restrictions; Relocate cannot move a Mountain', () => {
   const s = G({ handX: ['mountain'] });
@@ -892,7 +872,7 @@ function rng32(seed) {
   };
 }
 
-const PHASES = new Set(['select', 'place', 'effect', 'dictate', 'over', 'nomad']);
+const PHASES = new Set(['select', 'place', 'effect', 'dictate', 'over']);
 const fuzzFails = new Map();
 let fuzzSteps = 0, maxLen = 0;
 const wins = { X: 0, O: 0 }, reasons = {};

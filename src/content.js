@@ -130,8 +130,8 @@ export const ENEMIES = {
   mirrorknight: { name: 'The Mirror Knight', emoji: '🛡️', act: 2, tier: 'boss',
     rules: ['spy'], rules2: ['spy', 'reserved'], iters: 500, blunder: 0.04,
     quote: 'Your left is my right.' },
-  // Nomads: every Pebble it lays wanders on at the end of its turns, so a line
-  // has to be built where its stones are about to leave, or will arrive.
+  // Nomads: after each of its turns all its Pebbles step on to the next free
+  // square, so its lines wander, and so must your blocks.
   caravan: { name: 'The Caravan', emoji: '🐪', act: 2, tier: 'boss',
     rules: ['nomads'], rules2: ['nomads', 'clinch'], iters: 300, blunder: 0.08,
     quote: 'We never stay. Neither will your lines.' },
@@ -171,6 +171,10 @@ export const ENEMIES = {
     quote: 'You will play what I tell you to play.' },
   // Double Time: plain stones cannot hold out. It wants restrictions and
   // something that moves; risen, it also names the stone you play.
+  // Drift: your stones step on after each of your turns, its own stay put.
+  sandstorm: { name: 'The Sandstorm', emoji: '🌪️', act: 3, tier: 'boss',
+    rules: ['drift'], rules2: ['drift', 'reserved'], iters: 450, blunder: 0.04,
+    quote: 'Hold on to your stones.' },
   twinkings: { name: 'The Twin Kings', emoji: '🎭', act: 3, tier: 'boss',
     rules: ['double'], rules2: ['double', 'tactics'], iters: 600, blunder: 0.03,
     quote: 'Two crowns, two moves.' },
@@ -179,7 +183,7 @@ export const ENEMIES = {
 export const ACTS = [
   { n: 1, name: 'The Meadow', bosses: ['oak', 'scarecrow'], size: 1, cond: 0.25 },
   { n: 2, name: 'The Quarry', bosses: ['colossus', 'mirrorknight', 'carpenter', 'caravan'], size: 2, cond: 0.35 },
-  { n: 3, name: 'The Summit', bosses: ['grandmaster', 'twinkings'], size: 3, cond: 0.4 },
+  { n: 3, name: 'The Summit', bosses: ['grandmaster', 'twinkings', 'sandstorm'], size: 3, cond: 0.4 },
 ];
 
 export const enemiesOf = (act, tier) => Object.keys(ENEMIES)

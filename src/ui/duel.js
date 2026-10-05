@@ -130,6 +130,15 @@ export function mountDuel(root, opts) {
   requestAnimationFrame(align);
   window.addEventListener('resize', align);
 
+  // The state after `action` as if no stone wandered (the Nomads and Drift
+  // rules), to show the placing before the step on.
+  function unwandered(from, action) {
+    const x = cloneState(from); x.log = null;
+    x.rules = x.rules.filter((r) => r !== 'nomads' && r !== 'drift');
+    applyAction(x, action);
+    return x;
+  }
+
   // ── Rendering ─────────────────────────────────────────────────────────────
   const stoneEls = new Map();
   // The stone just placed, when its effect went off at once: {id, pos}. It lands
@@ -427,7 +436,12 @@ export function mountDuel(root, opts) {
   // ── The whole picture, for the current mode ───────────────────────────────
   function show() {
     const s = preview ? preview.state : state;
-    renderBoard(s);
+    if (preview?.first) {
+      const p = preview, first = p.first;
+      delete p.first;
+      renderBoard(first);
+      setTimeout(() => { if (preview === p) renderBoard(p.state); }, 480);
+    } else renderBoard(s);
     renderHands(state, s);
     renderChips(state);
     cells.forEach((c, i) => { c.onclick = () => tapSquare(i); });
@@ -465,18 +479,6 @@ export function mountDuel(root, opts) {
     } else if (state.phase === 'place' && preview) {
       const dud = preview.logs?.includes('silenced');
       setStatus(dud ? t('{why} — it will do nothing. Confirm?', { why: t('Hushed') }) : t('This is what happens. Confirm?'), dud ? 'lose-note' : 'you');
-      renderActions([undo, h('button.btn.primary', { onclick: confirm }, h('span', { html: icon('check') }), t('Confirm'))]);
-      verdict();
-    } else if (state.phase === 'nomad') {
-      // The Nomads' own step, at the end of the turn: shown, then confirmed.
-      if (!preview) {
-        const test = cloneState(state); test.log = [];
-        applyAction(test, { type: 'nomad' });
-        preview = { state: test, action: { type: 'nomad' } };
-        show();
-        return;
-      }
-      setStatus(t('Your Nomads move on. Confirm?'), 'you');
       renderActions([undo, h('button.btn.primary', { onclick: confirm }, h('span', { html: icon('check') }), t('Confirm'))]);
       verdict();
     } else if (state.phase === 'effect') {
@@ -586,9 +588,12 @@ export function mountDuel(root, opts) {
         commitState(test, action);
         return;
       }
-      if (!st.apply && state.selected.type !== 'parrot') { sfx('place'); commitState(test, action); return; }
+      const wanders = test.log.includes('wander:X');
+      if (!st.apply && state.selected.type !== 'parrot' && !wanders) { sfx('place'); commitState(test, action); return; }
       preview = { state: test, action, logs: test.log };
-      landing = { id: state.nextId, pos: i };
+      // Drift: the board as placed first, then every stone of yours steps on.
+      if (wanders) preview.first = unwandered(state, action);
+      else landing = { id: state.nextId, pos: i };
       sfx('place');
       show();
       return;
@@ -622,6 +627,7 @@ export function mountDuel(root, opts) {
     const test = cloneState(state); test.log = [];
     applyAction(test, action);
     preview = { state: test, action };
+    if (test.log.includes('wander:X')) preview.first = unwandered(state, action);
     sfx('move');
     show();
   }
@@ -677,6 +683,8 @@ export function mountDuel(root, opts) {
     for (const l of logs) {
       if (l === 'silenced') status.log(t(me ? 'Hushed! Your stone does nothing.' : 'Hushed! {enemy}\'s stone does nothing.', v), me ? 'bad' : 'good');
       else if (l.startsWith('copy:')) { const [, by, what] = l.split(':'); status.log(t('The {parrot} copies {stone}!', { parrot: STONES[by].name, stone: STONES[what].name })); }
+      else if (l === 'wander:O') status.log(t('{rule}: its Pebbles move on.', { rule: RULES.nomads.name }), 'bad');
+      else if (l === 'wander:X') status.log(t('{rule}: your stones move on.', { rule: RULES.drift.name }), 'bad');
       else if (l === 'found:X') status.log(t('You found a pebble!'), 'good');
       else if (l === 'found:O') status.log(t('{enemy} finds a pebble!', v), 'bad');
       else if (l === 'cond:gravity') { /* shown as a step of its own */ }
@@ -728,9 +736,14 @@ export function mountDuel(root, opts) {
       }
       if (action.type === 'place') landing = { id: state.nextId, pos: action.pos };
       if (action.type === 'effect') actor = state.board[state.placedAt]?.id ?? null;
+      const beforeWander = state.rules.includes('nomads') && (action.type === 'place' || action.type === 'effect') ? unwandered(state, action) : null;
       applyAction(state, action);
       const logs = state.log;
       state.log = [];
+      if (beforeWander && logs.includes('wander:O')) {
+        renderBoard(beforeWander);
+        await sleep(560);
+      }
       if (beforeFall && logs.includes('cond:gravity') && beforeFall.board.some((c, i) => (c?.id ?? 0) !== (state.board[i]?.id ?? 0))) {
         renderBoard(beforeFall);
         await sleep(520);
