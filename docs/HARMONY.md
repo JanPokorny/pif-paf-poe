@@ -46,7 +46,45 @@ limits a duel's hand)*
 
 ## Talismans
 
-*(pending: each talisman given at the start of 256 runs, against the baseline of 39%)*
+Each talisman given at the very start of 256 runs (the same seeds), against **100 victories
+without**. The noise is about ±8 runs; a gap under 15 says little.
+
+| talisman | wins | Δ | |
+|---|---|---|---|
+| Phoenix Feather | 158 | **+58** | a second life |
+| Iron Heart | 153 | **+53** | +2 max hearts |
+| Second Wind | 148 | **+48** | +1 energy |
+| Boundary Stone (Stinky+) | 128 | +28 | only once a Stinky is found |
+| Herbal Pouch | 118 | +18 | |
+| War Chest | 116 | +16 | |
+| Wings | 115 | +15 | |
+| Hand Bell | 114 | +14 | |
+| Fuse (Firecracker+, Bumper+) | 112 | +12 | |
+| Rematch Token | 110 | +10 | |
+| Echo Chamber | 107 | +7 | see below |
+| Lucky Coin | 105 | +5 | |
+| Merchant's Badge | 104 | +4 | |
+| Sled, Weathervane, Trickster's Hat, Long Arm | 97–103 | ≈0 | |
+| Loyalty Card, Piggy Bank | 98–99 | ≈0 | |
+| Four-Leaf Clover | **75** | **−25** | worse than nothing |
+
+What it says:
+
+- **Hearts are the currency that decides a run.** The three big ones are a second life, two more
+  hearts, and energy. Everything that only adds gold or shop goods (Piggy Bank, Lucky Coin,
+  Badge, Loyalty Card) does next to nothing: gold buys little that matters. The shop's heal and
+  energy are the only purchases that move a run, and they are capped.
+- **The Four-Leaf Clover hurts.** It tilts rewards towards stones of more energy — stones the run
+  cannot yet bring. With 1 energy for the whole first act, a 2- or 3-energy stone is a pick that
+  does nothing for a long time, and it is picked instead of one that would fit. The talisman
+  reads as luck and plays as a trap. (The bot takes the strongest stone offered; a person might
+  too.)
+- **The + talismans** given at the start are worth nothing until their stones turn up; as found
+  (they are only offered once the pouch holds one), they help — Fuse and Boundary Stone most.
+  Not a problem, but Weathervane and Trickster's Hat (Waltz, Bonfire; Frog, Parrot) upgrade
+  stones whose + form adds little (as `docs/STONE-FAMILIES.md` found).
+- **Gold has too little to buy.** Several talismans (Piggy Bank, Lucky Coin, Badge, Loyalty Card,
+  War Chest) are gold in some form, and gold mostly buys stones the energy cannot field.
 
 ### Echo Chamber (Ozvěna)
 
