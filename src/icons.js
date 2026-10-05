@@ -462,6 +462,11 @@ Object.assign(RAW, {
   'rule-clinch': C(-2.6, 0, 3.6) + C(3.4, 0, 3.6, ' stroke-dasharray="1.6 1.2"'),
   'rule-column': MINI_GRID + P('M -6.6 -6.6 L 6.6 6.6', SW(1.4)) + P('M 2.2 -6.6 H 6.6 V 6.6 H 2.2 Z', ' fill="currentColor" fill-opacity="0.25" stroke="none"'),
   'rule-spy': P('M -7 0 Q 0 -6.6 7 0 Q 0 6.6 -7 0 Z') + C(0, 0, 2.2) + DOT(0, 0, 0.9),
+  'rule-nomads': P('M -5.4 1.6 C -7 1.4 -7.4 -1.6 -6.4 -3.4 C -5.4 -5 -3.6 -4.6 -3.4 -2.6 C -3.2 -0.6 -3.8 1.8 -5.4 1.6 Z', ' fill="currentColor"' + SW(0.8))
+    + C(-5, 3.6, 0.9, ' fill="currentColor" stroke="none"')
+    + P('M 0.4 -1.4 C -1.2 -1.6 -1.6 -4.6 -0.6 -6.4 C 0.4 -8 2.2 -7.6 2.4 -5.6 C 2.6 -3.6 2 -1.2 0.4 -1.4 Z', ' fill="currentColor"' + SW(0.8))
+    + C(0.8, 0.6, 0.9, ' fill="currentColor" stroke="none"')
+    + P('M -2 6.4 H 5.6', SW(1.4)) + head(7.8, 6.4, 0, 2.4, 1.5),
   'rule-reserved': MINI_GRID + F(star(0, 0.2, 2.1, 0.9)),
   'rule-patient': RAW['relic-hourglass'],
 });

@@ -379,7 +379,7 @@ export const CS_DATA = {
     magpie: { name: 'Straka', text: 'Ukradne soupeři z ruky kámen podle tvé volby.' },
     relocate: { name: 'Ústup', text: 'Přesuň jeden svůj kámen, i tenhle, na libovolné volné políčko.' },
     'mind-control': { name: 'Vyhláška', text: 'Soupeřův kámen vedle ní je teď tvůj a Vyhláška zmizí.' },
-    nomad: { name: 'Nomád', text: 'Na konci každého tvého tahu se přesune na další volné pole, řádek po řádku. Tvoji Nomádi táhnou spolu. Tři v řadě se počítají až potom.' },
+    nomad: { name: 'Nomád', text: 'Na konci každého tahu svého majitele se přesune na další volné pole, řádek po řádku. Nomádi táhnou spolu. Tři v řadě se počítají až potom.' },
     hammer: { name: 'Kladivo', text: 'Rozbije kámen vedle sebe, tvůj i soupeřův, a z desky ho smete navždy.' },
     snatch: { name: 'Chňapka', text: 'Sebere kámen vedle sebe, tvůj i soupeřův, z desky do tvé ruky.' },
     seed: { name: 'Semínko', text: 'Na volném poli vedle něj ti vyroste Hora.' },
@@ -402,6 +402,7 @@ export const CS_DATA = {
     spy: { name: 'Špion', text: 'Každý tah boss určí, kam se tvoje kameny pohnou.' },
     patient: { name: 'Trpělivost', text: 'Plná deska patří bossovi.' },
     reserved: { name: 'Reservé', text: 'Na prostřední pole nesmíš. Boss smí.' },
+    nomads: { name: 'Nomádi', text: 'Bossovy oblázky jsou Nomádi: na konci každého jeho tahu se přesunou na další volné pole, řádek po řádku.' },
   },
 
   relics: {
@@ -444,6 +445,7 @@ export const CS_DATA = {
     magpie: { name: 'Straka Stáňa', short: 'Stáňa', quote: 'Ó, třpytí se. Tohle je teď moje.' },
     witch: { name: 'Dutá ježibaba', short: 'Ježibaba', quote: 'Doprostřed si nikdo nesedá, drahoušku.' },
     golem: { name: 'Kamenný golem', short: 'Golem', quote: 'JÁ. SE. NEHNU.' },
+    caravan: { name: 'Karavana', short: 'Karavana', quote: 'Nikde nezůstáváme. Tvoje řady taky ne.' },
     colossus: { name: 'Hodinový kolos', short: 'Kolos', quote: 'TIK. TAK. TENHLE SLOUPEC NE.' },
     carpenter: { name: 'Tesař', short: 'Tesař', quote: 'Rovné čáry jsou pro amatéry.' },
 

@@ -152,7 +152,7 @@ rock next to your marks.
 
 ## The stones
 
-22 special stones and the Pebble, six of them glass by nature.
+21 special stones and the Pebble, six of them glass by nature, and the Nomad (a boss's).
 Every stone's card shows an example computed by the engine.
 
 - **No restriction ever leaves you without a square.** Every rule and stone narrows where you
@@ -163,10 +163,11 @@ Every stone's card shows an example computed by the engine.
   Where the + form was the better stone it became the stone (Waltz, Gravity, Lasso, Swap, Frog,
   Firecracker, Parrot); Stinky and Bumper kept their plain form; Bonfire was redone (it turns
   the board's outer ring). The + talismans went with it.
-- **The Nomad moves by itself**: at the end of each of its owner's turns it steps on to the
-  next free square, row by row (several Nomads cycle together through the free squares and
-  each other's). It is a step of its own, previewed and confirmed; three in a row counts only
-  after it. Alone it wins little (20 of 120 against act 2), so it costs 1.
+- **The Nomad** steps on to the next free square, row by row, at the end of each of its
+  owner's turns (several cycle together); three in a row counts only after it. Too unpredictable
+  for a stone you carry, it is a boss's: the **Caravan** (act 2) lays its Pebbles as Nomads
+  (the Nomads rule), and risen adds Clinch. The bot beats it as often as the act's other
+  bosses (74 and 72 of 80, against 60–74).
 - **Every stone acts on the board.** Mind Control turns an enemy stone beside it yours (and is
   gone); Muffle hushes the enemy stones in its row and column for as long as it stands.
 - **Glass.** A stone is lasting or **glass** (a dashed outline): played once, then gone from the

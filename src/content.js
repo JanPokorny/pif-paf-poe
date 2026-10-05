@@ -130,6 +130,11 @@ export const ENEMIES = {
   mirrorknight: { name: 'The Mirror Knight', emoji: '🛡️', act: 2, tier: 'boss',
     rules: ['spy'], rules2: ['spy', 'reserved'], iters: 500, blunder: 0.04,
     quote: 'Your left is my right.' },
+  // Nomads: every Pebble it lays wanders on at the end of its turns, so a line
+  // has to be built where its stones are about to leave, or will arrive.
+  caravan: { name: 'The Caravan', emoji: '🐪', act: 2, tier: 'boss',
+    rules: ['nomads'], rules2: ['nomads', 'clinch'], iters: 300, blunder: 0.08,
+    quote: 'We never stay. Neither will your lines.' },
   carpenter: { name: 'The Carpenter', emoji: '🔨', act: 2, tier: 'boss',
     rules: ['elko'], rules2: ['elko', 'spy'], iters: 300, blunder: 0.1,
     quote: 'Straight lines are for amateurs.' },
@@ -173,7 +178,7 @@ export const ENEMIES = {
 
 export const ACTS = [
   { n: 1, name: 'The Meadow', bosses: ['oak', 'scarecrow'], size: 1, cond: 0.25 },
-  { n: 2, name: 'The Quarry', bosses: ['colossus', 'mirrorknight', 'carpenter'], size: 2, cond: 0.35 },
+  { n: 2, name: 'The Quarry', bosses: ['colossus', 'mirrorknight', 'carpenter', 'caravan'], size: 2, cond: 0.35 },
   { n: 3, name: 'The Summit', bosses: ['grandmaster', 'twinkings'], size: 3, cond: 0.4 },
 ];
 

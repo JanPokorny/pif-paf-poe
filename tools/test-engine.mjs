@@ -210,8 +210,8 @@ group('stones');
 test('every stone has a name and text', () => {
   for (const t of STONE_TYPES) assert.ok(STONES[t].name && STONES[t].text, t);
 });
-test('BASE_STONES are the findable ones: everything but the Pebble', () => {
-  assert.deepEqual(BASE_STONES, STONE_TYPES.filter((t) => t !== 'pebble'));
+test('BASE_STONES are the findable ones: everything but the Pebble and the Nomad (a boss\'s)', () => {
+  assert.deepEqual(BASE_STONES, STONE_TYPES.filter((t) => t !== 'pebble' && t !== 'nomad'));
 });
 test('Shift offers its own row and column, each way', () => {
   const s = G();
@@ -544,6 +544,17 @@ test('Nomad: at the end of each of your turns it moves to the next free square, 
   assert.ok(!t.over);
   applyAction(t, { type: 'nomad' });
   assert.ok(!t.over && t.board[4] === null);
+});
+test('Nomads boss rule: the boss\'s Pebbles land as Nomads and wander on its turns', () => {
+  const s = createGame({ handX: [...PEBBLES], handO: [...PEBBLES], rules: ['nomads'], first: 'O', log: false });
+  play(s, 'pebble', 0);
+  assert.equal(s.board[0].type, 'nomad');
+  assert.equal(s.phase, 'nomad');
+  applyAction(s, { type: 'nomad' });
+  assert.equal(s.board[1]?.type, 'nomad');
+  play(s, 'pebble', 8);
+  assert.equal(s.board[8].type, 'pebble');   // yours stay Pebbles
+  assert.ok(!BASE_STONES.includes('nomad'));
 });
 test('Nomads of yours travel together through the free squares and each other', () => {
   const s = G({ handX: ['nomad', 'nomad'] });

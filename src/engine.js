@@ -305,15 +305,16 @@ def('seed', {
 });
 
 // The Nomad moves by itself: at the end of each of its owner's turns (see
-// nomadSquares and the 'nomad' phase below), not when placed.
+// nomadSquares and the 'nomad' phase below), not when placed. Never found: it
+// is what the Caravan's Pebbles become (the Nomads boss rule).
 def('nomad', {
-  name: 'Nomad', rarity: 'common', kind: 'move', wanders: true,
-  text: 'At the end of each of your turns it moves on to the next free square, row by row. Your Nomads travel together. Three in a row counts only after.',
+  name: 'Nomad', rarity: 'common', kind: 'move', wanders: true, bossOnly: true,
+  text: 'At the end of each of its owner\'s turns it moves on to the next free square, row by row. Nomads travel together. Three in a row counts only after.',
 });
 
 export const STONE_TYPES = Object.keys(STONES);
-// Stones you can find: everything but the Pebble.
-export const BASE_STONES = STONE_TYPES.filter((t) => t !== 'pebble');
+// Stones you can find: everything but the Pebble and what only bosses have.
+export const BASE_STONES = STONE_TYPES.filter((t) => t !== 'pebble' && !STONES[t].bossOnly);
 export const ONCE_STONES = STONE_TYPES.filter((t) => STONES[t].once);
 
 
@@ -338,6 +339,7 @@ export const RULES = {
   spy: { name: 'Spy', text: 'Each turn the boss picks which way your stones move.', dictate: true },
   patient: { name: 'Patience', text: 'A full board goes to the boss.' },
   reserved: { name: 'Reserved', text: 'You may not place on the centre square. The boss may.' },
+  nomads: { name: 'Nomads', text: 'The boss\'s Pebbles are Nomads: at the end of each of its turns they move on to the next free square, row by row.' },
 };
 
 // Winning shapes: lines of three, or under the Elbow, L-shapes of three.
@@ -689,7 +691,9 @@ export function applyAction(s, a) {
       const stone = s.selected;
       if ((stone.once || STONES[stone.type].once) && !s.from) s.spent[p].push(stone.type);
       s.placedId = s.nextId++;
-      s.board[a.pos] = { player: p, type: stone.type, id: s.placedId };
+      // The Nomads rule: the boss's Pebbles land as Nomads.
+      const type = p === 'O' && stone.type === 'pebble' && s.rules.includes('nomads') ? 'nomad' : stone.type;
+      s.board[a.pos] = { player: p, type, id: s.placedId };
       s.placedAt = a.pos;
       s.placements[p]++;
       afterPlacement(s);
