@@ -211,6 +211,42 @@ The experiment: a pouch of at most N stones, the bot keeping its strongest when 
   when full, a new stone asks which to give up (or to leave it). Compensate the difficulty
   elsewhere — the act-1 draws below are the obvious place.
 
+### Does a cap hurt glass? (morning pass)
+
+Glass stones are worth measuring on their own: what glass is worth is the drop in victories
+when glass is taken out of the game (`--glass 0`). Measured with and without the cap, and
+with glass counted towards the 6 or kept outside it (`--pouchglass 0`). 256 runs each, the
+same seeds:
+
+| | victories with glass | without glass | glass is worth | glass gained / played / thrown away, a run |
+|---|---|---|---|---|
+| 1 energy, no cap | 100 | 92 | **+8** | 3.6 / 2.0 / 0 |
+| 1 energy, cap 6, glass counted | 69 | 62 | +7 | 3.2 / 1.2 / 1.6 |
+| 1 energy, cap 6, glass outside | 78 | 62 | **+16** | 3.3 / 2.3 / 0 |
+| 2 energy, no cap | 154 | 137 | **+17** | 4.7 / 2.8 / 0 |
+| 2 energy, cap 6, glass counted | 98 | 103 | **−5** | 4.1 / 1.8 / 2.0 |
+| 2 energy, cap 6, glass outside | 113 | 103 | **+10** | 4.3 / 3.4 / 0 |
+
+- **Yes: a cap that counts glass takes most of glass's use away.** Played glass falls by about
+  40%, and two of the four glass stones a run brings are thrown away to make room. With
+  2 energy, glass becomes a net loss (−5): a glass stone sitting in a slot keeps out a stone
+  that would have stayed.
+- **Keeping glass outside the cap fixes it, and more.** Glass is worth as much as without a
+  cap, or more: with fewer permanent stones, a glass stone is more often the best thing to
+  bring, so more of it gets played (3.4 a run at 2 energy, against 2.8 with no cap).
+  Glass becomes the build's flexible part, while the 6 slots are its spine. That is a good
+  split.
+- The cost is difficulty: at 2 energy, glass outside the cap gives 113 victories, against 98
+  with glass counted and 100 today. That is still close to today, and act 1 stops being the
+  wall (mean act 2.38).
+- Caveats:
+  - The bot throws away by a fixed ranking that ignores glass. A person might keep glass more
+    wisely.
+  - With 256 runs, differences under about 8 victories are within noise. The −5 is "worthless",
+    not reliably "harmful".
+  - Glass kept outside the cap can pile up. A few glass slots (e.g. 3) would keep the
+    "build" feel; this was not measured.
+
 ## Heat, and the map's weight (second pass)
 
 256 runs each, the same seeds. Heat levels add up (heat 3 has the first three's rules too).
@@ -299,10 +335,11 @@ And the two levers together (third pass):
 | | victories | mean act reached |
 |---|---|---|
 | today: 1 energy, any pouch | 100 | 2.08 |
-| **2 energy, a pouch of 6** | **98** | **2.33** |
+| 2 energy, a pouch of 6 (glass counted) | 98 | 2.33 |
+| **2 energy, a pouch of 6, glass outside it** | **113** | **2.38** |
 | 2 energy, a pouch of 5 | 84 | 2.22 |
 
-**2 energy with a pouch of 6 keeps today's difficulty but moves it**: runs get further (act 1
+**2 energy with a pouch of 6 (glass outside it) keeps roughly today's difficulty but moves it**: runs get further (act 1
 stops being the wall), lose more later, and every stone taken has to earn a slot. This is the
 single change most worth trying in play.
 
