@@ -480,8 +480,7 @@ export function ruleChip(kind, id, cls = '') {
     h('span.chip-ico', { html: icon(`${kind}-${id}`) }), h('span', {}, r.name));
 }
 
-// What a merchant asks: stones worth so much (a number), or one stone by name.
-export const priceTag = (price) => h('div.price', {}, iconEl('barter'), price);
+const priceTag = (price) => h('div.price', {}, iconEl('coin'), price);
 
 // A card for reward and shop screens.
 // Cards are small: picture, name, price. A tap opens the card (where to take or

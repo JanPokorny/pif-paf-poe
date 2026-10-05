@@ -7,7 +7,7 @@
 import { STONES, CONDS } from './engine.js';
 import {
   RELICS, RELIC_TYPES, BOSS_RELICS, ENEMIES, ACTS, EVENTS, enemiesOf, EASY_OPENERS,
-  REWARD_STONES, ONCE_STONES,
+  STONE_PRICE, ONCE_PRICE, RELIC_PRICE, REWARD_STONES, ONCE_STONES,
 } from './content.js';
 
 // ── Randomness that saves with the run ──────────────────────────────────────
@@ -19,6 +19,7 @@ export function rand(run) {
   return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
 }
 const pick = (run, list) => list[(rand(run) * list.length) | 0];
+const int = (run, lo, hi) => lo + ((rand(run) * (hi - lo + 1)) | 0);
 function weighted(run, table) {
   const total = Object.values(table).reduce((a, b) => a + b, 0);
   let r = rand(run) * total;
@@ -50,7 +51,7 @@ export const HEAT = [
 export const HAND = 4;
 const ENEMY_STONES = 5;
 // Every run starts with a Shift: the first duels are never plain tic-tac-toe.
-export const START = { pouch: ['shift'], hearts: 6, slots: 2 };
+export const START = { pouch: ['shift'], hearts: 6, gold: 30, slots: 2 };
 // XP for a duel won, by its tier, and the XP each level starts at (level 1 at 0).
 export const XP = { normal: 1, event: 1, elite: 2, boss: 4 };
 export const LEVELS = [0, 8, 18, 30, 44, 60];
@@ -70,8 +71,8 @@ export function gainXp(run, n) {
   return up;
 }
 export const COST = { starter: 0, common: 1, uncommon: 2, rare: 3 };
-// A stone's worth, by its rarity (the pips in its corner): what merchants count
-// it at, and how crafting and rewards name stones. Glass is small change at 1.
+// A stone's tier, by its rarity (the pips in its corner): how crafting and
+// rewards name stones (glass counts 1).
 export const tierOf = (s) => {
   const type = s?.type ?? s, st = STONES[type];
   return s?.once || st?.once ? 1 : COST[st?.rarity] ?? 0;
@@ -105,11 +106,11 @@ export function newRun({ seed = (Math.random() * 2 ** 31) | 0, heat = 0 } = {}) 
     seed, rs: seed, heat,
     act: 1, atBoss: false, map: null,
     hearts, maxHearts: hearts,
-    pouch: [], relics: [],
+    gold: START.gold, pouch: [], relics: [],
     slots: START.slots, xp: 0,
     lastHand: null, nextUid: 1,
     rematchUsed: {}, phoenixUsed: false,
-    stats: { won: 0, lost: 0, elites: 0, bosses: 0, started: Date.now() },
+    stats: { won: 0, lost: 0, elites: 0, bosses: 0, gold: 0, started: Date.now() },
     screen: 'actintro', pending: null, over: false, victory: false,
   };
   run.pouch = START.pouch.map((t) => stone(run, t));
@@ -775,7 +776,9 @@ export function enterNode(run, key) {
       let second = null;
       for (let g = 0; g < 10 && first; g++) { second = randomRelic(run); if (second !== first) break; }
       const choices = [first, second !== first ? second : null].filter(Boolean);
-      run.pending = { kind: 'treasure', choices, relic: null };
+      const gold = int(run, 15, 30);
+      run.gold += gold;
+      run.pending = { kind: 'treasure', choices, relic: null, gold };
       run.screen = 'treasure';
       break;
     }
@@ -805,10 +808,18 @@ export function duelWon(run, draw = false) {
     run.screen = 'predual';
     return { kind: 'boss-continue' };
   }
-  const reward = { kind: 'reward', stones: [], once: null, relic: null, relicChoice: null, tier: duel.tier, taken: {} };
-  reward.stones = stoneChoices(run, duel.tier);
-  // Glass is small change too, now that there is no gold: it turns up often.
-  const onceChance = duel.tier === 'normal' ? 0.5 : duel.tier === 'event' ? 0.5 : 0.8;
+  const act = ACTS[run.act - 1];
+  let gold = int(run, ...act.gold);
+  if (duel.tier === 'elite') gold += 20;
+  if (duel.tier === 'boss') gold += 60;
+  if (duel.event === 'thief') gold += 45;
+  if (duel.event === 'nightowl') gold += 30;
+  if (has(run, 'lucky-coin')) gold += 8;
+  run.gold += gold;
+  run.stats.gold += gold;
+  const reward = { kind: 'reward', gold, stones: [], once: null, relic: null, relicChoice: null, tier: duel.tier, taken: {} };
+  if (duel.event !== 'thief') reward.stones = stoneChoices(run, duel.tier);
+  const onceChance = duel.tier === 'normal' ? 0.3 : duel.tier === 'event' ? 0 : 0.7;
   if (rand(run) < onceChance) reward.once = randomOnce(run);
   const big = duel.tier === 'elite' || duel.tier === 'boss';
   if (duel.tier === 'elite' || duel.event === 'hermit' || duel.event === 'nightowl') reward.relic = randomRelic(run);
@@ -952,6 +963,7 @@ export function gainRelic(run, id) {
   if (!id || has(run, id)) return;
   run.relics.push(id);
   if (id === 'iron-heart') { run.maxHearts += 2; run.hearts = Math.min(run.maxHearts, run.hearts + 2); }
+  run.gold += RELICS[id].gold ?? 0;   // the Piggy Bank, the War Chest
 }
 
 export function gainStone(run, s) {
@@ -967,74 +979,41 @@ export function gainStone(run, s) {
 }
 
 
-// ── Merchants: barter, no gold ─────────────────────────────────────────────
-//
-// There is no money: stones are the currency. A stone is worth its tier (the
-// pips in its corner; glass, outside the pouch's limit, is small change at 1),
-// and a merchant who likes a kind of stone counts each of those one more.
-// Every shop square holds one merchant, of one of a few trades.
+// ── Shop ────────────────────────────────────────────────────────────────────
 
-export const KINDS_LIKED = {
-  movers: (s) => STONES[s.type].kind === 'move' && !isOnce(s),
-  walls: (s) => ['restrict', 'static'].includes(STONES[s.type].kind),
-  glass: (s) => isOnce(s),
-  tricks: (s) => ['copy', 'curse'].includes(STONES[s.type].kind) || STONES[s.type].kind === 'once',
-};
-export const likes = (merchant, s) => !!merchant?.likes && KINDS_LIKED[merchant.likes](s);
-// `glassWorth`: what a glass stone fetches (an experiment knob).
-export const ECON = { glassWorth: 1 };
-export const worth = (merchant, s) => (isOnce(s) ? ECON.glassWorth : tierOf(s)) + (likes(merchant, s) ? 1 : 0);
-// What a price comes to after talismans: the Merchant's Badge takes one off.
-export const priceOf = (run, n) => Math.max(1, n - (has(run, 'badge') ? 1 : 0));
-// Can the pouch pay `price` to this merchant (the Collector wants one kind only)?
-export const canPay = (run, merchant, price, only = null) => (only
-  ? run.pouch.some((s) => s.type === only)
-  : run.pouch.reduce((n, s) => n + worth(merchant, s), 0) >= price);
-// Pay with these stones (by uid): they leave the pouch.
-export function pay(run, uids) {
-  for (const u of uids) dropStone(run, u);
+export function price(run, base) {
+  return Math.round(base * (has(run, 'badge') ? 0.75 : 1) * (run.heat >= 2 ? 1.25 : 1) * (1 + 0.1 * (run.act - 1)));
 }
 
-export const MERCHANT_TYPES = ['stonecutter', 'glassblower', 'herbalist', 'mystic', 'curio', 'collector'];
-
+// XP the shop sells, once a visit, dearer each time bought.
+export const SHOP_XP = 4;
 export function makeShop(run) {
-  const type = pick(run, MERCHANT_TYPES);
-  const likesPool = Object.keys(KINDS_LIKED);
-  const m = { type, likes: pick(run, likesPool), wares: [] };
-  const extra = has(run, 'satchel') ? 1 : 0;   // the Loyalty Card: one more ware
-  const ware = (w) => m.wares.push({ sold: 0, times: 1, ...w, price: w.price === undefined ? undefined : priceOf(run, w.price) });
-  const distinct = (fn, n) => {
-    const out = [];
-    for (let g = 0; out.length < n && g < 40; g++) { const x = fn(); if (x && !out.some((o) => o.type === x.type)) out.push(x); }
-    return out;
-  };
-  if (type === 'stonecutter') {
-    // Lasting stones, a tier dearer than they cost to bring.
-    for (const st of distinct(() => randomStone(run, null, 'elite'), 3 + extra)) ware({ kind: 'stone', stone: st, price: COST[STONES[st.type].rarity] + 1 });
-  } else if (type === 'glassblower') {
-    m.likes = 'movers';
-    for (const st of distinct(() => randomOnce(run), 3 + extra)) ware({ kind: 'stone', stone: st, price: 2 });
-  } else if (type === 'herbalist') {
-    m.likes = 'glass';
-    ware({ kind: 'heal', n: 2, price: 2, times: 2 });
-    ware({ kind: 'maxheart', price: 4 });
-  } else if (type === 'mystic') {
-    m.likes = 'walls';
-    ware({ kind: 'xp', n: 3, price: 3 });
-    for (const st of distinct(() => randomOnce(run, 'rare'), 1)) ware({ kind: 'stone', stone: st, price: 2 });
-  } else if (type === 'curio') {
-    const ids = [];
-    for (let g = 0; ids.length < 2 + extra && g < 12; g++) { const id = randomRelic(run); if (id && !ids.includes(id)) ids.push(id); }
-    for (const id of ids) ware({ kind: 'relic', relic: id, price: { common: 4, uncommon: 5, rare: 6 }[RELICS[id].rarity] });
-  } else {
-    // The Collector wants one kind of stone, often one you carry, and pays well for it.
-    m.likes = null;
-    const mine = [...new Set(run.pouch.filter((x) => !isOnce(x)).map((x) => x.type))];
-    const want = mine.length && rand(run) < 0.75 ? pick(run, mine) : randomStone(run).type;
-    m.wants = want;
-    const id = randomRelic(run);
-    if (id) ware({ kind: 'relic', relic: id, only: want });
-    ware({ kind: 'xp', n: 4, only: want });
+  const stones = [];
+  const rarities = ['common', 'common', 'uncommon', 'uncommon', 'rare', ...(has(run, 'satchel') ? ['uncommon'] : [])];
+  for (const r of rarities) {
+    let s;
+    for (let g = 0; g < 20; g++) { s = randomStone(run, r); if (!stones.some((o) => o.type === s.type)) break; }
+    stones.push({ ...s, price: price(run, STONE_PRICE[r]), sold: false });
   }
-  return m;
+  const once = [];
+  for (const r of ['common', 'uncommon', 'uncommon', 'rare']) {
+    let s;
+    for (let g = 0; g < 20; g++) { s = randomOnce(run, r); if (!once.some((o) => o.type === s.type)) break; }
+    once.push({ ...s, price: price(run, ONCE_PRICE[r]), sold: false });
+  }
+  // Two talismans; never one that pays out less gold than it costs.
+  const relics = [];
+  for (let g = 0; relics.length < 2 && g < 12; g++) {
+    const id = randomRelic(run);
+    if (!id || relics.some((x) => x.relic === id)) continue;
+    const cost = price(run, RELIC_PRICE[RELICS[id].rarity]);
+    if (RELICS[id].gold !== undefined && cost >= RELICS[id].gold) continue;
+    relics.push({ relic: id, price: cost, sold: false });
+  }
+  return {
+    stones, once, relics,
+    healPrice: price(run, 30),
+    xpPrice: price(run, 45 + 10 * (run.xpBought ?? 0)),
+    healed: 0, trained: false,
+  };
 }

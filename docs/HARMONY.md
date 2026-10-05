@@ -600,6 +600,15 @@ Still open from the flat-cost finding: with no cost to hold them back, the stron
 the right pick every time. The weak ones (Shift, Waltz, Bonfire, Parrot, Mountain, Twin) need
 a lift for picks to be about fit.
 
+## Back to gold (eighth pass)
+
+**Barter is dropped; gold is back.**
+- The shop sells stones, glass stones, two talismans, XP (+4, once a visit, dearer each
+  time) and up to two hearts. The events and gold talismans are as before.
+- The Quarryman stays and asks 30 gold.
+- The bot wins 163 of 256 (150 with barter). It buys 2.2 things a run, against 0.9 trades
+  with barter: XP 0.8, heals 0.7, talismans 0.7, stones 0.1.
+
 ## Heat, and the map's weight (second pass)
 
 256 runs each, the same seeds. Heat levels add up (heat 3 has the first three's rules too).

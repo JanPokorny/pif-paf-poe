@@ -12,7 +12,7 @@ numbers. The camp game's own reasoning is in `old/adr/`.
 - **Counterattacks → one-shot stones.** The camp game's counterattacks became tricks, spent
   at the end of a turn; now they are stones like any other, brought along like any other and placed on the
   board, that then do their one thing (Relocate, Mind Control, Muffle, and any stone in glass). Once played in a duel, won or lost, one is gone from the pouch. They
-  have a dashed outline, come as their own reward, sold by the Glassblower, and take no slot.
+  have a dashed outline, come as their own reward and shop shelf, and take no slot.
   Only stones of tier 2 and 3 come in glass.
   Encore, which handed back your last special stone, did not survive the change.
 - **Boss rules** come from an older iteration's sheet of special rules (Taktika, Náskok, Elko,
@@ -28,10 +28,9 @@ duel, and a rule for who wins when someone runs out. The second version slows it
   size, so energy became slots; docs/HARMONY.md.) Every lasting special stone takes one slot
   in a duel hand; glass stones take none. A run starts with a Shift and the slots in
   `START.slots`. Duels won give XP (normal 1, elite 2, boss 4). Each level (`LEVELS` in run.js)
-  gives one more slot, with a burst on screen. The Mystic, the Collector and the Monk sell
-  XP; Second Wind (a boss relic) adds a slot. The XP towards the next level is a thin bar
-  under the slots in the top bar. A stone's **worth** (its tier: 1–3 amber pips in its corner)
-  is what merchants count, and what crafting and rewards go by.
+  gives one more slot, with a burst on screen. The shop and the Monk sell XP; Second Wind (a boss relic) adds a slot. The XP towards the next level is a thin bar
+  under the slots in the top bar. A stone's tier (1–3 amber pips in its corner) is what crafting
+  and rewards go by.
 - **Rewards are a form.** Each row of a reward is yours ("~ and ~" between rows); a row that
   offers a choice ("or" between its cards) works like radio buttons, and Continue stays grey
   until every choice is made, then takes it all. Nothing can be skipped.
@@ -138,20 +137,12 @@ its own, with its boss.
 
 Balance was measured and retuned with `tools/lab.mjs`; the run bots (see Difficulty) win a third to two thirds of their runs at heat 0.
 
-## Barter, no gold
+## Gold
 
-There is no money. **Stones are the currency**: a stone is worth its tier (the pips in its
-corner), and glass, which the pouch's limit leaves out, is the small change at 1. A shop square
-holds one **merchant** of six trades, each taking stones by their worth, with a liked kind
-(movers, walls and restrictions, glass, tricksters) worth one more each:
-the **Stonecutter** (lasting stones, a tier dearer than they cost to bring), the **Glassblower**
-(glass stones), the **Herbalist** (hearts, a max heart), the **Mystic** (XP, a rare glass
-stone), the **Curio Dealer** (talismans) and the **Collector**, who wants one named stone and
-pays a talisman or XP for it. With the pouch capped at six, paying means choosing what
-the build can spare. Events that asked for gold ask for stones; the gold talismans are gone
-(Lucky Coin, Piggy Bank; the War Chest became the Bottomless Bag, two more pouch slots), the
-Badge takes one off every price. The Quarryman, for stones worth 2, has your next X break a
-rock next to your marks.
+Duels, treasure and some events pay gold; a shop square sells stones, glass stones, two
+talismans, XP (once a visit, dearer each time) and up to two hearts. (A barter economy, stones
+for stones with six kinds of merchant, was tried and dropped: trade stayed thin, see
+docs/HARMONY.md.) The Quarryman, for 30 gold, has your next X break a rock next to your marks.
 
 ## The stones
 

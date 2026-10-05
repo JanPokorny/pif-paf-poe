@@ -1061,15 +1061,8 @@ body:has(.duel) #toast.show { transform: translate(-50%, 0) rotate(-1deg); }
 .heart-crack path { fill: none; stroke: var(--paper, #fbf7ec); stroke-width: 1.3; stroke-linecap: round; stroke-linejoin: round; stroke-dasharray: 100 102; stroke-dashoffset: 101; animation: draw 0.35s ease-out 0.5s forwards; }
 @keyframes heart-shake { 20% { rotate: -9deg; } 40% { rotate: 8deg; } 60% { rotate: -6deg; } 80% { rotate: 4deg; } }
 
-/* ── Merchants ───────────────────────────────────────────────────────────── */
-.merchant-head { display: flex; gap: 14px; align-items: flex-start; margin: 4px 0 10px; }
-.merchant-emoji { font-size: 3rem; line-height: 1; filter: grayscale(0.2); }
-.merchant-head h2 { margin: 0; }
-.merchant-head p { margin: 2px 0; }
-.merchant-terms { font-size: 1rem; }
-.pouch-slot.liked .stone::after { content: '+1'; position: absolute; right: -8px; bottom: -6px; font: 700 0.8rem var(--marker, inherit); color: var(--good, #2f7a4a); background: var(--card, #fff); border-radius: 6px; padding: 0 3px; }
 
-/* Worth: plain amber pips in a stone's corner (what merchants count it at). */
+/* Tier: plain amber pips in a stone's corner. */
 .stone .cost i.pip, .card .stone .cost i.pip { width: 7px; height: 7px; border-radius: 50%; background: #d6a531; box-shadow: inset 0 0 0 1.5px #8a6418; }
 .stone.mini .cost i.pip { width: 5px; height: 5px; }
 .stone .cost i.pip + i.pip { margin-left: 0; }

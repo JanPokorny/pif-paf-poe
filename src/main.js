@@ -4,7 +4,7 @@
 import { STONES, CONDS, RULES, createGame } from './engine.js';
 import { RELICS, ENEMIES, ACTS, EVENTS } from './content.js';
 import * as R from './run.js';
-import { h, hideToast, tapeUp, art, relicArt, scribbleX, scribbleO, stoneEl, iconEl, toast, modal, ask, tickStone, infoStone, infoRelic, infoThing, stoneCard, relicCard, priceTag, stoneName, langToggle, energyBar, statusLine } from './ui/common.js';
+import { h, hideToast, tapeUp, art, relicArt, scribbleX, scribbleO, stoneEl, iconEl, toast, modal, ask, tickStone, infoStone, infoRelic, infoThing, stoneCard, relicCard, stoneName, langToggle, energyBar, statusLine } from './ui/common.js';
 import { icon } from './icons.js';
 import { mountDuel } from './ui/duel.js';
 import { sfx, soundOn, setSound } from './sound.js';
@@ -21,7 +21,7 @@ document.documentElement.lang = lang;
 const shortName = (e) => e.short ?? e.name.replace(/^(The|Captain) /, '');
 
 const app = document.getElementById('app');
-const SAVE = 'ppp-run-v6';   // older runs are not carried over
+const SAVE = 'ppp-run-v7';   // older runs are not carried over
 const META = 'ppp-meta-v1';
 
 let run = null;
@@ -84,6 +84,7 @@ function topBar(menu = showMenu) {
   shownEnergy = energy;
   return h('div.topbar', {},
     hearts,
+    h('div.gold', {}, h('span', { html: icon('coin') }), run.gold),
     counter,
     h('button.icon-btn', { onclick: showPouch, 'aria-label': t('Your pouch') }, h('span', { html: icon('hand') })),
     h('button.icon-btn', { onclick: menu, 'aria-label': t('Menu') }, h('span', { html: icon('gear') })));
@@ -759,6 +760,7 @@ function radioRow(chosen, items) {
 function rewardScreen() {
   const rw = run.pending;
   const parts = [h('h1.reward-title', {}, rw.tier === 'boss' ? t('Boss defeated!') : t('Victory!'))];
+  if (rw.gold) parts.push(h('div.reward-gold', {}, h('span', { html: icon('coin') }), t('+{n} gold', { n: rw.gold })));
   if (rw.xp) parts.push(h('div.reward-gold.reward-energy', {}, h('span', { html: icon('star') }), t('+{n} XP', { n: rw.xp })));
   if (rw.relic && !rw.taken.relic) {
     R.gainRelic(run, rw.relic);
@@ -804,6 +806,7 @@ function treasureScreen() {
   const tr = run.pending;
   screen(...(tr.sel !== undefined ? [KEEP_SCROLL] : []), topBar(), h('div.page.reward', {},
     h('h1.reward-title', {}, t('Treasure!')),
+    h('div.reward-gold', {}, h('span', { html: icon('coin') }), t('+{n} gold', { n: tr.gold })),
     tr.relic ? h('div.cards.one', {}, relicCard(tr.relic, { onclick: () => infoRelic(tr.relic) }))
       // Its one choice: picking a talisman takes it, and the treasure with it.
       : tr.choices?.length ? radioRow(tr.sel, tr.choices.map((id) => [id, relicCard(id, { onclick: () => infoRelic(id, { label: t('Pick'), run: () => { R.gainRelic(run, id); sfx('coin'); R.leaveNode(run); route(); } }) })]))
@@ -814,91 +817,49 @@ function treasureScreen() {
     }, !tr.relic && tr.choices?.length && tr.sel === undefined ? t('Choose first') : t('Continue')))));
 }
 
-// ── Merchants ───────────────────────────────────────────────────────────────
+// ── Shop ────────────────────────────────────────────────────────────────────
 
-// Who keeps the shop, and what each likes (by run.js's KINDS_LIKED).
-const MERCHANT = {
-  stonecutter: { name: t('The Stonecutter'), emoji: '🪨', line: t('Lasting stones, cut to order.') },
-  glassblower: { name: t('The Glassblower'), emoji: '🫙', line: t('Glass stones, blown while you wait.') },
-  herbalist: { name: t('The Herbalist'), emoji: '🌿', line: t('Herbs for a weary heart.') },
-  mystic: { name: t('The Mystic'), emoji: '🔮', line: t('A little more of what moves you.') },
-  curio: { name: t('The Curio Dealer'), emoji: '🏺', line: t('Talismans, every one with a story.') },
-  collector: { name: t('The Collector'), emoji: '🧐', line: t('I collect one kind of stone. Only one.') },
-};
-const LIKED = { movers: t('stones that move others'), walls: t('restrictions and Mountains'), glass: t('glass stones'), tricks: t('tricksters and glass-only stones') };
-
-// Pay `price` from the pouch: tick stones until they are worth enough (each
-// worth its tier, one more if the merchant likes it). `only`: one stone of
-// that kind and nothing else. Calls done(uids), or done(null) if backed out.
-function payFlow(merchant, price, prompt, done, { only = null } = {}) {
-  if (only) {
-    pickFromPouch(prompt, (s) => done(s ? [s.uid] : null), { filter: (x) => x.type === only, cancel: t('Never mind') });
-    return;
-  }
-  let picked = [];
-  const body = h('div.pouch-view');
-  const total = () => picked.reduce((n, u) => n + R.worth(merchant, run.pouch.find((x) => x.uid === u)), 0);
-  const draw = () => {
-    const sum = total();
-    body.replaceChildren(
-      h('h2', {}, prompt),
-      h('p.dim', {}, t('Worth {n} of {price}. A stone is worth its pips{liked}.', { n: sum, price, liked: merchant?.likes ? t(', {kind} one more', { kind: LIKED[merchant.likes] }) : '' })),
-      h('div.stone-grid', {}, run.pouch.map((x) => tickStone(x, {
-        on: picked.includes(x.uid), name: true, face: '.pouch-slot' + (R.likes(merchant, x) ? '.liked' : ''),
-        toggle: () => { picked = picked.includes(x.uid) ? picked.filter((u) => u !== x.uid) : [...picked, x.uid]; sfx('click'); draw(); },
-      }))),
-      h('button.btn.primary.wide', { disabled: sum < price || undefined, onclick: () => { close(); done(picked); } }, t('Pay')),
-      h('button.btn.wide.ghost', { onclick: () => { close(); done(null); } }, t('Never mind')));
-  };
-  draw();
-  const close = modal(body, { dismissable: false, cls: 'tall' });
-}
-
-// A service on offer, as a card like the wares.
-function serviceCard(ico, name, price, off, dear, onclick) {
-  return h('button.card.service-card' + (off ? '.sold' : '') + (dear ? '.dear' : ''), { onclick, disabled: off || undefined },
-    h('div.relic-token', { html: icon(ico) }), h('div.card-name', {}, name), priceTag(price));
+// A shop service as a card like the wares.
+function serviceCard(ico, name, price, off, onclick) {
+  // Out of reach of your purse shows, whether or not the service is on offer at all.
+  return h('button.card.service-card' + (off ? '.sold' : '') + (run.gold < price ? '.dear' : ''), { onclick, disabled: off || undefined },
+    h('div.relic-token', { html: icon(ico) }), h('div.card-name', {}, name), h('div.price', {}, iconEl('coin'), price));
 }
 
 function shopScreen(redraw = false) {
-  const m = run.pending.shop;
-  const who = MERCHANT[m.type];
-  const label = (w) => (w.only ? STONES[w.only].name : w.price);
-  const can = (w) => R.canPay(run, m, w.price, w.only);
-  // Every ware opens its card first; the card's button trades for it. What was
-  // paid comes back if the ware is then turned down (a full pouch, kept).
-  const offer = (w, get) => ({
-    label: [t('Trade'), h('span.price-tag', {}, iconEl('barter'), label(w))], disabled: !can(w),
-    run: () => payFlow(m, w.price, t('Pay with which stones?'), (uids) => {
-      if (!uids) return;
-      const paid = run.pouch.filter((x) => uids.includes(x.uid));
-      R.pay(run, uids);
-      get((ok = true) => {
-        if (ok) { w.sold++; sfx('coin'); } else run.pouch.push(...paid);
-        save(); shopScreen(true);
-      });
-    }, { only: w.only }),
-  });
-  const card = (w) => {
-    const off = w.sold >= w.times, dear = !can(w);
-    if (w.kind === 'stone') return stoneCard(w.stone, { price: label(w), sold: off, dear, onclick: () => infoStone(w.stone, 'X', '', offer(w, (done) => takeStone(w.stone, done))) });
-    if (w.kind === 'relic') return relicCard(w.relic, { price: label(w), sold: off || R.has(run, w.relic), dear, onclick: () => infoRelic(w.relic, offer(w, (done) => { R.gainRelic(run, w.relic); done(); })) });
-    if (w.kind === 'heal') return serviceCard('heart', `+${w.n} ❤`, label(w), off || run.hearts >= run.maxHearts, dear, () => infoThing({ art: icon('heart'), name: `+${w.n} ❤`, text: t('Heal {n} hearts.', { n: w.n }) },
-      offer(w, (done) => { run.hearts = Math.min(run.maxHearts, run.hearts + w.n); sfx('heal'); done(); })));
-    if (w.kind === 'maxheart') return serviceCard('heart', t('+1 max ❤'), label(w), off, dear, () => infoThing({ art: icon('heart'), name: t('+1 max ❤'), text: t('One more heart to your maximum, and heal it.') },
-      offer(w, (done) => { run.maxHearts++; run.hearts++; sfx('heal'); done(); })));
-    return serviceCard('star', t('+{n} XP', { n: w.n }), label(w), off, dear, () => infoThing({ art: icon('star'), name: t('+{n} XP', { n: w.n }), text: t('Experience: every level brings one more slot for a stone in your duels.') },
-      offer(w, (done) => { R.gainXp(run, w.n); done(); })));
+  const shop = run.pending.shop;
+  const buy = (cost, fn) => {
+    if (run.gold < cost) { toast(t('Not enough gold.'), 'bad'); return; }
+    fn(() => { run.gold -= cost; sfx('coin'); save(); shopScreen(true); });
   };
-  const worthAll = run.pouch.reduce((n, x) => n + R.worth(m, x), 0);
+  // Every ware opens its card first; the card's button buys it.
+  const offer = (cost, fn) => ({ label: [t('Buy'), h('span.price-tag', {}, iconEl('coin'), cost)], disabled: run.gold < cost, run: () => buy(cost, fn) });
   screen(...(redraw ? [KEEP_SCROLL] : []), topBar(), h('div.page.shop', {},
-    h('div.merchant-head', {}, h('div.merchant-emoji', {}, who.emoji), h('div', {},
-      h('h2', {}, who.name), h('p.dim', {}, who.line),
-      h('p.merchant-terms', {}, m.wants ? t('Wants a {stone}, and nothing else.', { stone: STONES[m.wants].name })
-        : t('Takes stones by their pips. Likes {kind}: one more each.', { kind: LIKED[m.likes] })),
-      m.wants ? null : h('p.dim', {}, t('Your stones are worth {n} here.', { n: worthAll })))),
-    h('div.cards.scroll', {}, m.wares.map(card)),
-    h('div.sticky-bottom', {}, h('button.btn.primary.wide.big', { onclick: () => { R.leaveNode(run); route(); } }, t('Leave')))));
+    // How full each part of the pouch is: past it, a stone bought means one given up.
+    h('div.section-label', {}, t('Stones · {n}/{max}', { n: R.shelf(run, 'stones').length, max: R.POUCH.stones })),
+    h('div.cards.scroll', {}, shop.stones.map((s) => stoneCard(s, {
+      price: s.price, sold: s.sold, dear: run.gold < s.price,
+      onclick: () => infoStone(s, 'X', '', offer(s.price, (pay) => takeStone(s, (ok) => { if (ok) { s.sold = true; pay(); } }))),
+    }))),
+    h('div.section-label', {}, t('Glass stones')),
+    h('div.cards.scroll', {}, (shop.once ?? []).map((x) => stoneCard(x, {
+      price: x.price, sold: x.sold, dear: run.gold < x.price,
+      onclick: () => infoStone(x, 'X', '', offer(x.price, (pay) => takeStone(x, (ok) => { if (ok) { x.sold = true; pay(); } }))),
+    }))),
+    // Relics and services share a row of cards.
+    h('div.section-label', {}, t('Talismans and services')),
+    h('div.cards.scroll', {},
+      shop.relics.map((r) => relicCard(r.relic, {
+        price: r.price, sold: r.sold || R.has(run, r.relic), dear: run.gold < r.price,
+        onclick: () => infoRelic(r.relic, offer(r.price, (pay) => { R.gainRelic(run, r.relic); r.sold = true; pay(); })),
+      })),
+      serviceCard('star', t('+{n} XP', { n: R.SHOP_XP }), shop.xpPrice,
+        shop.trained, () => infoThing({ art: icon('star'), name: t('+{n} XP', { n: R.SHOP_XP }), text: t('Experience: every level brings one more slot for a stone in your duels.') },
+          offer(shop.xpPrice, (pay) => { R.gainXp(run, R.SHOP_XP); run.xpBought = (run.xpBought ?? 0) + 1; shop.trained = true; pay(); }))),
+      serviceCard('heart', '+1 ❤', shop.healPrice,
+        run.hearts >= run.maxHearts || shop.healed >= 2, () => infoThing({ art: icon('heart'), name: '+1 ❤', text: t('Heal one heart. Twice per shop at most.') },
+          offer(shop.healPrice, (pay) => { run.hearts++; shop.healed++; sfx('heal'); pay(); })))),
+    h('div.sticky-bottom', {}, h('button.btn.primary.wide.big', { onclick: () => { R.leaveNode(run); route(); } }, t('Leave shop')))));
 }
 
 // ── Rest ────────────────────────────────────────────────────────────────────
@@ -1012,9 +973,6 @@ function eventScreen() {
       s.type = n.type;
       resolve(t('It bubbles and hisses… and becomes a {stone}!', { stone: stoneName(s) }));
     })),
-    canPay: (n) => R.canPay(run, null, n),
-    pay: (n, prompt) => new Promise((resolve) => payFlow(null, n, prompt, (uids) => { if (uids) { R.pay(run, uids); save(); } resolve(!!uids); })),
-    loseStone: (prompt) => new Promise((resolve) => (run.pouch.length ? pickFromPouch(prompt, (s) => { if (s) R.dropStone(run, s.uid); resolve(); }, { cancel: null }) : resolve())),
     rocks: () => R.rocksInReach(run.map).length,
     xp: (n) => (R.gainXp(run, n) ? t('+{n} XP. Level up!', { n }) : t('+{n} XP.', { n })),
     duplicate: () => new Promise((resolve) => pickFromPouch(t('Duplicate which stone?'), (s) => {
@@ -1032,11 +990,11 @@ function eventScreen() {
   };
   // What a choice came to, by what it changed: anything gained is good news
   // (even paid for), only losses bad, nothing at all neither.
-  const sig = () => ({ hearts: run.hearts, maxHearts: run.maxHearts, energy: run.xp ?? 0, relics: run.relics.length, pouch: JSON.stringify(run.pouch), breaker: !!run.map?.breaker });
+  const sig = () => ({ hearts: run.hearts, maxHearts: run.maxHearts, gold: run.gold, energy: run.xp ?? 0, relics: run.relics.length, pouch: JSON.stringify(run.pouch), breaker: !!run.map?.breaker });
   const moodOf = (a, b) => {
-    const gained = b.hearts > a.hearts || b.maxHearts > a.maxHearts || b.energy > a.energy || b.relics > a.relics || (b.breaker && !a.breaker)
+    const gained = b.hearts > a.hearts || b.maxHearts > a.maxHearts || b.gold > a.gold || b.energy > a.energy || b.relics > a.relics || (b.breaker && !a.breaker)
       || (b.pouch !== a.pouch && JSON.parse(b.pouch).length >= JSON.parse(a.pouch).length);
-    const lost = b.hearts < a.hearts || b.maxHearts < a.maxHearts || JSON.parse(b.pouch).length < JSON.parse(a.pouch).length;
+    const lost = b.hearts < a.hearts || b.maxHearts < a.maxHearts || b.gold < a.gold || JSON.parse(b.pouch).length < JSON.parse(a.pouch).length;
     return gained ? 'good' : lost ? 'bad' : '';
   };
   const choose = (c) => async () => {
@@ -1107,6 +1065,7 @@ function endScreen(victory) {
       h('div', {}, h('b', {}, st.lost), tp(st.lost, ' duel lost', ' duels lost')),
       h('div', {}, h('b', {}, st.elites), tp(st.elites, ' elite beaten', ' elites beaten')),
       h('div', {}, h('b', {}, st.bosses), tp(st.bosses, ' boss beaten', ' bosses beaten')),
+      h('div', {}, h('b', {}, st.gold ?? 0), t(' gold earned', { n: st.gold ?? 0 })),
       h('div', {}, h('b', {}, mins), tp(mins, ' minute', ' minutes'))),
     h('div.section-label', {}, t('Final pouch')),
     h('div.hand.show', {}, run.pouch.map((s) => stoneEl(s, 'X', { mini: true }))),

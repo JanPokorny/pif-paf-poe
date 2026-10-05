@@ -31,11 +31,11 @@ const pick = (a) => a[Math.floor(rand() * a.length)];
       for (let i = 0; i < 2 + 2 * act; i++) R.gainStone(run, R.randomStone(run, null, 'elite'));
       R.gainStone(run, R.randomOnce(run));
       run.map = R.makeMap(run); run.screen = 'actintro';
-      localStorage.setItem('ppp-run-v6', JSON.stringify({ run, duel: null }));
+      localStorage.setItem('ppp-run-v7', JSON.stringify({ run, duel: null }));
     }
   }, [LANG, +ACT, +SEED]);
   await page.goto('http://localhost:8080/');
-  const state = () => page.evaluate(() => { try { const s = JSON.parse(localStorage.getItem('ppp-run-v6')); return s?.run ? { screen: s.run.screen, act: s.run.act, hearts: s.run.hearts, over: s.run.over, duel: !!s.duel, tier: s.run.pending?.duel?.tier } : null; } catch { return null; } });
+  const state = () => page.evaluate(() => { try { const s = JSON.parse(localStorage.getItem('ppp-run-v7')); return s?.run ? { screen: s.run.screen, act: s.run.act, hearts: s.run.hearts, over: s.run.over, duel: !!s.duel, tier: s.run.pending?.duel?.tier } : null; } catch { return null; } });
   const click = async (loc) => { try { await loc.click({ timeout: 1500, force: true }); return true; } catch { return false; } };
   const any = async (sel) => { const l = page.locator(sel); const n = await l.count(); if (!n) return false; return click(l.nth(Math.floor(rand() * n))); };
   const snap = async (name) => { if (seen.has(name)) return; seen.add(name); await page.screenshot({ path: `${OUT}/${String(seen.size).padStart(2, '0')}-${name}.png` }); };
@@ -54,6 +54,8 @@ const pick = (a) => a[Math.floor(rand() * a.length)];
       await snap(screenName.replace('+', '-') + (await page.locator('.modal .ask').count() ? '-ask' : await page.locator('.modal .stone-grid').count() ? '-grid' : ''));
       if (await page.locator('.modal .ask').count()) { await click(page.locator('.modal .ask button').first()); continue; }
       if (await page.locator('.modal .info-actions button.primary:not([disabled])').count() && rand() < 0.75) { await click(page.locator('.modal .info-actions button.primary')); continue; }
+      // A full pouch: give one up for the new stone, or keep what you have.
+      if (await page.locator('.modal .cards.one + p + .stone-grid .pouch-slot').count()) { if (rand() < 0.7) await any('.modal .stone-grid .pouch-slot'); else await click(page.locator('.modal button.btn.ghost').last()); continue; }
       if (await page.locator('.modal .cards .card').count() && rand() < 0.8) { await any('.modal .cards .card'); continue; }
       // The workshop: tick two, then Trade.
       if (await page.locator('.modal .stone-grid .tick-box').count() && rand() < 0.7) { await any('.modal .stone-grid .tick-box'); await page.waitForTimeout(100); await any('.modal .stone-grid .tick-box'); await page.waitForTimeout(100); await click(page.locator('.modal button.primary').first()); continue; }

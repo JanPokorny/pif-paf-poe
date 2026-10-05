@@ -764,28 +764,14 @@ test('a draw counts as won, and costs a heart', () => {
   assert.equal(RUN.duelWon(run, true).kind, 'reward');
   assert.equal(run.hearts, hearts - 1);
 });
-test('merchants barter: a stone is worth its tier, one more if liked; every kind turns up', () => {
-  const run = RUN.newRun({ seed: 3 });
-  run.pouch = [];
-  const swap = RUN.gainStone(run, { type: 'swap' }), glass = RUN.gainStone(run, { type: 'firecracker', once: true });
-  const m = { likes: 'movers' };
-  assert.equal(RUN.worth(m, swap), 3);   // 2, liked
-  assert.equal(RUN.worth(m, glass), 1);  // glass is small change; a glass mover is not a mover here
-  assert.equal(RUN.worth({ likes: 'glass' }, glass), 2);
-  assert.ok(RUN.canPay(run, m, 4) && !RUN.canPay(run, m, 5));
-  assert.ok(RUN.canPay(run, m, 99, 'swap') && !RUN.canPay(run, m, 1, 'magnet'));
-  RUN.pay(run, [swap.uid]);
-  assert.deepEqual(run.pouch.map((x) => x.uid), [glass.uid]);
-  const seen = new Set();
+test('a shop sells stones, glass, talismans, XP and a heal for gold; never a talisman for more gold than it pays', () => {
   for (let seed = 1; seed < 200; seed++) {
-    const r = RUN.newRun({ seed });
-    const shop = RUN.makeShop(r);
-    seen.add(shop.type);
-    assert.ok(shop.wares.length > 0, shop.type);
-    for (const w of shop.wares) assert.ok(w.only || w.price >= 1, `${shop.type} ${w.kind}`);
+    const run = RUN.newRun({ seed });
+    const shop = RUN.makeShop(run);
+    assert.ok(shop.stones.length >= 5 && shop.once.length === 4 && shop.xpPrice > 0 && shop.healPrice > 0);
+    for (const r of shop.relics) assert.notEqual(r.relic, 'piggy');
   }
-  assert.equal(seen.size, RUN.MERCHANT_TYPES.length);
-  assert.equal(run.gold, undefined);
+  assert.equal(RUN.newRun({ seed: 1 }).gold, RUN.START.gold);
 });
 test('the Quarryman\'s trick: the next X goes on a rock in reach, and breaks it', () => {
   const run = RUN.newRun({ seed: 5 });
