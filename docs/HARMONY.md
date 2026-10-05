@@ -468,14 +468,9 @@ next to your marks, and breaks it.
 
 - **Gifts do not help** the bot: a talisman or stone at the start is worth less than it looks.
 - **Energy and hearts do**, about a third more wins each.
-- **Adopted:**
-  - start with 3 energy;
-  - the boss's first three in a row on each page is a warning shot (no heart);
-  - the square that would give the boss its line is ringed in red dashes, so a person sees
-    it coming as the bot does.
-
-  Together that is 153 of 256 for the bot. That may be too easy for a person who plays well;
-  dial back with `START.energy` or `MAPCFG.freeLines` in run.js.
+- **Adopted:** start with 3 energy (118 of 256). A free first boss line and a red ring on the
+  square that would give the boss its line were tried and removed (not liked);
+  `MAPCFG.freeLines` stays as an experiment knob, off.
 - The heat ladder is iced: every run is at heat 0.
 
 ## Heat, and the map's weight (second pass)

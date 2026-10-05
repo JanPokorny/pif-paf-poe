@@ -152,7 +152,7 @@ export const BOSS_LIVES = 2;              // duels a boss must lose
 export const LINE = 3;                     // marks in a row that count
 export const MAX_POWER = 2;
 // `lineDamage`: hearts a line of the boss's Os costs you.
-export const MAPCFG = { lineDamage: 1, freeLines: 1 };
+export const MAPCFG = { lineDamage: 1, freeLines: 0 };
 // Rocks: a lattice -- (x + 3y) mod 7 in two neighbouring classes -- that cuts
 // every row, column and diagonal into runs between two and five squares long,
 // so an open two is rarely a double threat and a line has to be set up; plus a
@@ -546,7 +546,7 @@ function bossTurn(run) {
 function bossLine(run) {
   run.map.oLines++;
   run.map.news = 'oline';
-  // `freeLines`: the boss's first line on each page costs no heart (a warning shot).
+  // `freeLines`: the boss's first lines on each page cost no heart (an experiment, off).
   if (run.map.oLines <= MAPCFG.freeLines) { run.map.news = 'oline-free'; return; }
   hurt(run, MAPCFG.lineDamage);
 }

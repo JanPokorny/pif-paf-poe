@@ -93,7 +93,7 @@ its own, with its boss.
   boss as from any duel; it waits in its lair as it was, risen already if you beat it once.
   Lose to it and it throws you out (−1 ❤): the lair shuts, and another line of three opens it
   again, the boss still risen if you had beaten it once.
-  The boss always blocks an open two of yours. Its first three in a row on a page is a warning shot, free; each after costs you a heart, and the square that would give it one is ringed in red dashes (two made it the last blow in a quarter of the bots' runs). There is no page limit any more: the lair opens
+  The boss always blocks an open two of yours, and its three in a row costs you a heart (two made it the last blow in a quarter of the bots' runs). There is no page limit any more: the lair opens
   only to your line, and when nothing on view is free the boss moves again (into the fog beside
   the page if it must) until something is.
 - **Spent lines.** Every line of three is crossed through on the page, and its marks are spent:
