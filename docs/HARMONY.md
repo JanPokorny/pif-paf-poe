@@ -295,6 +295,37 @@ The options, in order:
    so it fires often enough to be worth paying for. That is more rules text for one
    material.
 
+## Built: no materials, a pouch of 6 + 6 glass
+
+**Done:** marble and gold are dropped. The pouch now holds 6 stones and, apart from them, 6
+glass ones (`POUCH` in run.js). A stone past a limit asks which stone to give up for it; the
+bot gives up its weakest. 256 runs each, the same seeds:
+
+| | 1 energy at the start | 2 energy at the start |
+|---|---|---|
+| no limits | 105 (mean act 2.18) | 143 (2.48) |
+| **6 + 6 (as built)** | **90** (2.13) | **116** (2.40) |
+| 6 + 3 glass | 89 | 116 |
+
+Glass a run, as built: gained 3.4 and played 2.3 at 1 energy; gained 4.1 and played 3.2 at
+2 energy. That is more glass played than with no limits (1.9 and 2.7): with only six lasting
+stones, a glass stone is more often the best thing to bring.
+
+- **The glass limit hardly ever binds.** Even a limit of 3 throws away only 0.1 glass stones a
+  run, and runs collect only 3–4 glass stones in all. As it stands, 6 is "no limit". Lower it
+  (3 changes nothing measurable) if glass should feel bounded too; that matters only once more
+  glass comes in.
+- Without materials, the 6-stone limit costs less than before: 90 against 105 at 1 energy,
+  where the earlier measurement with materials gave 78 against 100. The trade is milder
+  because the materials, which wasted slots, are gone.
+- Earlier tables here were measured with materials in the game. Their directions hold, but
+  re-run them before quoting exact numbers.
+
+Partial results from an earlier grid (with materials still in the game, 1 energy): 5 stones
+with a glass limit of 1, 2, 3 or none gave 65 / 61 / 62 / 60 victories; 6 stones with a glass
+limit of 1 or 2 gave 73 / 74. A glass limit of 1 throws away about one glass stone a run.
+None of these limits changed the outcome much.
+
 ## Heat, and the map's weight (second pass)
 
 256 runs each, the same seeds. Heat levels add up (heat 3 has the first three's rules too).
