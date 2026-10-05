@@ -211,6 +211,27 @@ The experiment: a pouch of at most N stones, the bot keeping its strongest when 
   when full, a new stone asks which to give up (or to leave it). Compensate the difficulty
   elsewhere — the act-1 draws below are the obvious place.
 
+## Events (second pass)
+
+Read against what the measurements say a run runs on — hearts first, energy second, gold a
+distant third — many events offer a choice with an obvious answer:
+
+| event | the choice in practice |
+|---|---|
+| Meditating Monk | **Donate 40 gold: +1 energy** — the best deal in the game (Second Wind, the same +1, is worth +48 runs in 256). Never refused when affordable. Breathe deeply (energy for a max heart) is the one real dilemma. |
+| Rickety Bridge | lose a heart for 50 gold: never worth it → always "Go around". |
+| A Pickpocket | lose 20 gold, or a duel risking a heart: losing the gold is always right. |
+| Wishing Fountain | a stone for a heart, or 2 hearts for 20 gold: the heal wins. |
+| Wishing Well | heal 2, or 25–50 gold: the heal wins. |
+| Storyteller | heal 1 *and* a glass stone, or 20 gold: Listen wins. |
+| Gambler's Table | gold for gold, at even odds: no stakes worth having. |
+| Wayside Shrine, Duplicating Pond, Night Owl, Hermit, Chest | real trade-offs (a max heart for a strong stone; a stone or a heal; a duel for a talisman) — the good ones. |
+| Stonemason, Transmuter, Trader, Library, Sculptor | "do a thing to your stones": fine, and they would matter more with a pouch cap. |
+
+So the **events are only as interesting as gold is valuable**. Either gold needs things worth
+buying (Recommendations, 5), or the gold options should become something else (a stone, a
+talisman, an energy at a price in hearts).
+
 ## Recommendations
 
 Tried with the bot where it could be (256 runs each, same seeds; today: 100 victories):
