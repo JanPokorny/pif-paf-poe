@@ -5,7 +5,7 @@ choices and more than one way to play, where it drags, and which stones and tali
 place. Written over a night of measuring (`tools/runbot.mjs`, scratch duel simulations) and
 reading the rules; numbers are the bot's, a fair but plain player (150 iterations, 10% blunders).
 
-Status: **in progress** — sections marked *(pending)* are still being measured.
+Status: first pass complete (see the end).
 
 ## How the bot was fixed first
 
@@ -177,9 +177,8 @@ the same duels for every stone; a + form as a glass stone. Noise about ±4.
   not blocking. Since Muffle now counts Pebbles, the enemy shrugs it off with one. Both are dead
   picks; they need a board effect of their own (Muffle: "…and it is placed like any stone that
   blocks"?) or to go.
-- **Shift, the stone every run starts with, is weak** (15, under Waltz 25 and Stinky 27). It is
-  part of why act 1 is a quarter draws. Starting with a Waltz or a Stinky would make the first
-  duels livelier at the same energy.
+- **Shift looks weak here** (15, under Waltz 25 and Stinky 27) — but against act 2. As the
+  *starting* stone over whole runs it is the best of the three (below, Recommendations): keep it.
 - **Bonfire (2 energy) is the weakest stone that costs more than 1**, Parrot (2) close behind;
   **Magnet (2) is weaker than Stinky (1)**. The energy prices do not follow strength there.
 - **Glass + stones are bargains**: 1 energy for the strongest effects in the game (Bumper+ 36,
@@ -214,4 +213,47 @@ The experiment: a pouch of at most N stones, the bot keeping its strongest when 
 
 ## Recommendations
 
-*(pending)*
+Tried with the bot where it could be (256 runs each, same seeds; today: 100 victories):
+
+| start | victories |
+|---|---|
+| a Shift, 1 energy (today) | 100 |
+| a Waltz, 1 energy | 79 |
+| a Stinky, 1 energy | 66 |
+| a Shift, **2 energy** | **154** |
+| a Shift and a Waltz, 2 energy | 158 |
+
+In order of how much they would change:
+
+1. **Act 1 needs a second stone in duels.** One energy for the whole first act is why a quarter of
+   its duels are plain tic-tac-toe and why most runs die there. Starting with 2 energy makes the
+   bot win half again as often — too much as it stands, so pair it with something that gives the
+   difficulty back in a more interesting place (tougher act-1 bosses, or the pouch cap below).
+   Keep the Shift as the starting stone; another start stone tested worse.
+2. **Rework the dead stones.** Muffle and Mind Control are worse than a Pebble. Give each a
+   board presence or cut them. Bonfire and Parrot (2 energy) and Magnet (2, weaker than Stinky at
+   1) are overpriced.
+3. **Echo Chamber**: make the repeat optional, or let the player choose when — or replace it
+   among the boss relics. As built it undoes itself a quarter of the time it fires.
+4. **Four-Leaf Clover**: drop "stones of more energy turn up more often" (it fills an early pouch
+   with stones the run cannot field); four choices alone is a fine common talisman.
+5. **Give gold something to buy.** Half the talismans are gold in some form and gold barely
+   matters. Ideas: a shop service that removes or upgrades a stone (glass → plain, a +), more
+   energy for sale at a rising price, a heal that is not capped at two.
+6. **A pouch cap (6, glass not counted)** to make taking a stone a decision — and a lever to
+   balance a richer act 1 against. It needs a "which one goes?" choice in the UI.
+7. **+ forms that add nothing** (Waltz+, Swap+, Bonfire+, Firecracker+): widen them or drop them
+   from their talismans, so a + talisman always means something.
+8. **More talismans that change how stones play** (like Wings), fewer flat bonuses: e.g. "your
+   restriction stones also apply to you" (a defensive build), "glass stones are not spent the
+   first time" (a glass build), "marble stones pay 5 gold when placed".
+
+## Not done tonight
+
+- The map's own balance (how often the boss's lines land, rock density) was only read from the
+  bot's numbers, not experimented with.
+- Heat levels were not measured.
+- A person plays differently from the bot (it picks stones by a fixed ranking and drops by the
+  same); the pouch-cap and Clover findings in particular should be felt in play before acting.
+
+Status: **done** for this pass.
