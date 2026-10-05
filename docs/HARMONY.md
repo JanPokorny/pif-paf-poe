@@ -118,11 +118,69 @@ dressed as a big one. Options, best first:
 
 ## Stones
 
-*(pending)*
+Each stone alone (the rest of the hand Pebbles) against act 2's ordinary enemies, 80 duels each,
+the same duels for every stone; a + form as a glass stone. Noise about ±4.
+
+| stone | wins /80 | energy | | stone | wins /80 | energy |
+|---|---|---|---|---|---|---|
+| Pebbles only | **9** | – | | Bumper+ | **36** | 1 (glass) |
+| Firecracker | 32 | 3 | | Shift+ | 30 | 1 (glass) |
+| Relocate | 28 | 1 | | Stinky+ | 28 | 1 (glass) |
+| Stinky | 27 | 1 | | Firecracker+ | 27 | 1 (glass) |
+| Waltz | 25 | 1 | | Waltz+ | 26 | 1 (glass) |
+| Magpie | 25 | 3 | | Swap+ | 22 | 1 (glass) |
+| Swap | 23 | 2 | | Gravity+ | 21 | 1 (glass) |
+| Bumper | 22 | 3 | | Lasso+ | 21 | 1 (glass) |
+| Twin | 21 | 2 | | Frog+ | 18 | 1 (glass) |
+| Magnet | 17 | 2 | | Parrot+ | 16 | 1 (glass) |
+| Mountain | 17 | 1 | | Bonfire+ | 11 | 1 (glass) |
+| **Shift** | **15** | 1 | | | | |
+| Lasso, Frog | 13 | 1 | | | | |
+| Gravity | 12 | 1 | | | | |
+| Parrot | 12 | 2 | | | | |
+| Bonfire | **10** | 2 | | | | |
+| Mind Control | **7** | 1 (glass) | | | | |
+| Muffle | **6** | 1 (glass) | | | | |
+
+- **Every special beats Pebbles** — but Muffle and Mind Control do not: they are *worse than a
+  Pebble*. They act on the enemy's next stone, not the board, and a turn spent on them is a stone
+  not blocking. Since Muffle now counts Pebbles, the enemy shrugs it off with one. Both are dead
+  picks; they need a board effect of their own (Muffle: "…and it is placed like any stone that
+  blocks"?) or to go.
+- **Shift, the stone every run starts with, is weak** (15, under Waltz 25 and Stinky 27). It is
+  part of why act 1 is a quarter draws. Starting with a Waltz or a Stinky would make the first
+  duels livelier at the same energy.
+- **Bonfire (2 energy) is the weakest stone that costs more than 1**, Parrot (2) close behind;
+  **Magnet (2) is weaker than Stinky (1)**. The energy prices do not follow strength there.
+- **Glass + stones are bargains**: 1 energy for the strongest effects in the game (Bumper+ 36,
+  Shift+ 30). That is fine for a one-use stone, and makes glass the most interesting reward —
+  but it also says the plain rares at 3 energy (Firecracker 32, Bumper 22, Magpie 25) are
+  dear for what they do.
+- A **+ form that adds nothing**: Waltz+, Swap+, Bonfire+, Firecracker+ win about what the plain
+  stone does. Their talismans (Weathervane, Long Arm, Fuse half) are paying for little.
 
 ## The pouch: a build, not a hoard
 
-*(pending: the experiment with a pouch of at most N stones)*
+Today the pouch holds any number of stones, and before each duel the player picks what the
+energy pays for. Most of a run's decisions about stones are therefore taken *before a duel*, ad
+hoc, rather than when a stone is taken: there is never a reason to refuse one.
+
+The experiment: a pouch of at most N stones, the bot keeping its strongest when one more comes
+(256 runs each, the same seeds):
+
+| pouch | no cap | 8 | 6 | 5 | 4 | 3 |
+|---|---|---|---|---|---|---|
+| victories | 100 | 88 | 69 | 60 | 37 | 19 |
+
+- A cap is a **big difficulty lever**: 6 stones costs a third of the victories, 4 nearly two
+  thirds. Glass stones fill slots too, and the bot throws away by a fixed ranking, not by what
+  goes together — a person building on purpose would do better, but the direction is clear.
+- **It does make taking a stone a decision**, which is what is missing: a reward or a shop stone
+  would now cost one already owned. The workshop (two for one) and the Transmuter would gain
+  weight, and stone choices would read as a build.
+- Suggested shape, if tried for real: **6 stones, glass not counted** (glass is spent anyway);
+  when full, a new stone asks which to give up (or to leave it). Compensate the difficulty
+  elsewhere — the act-1 draws below are the obvious place.
 
 ## Recommendations
 
