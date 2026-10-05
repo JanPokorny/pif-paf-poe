@@ -294,12 +294,24 @@ Tried with the bot where it could be (256 runs each, same seeds; today: 100 vict
 | a Shift, **2 energy** | **154** |
 | a Shift and a Waltz, 2 energy | 158 |
 
+And the two levers together (third pass):
+
+| | victories | mean act reached |
+|---|---|---|
+| today: 1 energy, any pouch | 100 | 2.08 |
+| **2 energy, a pouch of 6** | **98** | **2.33** |
+| 2 energy, a pouch of 5 | 84 | 2.22 |
+
+**2 energy with a pouch of 6 keeps today's difficulty but moves it**: runs get further (act 1
+stops being the wall), lose more later, and every stone taken has to earn a slot. This is the
+single change most worth trying in play.
+
 In order of how much they would change:
 
 1. **Act 1 needs a second stone in duels.** One energy for the whole first act is why a quarter of
    its duels are plain tic-tac-toe and why most runs die there. Starting with 2 energy makes the
-   bot win half again as often — too much as it stands, so pair it with something that gives the
-   difficulty back in a more interesting place (tougher act-1 bosses, or the pouch cap below).
+   bot win half again as often — too much alone, but **with a pouch of 6 the difficulty is back
+   where it is today** and spread over the run (table above).
    Keep the Shift as the starting stone; another start stone tested worse.
 2. **Rework the dead stones.** Muffle and Mind Control are worse than a Pebble. Give each a
    board presence or cut them. Bonfire and Parrot (2 energy) and Magnet (2, weaker than Stinky at
