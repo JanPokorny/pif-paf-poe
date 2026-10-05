@@ -41,8 +41,38 @@ Shift, Magnet, Swap; act 3: five stones), 120 duels an act:
 
 ## The run
 
-*(pending: where runs end, by act; pouch size over a run; how often energy, not the pouch,
-limits a duel's hand)*
+256 runs, heat 0: 159 reach act 2, 117 act 3, 100 win.
+
+- **38% of runs end in act 1**, and most of those to the act's bosses (53, more than half of
+  them to the risen boss) and to the boss's lines on the map (33).
+- **The boss's lines on the map are the biggest source of lost hearts** in every act (1.5 a run
+  in act 1, 0.9 in act 2, 0.7 in act 3). The map game is where a run is decided as much as in
+  the duels — which is good: it is the part with the most real choice (where to step, whose line
+  to break).
+- Ordinary act-1 enemies (Rock, Otter, Pip) each take half a heart a run: mostly draws.
+- Energy where runs end: 1.5 in act 1, 4.4 in act 2, 10 in act 3. Act 1 is played on one
+  energy almost throughout — one common stone a duel.
+
+## Choice, and ways to play
+
+- **On the map**, choices are real and readable: a line of your own against breaking the boss's,
+  a shop or a fight, the lair now or later. This is the strongest part of the design.
+- **Before a duel**, the choice is which stones the energy pays for. With one energy (all of act
+  1) it is no choice at all — the Shift, or a glass stone. From act 2 on it is a good puzzle:
+  the enemy's stones and condition are shown, and the right counter differs.
+- **Taking stones** is rarely a choice: the pouch is unlimited, so the answer is "the strongest
+  one". Glass stones are the exception — a one-use + stone at 1 energy is a real temptation.
+- **Ways to play**: restriction stones (Stinky, Magnet) and board movers (Waltz, Swap, Bumper)
+  are both strong and play differently — "deny squares" against "rearrange the board". That is
+  two styles. What does not exist yet is a style built on talismans: most talismans are flat
+  bonuses (hearts, gold, energy); only Wings and the + talismans change how stones play, and the
+  materials (marble against restrictions, gold for money) are the closest thing to a build.
+- **Dull moments**: the act-1 draws; duels against an enemy with no specials where a single
+  Shift decides little; events whose options are "pay gold for a small thing" (gold buys little,
+  below); a full board that ends in a heart lost after a duel that felt won.
+- **Fun moments** that do occur: a Firecracker or Bumper blowing a stone out of a line that was
+  one move from winning; a Waltz turning the boss's two into your three; Open Hands, where the
+  enemy's stones are yours too; the lair opening on the map; the risen boss by moonlight.
 
 ## Talismans
 

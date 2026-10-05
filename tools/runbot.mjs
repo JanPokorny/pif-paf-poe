@@ -3,7 +3,8 @@
 //
 //   node tools/runbot.mjs --runs 8 --piters 150 --pblunder 0.1 [--heat 0] [--linedmg 2] [--each 1]
 //   (--each 1 prints every run's story; the summary says where runs end and what hurts;
-//   --relics echo,wings starts every run with those talismans; --pouch 4 caps the pouch)
+//   --relics echo,wings starts every run with those talismans; --pouch 4 caps the pouch;
+//   --start rotate --energy 2 tries another start)
 
 import { Worker, isMainThread, parentPort, workerData } from 'node:worker_threads';
 import { cpus } from 'node:os';
@@ -70,6 +71,9 @@ const api = (run) => ({
 });
 
 function playRun(spec) {
+  // --start rotate,stinky / --energy 2: try another start (an experiment).
+  if (spec.start) R.START.pouch = spec.start;
+  if (spec.energy) R.START.energy = spec.energy;
   const run = R.newRun({ seed: spec.seed, heat: spec.heat });
   for (const id of spec.relics ?? []) R.gainRelic(run, id);   // --relics a,b: start with them
   const rng = makeRng(spec.seed);
@@ -201,7 +205,7 @@ if (!isMainThread) {
   parentPort.postMessage(out);
 } else {
   const runs = +arg('runs', 8), piters = +arg('piters', 150), pblunder = +arg('pblunder', 0.1), heat = +arg('heat', 0);
-  const specs = Array.from({ length: runs }, (_, i) => ({ seed: +arg('seed', 100) + i, piters, pblunder, heat, stay: arg('stay', 8), linedmg: arg('linedmg', null) == null ? null : +arg('linedmg'), relics: arg('relics', '') ? arg('relics').split(',') : [], pouch: +arg('pouch', 0) }));
+  const specs = Array.from({ length: runs }, (_, i) => ({ seed: +arg('seed', 100) + i, piters, pblunder, heat, stay: arg('stay', 8), linedmg: arg('linedmg', null) == null ? null : +arg('linedmg'), relics: arg('relics', '') ? arg('relics').split(',') : [], pouch: +arg('pouch', 0), start: arg('start', '') ? arg('start').split(',') : null, energy: +arg('energy', 0) }));
   const W = Math.min(cpus().length, runs);
   const chunks = Array.from({ length: W }, () => []);
   specs.forEach((s, i) => chunks[i % W].push(s));
