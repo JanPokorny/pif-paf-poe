@@ -760,6 +760,8 @@ body:has(.duel) #toast.show { transform: translate(-50%, 0) rotate(-1deg); }
 
 /* On view but out of reach: two squares from every mark. Seen, not yet to be taken. */
 .map-cell.far { cursor: default; }
+/* Squares you cannot step on (rocks, marks, burns, a shut lair) only explain themselves. */
+.map-cell.idle { cursor: default; }
 .map-cell.far > .doodle, .map-cell.far > .label, .map-cell.far > .elite-star { opacity: 0.4; filter: grayscale(0.6); }
 
 /* Energy: what the stones you bring may cost together. */

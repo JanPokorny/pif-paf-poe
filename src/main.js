@@ -323,7 +323,7 @@ function mapScreen() {
       if (!c) { grid.push(h('div.map-fog', { 'aria-hidden': 'true' }, '?')); continue; }
       const kind = c.kind;
       const can = kind === 'lair' ? map.open : reach.has(k);
-      const el = h(`button.map-cell.${kind}` + (can && kind !== 'lair' ? '.reach' : '') + (c.mark && kind !== 'lair' ? '.marked' : '') + (kind === 'lair' && map.open && !opening ? '.open' : '') + (kind === 'lair' && (map.bossWins ?? 0) > 0 ? '.undead' : '') + (!c.mark && !can && kind !== 'lair' && !R.inReach(map, k) ? '.far' : ''), {
+      const el = h(`button.map-cell.${kind}` + (can && kind !== 'lair' ? '.reach' : '') + (c.mark && kind !== 'lair' ? '.marked' : '') + (kind === 'lair' && map.open && !opening ? '.open' : '') + (kind === 'lair' && (map.bossWins ?? 0) > 0 ? '.undead' : '') + (!c.mark && !can && kind !== 'lair' && !R.inReach(map, k) ? '.far' : '') + (can ? '' : '.idle'), {
         'aria-label': NODE_NAME[kind] ?? boss.name, dataset: { k },
         onclick: () => {
           if (kind === 'lair') {
