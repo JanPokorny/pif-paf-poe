@@ -129,6 +129,12 @@ function playRun(spec) {
       if (R.isOnce(worst)) glass.dropped++;
       run.pouch = run.pouch.filter((x) => x !== worst);
     }
+    // --glasscap N: a limit of its own for glass (with --pouchglass 0).
+    if (spec.glasscap) while (run.pouch.filter((x) => R.isOnce(x)).length > spec.glasscap) {
+      const worst = run.pouch.filter((x) => R.isOnce(x)).sort((a, b) => value(a) - value(b))[0];
+      glass.dropped++;
+      run.pouch = run.pouch.filter((x) => x !== worst);
+    }
     if (run.map === page && page && page.oLines > seen) { lines += page.oLines - seen; if (run.over) lineDeath = true; }
     if (run.hearts < hearts || (run.over && !run.victory && hearts > 0)) { hurts.push({ act, what, n: hearts - run.hearts }); blow = what; }
   }
@@ -240,7 +246,7 @@ if (!isMainThread) {
   parentPort.postMessage(out);
 } else {
   const runs = +arg('runs', 8), piters = +arg('piters', 150), pblunder = +arg('pblunder', 0.1), heat = +arg('heat', 0);
-  const specs = Array.from({ length: runs }, (_, i) => ({ seed: +arg('seed', 100) + i, piters, pblunder, heat, stay: arg('stay', 8), linedmg: arg('linedmg', null) == null ? null : +arg('linedmg'), relics: arg('relics', '') ? arg('relics').split(',') : [], pouch: +arg('pouch', 0), start: arg('start', '') ? arg('start').split(',') : null, energy: +arg('energy', 0), sees: arg('sees', null) == null ? null : +arg('sees'), strict: !!+arg('strict', 0), glass: !!+arg('glass', 1), pouchglass: !!+arg('pouchglass', 1), mats: arg('mats', 'marble,gold').split(','), marbleval: +arg('marbleval', 0), goldval: +arg('goldval', 0), enemymarble: !!+arg('enemymarble', 1) }));
+  const specs = Array.from({ length: runs }, (_, i) => ({ seed: +arg('seed', 100) + i, piters, pblunder, heat, stay: arg('stay', 8), linedmg: arg('linedmg', null) == null ? null : +arg('linedmg'), relics: arg('relics', '') ? arg('relics').split(',') : [], pouch: +arg('pouch', 0), start: arg('start', '') ? arg('start').split(',') : null, energy: +arg('energy', 0), sees: arg('sees', null) == null ? null : +arg('sees'), strict: !!+arg('strict', 0), glass: !!+arg('glass', 1), pouchglass: !!+arg('pouchglass', 1), mats: arg('mats', 'marble,gold').split(','), marbleval: +arg('marbleval', 0), goldval: +arg('goldval', 0), enemymarble: !!+arg('enemymarble', 1), glasscap: +arg('glasscap', 0) }));
   const W = Math.min(cpus().length, runs);
   const chunks = Array.from({ length: W }, () => []);
   specs.forEach((s, i) => chunks[i % W].push(s));
