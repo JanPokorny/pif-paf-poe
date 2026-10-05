@@ -181,6 +181,10 @@ const RAW = {
 
   // Filled pale gold, as the heart and the bolt have their washes.
   coin: C(0, 0, 6.6, ' fill="#f1d98a"') + C(0, 0, 3.6, SW(1.1)),
+  // Barter: a stone for a stone, round and round.
+  barter: P('M -6.6 -4.6 H -1.4 V 0.6 H -6.6 Z', FILL_ROCK + SW(1.2)) + C(4, 4, 2.7, FILL_ROCK + SW(1.2))
+    + P('M 0.8 -5.6 C 4 -5.6 5.6 -4 5.6 -1.4', SW(1.1)) + F('M 5.6 0.4 L 3.8 -2 L 7.4 -2 Z')
+    + P('M -0.8 5.6 C -4 5.6 -5.6 4 -5.6 1.8', SW(1.1)) + F('M -5.6 0 L -7.4 2.4 L -3.8 2.4 Z'),
   'chevron-down': P('M -5 -2 L 0 3.2 L 5 -2', SW(1.8)),
   // Energy: a bolt.
   energy: P('M 2 -7.6 L -4.6 1.2 H -0.4 L -2 7.6 L 4.6 -1.2 H 0.4 Z', ' fill="currentColor"' + SW(1.1)),

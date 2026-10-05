@@ -726,11 +726,39 @@ test('a draw counts as won, and costs a heart', () => {
   assert.equal(RUN.duelWon(run, true).kind, 'reward');
   assert.equal(run.hearts, hearts - 1);
 });
-test('a shop never sells a talisman for more gold than it pays', () => {
-  for (let seed = 1; seed < 300; seed++) {
-    const run = RUN.newRun({ seed });
-    for (const r of RUN.makeShop(run).relics) assert.notEqual(r.relic, 'piggy');
+test('merchants barter: a stone is worth its energy, one more if liked; every kind turns up', () => {
+  const run = RUN.newRun({ seed: 3 });
+  run.pouch = [];
+  const swap = RUN.gainStone(run, { type: 'swap' }), glass = RUN.gainStone(run, { type: 'firecracker', once: true });
+  const m = { likes: 'movers' };
+  assert.equal(RUN.worth(m, swap), 3);   // 2, liked
+  assert.equal(RUN.worth(m, glass), 1);  // glass is small change; a glass mover is not a mover here
+  assert.equal(RUN.worth({ likes: 'glass' }, glass), 2);
+  assert.ok(RUN.canPay(run, m, 4) && !RUN.canPay(run, m, 5));
+  assert.ok(RUN.canPay(run, m, 99, 'swap') && !RUN.canPay(run, m, 1, 'magnet'));
+  RUN.pay(run, [swap.uid]);
+  assert.deepEqual(run.pouch.map((x) => x.uid), [glass.uid]);
+  const seen = new Set();
+  for (let seed = 1; seed < 200; seed++) {
+    const r = RUN.newRun({ seed });
+    const shop = RUN.makeShop(r);
+    seen.add(shop.type);
+    assert.ok(shop.wares.length > 0, shop.type);
+    for (const w of shop.wares) assert.ok(w.only || w.price >= 1, `${shop.type} ${w.kind}`);
   }
+  assert.equal(seen.size, RUN.MERCHANT_TYPES.length);
+  assert.equal(run.gold, undefined);
+});
+test('the Quarryman\'s trick: the next X goes on a rock in reach, and breaks it', () => {
+  const run = RUN.newRun({ seed: 5 });
+  const rocks = RUN.rocksInReach(run.map);
+  if (!rocks.length) return;
+  run.map.breaker = true;
+  assert.deepEqual(RUN.reachable(run).sort(), rocks.sort());
+  RUN.enterNode(run, rocks[0]);
+  assert.equal(run.map.cells[rocks[0]].mark, 'X');
+  assert.ok(!run.map.breaker);
+  assert.ok(!RUN.reachable(run).some((k) => run.map.cells[k]?.kind === 'rock'));
 });
 test('a run starts with a Shift, and 2 energy', () => {
   const run = RUN.newRun({ seed: 1 });

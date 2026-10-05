@@ -18,13 +18,11 @@ export const RELICS = {
     text: '+1 energy: bring stones worth one more into every duel.' },
   // (Its id is still 'satchel', as saves have it.)
   satchel: { name: 'Loyalty Card', emoji: '🎫', rarity: 'common',
-    text: 'Shopkeepers know you: every shop shows you one more stone.' },
-  'lucky-coin': { name: 'Lucky Coin', emoji: '🪙', rarity: 'common',
-    text: '+8 gold for every duel you win.' },
+    text: 'Merchants know you: every one shows you one more ware.' },
   herbs: { name: 'Herbal Pouch', emoji: '🌿', rarity: 'common',
     text: 'Heal 1 heart whenever you beat an elite or a boss.' },
   badge: { name: 'Merchant\'s Badge', emoji: '🏷️', rarity: 'common',
-    text: 'Everything in shops costs 25% less.' },
+    text: 'Every merchant asks one less (never nothing).' },
   clover: { name: 'Four-Leaf Clover', emoji: '🍀', rarity: 'uncommon',
     text: 'Stone rewards offer 4 choices instead of 3.' },
   bell: { name: 'Hand Bell', emoji: '🛎️', rarity: 'common',
@@ -33,19 +31,11 @@ export const RELICS = {
     text: 'Once, when you would run out of hearts, rise again with 3.' },
   rematch: { name: 'Rematch Token', emoji: '🎟️', rarity: 'uncommon',
     text: 'The first duel you lose in each act is replayed instead of costing hearts.' },
-  piggy: { name: 'Piggy Bank', emoji: '🐷', rarity: 'common', gold: 60,
-    text: 'Gain 60 gold now.' },
-  'war-chest': { name: 'War Chest', emoji: '💰', rarity: 'rare', gold: 150,
-    text: 'Gain 150 gold now.' },
+  bag: { name: 'Bottomless Bag', emoji: '👝', rarity: 'rare',
+    text: 'Your pouch holds 2 more stones.' },
 };
-export const BOSS_RELICS = ['deep-pockets', 'phoenix', 'war-chest'];
+export const BOSS_RELICS = ['deep-pockets', 'phoenix', 'bag'];
 export const RELIC_TYPES = Object.keys(RELICS);
-
-// ── Stone economy ───────────────────────────────────────────────────────────
-
-export const STONE_PRICE = { common: 45, uncommon: 70, rare: 100 };
-export const ONCE_PRICE = { common: 30, uncommon: 45, rare: 65 };
-export const RELIC_PRICE = { common: 110, uncommon: 140, rare: 170 };
 
 // Stones you can find as rewards: everything but the Pebble and the one-shot
 // stones, which come on their own.
@@ -182,9 +172,9 @@ export const ENEMIES = {
 };
 
 export const ACTS = [
-  { n: 1, name: 'The Meadow', bosses: ['oak', 'scarecrow'], size: 1, cond: 0.25, gold: [14, 22] },
-  { n: 2, name: 'The Quarry', bosses: ['colossus', 'mirrorknight', 'carpenter'], size: 2, cond: 0.35, gold: [18, 28] },
-  { n: 3, name: 'The Summit', bosses: ['grandmaster', 'twinkings'], size: 3, cond: 0.4, gold: [22, 34] },
+  { n: 1, name: 'The Meadow', bosses: ['oak', 'scarecrow'], size: 1, cond: 0.25 },
+  { n: 2, name: 'The Quarry', bosses: ['colossus', 'mirrorknight', 'carpenter'], size: 2, cond: 0.35 },
+  { n: 3, name: 'The Summit', bosses: ['grandmaster', 'twinkings'], size: 3, cond: 0.4 },
 ];
 
 export const enemiesOf = (act, tier) => Object.keys(ENEMIES)
@@ -223,8 +213,11 @@ export const EVENTS = [
     id: 'gambler', title: 'The Gambler\'s Table', emoji: '🎲',
     text: 'A grinning fox shuffles three cups. "Double or nothing, friend?"',
     choices: [
-      { label: 'Bet 40 gold', detail: '50%: win a talisman. 50%: lose the gold.', can: (r) => r.gold >= 40,
-        act: (r, api) => { r.gold -= 40; return api.rng() < 0.5 ? api.gainRandomRelic(t('The pebble is under your cup! The fox pays up:')) : t('Empty. The fox chuckles. −40 gold.'); } },
+      { label: 'Bet a stone', detail: 'Stones worth 2. 50%: win a talisman. 50%: they are the fox\'s.', can: (r, api) => api.canPay(2),
+        act: async (r, api) => {
+          if (!(await api.pay(2, t('Bet which stones?')))) return t('You keep your stones.');
+          return api.rng() < 0.5 ? api.gainRandomRelic(t('The pebble is under your cup! The fox pays up:')) : t('Empty. The fox chuckles and keeps your stones.');
+        } },
       { label: 'Bet a heart', detail: '50%: win a talisman. 50%: lose 1 heart.', can: (r) => r.hearts > 1,
         act: (r, api) => { if (api.rng() < 0.5) return api.gainRandomRelic(t('The pebble is under your cup! The fox pays up:')); r.hearts--; return t('Empty. The fox chuckles. −1 heart.'); } },
       { leave: true, label: 'Walk away', act: () => t('The fox shrugs and pockets the cups.') },
@@ -235,9 +228,7 @@ export const EVENTS = [
     text: 'Coins glitter at the bottom of a mossy well.',
     choices: [
       { label: 'Drink', detail: 'Heal 1 heart.', act: (r) => { r.hearts = Math.min(r.maxHearts, r.hearts + 1); return t('Cool, clear water. You feel restored.'); } },
-      { label: 'Fish for coins', detail: 'Gain 40–60 gold.', act: (r, api) => { const g = 40 + ((api.rng() * 21) | 0); r.gold += g; return t('You fish out {n} gold.', { n: g }); } },
-      { label: 'Toss a coin', detail: 'Pay 10 gold, gain a random glass stone.', can: (r) => r.gold >= 10,
-        act: (r, api) => { r.gold -= 10; return api.gainRandomOnce(); } },
+      { label: 'Fish in it', detail: 'Gain a random glass stone.', act: (r, api) => api.gainRandomOnce() },
     ],
   },
   {
@@ -277,21 +268,24 @@ export const EVENTS = [
   },
   {
     id: 'thief', title: 'A Pickpocket!', emoji: '🥷',
-    text: 'A shadow bumps into you and reaches for your coin purse…',
+    text: 'A shadow bumps into you and reaches for your pouch…',
     choices: [
       { label: 'Chase him', detail: 'Duel him. Win: get it back with interest. Lose: −1 heart.', act: (r, api) => api.fight('thief') },
-      { label: 'Let it go', detail: 'Lose 40 gold.', act: (r) => { r.gold = Math.max(0, r.gold - 40); return t('Easy come, easy go.'); } },
+      { label: 'Let it go', detail: 'He takes a stone of your choice.', act: async (r, api) => { await api.loseStone(t('He took which one?')); return t('Easy come, easy go.'); } },
     ],
   },
   {
     id: 'fountain', title: 'The Wishing Fountain', emoji: '⛲',
-    text: 'Coins glint under the water. A sign reads: "One wish per traveller."',
+    text: 'Stones glint under the water. A sign reads: "One wish per traveller."',
     choices: [
       { label: 'Wish for strength', detail: 'Choose a stone. Lose 1 heart.', can: (r) => r.hearts > 1,
         act: (r, api) => api.chooseStone(null, () => { r.hearts--; }) },
-      { label: 'Wish for health', detail: 'Pay 30 gold, heal 1 heart.', can: (r) => r.gold >= 30,
-        act: (r) => { r.gold -= 30; r.hearts = Math.min(r.maxHearts, r.hearts + 1); return t('You feel much better.'); } },
-      { leave: true, label: 'Move on', act: () => t('You keep your coins.') },
+      { label: 'Wish for health', detail: 'Toss in stones worth 2, heal 2 hearts.', can: (r, api) => api.canPay(2),
+        act: async (r, api) => {
+          if (!(await api.pay(2, t('Toss in which stones?')))) return t('You keep your stones.');
+          r.hearts = Math.min(r.maxHearts, r.hearts + 2); return t('You feel much better.');
+        } },
+      { leave: true, label: 'Move on', act: () => t('You keep your stones.') },
     ],
   },
   {
@@ -305,8 +299,11 @@ export const EVENTS = [
           r.pouch = r.pouch.filter((x) => x !== k);
           return api.gainRandomOnce('rare');
         } },
-      { label: 'Buy one', detail: 'Pay 25 gold for a random glass stone.', can: (r) => r.gold >= 25,
-        act: (r, api) => { r.gold -= 25; return api.gainRandomOnce(); } },
+      { label: 'Melt one', detail: 'Give stones worth 2 for two random glass stones.', can: (r, api) => api.canPay(2),
+        act: async (r, api) => {
+          if (!(await api.pay(2, t('Give which stones?')))) return t('He shrugs and shuffles the deck.');
+          return `${api.gainRandomOnce()} ${api.gainRandomOnce()}`;
+        } },
       { leave: true, label: 'No thanks', act: () => t('He vanishes in a puff of smoke.') },
     ],
   },
@@ -314,8 +311,11 @@ export const EVENTS = [
     id: 'library', title: 'The Rulebook Library', emoji: '📚',
     text: 'Shelves of dog-eared rulebooks. Someone has scribbled strategies in every margin.',
     choices: [
-      { label: 'Study', detail: 'Pay 30 gold, choose a stone of 2 energy.', can: (r) => r.gold >= 30,
-        act: (r, api) => api.chooseStone('uncommon', () => { r.gold -= 30; }) },
+      { label: 'Study', detail: 'Give stones worth 2, choose a stone of 2 energy.', can: (r, api) => api.canPay(2),
+        act: async (r, api) => {
+          if (!(await api.pay(2, t('Give which stones?')))) return t('You put the books back.');
+          return api.chooseStone('uncommon');
+        } },
       { label: 'Borrow a book', detail: 'Gain a random glass stone.',
         act: (r, api) => api.gainRandomOnce('uncommon') },
       { leave: true, label: 'Leave', act: () => t('You put the books back.') },
@@ -327,8 +327,11 @@ export const EVENTS = [
     choices: [
       { label: 'Breathe deeply', detail: '+1 energy. Lose 1 max heart.', can: (r) => r.maxHearts > 2,
         act: (r) => { r.energy = (r.energy ?? 1) + 1; r.maxHearts--; r.hearts = Math.min(r.hearts, r.maxHearts); return t('Your mind clears. +1 energy.'); } },
-      { label: 'Donate 80 gold', detail: '+1 energy.', can: (r) => r.gold >= 80,
-        act: (r) => { r.gold -= 80; r.energy = (r.energy ?? 1) + 1; return t('The monk bows. +1 energy.'); } },
+      { label: 'Offer stones', detail: 'Stones worth 4: +1 energy.', can: (r, api) => api.canPay(4),
+        act: async (r, api) => {
+          if (!(await api.pay(4, t('Offer which stones?')))) return t('You leave the monk to the quiet.');
+          r.energy = (r.energy ?? 1) + 1; return t('The monk bows. +1 energy.');
+        } },
       { leave: true, label: 'Tiptoe past', act: () => t('You leave the monk to the quiet.') },
     ],
   },
@@ -336,8 +339,8 @@ export const EVENTS = [
     id: 'bridge', title: 'The Rickety Bridge', emoji: '🌉',
     text: 'A rope bridge sways over a gorge. On the far side, something glints.',
     choices: [
-      { label: 'Cross it', detail: 'Lose 1 heart, gain 80 gold and a random glass stone.', can: (r) => r.hearts > 1,
-        act: (r, api) => { r.hearts--; r.gold += 80; return `${t('A plank snaps under you — but you make it, and pocket 80 gold.')} ${api.gainRandomOnce()}`; } },
+      { label: 'Cross it', detail: 'Lose 1 heart, gain two random glass stones.', can: (r) => r.hearts > 1,
+        act: (r, api) => { r.hearts--; return `${t('A plank snaps under you — but you make it.')} ${api.gainRandomOnce()} ${api.gainRandomOnce()}`; } },
       { leave: true, label: 'Go around', act: () => t('The long way round. Nothing lost, nothing found.') },
     ],
   },
@@ -345,8 +348,21 @@ export const EVENTS = [
     id: 'nightowl', title: 'The Night Owl', emoji: '🦉',
     text: '"Hoo. A late game, traveller? I play only the best — and I pay the best."',
     choices: [
-      { label: 'Play the Owl', detail: 'A hard duel. Win: a talisman and gold. Lose: −1 heart.', act: (r, api) => api.fight('nightowl') },
+      { label: 'Play the Owl', detail: 'A hard duel. Win: a talisman. Lose: −1 heart.', act: (r, api) => api.fight('nightowl') },
       { label: 'Get some sleep', detail: 'Heal 1 heart.', act: (r) => { r.hearts = Math.min(r.maxHearts, r.hearts + 1); return t('You sleep soundly.'); } },
+    ],
+  },
+  {
+    id: 'quarryman', title: 'The Quarryman', emoji: '⛏️',
+    text: 'A quarryman leans on his pick. "Something in your way? I know where it cracks."',
+    choices: [
+      { label: 'Clear the way', detail: 'Give stones worth 2. Your next X goes on a rock, a thicket or a crag next to your marks, and breaks it.', can: (r, api) => api.canPay(2) && api.rocks() > 0,
+        act: async (r, api) => {
+          if (!(await api.pay(2, t('Give which stones?')))) return t('He shrugs and shoulders his pick.');
+          r.map.breaker = true;
+          return t('"Hit it there." Your next step breaks through.');
+        } },
+      { leave: true, label: 'Walk on', act: () => t('He shrugs and shoulders his pick.') },
     ],
   },
   {
@@ -358,7 +374,7 @@ export const EVENTS = [
         r.hearts = Math.min(r.maxHearts, r.hearts + 1);
         return healed ? t('You feel better.') : t('A fine story.');
       } },
-      { label: 'Tell your own', detail: 'Gain 40 gold for a good yarn.', act: (r) => { r.gold += 40; return t('They toss you 40 gold. Not bad!'); } },
+      { label: 'Tell your own', detail: 'Gain a random glass stone for a good yarn.', act: (r, api) => `${t('They toss you a stone. Not bad!')} ${api.gainRandomOnce()}` },
     ],
   },
 ];

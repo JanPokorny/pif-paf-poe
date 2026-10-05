@@ -480,6 +480,9 @@ export function ruleChip(kind, id, cls = '') {
     h('span.chip-ico', { html: icon(`${kind}-${id}`) }), h('span', {}, r.name));
 }
 
+// What a merchant asks: stones worth so much (a number), or one stone by name.
+export const priceTag = (price) => h('div.price', {}, iconEl('barter'), price);
+
 // A card for reward and shop screens.
 // Cards are small: picture, name, price. A tap opens the card (where to take or
 // buy it).
@@ -487,7 +490,7 @@ export function stoneCard(s, { onclick, price, sold, dear, footer } = {}) {
   return h(`button.card.stone-card${sold ? '.sold' : dear ? '.dear' : ''}`, { disabled: sold || undefined, 'aria-label': stoneName(s), onclick: onclick ?? (() => infoStone(s, 'X')) },
     stoneEl(s, 'X', { cost: true }),
     h('div.card-name', {}, stoneName(s)),
-    price !== undefined ? h('div.price', {}, iconEl('coin'), price) : null,
+    price !== undefined ? priceTag(price) : null,
     footer ?? null);
 }
 
@@ -496,7 +499,7 @@ export function relicCard(id, { onclick, price, sold, dear } = {}) {
   return h(`button.card.relic-card${sold ? '.sold' : dear ? '.dear' : ''}`, { disabled: sold || undefined, 'aria-label': r.name, onclick: onclick ?? (() => infoRelic(id)) },
     h('div.relic-token', {}, relicArt(id)),
     h('div.card-name', {}, r.name),
-    price !== undefined ? h('div.price', {}, iconEl('coin'), price) : null);
+    price !== undefined ? priceTag(price) : null);
 }
 
 // The EN · CS switch. Changing it reloads the page.

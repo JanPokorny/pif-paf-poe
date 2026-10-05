@@ -12,7 +12,7 @@ numbers. The camp game's own reasoning is in `old/adr/`.
 - **Counterattacks → one-shot stones.** The camp game's counterattacks became tricks, spent
   at the end of a turn; now they are stones like any other, brought along like any other and placed on the
   board, that then do their one thing (Relocate, Mind Control, Muffle, and any stone in glass). Once played in a duel, won or lost, one is gone from the pouch. They
-  have a dashed outline, come as their own reward and shop shelf, and cost 1 energy, whatever
+  have a dashed outline, come as their own reward, sold by the Glassblower, and cost 1 energy, whatever
   they are. A 1-energy stone never comes in glass: it would save nothing.
   Encore, which handed back your last special stone, did not survive the change.
 - **Boss rules** come from an older iteration's sheet of special rules (Taktika, Náskok, Elko,
@@ -27,7 +27,7 @@ duel, and a rule for who wins when someone runs out. The second version slows it
   energy (common 1, uncommon 2, rare 3, a dot each in the stone's corner), and together they may
   cost no more than you have. A run starts with 2, and with a Shift in the pouch: the first
   duels are never plain tic-tac-toe. Beating an elite gives 1, an act's boss 2;
-  every shop sells 1 (once a visit), the Meditating Monk trades one for a max heart or 80 gold,
+  the Mystic and the Collector sell 1, the Meditating Monk trades one for a max heart or stones worth 4,
   and Second Wind (a boss relic) adds 1. Picking stones before a duel fills a bar of dots.
 - **Rewards are a form.** Each row of a reward is yours ("~ and ~" between rows); a row that
   offers a choice ("or" between its cards) works like radio buttons, and Continue stays grey
@@ -116,10 +116,10 @@ its own, with its boss.
   fills 34% of the time, in about nine steps (62% and seven steps without).
 - **Bosses** bring no stones, only their rule (above), and are beaten twice: once beaten, the moon
   rises and the boss climbs back out of the earth as its undead self ("Undead Old Oak"), with its
-  harder rule. A boss won is a boss relic, three hearts and 60 gold. **Elites** are just
+  harder rule. A boss won is a boss relic, three hearts and 2 energy. **Elites** are just
   stronger regular enemies: bigger hands, a red star in the corner. A lost duel costs one heart, elite and boss alike.
 - **No map aids.** Duels used to offer a *Double Step* (the boss skipped a reply) or a *Pickaxe*
-  (broke a rock) instead of a stone; they are gone. A duel's reward is stones, gold and relics.
+  (broke a rock) instead of a stone; they are gone. A duel's reward is stones, often a glass one, and (elites) relics.
 - **The page by distance** (`node tools/mapgen.mjs`, measured over whole explored pages):
   obstacles are densest near the start, where the fork-free layout holds (about half of rings
   1–4), and thin out ring by ring (a quarter by ring 9). Empty squares — nothing on them, just the
@@ -134,6 +134,21 @@ its own, with its boss.
   Quarry's are boulders and gravel; the Summit's crags and tufts of grass in the snow.
 
 Balance was measured and retuned with `tools/lab.mjs`; the run bots (see Difficulty) win a third to two thirds of their runs at heat 0.
+
+## Barter, no gold
+
+There is no money. **Stones are the currency**: a stone is worth its energy (the dots in its
+corner), and glass, which the pouch's limit leaves out, is the small change at 1. A shop square
+holds one **merchant** of six trades, each taking stones by their worth, with a liked kind
+(movers, walls and restrictions, glass, tricksters) worth one more each:
+the **Stonecutter** (lasting stones, a tier dearer than they cost to bring), the **Glassblower**
+(glass stones), the **Herbalist** (hearts, a max heart), the **Mystic** (energy, a rare glass
+stone), the **Curio Dealer** (talismans) and the **Collector**, who wants one named stone and
+pays a talisman or an energy for it. With the pouch capped at six, paying means choosing what
+the build can spare. Events that asked for gold ask for stones; the gold talismans are gone
+(Lucky Coin, Piggy Bank; the War Chest became the Bottomless Bag, two more pouch slots), the
+Badge takes one off every price. The Quarryman, for stones worth 2, has your next X break a
+rock next to your marks.
 
 ## The stones
 
@@ -184,7 +199,7 @@ At heat 0 (six hearts), bots that play the map sensibly, pick their stones by st
 (With energy the bot reaches about 1, 4 and 9 energy in the three acts. Before energy, when the
 hand grew with bought slots, the same bots won about 30%, 54% and 69%.)
 
-Heat 1–5 raises it after each win: deeper search, dearer shops, a heart fewer,
+Heat 1–5 (iced for now: every run is at heat 0) raises it after each win: deeper search, dearer shops, a heart fewer,
 bigger elite hands, no blunders.
 
 ## Tests

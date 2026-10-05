@@ -35,7 +35,7 @@ npx http-server -c-1 .
 | `src/ai.js` | the enemy: Monte Carlo tree search over the engine (runs in a worker via `src/brain.js`) |
 | `src/sound.js`, `src/music.js` | sound effects; the music player: pre-rendered loops (`music/`, composed in `tools/music/score.py`, rendered by FluidSynth with `tools/music/build.py`), crossfaded by scene, with stingers on the beat |
 | `src/content.js` | relics, enemies, acts, events |
-| `src/run.js` | a run: the act maps, duel setup, rewards, shops. Pure, JSON-serialisable |
+| `src/run.js` | a run: the act maps, duel setup, rewards, merchants (barter). Pure, JSON-serialisable |
 | `src/main.js`, `src/ui/` | the screens |
 | `tools/` | engine tests (`node tools/test-engine.mjs`), headless runs and balance measurements (`tools/lab.mjs`, findings in `docs/STONE-FAMILIES.md`) |
 
