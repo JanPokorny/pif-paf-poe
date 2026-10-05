@@ -807,6 +807,12 @@ test('a + talisman is offered only for stones in the pouch', () => {
     if (r?.startsWith('plus-')) assert.equal(r, 'plus-fence');
   }
 });
+test('a shop never sells a talisman for more gold than it pays', () => {
+  for (let seed = 1; seed < 300; seed++) {
+    const run = RUN.newRun({ seed });
+    for (const r of RUN.makeShop(run).relics) assert.notEqual(r.relic, 'piggy');
+  }
+});
 test('a run starts with a Shift, and 1 energy', () => {
   const run = RUN.newRun({ seed: 1 });
   assert.deepEqual(run.pouch.map((x) => x.type), ['shift']);

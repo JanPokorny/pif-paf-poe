@@ -947,8 +947,7 @@ export function gainRelic(run, id) {
   if (!id || has(run, id)) return;
   run.relics.push(id);
   if (id === 'iron-heart') { run.maxHearts += 2; run.hearts = Math.min(run.maxHearts, run.hearts + 2); }
-  if (id === 'piggy') run.gold += 60;
-  if (id === 'war-chest') run.gold += 150;
+  run.gold += RELICS[id].gold ?? 0;   // the Piggy Bank, the War Chest
 }
 
 export function gainStone(run, s) {
@@ -986,10 +985,14 @@ export function makeShop(run) {
     for (let g = 0; g < 20; g++) { s = randomOnce(run, r); if (!once.some((o) => o.type === s.type)) break; }
     once.push({ ...s, price: price(run, ONCE_PRICE[r]), sold: false });
   }
+  // Two talismans; never one that pays out less gold than it costs.
   const relics = [];
-  for (let i = 0; i < 2; i++) {
+  for (let g = 0; relics.length < 2 && g < 12; g++) {
     const id = randomRelic(run);
-    if (id && !relics.some((x) => x.relic === id)) relics.push({ relic: id, price: price(run, RELIC_PRICE[RELICS[id].rarity]), sold: false });
+    if (!id || relics.some((x) => x.relic === id)) continue;
+    const cost = price(run, RELIC_PRICE[RELICS[id].rarity]);
+    if (RELICS[id].gold !== undefined && cost >= RELICS[id].gold) continue;
+    relics.push({ relic: id, price: cost, sold: false });
   }
   return {
     stones, once, relics,

@@ -35,9 +35,9 @@ export const RELICS = {
     text: 'Once, when you would run out of hearts, rise again with 3.' },
   rematch: { name: 'Rematch Token', emoji: '🎟️', rarity: 'uncommon',
     text: 'The first duel you lose in each act is replayed instead of costing hearts.' },
-  piggy: { name: 'Piggy Bank', emoji: '🐷', rarity: 'common',
+  piggy: { name: 'Piggy Bank', emoji: '🐷', rarity: 'common', gold: 60,
     text: 'Gain 60 gold now.' },
-  'war-chest': { name: 'War Chest', emoji: '💰', rarity: 'rare',
+  'war-chest': { name: 'War Chest', emoji: '💰', rarity: 'rare', gold: 150,
     text: 'Gain 150 gold now.' },
 };
 // + talismans: every stone of their kinds you bring is its + form. Kinds go
