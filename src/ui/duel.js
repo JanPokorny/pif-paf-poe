@@ -208,8 +208,8 @@ export function mountDuel(root, opts) {
       e.addEventListener('click', () => { if (!e.classList.contains('target')) tapEnemyStone(st); });
       return h('div.hand-slot.enemy-slot', {}, e, n > 1 ? h('span.hand-count', {}, `×${n}`) : null);
     }));
-    // Under Open Hands, a sticky note says which of theirs you may take.
-    if (enemyHand.querySelector('.stone.borrow')) enemyHand.append(h('span.pick-note', {}, t('You can play these!')));
+    // Under Open Hands, a sticky note says their stones are yours to play too, all duel long.
+    if (shared && theirs.length) enemyHand.append(h('span.pick-note', {}, t('You can play these!')));
 
     // Player hand, one stone per kind with a count. During a turn in
     // progress, show the hand as it was. Out of your turn, a tap reads a stone.
