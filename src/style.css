@@ -1038,7 +1038,7 @@ body:has(.duel) #toast.show { transform: translate(-50%, 0) rotate(-1deg); }
 /* On the small stones of shop and reward cards, the energy note is smaller and
    sits out on the corner, so the stone stays in view. */
 .card .stone .cost { top: -6px; right: -5px; padding: 1px 2px; }
-.card .stone .cost i { width: 8px; height: 10px; }
+.card .stone .cost i { width: 10px; height: 12px; }
 /* The bolts on a cost note crowd together, a little overlapped. */
 .stone .cost i + i { margin-left: -3px; }
 .card .stone .cost i + i { margin-left: -2px; }
