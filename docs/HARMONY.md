@@ -326,6 +326,69 @@ with a glass limit of 1, 2, 3 or none gave 65 / 61 / 62 / 60 victories; 6 stones
 limit of 1 or 2 gave 73 / 74. A glass limit of 1 throws away about one glass stone a run.
 None of these limits changed the outcome much.
 
+## Built: the QA batch (no + forms, costs by wins, 2 energy)
+
+**Done**, from the recommendations:
+- glass outside a 6-stone pouch;
+- no + forms and no + talismans;
+- Bonfire turns the outer ring;
+- Mind Control and Muffle act on the board;
+- energy costs set by what each stone wins;
+- Echo Chamber cut;
+- the Clover only adds a choice;
+- the boss always blocks;
+- events evened out;
+- a start with 2 energy.
+
+### Each stone alone, as built
+
+The stone (lasting, the rest Pebbles) against act 2's ordinary enemies, 120 duels each, the
+same duels for every stone. Noise is about ±6.
+
+| stone | wins /120 | energy now | | stone | wins /120 | energy now |
+|---|---|---|---|---|---|---|
+| Mind Control (glass) | 60 | 2 (rare glass) | | Magnet | 33 | 2 |
+| Firecracker | 48 | 3 | | Frog | 32 | 1 |
+| Gravity | 42 | 3 | | Shift | 30 | 1 |
+| Magpie | 39 | 3 | | Twin | 29 | 1 |
+| Relocate (glass) | 38 | 1 | | Waltz | 28 | 1 |
+| Lasso | 37 | 2 | | Parrot | 26 | 1 |
+| Swap | 37 | 2 | | Muffle (glass) | 25 | 1 |
+| Stinky | 34 | 2 | | Bonfire | 22 | 1 |
+| Bumper | 34 | 2 | | Mountain | 18 | 1 |
+| | | | | Pebbles only | 8 | – |
+
+- **Mind Control** took an enemy stone and stayed on the board: 69 wins. Now it also leaves
+  the board: 60. It is still the strongest stone, so it is rare glass at 2 energy. Watch it.
+- **Muffle** first hushed only the stones beside it: 15 wins. Now it hushes its whole row and
+  column for as long as it stands: 25. It is now a real (cheap) stone.
+- **Glass costs one less than the lasting stone, at least 1.** A rare in glass would
+  otherwise be a 1-energy bargain.
+
+### The run, as built
+
+256 runs, the same seeds: **73 victories** (mean act 2.04). The 6 + 6 setup at 2 energy won
+116, and 1 energy with no limit won 105. Why it is harder:
+- the enemies' stones grew too (their Lassos and Swaps reach anywhere, their Firecrackers
+  their whole line, their Gravity picks a way);
+- the strong stones cost more;
+- the events heal less.
+
+Where runs end: act 1 is still the wall (109 of 256), to its risen bosses and to boss lines
+on the map.
+
+**Glass, as built: 73 victories with it, 78 without** (inside the noise). Runs gain 3.5 glass
+stones and play 3.0, so they are used. They just do not win more runs. Glass is now only a
+cheaper, one-use copy of the lasting stones, and the energy it saves buys little.
+
+### Next
+
+- **Difficulty is the first thing to tune again**, now that the stones settled. Candidates:
+  - act 1 bosses (51–56% when risen);
+  - the enemies' new reach: give act 1–2 enemies the gentler stones;
+  - the heal events.
+- **Glass needs a reason of its own** (see the suggestions below).
+
 ## Heat, and the map's weight (second pass)
 
 256 runs each, the same seeds. Heat levels add up (heat 3 has the first three's rules too).
