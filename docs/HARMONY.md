@@ -211,6 +211,41 @@ The experiment: a pouch of at most N stones, the bot keeping its strongest when 
   when full, a new stone asks which to give up (or to leave it). Compensate the difficulty
   elsewhere — the act-1 draws below are the obvious place.
 
+## Heat, and the map's weight (second pass)
+
+256 runs each, the same seeds. Heat levels add up (heat 3 has the first three's rules too).
+
+| | victories |
+|---|---|
+| heat 0 | 100 |
+| heat 1 — enemies think harder | 90 |
+| heat 2 — shops a quarter dearer | 82 |
+| heat 3 — one heart fewer | **42** |
+| heat 4 — elites bring an extra stone | 53 |
+| heat 5 — enemies never blunder | 22 |
+
+- **The steps are uneven.** Heat 1 and 2 are gentle (−10, −8), heat 3 halves the wins (one heart
+  out of six), heat 4 adds nothing measurable (53 against 42 is noise), heat 5 halves again.
+  For a ladder, swap 3 and 4 and make the "extra stone" step bite — or make heat 3 cost less
+  than a whole heart (a heart less from campfires, say).
+- **A heart is worth about a fifth of the runs.** Heat 3's single heart costs 40 victories in
+  256; Iron Heart's two give 53. Every heart lost or saved anywhere is the biggest thing.
+
+What the boss's lines on the map weigh (each costs a heart today):
+
+| a boss line costs | victories |
+|---|---|
+| nothing | **186** |
+| 1 heart (today) | 100 |
+| 2 hearts | 46 |
+
+- **The map's boss lines are the largest single source of difficulty** — larger than any heat
+  level: without them the bot wins nearly twice as often. That is a good thing in itself (the
+  map is the game's best part), but it means most of a run's danger comes from the map, not the
+  duels. Balance work should start here: the boss's chance to block (`MAPCFG.sees`), how often a
+  boss line is possible at all, and how the bot (and a player) is warned — now that the dashed
+  danger circles are gone, a player sees less of it coming than the bot does.
+
 ## Events (second pass)
 
 Read against what the measurements say a run runs on — hearts first, energy second, gold a
@@ -271,9 +306,8 @@ In order of how much they would change:
 
 ## Not done tonight
 
-- The map's own balance (how often the boss's lines land, rock density) was only read from the
-  bot's numbers, not experimented with.
-- Heat levels were not measured.
+- The map's own parameters (rock density, the boss's chance to block) were not varied — only
+  the damage of a line.
 - A person plays differently from the bot (it picks stones by a fixed ranking and drops by the
   same); the pouch-cap and Clover findings in particular should be felt in play before acting.
 
