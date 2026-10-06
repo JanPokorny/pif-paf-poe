@@ -62,7 +62,7 @@ function recordEnd() {
 
 // ── Chrome ──────────────────────────────────────────────────────────────────
 
-// The slots last shown in the top bar: more than that, and the level up is played out.
+// The energy last shown in the top bar: more than that, and the level up is played out.
 let shownEnergy = null;
 let shownHearts = null;   // the hearts the top bar showed last: fewer now is a loss to show
 let hurtDelay = 0;        // seconds before it shows
@@ -77,25 +77,28 @@ function topBar(menu = showMenu) {
   flash = null;
   const energy = R.slotsOf(run);
   const xp = R.xpBar(run), level = R.levelOf(run);
-  const counter = h('div.energy', { onclick: () => toast(xp ? t('Slots: how many stones you bring into a duel (glass ones ride free). Level {l}: {x}/{n} XP to the next.', { l: level, x: xp[0], n: xp[1] }) : t('Slots: how many stones you bring into a duel (glass ones ride free). Level {l}, the highest.', { l: level })) },
-    h('span', { html: icon('slot') }), energy,
-    xp ? h('span.xp-bar', {}, h('i', { style: `width: ${Math.round((xp[0] / xp[1]) * 100)}%` })) : null);
+  const counter = h('div.energy', { onclick: () => toast(t('Energy: each stone you bring into a duel costs 1, a glass one nothing. Every level of XP brings 1 more.')) },
+    h('span', { html: icon('energy') }), energy);
+  // XP towards the next level, as a count: "3/8 XP" (at the top, just the XP).
+  const xpCounter = h('div.xp', { onclick: () => toast(xp ? t('Level {l}: {x}/{n} XP to the next, which brings 1 more energy.', { l: level, x: xp[0], n: xp[1] }) : t('Level {l}, the highest.', { l: level })) },
+    xp ? `${xp[0]}/${xp[1]}` : `${run.xp ?? 0}`, h('span.xp-label', {}, t('XP')));
   if (shownEnergy !== null && energy > shownEnergy) energyBurst(energy - shownEnergy, level);   // after the hearts' (queued above)
   shownEnergy = energy;
   return h('div.topbar', {},
     hearts,
     h('div.gold', {}, h('span', { html: icon('coin') }), run.gold),
     counter,
+    xpCounter,
     h('button.icon-btn', { onclick: showPouch, 'aria-label': t('Your pouch') }, h('span', { html: icon('hand') })),
     h('button.icon-btn', { onclick: menu, 'aria-label': t('Menu') }, h('span', { html: icon('gear') })));
 }
 
-// A level up (or a slot from elsewhere): a big slot bursts in the middle of the
+// A level up (or energy from elsewhere): a big bolt bursts in the middle of the
 // screen, then flies into the top bar's counter, which jumps. It decides what
 // can be brought to a duel, so it is not to be missed.
 function energyBurst(n, level) {
-  const burst = h('div.energy-burst', {}, h('span.energy-burst-bolt', { html: icon('slot') }),
-    h('span.energy-burst-text', {}, n === 1 ? t('Level {l}! +1 slot', { l: level }) : t('Level {l}! +{n} slots', { l: level, n })));
+  const burst = h('div.energy-burst', {}, h('span.energy-burst-bolt', { html: icon('energy') }),
+    h('span.energy-burst-text', {}, t('Level {l}! +{n} energy', { l: level, n })));
   playBurst(burst, '.energy', 'heal', 'gained', 0);
 }
 
@@ -854,7 +857,7 @@ function shopScreen(redraw = false) {
         onclick: () => infoRelic(r.relic, offer(r.price, (pay) => { R.gainRelic(run, r.relic); r.sold = true; pay(); })),
       })),
       serviceCard('star', t('+{n} XP', { n: R.SHOP_XP }), shop.xpPrice,
-        shop.trained, () => infoThing({ art: icon('star'), name: t('+{n} XP', { n: R.SHOP_XP }), text: t('Experience: every level brings one more slot for a stone in your duels.') },
+        shop.trained, () => infoThing({ art: icon('star'), name: t('+{n} XP', { n: R.SHOP_XP }), text: t('Experience: every level brings 1 more energy, room for one more stone in your duels.') },
           offer(shop.xpPrice, (pay) => { R.gainXp(run, R.SHOP_XP); run.xpBought = (run.xpBought ?? 0) + 1; shop.trained = true; pay(); }))),
       serviceCard('heart', '+1 ❤', shop.healPrice,
         run.hearts >= run.maxHearts || shop.healed >= 2, () => infoThing({ art: icon('heart'), name: '+1 ❤', text: t('Heal one heart. Twice per shop at most.') },
@@ -899,7 +902,7 @@ function craftFlow(done) {
           sfx('click'); drawPick();
         },
       }))),
-      h('p.dim', {}, b ? t('→ a stone worth {n}', { n: R.craftCost(a, b) }) : t('Two stones → one worth 1 more than the cheaper.')),
+      h('p.dim', {}, b ? t(['', '→ a common stone', '→ an uncommon stone', '→ a rare stone'][R.craftCost(a, b)]) : t('Two stones → one rarer than the commoner of the two.')),
       h('button.btn.primary.wide', {
         disabled: !b || undefined,
         onclick: () => {
@@ -924,7 +927,7 @@ function craftScreen() {
   const did = (text) => { if (text) { run.pending.made = text; save(); craftScreen(); } };
   // One job a visit: a trade.
   const jobs = [
-    { label: t('Trade two stones'), detail: t('Two stones → one worth 1 more than the cheaper.'), ok: R.craftable(run).length >= 2, go: () => craftFlow(did) },
+    { label: t('Trade two stones'), detail: t('Two stones → one rarer than the commoner of the two.'), ok: R.craftable(run).length >= 2, go: () => craftFlow(did) },
   ];
   screen(topBar(), h('div.page.rest', {},
     h('div.campfire', { html: icon('relic-anvil') }),

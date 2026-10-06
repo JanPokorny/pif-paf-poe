@@ -2,7 +2,7 @@
 
 import { STONES, CONDS, RULES, createGame, legalActions, applyAction, cloneState, allowedSquares, specOf } from '../engine.js';
 import { RELICS } from '../content.js';
-import { tierOf } from '../run.js';
+import { slotOf } from '../run.js';
 import { icon, ICONS } from '../icons.js';
 import { t, lang, setLang, LANGS } from '../i18n.js';
 
@@ -53,19 +53,19 @@ export function stoneEl(s, player = 'X', opts = {}) {
     title: stoneName(s),
   });
   updateStone(el, s, player, opts);
-  // `cost`: its worth, as pips in the corner.
-  if (opts.cost) el.append(costDots(s));
+  // `cost`: its energy, as a bolt in the corner (glass costs none).
+  if (opts.cost && slotOf(s)) el.append(costDots(s));
   return el;
 }
 export function costDots(s) {
-  const n = tierOf(s);
-  return h('span.cost', { 'aria-label': t('Worth {n}', { n }) }, ...Array.from({ length: n }, () => h('i.pip')));
+  const n = slotOf(s);
+  return h('span.cost', { 'aria-label': t('{n} energy', { n }) }, ...Array.from({ length: n }, () => h('i', { html: icon('energy') })));
 }
 // The slots you have, as squares: `used` of them filled.
 export function energyBar(used, total) {
-  return h('div.energy-bar' + (used > total ? '.over' : ''), { 'aria-label': t('Slots {used}/{n}', { used, n: total }) },
-    h('span.energy-label', {}, t('Slots:')),
-    ...Array.from({ length: Math.max(total, used) }, (_, i) => h('i' + (i < used ? '.on' : '') + (i >= total ? '.over' : ''), { html: icon('slot') })));
+  return h('div.energy-bar' + (used > total ? '.over' : ''), { 'aria-label': t('Energy {used}/{n}', { used, n: total }) },
+    h('span.energy-label', {}, t('Available:')),
+    ...Array.from({ length: Math.max(total, used) }, (_, i) => h('i' + (i < used ? '.on' : '') + (i >= total ? '.over' : ''), { html: icon('energy') })));
 }
 
 export function updateStone(el, s, player, opts = {}) {

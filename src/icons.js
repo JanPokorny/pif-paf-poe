@@ -188,8 +188,6 @@ const RAW = {
 
   // Filled pale gold, as the heart and the bolt have their washes.
   coin: C(0, 0, 6.6, ' fill="#f1d98a"') + C(0, 0, 3.6, SW(1.1)),
-  // A slot: a stone's place in a duel hand.
-  slot: P('M -5.6 -5.6 H 5.6 V 5.6 H -5.6 Z', ' fill="currentColor" rx="2"' + SW(1.6)),
   // Energy: a bolt.
   energy: P('M 2 -7.6 L -4.6 1.2 H -0.4 L -2 7.6 L 4.6 -1.2 H 0.4 Z', ' fill="currentColor"' + SW(1.1)),
 

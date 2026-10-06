@@ -1062,12 +1062,6 @@ body:has(.duel) #toast.show { transform: translate(-50%, 0) rotate(-1deg); }
 @keyframes heart-shake { 20% { rotate: -9deg; } 40% { rotate: 8deg; } 60% { rotate: -6deg; } 80% { rotate: 4deg; } }
 
 
-/* Tier: plain amber pips in a stone's corner. */
-.stone .cost i.pip, .card .stone .cost i.pip { width: 7px; height: 7px; border-radius: 50%; background: #d6a531; box-shadow: inset 0 0 0 1.5px #8a6418; }
-.stone.mini .cost i.pip { width: 5px; height: 5px; }
-.stone .cost i.pip + i.pip { margin-left: 0; }
-/* The top bar's slots: the count, with the XP to the next level as a thin bar. */
-.topbar .energy { position: relative; }
-.topbar .xp-bar { position: absolute; left: 2px; right: 2px; bottom: -6px; height: 4px; border-radius: 2px; background: var(--blue-wash); overflow: hidden; }
-.topbar .xp-bar i { display: block; height: 100%; background: var(--blue); border-radius: 2px; }
-.topbar .level { font-size: 0.75rem; opacity: 0.7; margin-left: 2px; }
+/* XP towards the next level: a count with "XP" as its symbol. */
+.topbar .xp { display: inline-flex; align-items: baseline; gap: 3px; font-size: 1.05rem; color: var(--ink); cursor: pointer; }
+.topbar .xp-label { font-family: var(--marker, inherit); font-size: 0.8rem; color: var(--blue); }
