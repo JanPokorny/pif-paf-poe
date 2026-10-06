@@ -995,8 +995,11 @@ function eventScreen() {
   // (even paid for), only losses bad, nothing at all neither.
   const sig = () => ({ hearts: run.hearts, maxHearts: run.maxHearts, gold: run.gold, energy: run.xp ?? 0, relics: run.relics.length, pouch: JSON.stringify(run.pouch), breaker: !!run.map?.breaker });
   const moodOf = (a, b) => {
+    // A stone that was not there before is a gain, even paid for with two (a trade).
+    const had = new Set(JSON.parse(a.pouch).map((x) => x.uid));
+    const fresh = JSON.parse(b.pouch).some((x) => !had.has(x.uid));
     const gained = b.hearts > a.hearts || b.maxHearts > a.maxHearts || b.gold > a.gold || b.energy > a.energy || b.relics > a.relics || (b.breaker && !a.breaker)
-      || (b.pouch !== a.pouch && JSON.parse(b.pouch).length >= JSON.parse(a.pouch).length);
+      || fresh || (b.pouch !== a.pouch && JSON.parse(b.pouch).length >= JSON.parse(a.pouch).length);
     const lost = b.hearts < a.hearts || b.maxHearts < a.maxHearts || b.gold < a.gold || JSON.parse(b.pouch).length < JSON.parse(a.pouch).length;
     return gained ? 'good' : lost ? 'bad' : '';
   };
