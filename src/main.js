@@ -607,7 +607,7 @@ function preDuel() {
     const chip = h('button.stone-pick.pebble-pick', {
       'aria-label': stoneName({ type: 'pebble' }),
       onclick: () => infoStone({ type: 'pebble' }, player, t(player === 'X' ? 'Pebbles fill your hand up to {n} stones.' : 'Pebbles fill their hand up to {n} stones.', { n: size })),
-    }, stoneEl({ type: 'pebble' }, player), h('span.hand-count', {}, `×${n}`));
+    }, stoneEl({ type: 'pebble' }, player), h(`span.tick-count.${player}`, {}, `${n}×`));
     if (!n) chip.classList.add('none');   // a full hand: no Pebbles, shown faint
     return chip;
   };
@@ -663,7 +663,7 @@ function preDuel() {
       h('div.stone-row', {}, [...new Set(duel.handO.filter((s) => s.type !== 'pebble').map((s) => s.type))].map((type) => {
         const n = duel.handO.filter((s) => s.type === type).length;
         return h('button.stone-pick', { onclick: () => infoStone({ type }, 'O'), 'aria-label': stoneName({ type }) },
-          stoneEl({ type }, 'O'), n > 1 ? h('span.hand-count', {}, `×${n}`) : null);
+          stoneEl({ type }, 'O'), h('span.tick-count.O', {}, `${n}×`));
       }), duel.handO.some((s) => s.type === 'pebble') ? pebbles('O', duel.handO.filter((s) => s.type === 'pebble').length, duel.handO.length) : null),
       h('div.section-label.with-bar', {}, h('span', {}, t('Your stones')), bar),
       grid,

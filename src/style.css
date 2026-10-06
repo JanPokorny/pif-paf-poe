@@ -680,6 +680,16 @@ body:has(.duel) #toast.show { transform: translate(-50%, 0) rotate(-1deg); }
 .stone-grid .tick-box { bottom: auto; top: 34px; left: -3px; }
 .tick-name { display: block; }
 .stone-pick .hand-count, .hand-slot .hand-count { top: -2px; right: -4px; }
+/* Before a duel, how many of a stone come along: written in the box where a chosen stone
+   is ticked, in the same ink, as these always come. */
+.tick-count {
+  position: absolute; bottom: -6px; left: -6px; z-index: 2; min-width: 23px; height: 23px; padding: 0 3px;
+  display: flex; align-items: center; justify-content: center;
+  background: var(--card); border: 2px solid var(--pencil); border-radius: 3px 5px 2px 4px; transform: rotate(-4deg);
+  box-shadow: 1px 1px 0 rgba(43, 42, 51, 0.15);
+  font-family: var(--marker); font-size: 1.35rem; line-height: 1; color: var(--blue);
+}
+.tick-count.O { color: var(--red); }
 .hand-slot { -webkit-touch-callout: none; user-select: none; }
 .enemy-hand { justify-content: center; gap: 2px; min-height: 60px; flex-wrap: nowrap; margin: 2px 0 4px; }
 .enemy-hand .hand-slot .stone { --size: min(54px, calc((100vw - 64px) / 7.3)); }
