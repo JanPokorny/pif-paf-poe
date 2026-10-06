@@ -94,7 +94,6 @@ export default {
   'Energy: each stone you bring into a duel costs 1, a glass one nothing. Every level of XP brings 1 more.': 'Energie: každý kámen, který si bereš do duelu, stojí 1, skleněný nic. Každá úroveň XP přidá 1.',
   'Level {l}: {x}/{n} XP to the next, which brings 1 more energy.': 'Úroveň {l}: {x}/{n} XP do další, která přidá 1 energii.',
   'Level {l}, the highest.': 'Úroveň {l}, nejvyšší.',
-  'XP': 'XP',
   'Level {l}! +{n} energy': 'Úroveň {l}! +{n} energie',
   'Experience: every level brings 1 more energy, room for one more stone in your duels.': 'XP: každá úroveň přidá 1 energii, místo pro další kámen v duelech.',
   'Two stones → one rarer than the commoner of the two.': 'Dva kameny → jeden vzácnější než ten obyčejnější z nich.',

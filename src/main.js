@@ -81,7 +81,7 @@ function topBar(menu = showMenu) {
     h('span', { html: icon('energy') }), energy);
   // XP towards the next level, as a count: "3/8 XP" (at the top, just the XP).
   const xpCounter = h('div.xp', { onclick: () => toast(xp ? t('Level {l}: {x}/{n} XP to the next, which brings 1 more energy.', { l: level, x: xp[0], n: xp[1] }) : t('Level {l}, the highest.', { l: level })) },
-    xp ? `${xp[0]}/${xp[1]}` : `${run.xp ?? 0}`, h('span.xp-label', {}, t('XP')));
+    h('span', { html: icon('xp') }), xp ? `${xp[0]}/${xp[1]}` : `${run.xp ?? 0}`);
   if (shownEnergy !== null && energy > shownEnergy) energyBurst(energy - shownEnergy, level);   // after the hearts' (queued above)
   shownEnergy = energy;
   return h('div.topbar', {},

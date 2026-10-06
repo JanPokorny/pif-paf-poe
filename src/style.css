@@ -117,10 +117,10 @@ b { font-weight: 400; background: linear-gradient(transparent 55%, var(--hi) 55%
 .section-label .count { color: var(--blue); }
 
 .topbar { display: flex; align-items: center; gap: 12px; padding: 10px 14px 4px; }
-.topbar > .energy { margin-right: auto; }   /* the pouch and the menu to the right */
-.hearts, .gold, .topbar .energy { display: inline-flex; align-items: center; gap: 4px; font-size: 1.25rem; }
+.topbar > .xp { margin-right: auto; }   /* the pouch and the menu to the right */
+.hearts, .gold, .topbar .energy, .topbar .xp { display: inline-flex; align-items: center; gap: 4px; font-size: 1.25rem; }
 /* The top bar: the icon carries the colour, the number is plain ink. */
-.topbar .hearts, .topbar .gold, .topbar .energy { color: var(--ink); }
+.topbar .hearts, .topbar .gold, .topbar .energy, .topbar .xp { color: var(--ink); }
 .hearts .icon { color: var(--red); width: 22px; height: 22px; filter: url(#ink); }
 .hearts .icon path { fill: rgba(200, 55, 45, 0.25); }
 .gold .icon { color: var(--rare); width: 22px; height: 22px; filter: url(#ink); }
@@ -1063,5 +1063,5 @@ body:has(.duel) #toast.show { transform: translate(-50%, 0) rotate(-1deg); }
 
 
 /* XP towards the next level: a count with "XP" as its symbol. */
-.topbar .xp { display: inline-flex; align-items: baseline; gap: 3px; font-size: 1.05rem; color: var(--ink); cursor: pointer; }
-.topbar .xp-label { font-family: var(--marker, inherit); font-size: 0.8rem; color: var(--blue); }
+.topbar .xp { cursor: pointer; }
+.topbar .xp .icon { color: var(--good, #2f7a4a); width: 22px; height: 22px; filter: url(#ink); }

@@ -188,6 +188,8 @@ const RAW = {
 
   // Filled pale gold, as the heart and the bolt have their washes.
   coin: C(0, 0, 6.6, ' fill="#f1d98a"') + C(0, 0, 3.6, SW(1.1)),
+  // XP: the letters, drawn.
+  xp: P('M -8 -5.4 L -2 5.4 M -2 -5.4 L -8 5.4', SW(1.9)) + P('M 1.4 5.4 V -5.4 H 4.6 C 8.2 -5.4 8.2 0.6 4.6 0.6 H 1.4', SW(1.9)),
   // Energy: a bolt.
   energy: P('M 2 -7.6 L -4.6 1.2 H -0.4 L -2 7.6 L 4.6 -1.2 H 0.4 Z', ' fill="currentColor"' + SW(1.1)),
 
